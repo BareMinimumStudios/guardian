@@ -1,0 +1,44 @@
+[versions]
+# Common
+cloche = "0.18.4"
+kotlin = "2.2.21"
+fabric-loader = "0.19.2"
+fabric-kotlin = "1.13.7+kotlin.2.2.21"
+exposed = "1.3.0"
+mysql = "9.7.0"
+sqlite = "3.53.1.0"
+h2 = "2.4.240"
+ktoml = "0.7.1"
+# 1.20.1
+fabric-api-1201 = "0.92.9"
+opc-1201 = "2.0.0+1.20.1-beta.4-fabric"
+sgui-1201 = "1.2.2+1.20"
+permissionsapi-1201 = "0.2-SNAPSHOT"
+# 1.21.1
+fabric-api-1211 = "0.116.12"
+opc-1211 = "2.0.0+1.21-beta.2-fabric"
+sgui-1211 = "1.6.1+1.21.1"
+permissionsapi-1211 = "0.3.1"
+
+[plugins]
+cloche = { id = "earth.terrarium.cloche", version.ref = "cloche" }
+
+[libraries]
+# Common
+fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-kotlin" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+ktoml-core = { module = "com.akuleshov7:ktoml-core", version.ref = "ktoml" }
+ktoml-file = { module = "com.akuleshov7:ktoml-file", version.ref = "ktoml" }
+# 1.20.1
+opc-1201 = { module = "maven.modrinth:opc-directors-cut", version.ref = "opc-1201" }
+sgui-1201 = { module = "eu.pb4:sgui", version.ref = "sgui-1201" }
+permissionsapi-1201 = { module = "me.lucko:fabric-permissions-api", version.ref = "permissionsapi-1201" }
+# 1.21.1
+opc-1211 = { module = "maven.modrinth:opc-directors-cut", version.ref = "opc-1211" }
+sgui-1211 = { module = "eu.pb4:sgui", version.ref = "sgui-1211" }
+permissionsapi-1211 = { module = "me.lucko:fabric-permissions-api", version.ref = "permissionsapi-1211" }
