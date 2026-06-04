@@ -43,18 +43,19 @@ object Guardian :
         ensureConfigs()
 
         info("Using driver: ${databaseConfig.driver}")
-        db = when (databaseConfig.driver) {
-            "sqlite" -> SQLiteDriver.connect()
-            "mysql" -> MySQLDriver.connect()
+        val driver = when (databaseConfig.driver) {
+            "sqlite" -> SQLiteDriver
+            "mysql" -> MySQLDriver
             "h2" -> {
                 error("h2 database is not persistent. DO NOT USE in production.")
-                H2MemDriver.connect()
+                H2MemDriver
             }
             else -> {
                 warn("Unknown database driver ${databaseConfig.driver}, defaulting to sqlite.")
-                SQLiteDriver.connect()
+                SQLiteDriver
             }
         }
+        db = driver.connect()
 
     }
 
