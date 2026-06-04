@@ -84,6 +84,7 @@ cloche {
 			include(libs.sgui.get1201())
 			modImplementation(libs.permissionsapi.get1201())
 			include(libs.permissionsapi.get1201())
+			implementation(libs.nullevt)
 		}
 
 		metadata {
@@ -127,6 +128,7 @@ cloche {
 			include(libs.sgui.get1211())
 			modImplementation(libs.permissionsapi.get1211())
 			include(libs.permissionsapi.get1211())
+			implementation(libs.nullevt)
 		}
 
 		metadata {
@@ -153,4 +155,17 @@ kotlin {
 	compilerOptions {
 		freeCompilerArgs = listOf("-Xmulti-platform", "-Xno-check-actual", "-Xexpect-actual-classes")
 	}
+}
+
+// nullevt uses inline stuff which apparently breaky in common so we do this
+tasks.compileKotlin {
+	enabled = false
+}
+
+tasks.compileJava {
+	enabled = false
+}
+
+tasks.jar {
+	enabled = false
 }

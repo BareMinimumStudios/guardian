@@ -11,9 +11,9 @@ import net.minecraft.world.level.block.state.BlockState
 
 object BlockEvent {
     object Break {
-        var BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        var AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        var CANCELLED: Event<Cancelled> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val CANCELLED: Event<Cancelled> = newCustomEvent(false, CancellationStrategy.ForTrue)
 
         fun interface Before {
             fun invoke(
