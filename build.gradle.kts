@@ -16,10 +16,12 @@ repositories {
 	cloche {
 		main()
 		mavenFabric()
+		mavenParchment()
 	}
 
 	maven("https://api.modrinth.com/maven")
 	maven("https://maven.nucleoid.xyz")
+	maven("https://maven.is-immensely.gay/releases")
 }
 
 cloche {
@@ -42,27 +44,32 @@ cloche {
 	}
 
 	common {
-		mappings {
-			official()
-		}
+		mixins.from(file("src/main/guardian.mixins.json"))
 
 		dependencies {
 			modImplementation(libs.fabric.kotlin)
 
 			implementation(libs.exposed.core)
 			implementation(libs.exposed.jdbc)
+			implementation(libs.exposed.json)
 			implementation(libs.exposed.kotlin.datetime)
 			implementation(libs.mysql)
 			implementation(libs.sqlite)
 			implementation(libs.h2)
 			implementation(libs.ktoml.core)
 			implementation(libs.ktoml.file)
+			implementation(libs.nullevt)
 		}
 	}
 
 	fabric("1.20.1") {
 		minecraftVersion = "1.20.1"
 		loaderVersion = libs.versions.fabric.loader
+
+		mappings {
+			official()
+			parchment(libs.versions.parchment.get1201())
+		}
 
 		runs {
 			server()
@@ -101,6 +108,11 @@ cloche {
 	fabric("1.21.1") {
 		minecraftVersion = "1.21.1"
 		loaderVersion = libs.versions.fabric.loader
+
+		mappings {
+			official()
+			parchment(libs.versions.parchment.get1211())
+		}
 
 		runs {
 			server()

@@ -1,0 +1,6 @@
+{
+  "package": "xyz.naomieow.guardian.mixins",
+  "server": [
+    "ServerPlayerGameModeMixin"
+  ]
+}
