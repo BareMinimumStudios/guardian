@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.naomieow.guardian.event.BlockEvent;
+import xyz.naomieow.guardian.event.PlayerBlockEvent;
 
 @Mixin(ServerPlayerGameMode.class)
 abstract class ServerPlayerGameModeMixin {
@@ -40,7 +40,7 @@ abstract class ServerPlayerGameModeMixin {
             @Local(name = "$$2") BlockEntity blockEntity,
             @Local(name = "$$1") BlockState state
     ) {
-        var result = BlockEvent.Break.INSTANCE
+        var result = PlayerBlockEvent.Break.INSTANCE
                 .getBEFORE()
                 .getDispatcher()
                 .invoke(
@@ -52,7 +52,7 @@ abstract class ServerPlayerGameModeMixin {
                 );
 
         if (result) {
-            BlockEvent.Break.INSTANCE
+            PlayerBlockEvent.Break.INSTANCE
                     .getCANCELLED()
                     .getDispatcher()
                     .invoke(
@@ -80,7 +80,7 @@ abstract class ServerPlayerGameModeMixin {
             @Local(name = "$$2") BlockEntity blockEntity,
             @Local(name = "$$3") Block block
     ) {
-        BlockEvent.Break.INSTANCE
+        PlayerBlockEvent.Break.INSTANCE
                 .getAFTER()
                 .getDispatcher()
                 .invoke(

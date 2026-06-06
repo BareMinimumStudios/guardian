@@ -35,4 +35,5 @@ data class ActionConfig (
 @Serializable
 data class PlayerActionConfig (
     val breakBlock: Boolean = true,
+    val placeBlock: Boolean = true,
 )

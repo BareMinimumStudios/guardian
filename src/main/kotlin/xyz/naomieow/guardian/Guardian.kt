@@ -13,6 +13,7 @@ import xyz.naomieow.guardian.config.DatabaseConfig
 import xyz.naomieow.guardian.database.driver.H2MemDriver
 import xyz.naomieow.guardian.database.driver.MySQLDriver
 import xyz.naomieow.guardian.database.driver.SQLiteDriver
+import xyz.naomieow.guardian.event.PlayerBlockEvent
 import java.nio.file.Files
 import java.nio.file.Paths
 

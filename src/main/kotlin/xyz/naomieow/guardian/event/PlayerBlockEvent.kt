@@ -9,7 +9,40 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 
-object BlockEvent {
+object PlayerBlockEvent {
+    object Place {
+        val BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val CANCELLED: Event<Cancelled> = newCustomEvent(false, CancellationStrategy.ForTrue)
+
+        fun interface Before {
+            fun invoke(
+                level: Level,
+                player: Player,
+                pos: BlockPos,
+                state: BlockState,
+            ): Boolean
+        }
+
+        fun interface After {
+            fun invoke(
+                level: Level,
+                player: Player,
+                pos: BlockPos,
+                state: BlockState,
+            ): Boolean
+        }
+
+        fun interface Cancelled {
+            fun invoke(
+                level: Level,
+                player: Player,
+                pos: BlockPos,
+                state: BlockState,
+            ): Boolean
+        }
+    }
+
     object Break {
         val BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
         val AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
@@ -18,7 +51,7 @@ object BlockEvent {
         fun interface Before {
             fun invoke(
                 level: Level,
-                player: Player?,
+                player: Player,
                 pos: BlockPos,
                 state: BlockState,
                 blockEntity: BlockEntity?,
@@ -28,7 +61,7 @@ object BlockEvent {
         fun interface After {
             fun invoke(
                 level: Level,
-                player: Player?,
+                player: Player,
                 pos: BlockPos,
                 state: BlockState,
                 blockEntity: BlockEntity?,
@@ -38,7 +71,7 @@ object BlockEvent {
         fun interface Cancelled {
             fun invoke(
                 level: Level,
-                player: Player?,
+                player: Player,
                 pos: BlockPos,
                 state: BlockState,
                 blockEntity: BlockEntity?,
