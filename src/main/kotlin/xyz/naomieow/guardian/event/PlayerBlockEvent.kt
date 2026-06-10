@@ -12,8 +12,8 @@ import net.minecraft.world.level.block.state.BlockState
 object PlayerBlockEvent {
     object Place {
         val BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        val AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        val CANCELLED: Event<Cancelled> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val AFTER: Event<After> = newCustomEvent()
+        val CANCELLED: Event<Cancelled> = newCustomEvent()
 
         fun interface Before {
             fun invoke(
@@ -30,7 +30,7 @@ object PlayerBlockEvent {
                 player: Player,
                 pos: BlockPos,
                 state: BlockState,
-            ): Boolean
+            )
         }
 
         fun interface Cancelled {
@@ -39,14 +39,14 @@ object PlayerBlockEvent {
                 player: Player,
                 pos: BlockPos,
                 state: BlockState,
-            ): Boolean
+            )
         }
     }
 
     object Break {
         val BEFORE: Event<Before> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        val AFTER: Event<After> = newCustomEvent(false, CancellationStrategy.ForTrue)
-        val CANCELLED: Event<Cancelled> = newCustomEvent(false, CancellationStrategy.ForTrue)
+        val AFTER: Event<After> = newCustomEvent()
+        val CANCELLED: Event<Cancelled> = newCustomEvent()
 
         fun interface Before {
             fun invoke(
@@ -65,7 +65,7 @@ object PlayerBlockEvent {
                 pos: BlockPos,
                 state: BlockState,
                 blockEntity: BlockEntity?,
-            ): Boolean
+            )
         }
 
         fun interface Cancelled {
@@ -75,7 +75,7 @@ object PlayerBlockEvent {
                 pos: BlockPos,
                 state: BlockState,
                 blockEntity: BlockEntity?,
-            ): Boolean
+            )
         }
     }
 }
