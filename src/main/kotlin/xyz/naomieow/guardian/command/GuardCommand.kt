@@ -1,6 +1,7 @@
 package xyz.naomieow.guardian.command
 
 import com.mojang.brigadier.arguments.IntegerArgumentType
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
@@ -15,20 +16,35 @@ import xyz.naomieow.guardian.Guardian
 import xyz.naomieow.guardian.config.ActionConfig
 import xyz.naomieow.guardian.config.DatabaseConfig
 import xyz.naomieow.guardian.database.table.BlockStateModification
+import xyz.naomieow.guardian.ext.inspectMode
 
 object GuardCommand {
-    val command = Commands.literal("guard")
-        .then(
-            Commands.literal("reload")
-                .executes(::reloadConfig)
+    val command: LiteralArgumentBuilder<CommandSourceStack> = Commands.literal("guard")
+        .then(Commands.literal("reload")
+            .executes(::reloadConfig)
         )
-        .then(
-            Commands.literal("lookup")
-                .then(
-                    Commands.argument("radius", IntegerArgumentType.integer())
-                        .executes(::lookupRadius)
-                )
+        .then(Commands.literal("lookup")
+            .then(Commands.argument("radius", IntegerArgumentType.integer())
+                .executes(::lookupRadius)
+            )
         )
+        .then(Commands.literal("inspect")
+            .executes(::inspectMode)
+        )
+
+    private fun inspectMode(ctx: CommandContext<CommandSourceStack>): Int {
+        if (ctx.source.player == null) {
+            ctx.source.sendSystemMessage(Component.literal("Attempted to call command from non-player environment"))
+            return 0
+        }
+        ctx.source.player!!.inspectMode = !ctx.source.player!!.inspectMode
+        if (ctx.source.player!!.inspectMode) {
+            ctx.source.sendSystemMessage(Component.literal("Entered inspect mode."))
+        } else {
+            ctx.source.sendSystemMessage(Component.literal("Exited inspect mode."))
+        }
+        return 1
+    }
 
     private fun reloadConfig(ctx: CommandContext<CommandSourceStack>): Int {
         Guardian.databaseConfig = DatabaseConfig.load()

@@ -1,6 +1,9 @@
 package xyz.naomieow.guardian.database.table
 
 import com.google.gson.JsonParser
+import kotlinx.datetime.LocalDateTime
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.datetime.datetime
@@ -8,6 +11,15 @@ import org.jetbrains.exposed.v1.json.json
 import xyz.naomieow.guardian.ext.blockStateFromJson
 import xyz.naomieow.guardian.ext.toJson
 
+
+data class BlockStateModificationData(
+    val performedAt: LocalDateTime,
+    val oldState: BlockState,
+    val newState: BlockState,
+    val playerUUID: String,
+    val playerName: String,
+    val pos: BlockPos,
+)
 
 object BlockStateModification : Table("blockstate_modification") {
     val id = integer(name = "id").autoIncrement()
