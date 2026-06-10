@@ -1,12 +1,20 @@
 package xyz.naomieow.guardian.command
 
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
 import net.minecraft.network.chat.Component
+import net.minecraft.world.phys.Vec3
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import xyz.naomieow.guardian.Guardian
 import xyz.naomieow.guardian.config.ActionConfig
 import xyz.naomieow.guardian.config.DatabaseConfig
+import xyz.naomieow.guardian.database.table.BlockStateModification
 
 object GuardCommand {
     val command = Commands.literal("guard")
@@ -14,12 +22,63 @@ object GuardCommand {
             Commands.literal("reload")
                 .executes(::reloadConfig)
         )
+        .then(
+            Commands.literal("lookup")
+                .then(
+                    Commands.argument("radius", IntegerArgumentType.integer())
+                        .executes(::lookupRadius)
+                )
+        )
 
     private fun reloadConfig(ctx: CommandContext<CommandSourceStack>): Int {
         Guardian.databaseConfig = DatabaseConfig.load()
         Guardian.actionConfig = ActionConfig.load()
         ctx.source.sendSystemMessage(Component.literal("Reloaded config!"))
         // TODO: Diff message of changed config values.
+        return 1
+    }
+
+    private fun lookupRadius(ctx: CommandContext<CommandSourceStack>): Int {
+        val radius = IntegerArgumentType.getInteger(ctx, "radius")
+        if (ctx.source.player == null) {
+            ctx.source.sendSystemMessage(
+                Component.literal("Attempted to call command from non-player environment")
+            )
+            return 0
+        }
+        val center = ctx.source.player!!.blockPosition()
+        val actions = transaction {
+            SchemaUtils.create(BlockStateModification)
+            addLogger(StdOutSqlLogger)
+
+            BlockStateModification
+                .selectAll()
+                .orderBy(BlockStateModification.performedAt to SortOrder.ASC)
+                .filter { row ->
+                    center.distToCenterSqr(Vec3(
+                        row[BlockStateModification.posX].toDouble(),
+                        row[BlockStateModification.posY].toDouble(),
+                        row[BlockStateModification.posZ].toDouble(),
+                    )) <= radius * radius
+                }
+                .forEach { row ->
+                    ctx.source.sendSystemMessage(Component.literal(
+                        "${
+                            row[BlockStateModification.performedAt].date
+                        } ${
+                            row[BlockStateModification.performedAt].time
+                        } | ${
+                            row[BlockStateModification.playerName]
+                        }: [${row[BlockStateModification.posX]}, ${
+                            row[BlockStateModification.posY]
+                        }, ${row[BlockStateModification.posZ]}], ${
+                            row[BlockStateModification.oldState].block.name.string
+                        } -> ${
+                            row[BlockStateModification.newState].block.name.string
+                        }"
+                    ))
+                }
+        }
         return 1
     }
 }
