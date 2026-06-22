@@ -3,6 +3,8 @@ package xyz.naomieow.guardian.database.table
 import com.google.gson.JsonParser
 import kotlinx.datetime.LocalDateTime
 import net.minecraft.core.BlockPos
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
@@ -17,10 +19,12 @@ data class BlockStateModificationData(
     val performedAt: LocalDateTime,
     val oldState: BlockState,
     val newState: BlockState,
-    val playerUUID: String,
-    val playerName: String,
+    val playerUUID: String?,
+    val playerName: String?,
     val pos: BlockPos,
+    val level: ResourceKey<Level>,
     val actionType: ActionType,
+    val reverted: Boolean = false,
 )
 
 object BlockStateModification : Table("blockstate_modification") {
@@ -41,6 +45,7 @@ object BlockStateModification : Table("blockstate_modification") {
     val posX = integer(name = "pos_x")
     val posY = integer(name = "pos_y")
     val posZ = integer(name = "pos_z")
+    val level = text(name = "level")
     val actionType = enumeration("action_type", ActionType::class)
     val reverted = bool("reverted").default(false)
 

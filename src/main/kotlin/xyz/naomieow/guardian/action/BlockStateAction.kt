@@ -3,7 +3,10 @@ package xyz.naomieow.guardian.action
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.minecraft.core.BlockPos
+import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceKey
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
@@ -59,6 +62,7 @@ object BlockStateAction : Action {
                     it[posY] = pos.y
                     it[posZ] = pos.z
                     it[actionType] = ActionType.BLOCK_BREAK
+                    it[BlockStateModification.level] = level.dimension().location().toString()
                 }
             }
         }
@@ -79,6 +83,7 @@ object BlockStateAction : Action {
                 player.uuid.toString(),
                 player.name.string,
                 pos,
+                level.dimension(),
                 ActionType.BLOCK_PLACE
             ))
         }
@@ -117,6 +122,7 @@ object BlockStateAction : Action {
                 this[BlockStateModification.posX] = it.pos.x
                 this[BlockStateModification.posY] = it.pos.y
                 this[BlockStateModification.posZ] = it.pos.z
+                this[BlockStateModification.level] = it.level.location().toString()
                 this[BlockStateModification.actionType] = it.actionType
             }
         }
@@ -147,7 +153,7 @@ object BlockStateAction : Action {
     // Always on server so casting to ServerPlayer is OK
     private fun inspect(player: ServerPlayer, pos: BlockPos) {
         if (player.inspectMode) {
-            val action = transaction {
+            val actions = transaction {
                 SchemaUtils.create(BlockStateModification)
 
                 BlockStateModification.selectAll()
@@ -159,26 +165,43 @@ object BlockStateAction : Action {
                                 )
                     )
                     .orderBy(BlockStateModification.performedAt to SortOrder.DESC)
-                    .limit(1)
-                    .toList()
-            }.firstOrNull()
+                    .map {
+                        BlockStateModificationData(
+                            it[BlockStateModification.performedAt],
+                            it[BlockStateModification.oldState],
+                            it[BlockStateModification.newState],
+                            it[BlockStateModification.playerUUID],
+                            it[BlockStateModification.playerName],
+                            BlockPos(
+                                it[BlockStateModification.posX],
+                                it[BlockStateModification.posY],
+                                it[BlockStateModification.posZ]
+                            ),
+                            ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(it[BlockStateModification.level])!!),
+                            it[BlockStateModification.actionType],
+                            it[BlockStateModification.reverted]
+                        )
+                    }
+            }
 
-            if (action == null) {
-                player.sendSystemMessage(Component.literal("No known actions."))
-            } else {
+            actions.forEach {
                 player.sendSystemMessage(Component.literal(
                     "${
-                        action[BlockStateModification.performedAt].date
+                        if (it.reverted) {
+                            "REVERTED"
+                        } else {
+                            ""
+                        }
                     } ${
-                        action[BlockStateModification.performedAt].time
+                        it.performedAt.date
+                    } ${
+                        it.performedAt.time
                     } | ${
-                        action[BlockStateModification.playerName]
-                    }: [${action[BlockStateModification.posX]}, ${
-                        action[BlockStateModification.posY]
-                    }, ${action[BlockStateModification.posZ]}], ${
-                        action[BlockStateModification.oldState].block.name.string
+                        it.playerName
+                    }: [${it.pos}], ${
+                        it.oldState.block.name.string
                     } -> ${
-                        action[BlockStateModification.newState].block.name.string
+                        it.newState.block.name.string
                     }"
                 ))
             }
