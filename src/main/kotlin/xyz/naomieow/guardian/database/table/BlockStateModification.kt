@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.datetime.datetime
 import org.jetbrains.exposed.v1.json.json
+import xyz.naomieow.guardian.action.ActionType
 import xyz.naomieow.guardian.ext.blockStateFromJson
 import xyz.naomieow.guardian.ext.toJson
 
@@ -19,6 +20,7 @@ data class BlockStateModificationData(
     val playerUUID: String,
     val playerName: String,
     val pos: BlockPos,
+    val actionType: ActionType,
 )
 
 object BlockStateModification : Table("blockstate_modification") {
@@ -39,6 +41,7 @@ object BlockStateModification : Table("blockstate_modification") {
     val posX = integer(name = "pos_x")
     val posY = integer(name = "pos_y")
     val posZ = integer(name = "pos_z")
+    val actionType = enumeration("action_type", ActionType::class)
     val reverted = bool("reverted").default(false)
 
     override val primaryKey = PrimaryKey(id)

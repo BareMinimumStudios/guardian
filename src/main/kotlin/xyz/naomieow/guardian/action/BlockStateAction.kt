@@ -58,6 +58,7 @@ object BlockStateAction : Action {
                     it[posX] = pos.x
                     it[posY] = pos.y
                     it[posZ] = pos.z
+                    it[actionType] = ActionType.BLOCK_BREAK
                 }
             }
         }
@@ -77,7 +78,8 @@ object BlockStateAction : Action {
                 state,
                 player.uuid.toString(),
                 player.name.string,
-                pos
+                pos,
+                ActionType.BLOCK_PLACE
             ))
         }
         return false
@@ -115,6 +117,7 @@ object BlockStateAction : Action {
                 this[BlockStateModification.posX] = it.pos.x
                 this[BlockStateModification.posY] = it.pos.y
                 this[BlockStateModification.posZ] = it.pos.z
+                this[BlockStateModification.actionType] = it.actionType
             }
         }
         logQueue.clear()
