@@ -20,15 +20,18 @@ import xyz.naomieow.guardian.ext.inspectMode
 
 object GuardCommand {
     val command: LiteralArgumentBuilder<CommandSourceStack> = Commands.literal("guard")
+        .requires(CommandPermissions.root_command::check)
         .then(Commands.literal("reload")
             .executes(::reloadConfig)
         )
         .then(Commands.literal("lookup")
+            .requires(CommandPermissions.lookup_mode::check)
             .then(Commands.argument("radius", IntegerArgumentType.integer())
                 .executes(::lookupRadius)
             )
         )
         .then(Commands.literal("inspect")
+            .requires(CommandPermissions.inspect_mode::check)
             .executes(::inspectMode)
         )
 
@@ -96,5 +99,11 @@ object GuardCommand {
                 }
         }
         return 1
+    }
+
+    object CommandPermissions {
+        val root_command: Permission = Permission("guardian.command", 2)
+        val inspect_mode: Permission = Permission("guardian.command.inspect", 2)
+        val lookup_mode: Permission = Permission("guardian.command.lookup", 2)
     }
 }
