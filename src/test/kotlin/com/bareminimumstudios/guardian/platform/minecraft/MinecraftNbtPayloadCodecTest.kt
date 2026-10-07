@@ -1,6 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.CompoundTag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -8,7 +8,7 @@ import kotlin.test.assertFailsWith
 class MinecraftNbtPayloadCodecTest {
     @Test
     fun roundTripsVersionedCompressedNbt() {
-        val nbt = NbtCompound().apply {
+        val nbt = CompoundTag().apply {
             putString("id", "minecraft:chest")
             putInt("x", 12)
             putInt("y", 64)

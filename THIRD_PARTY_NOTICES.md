@@ -8,7 +8,7 @@ The public CoreProtect source is used as a behavioral and migration-format refer
 
 ## Fzzy Config
 
-Guardian depends on Fzzy Config as an external Fabric mod dependency and does not bundle or copy its source. Fzzy Config retains its own license and copyright notices.
+Guardian depends on Fzzy Config as an external loader-specific mod dependency and does not bundle or copy its source. Fzzy Config retains its own license and copyright notices.
 
 ## Fabric Permissions API / LuckPerms
 
@@ -31,3 +31,7 @@ Because the BML core and GPL adapter are separately licensed artifacts, redistri
 ## Gradle wrapper
 
 The Gradle wrapper files retain Gradle's applicable license and notices.
+
+## Mojang mappings and NeoForge
+
+Both loader builds use official Mojang mappings under Mojang's mapping license. NeoForge, ModDevGradle, and Kotlin for Forge retain their respective licenses; Kotlin for Forge remains an external server dependency.

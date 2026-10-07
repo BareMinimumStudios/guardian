@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src/main/resources/assets/guardian/icon.png" alt="Guardian shield and rollback arrow" width="128" height="128">
+<img src="docs/assets/guardian-banner.png" alt="Guardian shield and wordmark" width="100%">
 
-# Guardian
+<br>
 
 <a href="LICENSE"><img alt="BML 1.0" src="https://img.shields.io/badge/LICENSE-BML--1.0-FFFFFF?style=for-the-badge&labelColor=1A1A1A"></a>
 <a href="https://github.com/BareMinimumStudios/guardian/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/BareMinimumStudios/guardian/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=BUILD&labelColor=1A1A1A"></a>
@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite or DuckDB and provides commands for lookup, inspection, and rollback.
 
-Guardian continues the ExProtect prototype. This checkpoint verifies the existing Fabric implementation under the new name and extracts a shared core for the loader port. NeoForge support and container transactions are the next milestones; they are not available in this build.
+Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Container and item transaction logging is the next milestone.
 
 ## At a glance
 
@@ -31,11 +31,11 @@ Guardian continues the ExProtect prototype. This checkpoint verifies the existin
 
 ## Installation
 
-Use the main Guardian jar from `build/libs` on a Fabric 1.21.1 server with Fabric API, Fabric Language Kotlin, and Fzzy Config. The JDBC drivers are bundled. Fzzy Config stays an external dependency.
+For Fabric 1.21.1, use the Guardian jar from `build/libs` with Fabric API, Fabric Language Kotlin, and Fzzy Config. For NeoForge 1.21.1, use the jar from `neoforge/build/libs` with Kotlin for Forge and Fzzy Config. Install the jar for your server loader. The JDBC drivers and shared core are bundled; Fzzy Config stays an external dependency.
 
-For WorldEdit support, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
+For WorldEdit support on Fabric, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
 
-LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent.
+LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent. NeoForge uses its built-in permissions API, which also allows a compatible permission handler.
 
 ## Commands
 
@@ -59,10 +59,12 @@ The rename does not automatically move old ExProtect settings or databases. Back
 | Module | Role |
 | --- | --- |
 | `common` | Loader-independent snapshots, storage, queues, filters, and rollback decisions. |
-| Root Fabric module | Minecraft adapters, lifecycle, configuration, commands, and mixins. |
-| `worldedit-adapter` | Optional GPL integration with WorldEdit 7.3.8. |
+| `minecraft` source directory | Shared Mojang-mapped Minecraft adapters, configuration, commands, and mixins. |
+| Root Fabric module | Fabric lifecycle, event, and permission hooks. |
+| `neoforge` | NeoForge lifecycle, event, and permission hooks. |
+| `worldedit-adapter` | Optional Fabric GPL integration with WorldEdit 7.3.8. |
 
-The shared classes are packaged inside the Fabric runtime jar. You do not need to install a separate `common` jar.
+The shared classes are packaged inside each loader runtime jar. You do not need to install a separate `common` jar.
 
 ## Building
 
@@ -72,7 +74,7 @@ The shared classes are packaged inside the Fabric runtime jar. You do not need t
 ./gradlew :worldedit-adapter:build --no-daemon --warning-mode all
 ```
 
-Use `gradlew.bat` on Windows. The wrapper uses Gradle 9.8.0 and Fabric Loom 1.17.21. See [development notes](DEVELOPMENT.md) for validation and the staged migration.
+Use `gradlew.bat` on Windows. The wrapper uses Gradle 9.8.0. Fabric uses Loom 1.17.21; NeoForge uses ModDevGradle. Both compile against official Mojang mappings. See [development notes](DEVELOPMENT.md) for validation and the staged migration.
 
 ## Publishing
 

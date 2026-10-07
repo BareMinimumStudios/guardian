@@ -1,3 +1,5 @@
+> Guardian checkpoint update (2026-10-07): the former ExProtect prototype now builds for Fabric and NeoForge 1.21.1 using official Mojang mappings. Pure audit code lives in `common`; shared Minecraft code lives in `minecraft`; loader hooks remain separate. See [validation](VALIDATION.md) for what has been exercised. Step 4 remains focused on container and item transactions.
+
 # Guardian staged port plan
 
 ## Step 1 — Foundation — complete

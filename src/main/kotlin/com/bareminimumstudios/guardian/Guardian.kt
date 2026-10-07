@@ -6,6 +6,10 @@ import com.bareminimumstudios.guardian.integration.FabricIntegrationDetector
 import com.bareminimumstudios.guardian.lookup.BlockInspector
 import com.bareminimumstudios.guardian.permission.PermissionServices
 import com.bareminimumstudios.guardian.platform.minecraft.PlayerBlockCapture
+import com.bareminimumstudios.guardian.lookup.FabricBlockInspectorHooks
+import com.bareminimumstudios.guardian.platform.minecraft.PlayerBlockBreakHook
+import net.fabricmc.loader.api.FabricLoader
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -50,22 +54,22 @@ object Guardian : ModInitializer {
             }
         )
 
+        PlayerBlockBreakHook.register()
+        FabricBlockInspectorHooks.install()
         BlockInspector.install(
             historyProvider = { runtime?.history() },
             configProvider = { config }
         )
-        GuardianCommands.install(
-            permissions = permissionService,
-            runtimeProvider = { runtime },
-            configProvider = { config }
-        )
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            GuardianCommands.register(dispatcher, permissionService, { runtime }, { config })
+        }
         ServerTickEvents.END_SERVER_TICK.register { _ -> runtime?.rollback()?.tick() }
 
         logger.info("Guardian foundation initialized; permission provider={}", permissionService.providerName)
 
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
             check(runtime == null) { "Guardian runtime already active" }
-            runtime = GuardianRuntime(config, permissionService).also { it.start(server) }
+            runtime = GuardianRuntime(config, permissionService, FabricLoader.getInstance().gameDir.resolve("guardian")).also { it.start(server) }
             val activeStorage = runtime?.storage()
             if (activeStorage != null) {
                 val health = activeStorage.health()

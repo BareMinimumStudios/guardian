@@ -15,8 +15,8 @@ import com.sk89q.worldedit.extent.AbstractDelegateExtent;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockStateHolder;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.BlockPos;
 
 import java.util.UUID;
 
@@ -25,18 +25,18 @@ import java.util.UUID;
  * block mutation succeeded, while checking capacity before the mutation so an oversized edit fails closed.
  */
 final class GuardianWorldEditExtent extends AbstractDelegateExtent {
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final ActorIdentity actor;
     private final BulkCaptureSession capture;
     private final ResourceId dimension;
     private boolean committed;
 
-    GuardianWorldEditExtent(Extent extent, ServerWorld world, ActorIdentity actor, BulkCaptureSession capture) {
+    GuardianWorldEditExtent(Extent extent, ServerLevel world, ActorIdentity actor, BulkCaptureSession capture) {
         super(extent);
         this.world = world;
         this.actor = actor;
         this.capture = capture;
-        this.dimension = ResourceId.Companion.parse(world.getRegistryKey().getValue().toString());
+        this.dimension = ResourceId.Companion.parse(world.dimension().location().toString());
     }
 
     @Override

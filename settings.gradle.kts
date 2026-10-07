@@ -11,3 +11,5 @@ rootProject.name = "Guardian"
 include("worldedit-adapter")
 
 include("common")
+
+include("neoforge")

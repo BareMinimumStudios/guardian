@@ -10,13 +10,13 @@ import com.sk89q.worldedit.IncompleteRegionException
 import com.sk89q.worldedit.WorldEdit
 import com.sk89q.worldedit.fabric.FabricAdapter
 import com.sk89q.worldedit.regions.CuboidRegion
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer
 
 class WorldEditSelectionProvider : RegionSelectionProvider {
-    override fun selectionFor(player: ServerPlayerEntity): RegionSelectionResult {
+    override fun selectionFor(player: ServerPlayer): RegionSelectionResult {
         return runCatching {
             val actor = FabricAdapter.adaptPlayer(player)
-            val world = FabricAdapter.adapt(player.serverWorld)
+            val world = FabricAdapter.adapt(player.serverLevel())
             val session = WorldEdit.getInstance().sessionManager.get(actor)
             val region = try {
                 session.getSelection(world)
@@ -36,7 +36,7 @@ class WorldEditSelectionProvider : RegionSelectionProvider {
             RegionSelectionResult.Success(
                 RegionSelection(
                     providerId = "worldedit",
-                    dimension = ResourceId.parse(player.serverWorld.registryKey.value.toString()),
+                    dimension = ResourceId.parse(player.serverLevel().dimension().location().toString()),
                     bounds = BlockBounds(
                         BlockPosition(min.x(), min.y(), min.z()),
                         BlockPosition(max.x(), max.y(), max.z())

@@ -8,7 +8,7 @@ import com.sk89q.worldedit.event.extent.EditSessionEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.fabric.FabricAdapter;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 
 /** Registers exactly at WorldEdit's recommended block-logger stage: BEFORE_CHANGE. */
 public final class WorldEditEditSessionListener {
@@ -35,8 +35,8 @@ public final class WorldEditEditSessionListener {
         }
 
         try {
-            net.minecraft.world.World nativeWorld = FabricAdapter.adapt(event.getWorld());
-            if (!(nativeWorld instanceof ServerWorld serverWorld)) {
+            net.minecraft.world.level.Level nativeWorld = FabricAdapter.adapt(event.getWorld());
+            if (!(nativeWorld instanceof ServerLevel serverWorld)) {
                 capture.releaseUnused();
                 event.setExtent(new RejectingAuditExtent(event.getExtent(), "Guardian could not resolve the WorldEdit server world."));
                 return;

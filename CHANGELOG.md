@@ -7,6 +7,21 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.3.0-alpha.5+1.21.1] - 2026-10-07
+
+### Added
+
+- A dedicated-server NeoForge 1.21.1 artifact with lifecycle hooks, inspector events, block capture, and NeoForge permission nodes.
+- A flat Guardian banner using the approved shield and wordmark style.
+- NeoForge release artifacts in the mc-publish workflow.
+
+### Changed
+
+- Switched Fabric and the optional WorldEdit adapter from Yarn to official Mojang mappings.
+- Moved Minecraft adapters, configuration, commands, and rollback code into a source directory compiled by both loaders.
+- Bundled the shared core and JDBC drivers in each loader artifact while keeping Fzzy Config external.
+- Kept Gradle 9.8.0 and Fabric Loom 1.17.21; added ModDevGradle 2.0.148 for NeoForge.
+
 ## [0.3.0-alpha.4+1.21.1] - 2026-10-07
 
 ### Changed

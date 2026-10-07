@@ -5,7 +5,6 @@ plugins {
 }
 
 val minecraftVersion = providers.gradleProperty("minecraftVersion").get()
-val yarnMappings = providers.gradleProperty("yarnMappings").get()
 val loaderVersion = providers.gradleProperty("loaderVersion").get()
 val fabricApiVersion = providers.gradleProperty("fabricApiVersion").get()
 val fabricKotlinVersion = providers.gradleProperty("fabricKotlinVersion").get()
@@ -28,7 +27,7 @@ repositories {
 dependencies {
     implementation(project(":common"))
     minecraft("com.mojang:minecraft:$minecraftVersion")
-    mappings("net.fabricmc:yarn:$yarnMappings:v2")
+    mappings(loom.officialMojangMappings())
 
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")

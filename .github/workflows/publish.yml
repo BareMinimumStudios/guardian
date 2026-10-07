@@ -69,6 +69,14 @@ jobs:
               if len(matches) != 1:
                   raise SystemExit('Expected one runtime artifact for ' + mod_id + ': ' + str(matches))
               shutil.copy2(matches[0], dest / (name + '-' + version + '-fabric.jar'))
+          neo = Path('neoforge/build/libs') / ('guardian-neoforge-' + version + '.jar')
+          with zipfile.ZipFile(neo) as archive:
+              metadata = archive.read('META-INF/neoforge.mods.toml').decode()
+              if 'modId="guardian"' not in metadata or ('version="' + version + '"') not in metadata:
+                  raise SystemExit('Invalid NeoForge runtime metadata')
+              if 'META-INF/jarjar/metadata.json' not in archive.namelist():
+                  raise SystemExit('Missing NeoForge JDBC jar-in-jar metadata')
+          shutil.copy2(neo, dest / ('guardian-' + version + '-neoforge.jar'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('version=' + version + '\ntag=' + tag + '\n')
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -97,7 +105,7 @@ jobs:
           name: Guardian ${{ needs.build.outputs.version }}
           version: ${{ needs.build.outputs.version }}
           version-type: alpha
-          files: build/release/*-fabric.jar
+          files: build/release/*.jar
           changelog-file: build/release/RELEASE-NOTES.md
           java: '21'
           fail-mode: fail
@@ -165,5 +173,69 @@ jobs:
           dependencies: |
             fabric-api(required){modrinth:fabric-api}{curseforge:fabric-api}
             fabric-language-kotlin(required){modrinth:fabric-language-kotlin}{curseforge:fabric-language-kotlin}
+            fzzy-config(required){modrinth:fzzy-config}{curseforge:fzzy-config}
+          fail-mode: fail
+
+  modrinth-neoforge:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && (inputs.target == 'modrinth' || inputs.target == 'all')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: guardian-release
+          path: build/release
+      - name: Check Modrinth configuration
+        env:
+          PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: test -n "$PROJECT_ID" && test -n "$TOKEN"
+      - uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
+        with:
+          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          name: ${{ needs.build.outputs.version }}-neoforge
+          version: ${{ needs.build.outputs.version }}-neoforge
+          version-type: alpha
+          files: build/release/guardian-${{ needs.build.outputs.version }}-neoforge.jar
+          changelog-file: build/release/RELEASE-NOTES.md
+          loaders: neoforge
+          environment: server
+          game-versions: '1.21.1'
+          java: '21'
+          dependencies: |
+            kotlin-for-forge(required){modrinth:kotlin-for-forge}{curseforge:kotlin-for-forge}
+            fzzy-config(required){modrinth:fzzy-config}{curseforge:fzzy-config}
+          fail-mode: fail
+
+  curseforge-neoforge:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && (inputs.target == 'curseforge' || inputs.target == 'all')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: guardian-release
+          path: build/release
+      - name: Check CurseForge configuration
+        env:
+          PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: test -n "$PROJECT_ID" && test -n "$TOKEN"
+      - uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
+        with:
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          name: ${{ needs.build.outputs.version }}-neoforge
+          version: ${{ needs.build.outputs.version }}-neoforge
+          version-type: alpha
+          files: build/release/guardian-${{ needs.build.outputs.version }}-neoforge.jar
+          changelog-file: build/release/RELEASE-NOTES.md
+          loaders: neoforge
+          environment: server
+          game-versions: '1.21.1'
+          java: '21'
+          dependencies: |
+            kotlin-for-forge(required){modrinth:kotlin-for-forge}{curseforge:kotlin-for-forge}
             fzzy-config(required){modrinth:fzzy-config}{curseforge:fzzy-config}
           fail-mode: fail

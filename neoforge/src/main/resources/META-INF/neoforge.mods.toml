@@ -1,0 +1,35 @@
+modLoader="kotlinforforge"
+loaderVersion="[5.12,)"
+license="BML-1.0"
+issueTrackerURL="https://github.com/BareMinimumStudios/guardian/issues"
+
+[[mods]]
+modId="guardian"
+version="${version}"
+displayName="Guardian"
+displayURL="https://github.com/BareMinimumStudios/guardian"
+logoFile="assets/guardian/icon.png"
+authors="Bare Minimum Studios"
+description="Server-side block auditing, inspection, and rollback."
+displayTest="IGNORE_SERVER_VERSION"
+
+[[dependencies.guardian]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.256,)"
+side="SERVER"
+
+[[dependencies.guardian]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+side="SERVER"
+
+[[dependencies.guardian]]
+modId="fzzy_config"
+type="required"
+versionRange="[0.7.6,)"
+side="SERVER"
+
+[[mixins]]
+config="guardian.neoforge.mixins.json"

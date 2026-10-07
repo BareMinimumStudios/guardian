@@ -1,6 +1,6 @@
 # Developing Guardian
 
-Guardian is built with Kotlin, Java 21, and Gradle 9.8.0. Java is reserved for mixins and low-level hooks. The Fabric build uses Loom 1.17.21.
+Guardian is built with Kotlin, Java 21, and Gradle 9.8.0. Java is reserved for mixins and low-level hooks. The Fabric build uses Loom 1.17.21; NeoForge uses ModDevGradle 2.0.148. Both use official Mojang mappings. Cloche is not needed for this layout.
 
 ## Current milestone
 
@@ -10,8 +10,8 @@ The core and optional WorldEdit adapter remain separate artifacts with separate 
 
 ## Next milestones
 
-1. Completed: the platform-neutral domain, storage, queues, filters, and rollback decisions now live in `common`. Minecraft lifecycle, events, permissions, and configuration remain in the Fabric platform module.
-2. Add a NeoForge 1.21.1 implementation and verify block capture, queries, rollback, shutdown, and restart on both dedicated servers.
+1. Completed: the platform-neutral domain, storage, queues, filters, and rollback decisions now live in `common`. Minecraft code now lives in the shared `minecraft` source directory; loader lifecycle, events, and permissions live in the corresponding platform module.
+2. Implemented: NeoForge 1.21.1 builds from the same Mojang-mapped Minecraft sources. Dedicated-server startup, status, shutdown, and restart are smoke-tested. Player-driven capture, inspection, and rollback acceptance remains pending on both loaders.
 3. Add immutable, registry-aware item snapshots using Minecraft's ItemStack codec and Data Components. Correlate all slot changes from one accepted container action under one transaction ID.
 4. Persist and query container transactions, then exercise ordinary clicks, shift clicks, swaps, splits, drag actions, cancellation, disconnects, and restart recovery.
 
@@ -42,4 +42,4 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The shared-core extraction is version `0.3.0-alpha.4+1.21.1`. It keeps the existing database schema and persisted format unchanged.
+The Mojang-mapped multiloader checkpoint is version `0.3.0-alpha.5+1.21.1`. It keeps the existing database schema and persisted format unchanged.
