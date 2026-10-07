@@ -3,6 +3,7 @@ package com.bareminimumstudios.guardian.platform.minecraft
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
 import com.bareminimumstudios.guardian.logging.SubmissionResult
+import com.bareminimumstudios.guardian.logging.container.ActionCaptureScope
 import com.bareminimumstudios.guardian.logging.container.ContainerTransactionCorrelation
 import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
 import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
@@ -14,64 +15,90 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.level.block.entity.BlockEntity
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
-/** First Step 4 slice: server-accepted menu clicks backed by block containers and player inventory. */
+/** Server-thread snapshots bracket authoritative menu and standalone player item operations. */
 object PlayerContainerCapture {
     private val logger = LoggerFactory.getLogger("Guardian/ContainerCapture")
     @Volatile private var pipeline: () -> BufferedLogPipeline? = { null }
     @Volatile private var enabled: () -> Boolean = { false }
+    private val scope = ActionCaptureScope()
     private val submitted = AtomicLong(); private val failures = AtomicLong(); private val backpressure = AtomicLong()
     fun install(pipeline: () -> BufferedLogPipeline?, enabled: () -> Boolean) { this.pipeline = pipeline; this.enabled = enabled }
-    fun status() = "Container audit: submitted=${submitted.get()} failures=${failures.get()} backpressure=${backpressure.get()}"
+    fun status() = "Item/container audit: submitted=${submitted.get()} failures=${failures.get()} backpressure=${backpressure.get()}"
 
-    @JvmStatic fun begin(menu: AbstractContainerMenu, type: ClickType, player: Player): ContainerTransactionCorrelation? {
-        if (!enabled() || player !is ServerPlayer || player.containerMenu !== menu) return null
-        check(player.server.isSameThread) { "Container snapshot capture must run on the server thread" }
-        return runCatching {
-            val before = snapshot(menu, player) ?: return@runCatching null
-            ContainerTransactionCorrelation(MinecraftActorAdapter.player(player), menu.containerId, ContainerAction.valueOf(type.name), before)
-        }.onFailure(::failed).getOrNull()
+    class Pending internal constructor(
+        internal val playerId: UUID,
+        internal val menu: AbstractContainerMenu,
+        internal val includeContainers: Boolean,
+        internal val correlation: ContainerTransactionCorrelation,
+        private val lease: ActionCaptureScope.Lease
+    ) : AutoCloseable {
+        override fun close() = lease.close()
     }
 
-    @JvmStatic fun finish(pending: ContainerTransactionCorrelation?, menu: AbstractContainerMenu, player: Player) {
-        if (pending == null || player !is ServerPlayer || player.containerMenu !== menu) return
+    @JvmStatic fun begin(menu: AbstractContainerMenu, type: ClickType, player: Player): Pending? =
+        begin(menu, ContainerAction.valueOf(type.name), player, true)
+
+    @JvmStatic fun beginClose(player: ServerPlayer): Pending? = begin(player.containerMenu, ContainerAction.CLOSE, player, true)
+
+    @JvmStatic fun beginPlayerAction(player: ServerPlayer, action: ContainerAction): Pending? = begin(player.containerMenu, action, player, false)
+
+    private fun begin(menu: AbstractContainerMenu, action: ContainerAction, player: Player, includeContainers: Boolean): Pending? {
+        if (!enabled() || player !is ServerPlayer || player.containerMenu !== menu || !player.server.isSameThread) return null
+        val lease = scope.enter(player.uuid) ?: return null
+        var retained = false
+        try {
+            return runCatching {
+                val before = snapshot(menu, player, includeContainers) ?: return@runCatching null
+                Pending(player.uuid, menu, includeContainers, ContainerTransactionCorrelation(MinecraftActorAdapter.player(player), menu.containerId, action, before), lease).also { retained = true }
+            }.onFailure(::failed).getOrNull()
+        } finally { if (!retained) lease.close() }
+    }
+
+    @JvmStatic fun finish(pending: Pending?, player: Player) {
+        if (pending == null || player !is ServerPlayer || pending.playerId != player.uuid) return
         runCatching {
-            val after = snapshot(menu, player) ?: return@runCatching
-            val transaction = pending.finish(after, true) ?: return@runCatching
-            ContainerChangesCodec.encode(transaction.changes) // Check persistence budget before queueing.
+            // Read the original menu even after doCloseContainer switches back to inventoryMenu.
+            val after = snapshot(pending.menu, player, pending.includeContainers) ?: return@runCatching
+            val transaction = pending.correlation.finish(after, true) ?: return@runCatching
+            ContainerChangesCodec.encode(transaction.changes)
             when (pipeline()?.submit(ContainerAuditEntry(transaction)) ?: SubmissionResult.NOT_RUNNING) {
                 SubmissionResult.ACCEPTED -> submitted.incrementAndGet()
                 SubmissionResult.BACKPRESSURE -> {
                     val count = backpressure.incrementAndGet()
-                    if (count == 1L || count and (count - 1L) == 0L) logger.error("Container audit queue is saturated; unqueued transactions={}", count)
+                    if (count == 1L || count and (count - 1L) == 0L) logger.error("Item audit queue is saturated; unqueued transactions={}", count)
                 }
-                SubmissionResult.NOT_RUNNING -> failed(IllegalStateException("Container audit writer is unavailable"))
+                SubmissionResult.NOT_RUNNING -> failed(IllegalStateException("Item audit writer is unavailable"))
             }
         }.onFailure(::failed)
     }
 
     private fun failed(error: Throwable) {
         val count = failures.incrementAndGet()
-        if (count == 1L || count and (count - 1L) == 0L) logger.error("Unable to capture container transaction; failures={}", count, error)
+        if (count == 1L || count and (count - 1L) == 0L) logger.error("Unable to capture item transaction; failures={}", count, error)
     }
 
-    private fun snapshot(menu: AbstractContainerMenu, player: ServerPlayer): InventorySnapshot? {
-        if (menu.slots.size >= ContainerChangesCodec.MAX_SLOTS) return null
+    private fun snapshot(menu: AbstractContainerMenu, player: ServerPlayer, includeContainers: Boolean): InventorySnapshot? {
+        if (includeContainers && menu.slots.size >= ContainerChangesCodec.MAX_SLOTS) return null
         val slots = LinkedHashMap<ItemSlotAddress, ItemStackSnapshot>()
         for (index in 0 until player.inventory.containerSize) {
             slots[ItemSlotAddress(ItemSlotOwner.PlayerInventory(player.uuid), index)] = MinecraftItemSnapshotter.capture(player.inventory.getItem(index), player.registryAccess())
         }
-        var hasBlockContainer = false
-        for (slot in menu.slots) {
-            val address = address(slot.container, slot.containerSlot, player) ?: return null
-            if (address.owner is ItemSlotOwner.BlockContainer) hasBlockContainer = true
-            if (address.owner is ItemSlotOwner.PlayerInventory) continue
-            require(address !in slots) { "Menu aliases a logical inventory slot" }
-            slots[address] = MinecraftItemSnapshotter.capture(slot.item, player.registryAccess())
+        if (includeContainers) {
+            var hasBlockContainer = false
+            for (slot in menu.slots) {
+                val address = address(slot.container, slot.containerSlot, player) ?: return null
+                if (address.owner is ItemSlotOwner.BlockContainer) hasBlockContainer = true
+                if (address.owner is ItemSlotOwner.PlayerInventory) continue
+                require(address !in slots) { "Menu aliases a logical inventory slot" }
+                slots[address] = MinecraftItemSnapshotter.capture(slot.item, player.registryAccess())
+            }
+            if (!hasBlockContainer) return null
         }
-        if (!hasBlockContainer) return null
         slots[ItemSlotAddress(ItemSlotOwner.Cursor(player.uuid), 0)] = MinecraftItemSnapshotter.capture(menu.carried, player.registryAccess())
+        require(slots.size <= ContainerChangesCodec.MAX_SLOTS) { "Inventory capture exceeds the slot budget" }
         return InventorySnapshot(slots)
     }
 

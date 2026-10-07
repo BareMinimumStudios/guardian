@@ -32,6 +32,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.5")
     implementation(project(":common"))
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings(loom.officialMojangMappings())

@@ -7,6 +7,23 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.2+1.21.1] - 2026-10-07
+
+### Added
+
+- Correlated close-time cursor returns from supported block-container menus.
+- Standalone Q/Ctrl-Q drops and offhand swaps, with player inventory lookup through `/guardian transactions player <name-or-uuid>`.
+- A per-player action scope that prevents nested close/drop hooks from recording an action twice and releases safely on exceptions.
+- Tests for close/drop/swap correlation, scope cleanup, player identity, actor-name queries, and schema-2 upgrades on SQLite and DuckDB.
+
+### Changed
+
+- Chain menu capture with other mods through MixinExtras wrappers.
+- Require changed-slot owners to match the transaction's player or declared container context.
+- Upgrade storage to schema 3 so older readers reject the new action kinds safely. Existing block and item payloads remain unchanged.
+
+Gameplay acceptance is still pending on both loaders. Automated transfers, other player-inventory menu/creative packets, unsupported menus, and container rollback remain outside this checkpoint.
+
 ## [0.4.0-alpha.1+1.21.1] - 2026-10-07
 
 ### Added

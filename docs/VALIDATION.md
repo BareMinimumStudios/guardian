@@ -1,3 +1,35 @@
+# Guardian Step 4 close and player item validation
+
+Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.2+1.21.1`.
+
+## Automated checks
+
+- Clean build passed with Java 21, Gradle 9.8.0, Fabric Loom 1.17.21, and ModDevGradle 2.0.148.
+- All 69 tests passed: 61 platform-neutral tests and 8 Minecraft codec tests.
+- The standard build reused its configuration cache. The separate WorldEdit adapter build passed.
+- New tests cover close-time cursor return, standalone drops and offhand correlation, no-op actions, ownership validation, nested capture suppression, exception cleanup, and thread ownership.
+- SQLite and DuckDB tests persist all new action kinds, query player names without case sensitivity, reopen history by UUID, upgrade schema 2, and reject schema 3 through an older migrator.
+- Existing component, block history, atomic-batch, retry, and migration tests remain passing.
+- Runtime/source jar contents, release workflow validation, source ZIP integrity, and SHA-256 were checked.
+
+## Dedicated server smoke tests
+
+- Backed up stopped schema-2 test databases outside Git before installing the checkpoint.
+- Fabric core plus WorldEdit 7.3.8 and the optional adapter reached `Done` with SQLite schema 3.
+- NeoForge reached `Done` with SQLite schema 3, DuckDB schema 3, and a subsequent SQLite restart.
+- Status reported a running writer with zero audit/write failures.
+- Player-name and block-position lookups returned empty history on both loaders. UUID lookup also passed on NeoForge.
+- NeoForge reported the expected saved-world mod-version change on the first upgrade; it disappeared on restart. Its standard resource URL notices remain. No Guardian initialization or mixin errors appeared.
+- Servers shut down normally. NeoForge's backend setting was restored to SQLite.
+
+## Acceptance boundary
+
+No player connected during these checks. Startup verifies transformed server classes and database access, but does not establish gameplay acceptance of clicks, close-time cursor returns, Q/Ctrl-Q drops, offhand swaps, or protection-mod cancellation. Follow [the acceptance guide](STEP_4_TESTING.md) on both loaders before release.
+
+Other player inventory-menu/creative packets, automated transfers, unsupported menus, disconnect cleanup, and container rollback remain outside this checkpoint. Fluids and entity logging remain outside Step 4.
+
+## Historical first Step 4 checkpoint
+
 # Guardian Step 4 validation
 
 Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.1+1.21.1`.

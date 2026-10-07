@@ -74,6 +74,18 @@ object GuardianCommands {
                 }, { context.source.sendFailure(Component.literal("Guardian container lookup failed; see server log.")) })
                 1
             }))
+        root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
+            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).executes { context ->
+                val history = runtimeProvider()?.history()
+                if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
+                val name = StringArgumentType.getString(context, "name")
+                val uuid = runCatching { java.util.UUID.fromString(name) }.getOrNull()
+                val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(actorUuid = uuid, actorName = if (uuid == null) name else null)
+                history.lookupContainers(query, { transactions ->
+                    com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
+                }, { context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
+                1
+            })))
         dispatcher.register(root)
     }
 

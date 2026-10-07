@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 2
+    const val CURRENT_VERSION = 3
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -82,6 +82,7 @@ internal object GuardianSchema {
             "CREATE INDEX ex_container_time_idx ON ex_container(time)",
             "CREATE INDEX ex_container_actor_idx ON ex_container(actor, time)",
             "CREATE INDEX ex_container_location_idx ON ex_container_location(wid, x, y, z)"
-        ))
+        )),
+        SchemaMigration(3, "Close and standalone player item action kinds", emptyList())
     )
 }

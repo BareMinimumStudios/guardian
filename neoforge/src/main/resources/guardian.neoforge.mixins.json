@@ -6,7 +6,9 @@
     "BlockItemMixin",
     "ServerPlayerGameModeMixin",
     "CompoundContainerAccessor",
-    "ContainerClickMixin"
+    "ContainerClickMixin",
+    "ContainerCloseMixin",
+    "PlayerItemActionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

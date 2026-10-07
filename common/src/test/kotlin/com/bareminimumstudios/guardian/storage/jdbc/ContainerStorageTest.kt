@@ -42,7 +42,7 @@ class ContainerStorageTest {
         factory(path).use { backend ->
             backend.open(); backend.append(listOf(ContainerAuditEntry(value)))
             val elsewhere = ItemSlotOwner.BlockContainer(dimension, BlockPosition(99, 64, 99))
-            val duplicate = ContainerTransactionSnapshot(value.transactionId, 100, actor, 1, ContainerAction.CLONE, value.changes, listOf(elsewhere))
+            val duplicate = ContainerTransactionSnapshot(value.transactionId, 100, actor, 1, ContainerAction.CLONE, listOf(ItemSlotChange(ItemSlotAddress(elsewhere, 0), ItemStackSnapshot.EMPTY, item)), listOf(elsewhere))
             backend.append(listOf(ContainerAuditEntry(duplicate)))
             assertTrue(backend.lookupContainers(ContainerLookupQuery(dimension, elsewhere.position)).isEmpty())
         }
@@ -79,9 +79,33 @@ class ContainerStorageTest {
                 conn.prepareStatement("INSERT INTO ex_blockdata_map VALUES (1, ?)").use { data -> data.setString(1, com.bareminimumstudios.guardian.storage.codec.BlockPropertiesCodec.encode(emptyMap())); data.executeUpdate() }
                 statement.executeUpdate("INSERT INTO ex_block VALUES (1, '${UUID.randomUUID()}', 100, NULL, 1, 1, 64, 2, 1, 1, NULL, 2, 1, NULL, 1, 1, 0)") }
         }
-        factory(path).use { backend -> backend.open(); assertEquals(2, backend.health().schemaVersion); assertEquals(ResourceId.parse("minecraft:stone"), backend.lookupBlocks(BlockLookupQuery()).single().snapshot.after.blockId); backend.append(listOf(ContainerAuditEntry(transaction()))) }
+        factory(path).use { backend -> backend.open(); assertEquals(GuardianSchema.CURRENT_VERSION, backend.health().schemaVersion); assertEquals(ResourceId.parse("minecraft:stone"), backend.lookupBlocks(BlockLookupQuery()).single().snapshot.after.blockId); backend.append(listOf(ContainerAuditEntry(transaction()))) }
         DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
             conn.createStatement().use { statement -> statement.executeQuery("SELECT meta_value FROM ex_meta WHERE meta_key = 'test_preserved'").use { rows -> assertTrue(rows.next()); assertEquals("yes", rows.getString(1)) } }
+        }
+    }
+    @Test fun standaloneActionKindsPersistAndCanBeQueriedByPlayerName() = backends { factory, path, _ ->
+        factory(path).use { backend ->
+            backend.open()
+            val records = listOf(ContainerAction.DROP_ONE, ContainerAction.DROP_STACK, ContainerAction.SWAP_OFFHAND).mapIndexed { index, action ->
+                ContainerAuditEntry(ContainerTransactionSnapshot(UUID.randomUUID(), index.toLong(), actor, 0, action,
+                    listOf(ItemSlotChange(ItemSlotAddress(ItemSlotOwner.PlayerInventory(actor.uuid), 0), item, ItemStackSnapshot.EMPTY))))
+            }
+            backend.append(records)
+            val rows = backend.lookupContainers(ContainerLookupQuery(actorName = "TESTER"))
+            assertEquals(listOf(ContainerAction.SWAP_OFFHAND, ContainerAction.DROP_STACK, ContainerAction.DROP_ONE), rows.map { it.action })
+            assertTrue(rows.all { it.containers.isEmpty() })
+            assertTrue(backend.lookupContainers(ContainerLookupQuery(dimension, left.position)).isEmpty())
+            assertTrue(backend.lookupContainers(ContainerLookupQuery(actorName = "Other")).isEmpty())
+        }
+        factory(path).use { backend -> backend.open(); assertEquals(3, backend.lookupContainers(ContainerLookupQuery(actorUuid = actor.uuid)).size) }
+    }
+    @Test fun upgradesVersionTwoAndRejectsOlderReaders() = backends { factory, path, prefix ->
+        Class.forName(if (prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn -> assertEquals(2, SchemaMigrator(GuardianSchema.migrations.take(2)).migrate(conn)) }
+        factory(path).use { backend -> backend.open(); assertEquals(3, backend.health().schemaVersion) }
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
+            assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(2)).migrate(conn) }
         }
     }
     @Test fun encodingRejectsCorruptionAndTrailingBytes() {

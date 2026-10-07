@@ -144,6 +144,7 @@ abstract class JdbcStorageBackend(
         val conn = requireConnection()
         val sql = StringBuilder("SELECT c.* FROM ex_container c JOIN ex_actor_map a ON a.id = c.actor WHERE 1=1")
         if (query.actorUuid != null) sql.append(" AND a.uuid = ?")
+        if (query.actorName != null) sql.append(" AND LOWER(a.name) = LOWER(?)")
         if (query.dimension != null) {
             sql.append(" AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
             if (query.position != null) sql.append(" AND l.x = ? AND l.y = ? AND l.z = ?")
@@ -153,6 +154,7 @@ abstract class JdbcStorageBackend(
         conn.prepareStatement(sql.toString()).use { statement ->
             var index = 1
             query.actorUuid?.let { statement.setString(index++, it.toString()) }
+            query.actorName?.let { statement.setString(index++, it) }
             query.dimension?.let { statement.setString(index++, it.toString()) }
             query.position?.let { statement.setInt(index++, it.x); statement.setInt(index++, it.y); statement.setInt(index++, it.z) }
             statement.setInt(index, query.limit)

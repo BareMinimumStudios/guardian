@@ -1,6 +1,6 @@
-# Step 4: container click audit
+# Step 4: container and player item audit
 
-This alpha adds a first shared Fabric/NeoForge vertical slice: immutable item capture, action correlation, persistence, and lookup for accepted clicks in block-backed menus. It remains a testing checkpoint until player-driven acceptance is complete.
+This alpha adds a first shared Fabric/NeoForge vertical slice: immutable item capture, action correlation, persistence, and lookup for accepted clicks and close-time cursor returns in block-backed menus, plus standalone drops and offhand swaps. It remains a testing checkpoint until player-driven acceptance is complete.
 
 ## What is recorded
 
@@ -10,15 +10,16 @@ Logical container addresses retain dimension, block position, and slot. A double
 
 Each nonempty item is encoded at count one through Minecraft's registry-aware `SINGLE_ITEM_CODEC`. The actual count is stored separately. Persistent Data Components and explicit removals are preserved. Compound keys are ordered before encoding so equivalent custom data does not create a false change. Encodings have a format/version header and bounded compressed/decompressed sizes. A transient component patch without a persistence codec causes an explicit capture failure.
 
-One immutable transaction enters the bounded writer queue as one entry. The SQL write commits its header, complete changed-slot payload, and container locations together. Its UUID deduplicates retries. Schema 2 adds separate transaction tables and leaves block tables intact.
+One immutable transaction enters the bounded writer queue as one entry. The SQL write commits its header, complete changed-slot payload, and container locations together. Its UUID deduplicates retries. Schema 2 added separate transaction tables. Schema 3 guards the new action names against older readers; it does not change the payload format or block tables.
 
 ## Commands and settings
 
 - `/guardian transactions <x> <y> <z>` returns up to ten recent transactions in the command source's dimension. Relative coordinates work. It uses `guardian.lookup` (operator level 2 by default).
+- `/guardian transactions player <name-or-uuid>` searches recent item history by UUID or a case-insensitive stored player name, using the same lookup permission. Prefer UUIDs when names change.
 - `/guardian status` includes container submissions, capture failures, and backpressure counters.
 - `logging.containerTransactions` is a live switch. The general and logging master switches also apply.
 
-Back up databases before upgrading. Schema 1 is migrated automatically; schema 2 requires this checkpoint or a newer compatible build. Flushes are asynchronous, so allow a flush interval before expecting newly queued transactions in lookup results.
+Back up databases before upgrading. Schemas 1 and 2 are migrated automatically; schema 3 requires this checkpoint or a newer compatible build. Flushes are asynchronous, so allow a flush interval before expecting newly queued transactions in lookup results.
 
 ## Player acceptance on each loader
 
@@ -31,8 +32,19 @@ Back up databases before upgrading. Schema 1 is migrated automatically; schema 2
 7. Stop normally and restart. Confirm history persists and the writer reports no failures.
 8. Disable container logging live, repeat a click, and confirm it creates no transaction. Re-enable it and repeat.
 
+## Close, drop, and swap acceptance on each loader
+
+1. Pick up a stack from a chest and close the menu with items on the cursor. Query that chest and the player. Confirm one CLOSE transaction includes the cursor return and inventory changes.
+2. Repeat with a full player inventory, causing the cursor stack to be dropped. Confirm one CLOSE record describes the cursor decrease without inventing an inventory destination or a duplicate nested drop record.
+3. Hold a stack and press Q, then Ctrl-Q. Confirm DROP_ONE and DROP_STACK each produce one player transaction with the actual count change.
+4. Press F with different items in the main and offhand slots. Confirm one SWAP_OFFHAND transaction includes both slots. Repeat with unchanged/empty slots and confirm no transaction.
+5. Cancel these actions using a compatible protection mod and repeat in spectator mode. Unchanged actions must produce no transaction.
+6. Restart, then query the player's UUID. Confirm the new action kinds persist on SQLite and DuckDB.
+
+Standalone drops/swaps are associated with the player, not a block location. Menu closes retain the original container context. Nested close/drop hooks are suppressed while the outer action is being captured. Logging a removed item does not establish where a dropped entity went.
+
 ## Boundaries of this checkpoint
 
-Supported menus must expose slots backed by block containers, the player's inventory, or their cursor. Menus with unknown backing inventories are skipped. Ender chests, crafting/trading menus, and entity inventories are outside this first slice. Close-time cursor returns, standalone player-inventory/drop packets, and automated transfers are not captured yet. Logging a THROW click describes the item leaving the inventory; it does not add entity tracking.
+Supported menus must expose slots backed by block containers, the player's inventory, or their cursor. Menus with unknown backing inventories are skipped. Ender chests, crafting/trading menus, and entity inventories are outside this first slice. Other standalone inventory-menu/creative packets and automated transfers are not captured yet. Disconnect-time cursor cleanup is not claimed; the close hook covers calls to the normal server menu-close method. Logging a THROW click describes the item leaving the inventory; it does not add entity tracking.
 
 Container rollback is not enabled. Fluids and entity logging remain outside Step 4. Dedicated idle-server smoke tests establish startup and migration behavior, not player click acceptance.

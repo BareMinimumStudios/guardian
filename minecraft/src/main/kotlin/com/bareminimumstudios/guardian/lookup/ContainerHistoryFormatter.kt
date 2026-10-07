@@ -6,7 +6,7 @@ import java.time.Instant
 
 object ContainerHistoryFormatter {
     fun lines(transactions: List<ContainerTransactionSnapshot>): List<Component> = buildList {
-        if (transactions.isEmpty()) add(Component.literal("Guardian: no container transactions found."))
+        if (transactions.isEmpty()) add(Component.literal("Guardian: no item transactions found."))
         for (transaction in transactions) {
             val actor = transaction.actor.lastKnownName ?: transaction.actor.uuid.toString()
             val action = transaction.action.name.lowercase().replace('_', ' ')

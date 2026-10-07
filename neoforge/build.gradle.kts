@@ -23,6 +23,7 @@ neoForge {
 }
 
 dependencies {
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.5")
     implementation(project(":common"))
     implementation("me.fzzyhmstrs:fzzy_config:0.7.6+1.21+neoforge")
     implementation("thedarkcolour:kotlinforforge-neoforge:5.12.0")
