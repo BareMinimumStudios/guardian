@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "guardian-worldedit",
+  "version": "${version}",
+  "name": "Guardian WorldEdit Adapter",
+  "description": "Optional WorldEdit integration for Guardian on Fabric 1.21.1.",
+  "authors": [
+    "Bare Minimum Studios"
+  ],
+  "license": "GPL-3.0-or-later",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "com.bareminimumstudios.guardian.worldedit.GuardianWorldEditAdapter"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "=1.21.1",
+    "java": ">=21",
+    "guardian": "*",
+    "worldedit": ">=7.3.8 <7.4",
+    "fabric-language-kotlin": "*"
+  }
+}

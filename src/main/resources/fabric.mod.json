@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "guardian",
+  "version": "${version}",
+  "name": "Guardian",
+  "description": "Server-side block auditing, inspection, and rollback for Minecraft 1.21.1.",
+  "authors": [
+    "Bare Minimum Studios"
+  ],
+  "license": "Bare Minimum License (BML) v1.0",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "com.bareminimumstudios.guardian.Guardian"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loaderVersion}",
+    "minecraft": "=1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "fabric-language-kotlin": ">=${fabricKotlinVersion}",
+    "fzzy_config": ">=${fzzyConfigVersion}"
+  },
+  "suggests": {
+    "luckperms": "*",
+    "worldedit": "*",
+    "guardian-worldedit": "*",
+    "fabric-permissions-api-v0": "*"
+  },
+  "mixins": [
+    "guardian.mixins.json"
+  ],
+  "icon": "assets/guardian/icon.png",
+  "contact": {
+    "homepage": "https://github.com/BareMinimumStudios/guardian",
+    "sources": "https://github.com/BareMinimumStudios/guardian",
+    "issues": "https://github.com/BareMinimumStudios/guardian/issues"
+  }
+}

@@ -1,0 +1,85 @@
+<div align="center">
+
+<img src="src/main/resources/assets/guardian/icon.png" alt="Guardian shield and rollback arrow" width="128" height="128">
+
+# Guardian
+
+<a href="LICENSE"><img alt="BML 1.0" src="https://img.shields.io/badge/LICENSE-BML--1.0-FFFFFF?style=for-the-badge&labelColor=1A1A1A"></a>
+<a href="https://github.com/BareMinimumStudios/guardian/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/BareMinimumStudios/guardian/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=BUILD&labelColor=1A1A1A"></a>
+<a href="https://github.com/BareMinimumStudios/guardian/issues"><img alt="Issues" src="https://img.shields.io/github/issues/BareMinimumStudios/guardian?style=for-the-badge&labelColor=1A1A1A&color=FFFFFF"></a>
+
+Minecraft 1.21.1 · Java 21 · Server-side
+
+</div>
+
+---
+
+## What is Guardian?
+
+Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite or DuckDB and provides commands for lookup, inspection, and rollback.
+
+Guardian continues the ExProtect prototype. This checkpoint verifies the existing Fabric implementation under the new name and extracts a shared core for the loader port. NeoForge support and container transactions are the next milestones; they are not available in this build.
+
+## At a glance
+
+- Records player block placement and breaking.
+- Keeps audit history across server restarts with SQLite or DuckDB.
+- Shows block history through commands or an inspector tool.
+- Restores blocks with bounded work per server tick.
+- Logs WorldEdit operations through a separate optional adapter.
+- Runs on the server; players do not need Guardian installed.
+
+## Installation
+
+Use the main Guardian jar from `build/libs` on a Fabric 1.21.1 server with Fabric API, Fabric Language Kotlin, and Fzzy Config. The JDBC drivers are bundled. Fzzy Config stays an external dependency.
+
+For WorldEdit support, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
+
+LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent.
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `/guardian lookup` | Search block history with player, time, action, and region filters. |
+| `/guardian inspect` | Toggle the block inspector. |
+| `/guardian rollback` | Preview or apply a block rollback. |
+| `/guardian status` | Show storage, queue, and capture status. |
+
+`/co` remains an alias. `l`, `i`, and `rb` are the short subcommands. See [the block testing guide](docs/STEP_2C_TESTING.md) for filter examples and rollback checks.
+
+## Configuration and stored data
+
+Fzzy Config manages Guardian's settings under the `guardian` namespace. New installations store databases in the server's `guardian` directory. Permission nodes start with `guardian.`.
+
+The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. The database schema, persisted format marker, and block payload encoding remain compatible with the prototype.
+
+## Project structure
+
+| Module | Role |
+| --- | --- |
+| `common` | Loader-independent snapshots, storage, queues, filters, and rollback decisions. |
+| Root Fabric module | Minecraft adapters, lifecycle, configuration, commands, and mixins. |
+| `worldedit-adapter` | Optional GPL integration with WorldEdit 7.3.8. |
+
+The shared classes are packaged inside the Fabric runtime jar. You do not need to install a separate `common` jar.
+
+## Building
+
+```bash
+./gradlew clean build --no-daemon --warning-mode all
+./gradlew build --no-daemon --warning-mode all
+./gradlew :worldedit-adapter:build --no-daemon --warning-mode all
+```
+
+Use `gradlew.bat` on Windows. The wrapper uses Gradle 9.8.0 and Fabric Loom 1.17.21. See [development notes](DEVELOPMENT.md) for validation and the staged migration.
+
+## Publishing
+
+The [release workflow](.github/workflows/publish.yml) uses [Kira-NT/mc-publish](https://github.com/Kira-NT/mc-publish), following Remnant's publishing approach. Releases use the matching dated section from [CHANGELOG.md](CHANGELOG.md).
+
+GitHub uses `GITHUB_TOKEN`. Marketplace uploads require repository variables `MODRINTH_PROJECT_ID` and `CURSEFORGE_PROJECT_ID`, and secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN`. Choose a single destination when retrying a failed upload.
+
+## License
+
+The core uses the [Bare Minimum License (BML) v1.0](LICENSE). The optional WorldEdit adapter uses [GPL-3.0-or-later](worldedit-adapter/LICENSE). Third-party notices are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

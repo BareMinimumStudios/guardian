@@ -1,0 +1,20 @@
+.gradle/
+build/
+run/
+out/
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Local server, editor, and release outputs
+logs/
+.kotlinc/
+*.zip
+*.sha256
+*.sqlite
+*.sqlite-*
+*.duckdb
+*.duckdb.*
+.env
