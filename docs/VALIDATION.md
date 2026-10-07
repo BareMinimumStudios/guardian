@@ -1,3 +1,35 @@
+# Guardian Step 4 hopper validation
+
+Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.4+1.21.1`.
+
+## Automated checks
+
+- Clean build passed with Java 21, Gradle 9.8.0, Fabric Loom 1.17.21, and ModDevGradle 2.0.148.
+- All 85 tests passed: 71 platform-neutral tests and 14 Minecraft snapshot/codec tests.
+- Standard build reused its configuration cache; the separate WorldEdit adapter build passed.
+- New tests cover balanced hopper transfers, no-op/failed attempts, reversed or one-sided transfers, changed components, overlapping owners, topology changes, defensive owner copies, and double-chest context.
+- SQLite and DuckDB tests preserve system attribution, deduplicate retries, exclude system history from player queries, upgrade schema 4, and reject the new schema through older migrators.
+- Runtime/source jar contents, release workflow validation, source ZIP integrity, and SHA-256 were checked.
+
+## Dedicated server transfer acceptance
+
+- Backed up stopped test databases and configuration outside Git before installing the checkpoint.
+- Temporarily enabled `logging.automatedContainerTransfers` on the test servers. Configurations use version 6; storage uses schema 5.
+- Created a temporary rig in an inspected empty area: double source chest, hopper, double destination chest, plus a separate hopper facing a full incompatible destination.
+- Ran actual transfers on Fabric/SQLite, NeoForge/SQLite, and NeoForge/DuckDB. Each run produced 41 unique transactions: 19 successful pulls and 19 pushes through the double chests, plus three successful pulls into the blocked hopper.
+- Failed pushes and empty attempts produced no history. Status reported zero audit/write failures and zero backpressure, with all accepted entries persisted.
+- Independently decoded persisted payloads after shutdown on each backend. Every transaction conserved one diamond between two physical owners, system attribution was correct, both double-chest halves were indexed, and persistent custom names survived.
+- The final guarded Fabric jar also restarted with hopper logging disabled; the temporary rig still transferred items without new audit submissions.
+- Removed the temporary blocks and their contents, removed only the force-load added for the fixture, shut servers down normally, and restored NeoForge to SQLite and both automation switches to false.
+
+## Acceptance boundary
+
+This establishes the tested chest/hopper paths, including NeoForge's capability shortcut, and persistence on both backends. The short single-hopper stream is not a large-server pressure benchmark. Furnaces, other sided/modded containers, protection plugins, sealed-loot behavior, and chunk-boundary cases still need dedicated runtime acceptance.
+
+Player clicks, close/drop/swap packets, creative requests, and protection-mod cancellation still need connected-player acceptance on both loaders. Crafting, other automation mechanisms, loose item pickup, entity inventories, unrelated capability storage, disconnect cleanup, and container rollback remain outside this checkpoint. Fluids and entity logging remain outside Step 4. See [the acceptance guide](STEP_4_TESTING.md).
+
+## Historical inventory and creative checkpoint
+
 # Guardian Step 4 inventory and creative validation
 
 Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.3+1.21.1`.

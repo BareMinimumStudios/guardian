@@ -200,6 +200,7 @@ object GuardianCommands {
                 )
             )
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.status()))
+            context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.status()))
             if (b != null) {
                 context.source.sendSystemMessage(
                     Component.literal(

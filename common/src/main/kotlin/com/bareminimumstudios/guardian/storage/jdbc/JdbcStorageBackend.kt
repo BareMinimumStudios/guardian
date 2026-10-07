@@ -162,7 +162,7 @@ abstract class JdbcStorageBackend(
                 buildList {
                     while (result.next()) add(ContainerTransactionSnapshot(
                         UUID.fromString(result.getString("transaction_uuid")), result.getLong("time"),
-                        actorCodec.actorFor(conn, result.getLong("actor")) as ActorIdentity.Player,
+                        actorCodec.actorFor(conn, result.getLong("actor")),
                         result.getInt("menu_id"), ContainerAction.valueOf(result.getString("interaction")),
                         ContainerChangesCodec.decode(result.getBytes(result.findColumn("changes"))),
                         containerLocations(conn, result.getString("transaction_uuid"))

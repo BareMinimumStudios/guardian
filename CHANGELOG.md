@@ -7,6 +7,24 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.4+1.21.1] - 2026-10-07
+
+### Added
+
+- Opt-in block-to-block hopper push and pull logging on Fabric and NeoForge, with both inventories in one transaction.
+- System attribution through `minecraft:hopper`, separate from player history.
+- Item identity and count conservation checks, including persistent Data Components, before accepting a transfer record.
+- `logging.automatedContainerTransfers` and hopper submission/failure/backpressure counters.
+- Tests for balanced transfers, failed/no-op attempts, topology changes, component mismatches, system queries, retry deduplication, and schema-4 upgrade.
+
+### Changed
+
+- Upgrade storage to schema 5 for system item actors and the new action kind. Existing block and item payload formats remain unchanged.
+- Retain both double-chest positions in hopper transaction context.
+- Skip sealed loot containers, unloaded neighbours, and unsupported inventories. Snapshot capture does not generate loot or load additional chunks.
+
+Hopper logging defaults to false while broader load testing remains pending. This slice observes block-container inventories around the full transfer attempt, including NeoForge's capability fast path. Entity inventories, loose item pickup, unrelated capability storage, crafting, and container rollback remain outside this checkpoint.
+
 ## [0.4.0-alpha.3+1.21.1] - 2026-10-07
 
 ### Added

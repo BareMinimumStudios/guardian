@@ -54,10 +54,14 @@ class GuardianRuntime(
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
         })
+        com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ pipeline }, {
+            config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get() && config.logging.automatedContainerTransfers.get()
+        })
     }
 
     fun stop(): Boolean {
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ null }, { false })
+        com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ null }, { false })
         rollback?.stop()
         rollback = null
         GuardianIntegrationApi.detach()

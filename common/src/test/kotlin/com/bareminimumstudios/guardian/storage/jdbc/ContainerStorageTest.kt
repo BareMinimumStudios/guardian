@@ -133,4 +133,29 @@ class ContainerStorageTest {
         factory(path).use { backend -> backend.open(); assertEquals(ContainerAction.CREATIVE_SET, backend.lookupContainers(ContainerLookupQuery()).single().action) }
     }
 
+    @Test fun systemTransferPersistsDeduplicatesAndStaysOutOfPlayerQueries() = backends { factory, path, _ ->
+        val value = ContainerTransactionSnapshot(UUID.randomUUID(), 1, ActorIdentity.System("minecraft:hopper"), 0, ContainerAction.HOPPER_TRANSFER,
+            listOf(ItemSlotChange(ItemSlotAddress(left, 0), item, ItemStackSnapshot.EMPTY), ItemSlotChange(ItemSlotAddress(right, 0), ItemStackSnapshot.EMPTY, item)))
+        factory(path).use { backend ->
+            backend.open(); backend.append(listOf(ContainerAuditEntry(value), ContainerAuditEntry(transaction())))
+            backend.append(listOf(ContainerAuditEntry(value)))
+            assertEquals(2, backend.lookupContainers(ContainerLookupQuery(dimension, left.position)).size)
+            assertEquals(1, backend.lookupContainers(ContainerLookupQuery(actorName = "Tester")).size)
+            assertEquals(1, backend.lookupContainers(ContainerLookupQuery(actorUuid = actor.uuid)).size)
+        }
+        factory(path).use { backend ->
+            backend.open()
+            val stored = backend.lookupContainers(ContainerLookupQuery()).single { it.transactionId == value.transactionId }
+            assertEquals(value.actor, stored.actor); assertEquals(value.changes, stored.changes); assertEquals(value.containers.toSet(), stored.containers.toSet())
+        }
+    }
+    @Test fun upgradesVersionFourForSystemTransactions() = backends { factory, path, prefix ->
+        Class.forName(if (prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn -> assertEquals(4, SchemaMigrator(GuardianSchema.migrations.take(4)).migrate(conn)) }
+        factory(path).use { backend -> backend.open(); assertEquals(GuardianSchema.CURRENT_VERSION, backend.health().schemaVersion) }
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
+            assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(4)).migrate(conn) }
+        }
+    }
+
 }

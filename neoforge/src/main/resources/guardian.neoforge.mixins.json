@@ -9,7 +9,8 @@
     "ContainerClickMixin",
     "ContainerCloseMixin",
     "PlayerItemActionMixin",
-    "CreativeInventoryMixin"
+    "CreativeInventoryMixin",
+    "HopperTransferMixin"
   ],
   "injectors": {
     "defaultRequire": 1

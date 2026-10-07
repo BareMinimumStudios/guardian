@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** Single-use action bracket. Snapshot capture itself remains on the server thread. */
 class ContainerTransactionCorrelation(
-    private val actor: ActorIdentity.Player,
+    private val actor: ActorIdentity,
     private val menuId: Int,
     private val action: ContainerAction,
     private val before: InventorySnapshot,

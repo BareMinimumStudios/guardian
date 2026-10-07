@@ -8,7 +8,12 @@ object ContainerHistoryFormatter {
     fun lines(transactions: List<ContainerTransactionSnapshot>): List<Component> = buildList {
         if (transactions.isEmpty()) add(Component.literal("Guardian: no item transactions found."))
         for (transaction in transactions) {
-            val actor = transaction.actor.lastKnownName ?: transaction.actor.uuid.toString()
+            val actor = when (val identity = transaction.actor) {
+                is ActorIdentity.Player -> identity.lastKnownName ?: identity.uuid.toString()
+                is ActorIdentity.System -> identity.source
+                is ActorIdentity.Entity -> identity.entityType.toString()
+                ActorIdentity.Unknown -> "unknown"
+            }
             val action = transaction.action.name.lowercase().replace('_', ' ')
             add(Component.literal("${Instant.ofEpochMilli(transaction.timestampEpochMillis)} | $actor | $action | ${transaction.transactionId}"))
             for (change in transaction.changes.take(6)) {
