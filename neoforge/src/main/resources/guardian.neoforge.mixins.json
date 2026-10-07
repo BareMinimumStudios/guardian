@@ -2,6 +2,13 @@
   "required": true,
   "package": "com.bareminimumstudios.guardian.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["BlockItemMixin", "ServerPlayerGameModeMixin"],
-  "injectors": { "defaultRequire": 1 }
+  "mixins": [
+    "BlockItemMixin",
+    "ServerPlayerGameModeMixin",
+    "CompoundContainerAccessor",
+    "ContainerClickMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

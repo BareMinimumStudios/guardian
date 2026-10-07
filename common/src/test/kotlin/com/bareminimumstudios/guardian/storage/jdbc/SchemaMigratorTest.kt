@@ -16,7 +16,7 @@ class SchemaMigratorTest {
             connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT COUNT(*) FROM ex_schema_migrations").use { result ->
                     assertTrue(result.next())
-                    assertEquals(1, result.getInt(1))
+                    assertEquals(GuardianSchema.CURRENT_VERSION, result.getInt(1))
                 }
             }
         }
@@ -42,7 +42,7 @@ class SchemaMigratorTest {
         DriverManager.getConnection("jdbc:sqlite::memory:").use { connection ->
             SchemaMigrator().migrate(connection)
             connection.prepareStatement(
-                "INSERT INTO ex_schema_migrations(version, applied_at, description) VALUES (2, ?, 'future')"
+                "INSERT INTO ex_schema_migrations(version, applied_at, description) VALUES (999, ?, 'future')"
             ).use { statement ->
                 statement.setLong(1, System.currentTimeMillis())
                 statement.executeUpdate()

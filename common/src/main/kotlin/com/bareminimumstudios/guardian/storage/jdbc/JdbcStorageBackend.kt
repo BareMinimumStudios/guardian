@@ -24,6 +24,9 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import com.bareminimumstudios.guardian.domain.*
+import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -93,17 +96,19 @@ abstract class JdbcStorageBackend(
     override fun append(entries: List<LogEntry>): Unit = lock.withLock {
         if (entries.isEmpty()) return@withLock
         val conn = requireConnection()
-        require(entries.all { it is BlockChangeSnapshot }) {
-            "Step 2A persistence currently accepts block audit entries only"
+        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry }) {
+            "Unsupported audit entry"
         }
 
-        val reservedRowIds = allocator.reserve(conn, "block", entries.size).iterator()
+        val reservedRowIds = entries.filterIsInstance<BlockChangeSnapshot>().let { blocks -> if (blocks.isEmpty()) null else allocator.reserve(conn, "block", blocks.size).iterator() }
         conn.autoCommit = false
         try {
             conn.prepareStatement(BLOCK_INSERT_SQL).use { insertStatement ->
                 entries.forEach {
-                    bindBlockChange(conn, insertStatement, it as BlockChangeSnapshot, reservedRowIds.nextLong())
-                    insertStatement.addBatch()
+                    when (it) {
+                        is BlockChangeSnapshot -> { bindBlockChange(conn, insertStatement, it, checkNotNull(reservedRowIds).nextLong()); insertStatement.addBatch() }
+                        is ContainerAuditEntry -> insertContainer(conn, it.transaction)
+                    }
                 }
                 insertStatement.executeBatch()
             }
@@ -116,6 +121,62 @@ abstract class JdbcStorageBackend(
             conn.autoCommit = true
         }
     }
+
+    private fun insertContainer(conn: Connection, transaction: ContainerTransactionSnapshot) {
+        val bytes = ContainerChangesCodec.encode(transaction.changes)
+        val inserted = conn.prepareStatement("INSERT INTO ex_container(transaction_uuid, time, actor, menu_id, interaction, changes) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(transaction_uuid) DO NOTHING").use {
+            it.setString(1, transaction.transactionId.toString()); it.setLong(2, transaction.timestampEpochMillis)
+            it.setLong(3, checkNotNull(actorCodec.idFor(conn, transaction.actor))); it.setInt(4, transaction.menuId)
+            it.setString(5, transaction.action.name); it.setBytes(6, bytes); it.executeUpdate()
+        }
+        if (inserted == 0) return
+        conn.prepareStatement("INSERT INTO ex_container_location(transaction_uuid, wid, x, y, z) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING").use { statement ->
+            transaction.containers.forEach { owner ->
+                statement.setString(1, transaction.transactionId.toString()); statement.setInt(2, worldMappings.idFor(conn, owner.dimension.toString()))
+                statement.setInt(3, owner.position.x); statement.setInt(4, owner.position.y); statement.setInt(5, owner.position.z)
+                statement.addBatch()
+            }
+            statement.executeBatch()
+        }
+    }
+
+    override fun lookupContainers(query: ContainerLookupQuery): List<ContainerTransactionSnapshot> = lock.withLock {
+        val conn = requireConnection()
+        val sql = StringBuilder("SELECT c.* FROM ex_container c JOIN ex_actor_map a ON a.id = c.actor WHERE 1=1")
+        if (query.actorUuid != null) sql.append(" AND a.uuid = ?")
+        if (query.dimension != null) {
+            sql.append(" AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
+            if (query.position != null) sql.append(" AND l.x = ? AND l.y = ? AND l.z = ?")
+            sql.append(")")
+        }
+        sql.append(" ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ?")
+        conn.prepareStatement(sql.toString()).use { statement ->
+            var index = 1
+            query.actorUuid?.let { statement.setString(index++, it.toString()) }
+            query.dimension?.let { statement.setString(index++, it.toString()) }
+            query.position?.let { statement.setInt(index++, it.x); statement.setInt(index++, it.y); statement.setInt(index++, it.z) }
+            statement.setInt(index, query.limit)
+            statement.executeQuery().use { result ->
+                buildList {
+                    while (result.next()) add(ContainerTransactionSnapshot(
+                        UUID.fromString(result.getString("transaction_uuid")), result.getLong("time"),
+                        actorCodec.actorFor(conn, result.getLong("actor")) as ActorIdentity.Player,
+                        result.getInt("menu_id"), ContainerAction.valueOf(result.getString("interaction")),
+                        ContainerChangesCodec.decode(result.getBytes(result.findColumn("changes"))),
+                        containerLocations(conn, result.getString("transaction_uuid"))
+                    ))
+                }
+            }
+        }
+    }
+
+    private fun containerLocations(conn: Connection, id: String): List<ItemSlotOwner.BlockContainer> =
+        conn.prepareStatement("SELECT wid, x, y, z FROM ex_container_location WHERE transaction_uuid = ? ORDER BY wid, x, y, z").use { statement ->
+            statement.setString(1, id)
+            statement.executeQuery().use { rows -> buildList {
+                while (rows.next()) add(ItemSlotOwner.BlockContainer(ResourceId.parse(worldMappings.valueFor(conn, rows.getInt("wid"))), BlockPosition(rows.getInt("x"), rows.getInt("y"), rows.getInt("z"))))
+            } }
+        }
 
     override fun lookupBlocks(query: BlockLookupQuery): List<StoredBlockChange> = lock.withLock {
         val conn = requireConnection()

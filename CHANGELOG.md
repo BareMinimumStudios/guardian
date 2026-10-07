@@ -7,6 +7,25 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.1+1.21.1] - 2026-10-07
+
+### Added
+
+- Immutable item snapshots using Minecraft's registry-aware item codec, including persistent Data Components and explicit default-component removals.
+- One transaction ID for all changed block-container slots, player inventory slots, and cursor contents from an accepted menu click.
+- Shared Fabric and NeoForge capture hooks for block-backed container menus, including the two halves of a double chest.
+- Atomic SQLite and DuckDB transaction persistence, retry deduplication, and location-based queries.
+- `/guardian transactions <x> <y> <z>` using the existing lookup permission.
+- A live `logging.containerTransactions` switch and container capture counters in `/guardian status`.
+- Tests for component round trips, cancelled/no-op correlation, immutable snapshots, mixed-batch rollback, retries, and migration from schema 1.
+
+### Changed
+
+- Migrated databases to schema 2 while preserving existing block history and payload formats.
+- Bounded item and transaction encodings; unsupported transient component patches are reported as capture failures.
+
+This first Step 4 slice captures accepted clicks in supported block-container menus. It does not yet log close-time cursor returns, automated inventory transfers, ender chests, entity inventories, crafting menus, or standalone inventory/drop packets. Container rollback is not enabled. Player-driven acceptance remains required on both loaders.
+
 ## [0.3.0-alpha.5+1.21.1] - 2026-10-07
 
 ### Added

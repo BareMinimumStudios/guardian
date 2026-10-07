@@ -10,5 +10,7 @@ interface QueryableStorageBackend : StorageBackend {
     /** Updates the rollback journal state for the supplied row IDs. */
     fun setBlockRollbackState(rowIds: Collection<Long>, state: BlockRollbackState): Int
 
+    fun lookupContainers(query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery): List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>
+
     fun health(): StorageHealth
 }

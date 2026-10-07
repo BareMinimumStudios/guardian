@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(4)
+@Version(5)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -36,6 +36,9 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
 
         /** Player-originated primary block placement and break capture (Step 2B). */
         var playerBlockChanges = ValidatedBoolean(true)
+
+        /** Accepted player clicks in supported block-container menus (Step 4). */
+        var containerTransactions = ValidatedBoolean(true)
     }
 
     var storage = Storage()

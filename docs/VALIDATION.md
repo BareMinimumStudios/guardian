@@ -1,3 +1,36 @@
+# Guardian Step 4 validation
+
+Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.1+1.21.1`.
+
+## Automated checks
+
+- Clean build passed on Java 21, Gradle 9.8.0, Loom 1.17.21, and ModDevGradle 2.0.148.
+- All 58 tests passed: 50 platform-neutral tests and 8 Minecraft codec tests.
+- Both loader artifacts compile the same Mojang-mapped item snapshotter and container hook.
+- The item codec tests cover name, damage, explicit default-component removal, count-independent payloads, custom-data ordering, empty stacks, corrupt payloads, identity mismatch, and transient-component rejection.
+- Correlation tests cover immutability, cancellation, no-op actions, topology changes, component-only changes, and one ID across multiple slot changes.
+- SQLite and DuckDB tests cover complete transaction round trips, restart, retry deduplication, location/actor filtering, cursor-only context, atomic rollback of a mixed block/container batch, successful retry, and schema-1 upgrade with an existing block row.
+- Repeated standard build reused the configuration cache. Separate WorldEdit adapter build passed.
+- Runtime jars, source jars, workflow release validation, ZIP integrity, and SHA-256 were checked.
+
+## Dedicated server smoke tests
+
+- The stopped test databases were backed up outside the repository before migration.
+- Fabric core plus the optional WorldEdit adapter reached `Done` using SQLite schema 2.
+- NeoForge reached `Done` using SQLite schema 2 and DuckDB schema 2.
+- `/guardian status` reported a running writer and zero capture/write failures.
+- `/guardian transactions 0 64 0` completed its asynchronous lookup on both loaders and returned an empty history, as expected without connected players.
+- The new Fzzy logging setting defaulted to true and was written into configuration version 5. The first upgrade emitted Fzzy's missing-new-field notice; later startup read the updated configuration normally.
+- Servers were shut down normally, and SQLite configuration was restored after DuckDB testing.
+
+## Acceptance boundary
+
+No player was connected during these smoke tests. Actual packet-driven clicks, protection-mod cancellation, double-chest addressing, offhand swaps, drag distribution, creative cloning, and modded persistent components still need player acceptance on both loaders. Automated storage and codec tests do not establish those gameplay paths.
+
+This is the first Step 4 slice, not a declaration that all item paths are complete. Close-time cursor returns, standalone inventory/drop packets, automated transfers, crafting/trading/ender-chest/entity inventories, and container rollback remain outside this checkpoint. See [the acceptance guide](STEP_4_TESTING.md).
+
+## Historical Step 3 checkpoint
+
 # Guardian validation
 
 Date: 2026-10-07. Current checkpoint: `0.3.0-alpha.5+1.21.1`.

@@ -51,9 +51,13 @@ class GuardianRuntime(
         history = selectedHistory
         rollback = BlockRollbackService(server, selectedHistory, config)
         GuardianIntegrationApi.attach(config, selectedBulk)
+        com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
+            config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
+        })
     }
 
     fun stop(): Boolean {
+        com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ null }, { false })
         rollback?.stop()
         rollback = null
         GuardianIntegrationApi.detach()

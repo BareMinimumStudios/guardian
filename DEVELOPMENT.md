@@ -12,8 +12,8 @@ The core and optional WorldEdit adapter remain separate artifacts with separate 
 
 1. Completed: the platform-neutral domain, storage, queues, filters, and rollback decisions now live in `common`. Minecraft code now lives in the shared `minecraft` source directory; loader lifecycle, events, and permissions live in the corresponding platform module.
 2. Implemented: NeoForge 1.21.1 builds from the same Mojang-mapped Minecraft sources. Dedicated-server startup, status, shutdown, and restart are smoke-tested. Player-driven capture, inspection, and rollback acceptance remains pending on both loaders.
-3. Add immutable, registry-aware item snapshots using Minecraft's ItemStack codec and Data Components. Correlate all slot changes from one accepted container action under one transaction ID.
-4. Persist and query container transactions, then exercise ordinary clicks, shift clicks, swaps, splits, drag actions, cancellation, disconnects, and restart recovery.
+3. Implemented: immutable registry-aware item snapshots and correlation of all changed logical slots from an accepted block-container menu click.
+4. Implemented: atomic container persistence and location queries on SQLite/DuckDB. Automated codec, correlation, persistence, retry, and migration tests pass. Exercise actual clicks, shift clicks, offhand swaps, splits, drag actions, cancellation, and restart recovery with a player before claiming gameplay acceptance. Close-time cursor returns and standalone inventory/drop paths remain for the next slice.
 
 Fluids and entity logging remain outside this stage. Do not claim a loader or transaction path is supported until it passes runtime checks.
 
@@ -42,4 +42,4 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The Mojang-mapped multiloader checkpoint is version `0.3.0-alpha.5+1.21.1`. It keeps the existing database schema and persisted format unchanged.
+The first Step 4 checkpoint is version `0.4.0-alpha.1+1.21.1`. It upgrades storage to schema 2 while preserving block history and its existing encodings.

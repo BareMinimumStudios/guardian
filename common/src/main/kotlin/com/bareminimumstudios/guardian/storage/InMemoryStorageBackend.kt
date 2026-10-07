@@ -15,6 +15,7 @@ import kotlin.math.abs
 class InMemoryStorageBackend : QueryableStorageBackend {
     private val lock = ReentrantReadWriteLock()
     private val entries = mutableListOf<MemoryBlockRow>()
+    private val containers = mutableListOf<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>()
     private var nextRowId = 1L
     @Volatile private var open = false
 
@@ -27,6 +28,9 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     override fun append(entries: List<LogEntry>) {
         check(open) { "Storage backend is not open" }
         lock.write {
+            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.ContainerAuditEntry>().forEach { entry ->
+                if (containers.none { it.transactionId == entry.transaction.transactionId }) containers += entry.transaction
+            }
             entries.filterIsInstance<BlockChangeSnapshot>().forEach { snapshot ->
                 if (this.entries.none { it.snapshot.eventId == snapshot.eventId }) {
                     this.entries += MemoryBlockRow(nextRowId++, snapshot, BlockRollbackState.ACTIVE)
@@ -83,9 +87,13 @@ class InMemoryStorageBackend : QueryableStorageBackend {
         changed
     }
 
+    override fun lookupContainers(query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery) = lock.read {
+        containers.filter(query::matches).sortedWith(compareByDescending<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).take(query.limit)
+    }
+
     override fun flush() = Unit
 
-    fun snapshot(): List<LogEntry> = lock.read { entries.map { it.snapshot } }
+    fun snapshot(): List<LogEntry> = lock.read { entries.map { it.snapshot } + containers.map { com.bareminimumstudios.guardian.domain.ContainerAuditEntry(it) } }
 
     override fun health(): StorageHealth = StorageHealth(id, schemaVersion = 0)
 

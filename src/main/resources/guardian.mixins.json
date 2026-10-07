@@ -3,7 +3,9 @@
   "package": "com.bareminimumstudios.guardian.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "BlockItemMixin"
+    "BlockItemMixin",
+    "CompoundContainerAccessor",
+    "ContainerClickMixin"
   ],
   "injectors": {
     "defaultRequire": 1

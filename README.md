@@ -18,11 +18,12 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite or DuckDB and provides commands for lookup, inspection, and rollback.
 
-Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Container and item transaction logging is the next milestone.
+Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. The first container transaction slice records accepted clicks in block-backed menus. See [Step 4 testing](docs/STEP_4_TESTING.md) for coverage and remaining acceptance checks.
 
 ## At a glance
 
 - Records player block placement and breaking.
+- Records correlated item changes from supported block-container clicks.
 - Keeps audit history across server restarts with SQLite or DuckDB.
 - Shows block history through commands or an inspector tool.
 - Restores blocks with bounded work per server tick.
@@ -42,6 +43,7 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 | Command | Purpose |
 | --- | --- |
 | `/guardian lookup` | Search block history with player, time, action, and region filters. |
+| `/guardian transactions <x> <y> <z>` | Show recent container transactions at a block position. |
 | `/guardian inspect` | Toggle the block inspector. |
 | `/guardian rollback` | Preview or apply a block rollback. |
 | `/guardian status` | Show storage, queue, and capture status. |
@@ -52,7 +54,7 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 
 Fzzy Config manages Guardian's settings under the `guardian` namespace. New installations store databases in the server's `guardian` directory. Permission nodes start with `guardian.`.
 
-The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. The database schema, persisted format marker, and block payload encoding remain compatible with the prototype.
+The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 2. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 2.
 
 ## Project structure
 

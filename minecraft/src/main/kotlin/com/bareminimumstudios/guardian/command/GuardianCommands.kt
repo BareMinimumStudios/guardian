@@ -43,7 +43,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, inspect/i, rollback/rb, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, inspect/i, rollback/rb, or status."))
                 1
             }
 
@@ -63,6 +63,17 @@ object GuardianCommands {
             statusNode(permissions, runtimeProvider)
         )
 
+        root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
+            .then(Commands.argument("position", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos()).executes { context ->
+                val history = runtimeProvider()?.history()
+                if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
+                val pos = net.minecraft.commands.arguments.coordinates.BlockPosArgument.getBlockPos(context, "position")
+                val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension(context.source), BlockPosition(pos.x, pos.y, pos.z))
+                history.lookupContainers(query, { transactions ->
+                    com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
+                }, { context.source.sendFailure(Component.literal("Guardian container lookup failed; see server log.")) })
+                1
+            }))
         dispatcher.register(root)
     }
 
@@ -176,6 +187,7 @@ object GuardianCommands {
                         "accepted=${p.accepted} persisted=${p.persisted} backpressure=${p.backpressure} failures=${p.writeFailures}"
                 )
             )
+            context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.status()))
             if (b != null) {
                 context.source.sendSystemMessage(
                     Component.literal(
@@ -233,7 +245,7 @@ object GuardianCommands {
             limit = requestedLimit
         )
 
-        source.sendSystemMessage(Component.literal("Guardian: searching block history…"))
+        source.sendSystemMessage(Component.literal("Guardian: searching block historyâ€¦"))
         history.lookup(
             query,
             onSuccess = { rows -> BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage) },

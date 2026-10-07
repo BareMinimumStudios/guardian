@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 1
+    const val CURRENT_VERSION = 2
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -75,6 +75,13 @@ internal object GuardianSchema {
                 "CREATE INDEX IF NOT EXISTS ex_block_actor_idx ON ex_block(actor, time)",
                 "CREATE INDEX IF NOT EXISTS ex_block_action_idx ON ex_block(action, time)"
             )
-        )
+        ),
+        SchemaMigration(2, "Correlated container item transactions", listOf(
+            "CREATE TABLE ex_container (transaction_uuid VARCHAR PRIMARY KEY, time BIGINT NOT NULL, actor BIGINT NOT NULL, menu_id INTEGER NOT NULL, interaction VARCHAR NOT NULL, changes BLOB NOT NULL)",
+            "CREATE TABLE ex_container_location (transaction_uuid VARCHAR NOT NULL, wid INTEGER NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, PRIMARY KEY(transaction_uuid, wid, x, y, z))",
+            "CREATE INDEX ex_container_time_idx ON ex_container(time)",
+            "CREATE INDEX ex_container_actor_idx ON ex_container(actor, time)",
+            "CREATE INDEX ex_container_location_idx ON ex_container_location(wid, x, y, z)"
+        ))
     )
 }

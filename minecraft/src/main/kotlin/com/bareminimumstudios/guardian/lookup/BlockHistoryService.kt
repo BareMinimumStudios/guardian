@@ -44,6 +44,19 @@ class BlockHistoryService(
         }
     }
 
+    fun lookupContainers(
+        query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery,
+        onSuccess: (List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>) -> Unit,
+        onFailure: (Throwable) -> Unit
+    ) {
+        if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
+        executor.execute {
+            runCatching { storage.lookupContainers(query) }
+                .onSuccess { rows -> server.execute { onSuccess(rows) } }
+                .onFailure { error -> logger.error("Container history lookup failed", error); server.execute { onFailure(error) } }
+        }
+    }
+
     fun setRollbackState(
         rowIds: Collection<Long>,
         state: BlockRollbackState,

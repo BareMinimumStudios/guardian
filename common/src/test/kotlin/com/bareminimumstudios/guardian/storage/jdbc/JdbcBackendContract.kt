@@ -61,7 +61,7 @@ abstract class JdbcBackendContract {
         backend(path).use { reopened ->
             reopened.open()
             assertEquals(1, reopened.lookupBlocks(BlockLookupQuery(actorUuid = actorId)).size)
-            assertEquals(1, reopened.health().schemaVersion)
+            assertEquals(GuardianSchema.CURRENT_VERSION, reopened.health().schemaVersion)
         }
     }
 
