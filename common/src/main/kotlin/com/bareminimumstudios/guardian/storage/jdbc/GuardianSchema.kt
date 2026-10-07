@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 3
+    const val CURRENT_VERSION = 4
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -83,6 +83,8 @@ internal object GuardianSchema {
             "CREATE INDEX ex_container_actor_idx ON ex_container(actor, time)",
             "CREATE INDEX ex_container_location_idx ON ex_container_location(wid, x, y, z)"
         )),
-        SchemaMigration(3, "Close and standalone player item action kinds", emptyList())
+        SchemaMigration(3, "Close and standalone player item action kinds", emptyList()),
+        // New persisted enum names must not reach readers that predate these actions.
+        SchemaMigration(4, "Accepted creative inventory action kind", emptyList())
     )
 }

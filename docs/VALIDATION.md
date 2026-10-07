@@ -1,3 +1,34 @@
+# Guardian Step 4 inventory and creative validation
+
+Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.3+1.21.1`.
+
+## Automated checks
+
+- Clean build passed with Java 21, Gradle 9.8.0, Fabric Loom 1.17.21, and ModDevGradle 2.0.148.
+- All 76 tests passed: 62 platform-neutral tests and 14 Minecraft snapshot/codec tests.
+- The standard build reused its configuration cache; the separate WorldEdit adapter build passed.
+- New Minecraft tests capture inventory, armor, offhand, and cursor through real inventory-menu classes, check detached item snapshots, reject crafting and invalid indices, and reject extra/replaced menu slots.
+- Correlation tests record inventory-to-cursor moves and component-only creative replacements, while unchanged creative replacements produce no transaction.
+- SQLite and DuckDB tests persist CREATIVE_SET, query it by name/UUID, upgrade schema 3, and refuse schema 4 through an older migrator. Existing block and container tests remain passing.
+- Runtime/source jar contents, release workflow validation, source ZIP integrity, and SHA-256 were checked.
+
+## Dedicated server smoke tests
+
+- Backed up stopped test databases and configuration outside Git before installing the new jars.
+- Fabric core plus WorldEdit 7.3.8 and its optional adapter reached `Done` with SQLite schema 4.
+- NeoForge reached `Done` with SQLite schema 4 and DuckDB schema 4.
+- Status showed a running writer and zero audit/write failures. Player and position lookups completed without errors and returned empty history.
+- Servers shut down normally; NeoForge's backend setting was restored to SQLite after DuckDB testing.
+- The initial NeoForge saved-world mod-version notice disappeared on the next start. Its standard resource URL notices remain; no Guardian initialization errors appeared.
+
+## Acceptance boundary
+
+No player connected during these checks. Tests exercise snapshots, eligibility, correlation, storage, and migration; idle-server startup does not establish packet-driven gameplay acceptance. Inventory-screen clicks, armor/offhand movement, cursor returns, accepted/rejected creative requests, and protection-mod interactions still require acceptance on both loaders. See [the acceptance guide](STEP_4_TESTING.md).
+
+Inventory-screen capture requires the standard menu layout and an empty crafting area before and after the action. Crafting/result clicks, direct creative drops, automated transfers, unsupported menus, disconnect cleanup, and container rollback remain outside this checkpoint. Fluids and entity logging remain outside Step 4.
+
+## Historical close and standalone action checkpoint
+
 # Guardian Step 4 close and player item validation
 
 Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.2+1.21.1`.

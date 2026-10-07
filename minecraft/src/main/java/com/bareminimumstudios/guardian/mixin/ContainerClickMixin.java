@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class ContainerClickMixin {
     @WrapOperation(method = "handleContainerClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;clicked(IILnet/minecraft/world/inventory/ClickType;Lnet/minecraft/world/entity/player/Player;)V"))
     private void guardian$captureClick(AbstractContainerMenu menu, int slot, int button, ClickType type, Player player, Operation<Void> original) {
-        try (var pending = PlayerContainerCapture.begin(menu, type, player)) {
+        try (var pending = PlayerContainerCapture.begin(menu, slot, type, player)) {
             original.call(menu, slot, button, type, player);
             PlayerContainerCapture.finish(pending, player);
         }

@@ -32,27 +32,42 @@ object PlayerContainerCapture {
         internal val playerId: UUID,
         internal val menu: AbstractContainerMenu,
         internal val includeContainers: Boolean,
+        internal val requireEmptyCrafting: Boolean,
         internal val correlation: ContainerTransactionCorrelation,
         private val lease: ActionCaptureScope.Lease
     ) : AutoCloseable {
         override fun close() = lease.close()
     }
 
-    @JvmStatic fun begin(menu: AbstractContainerMenu, type: ClickType, player: Player): Pending? =
-        begin(menu, ContainerAction.valueOf(type.name), player, true)
+    @JvmStatic fun begin(menu: AbstractContainerMenu, slot: Int, type: ClickType, player: Player): Pending? {
+        if (player !is ServerPlayer) return null
+        if (menu === player.inventoryMenu) {
+            if (!MinecraftInventorySnapshotter.acceptsInventoryClick(menu, player.inventory, slot)) return null
+            return begin(menu, ContainerAction.valueOf(type.name), player, false, true)
+        }
+        return begin(menu, ContainerAction.valueOf(type.name), player, true)
+    }
 
-    @JvmStatic fun beginClose(player: ServerPlayer): Pending? = begin(player.containerMenu, ContainerAction.CLOSE, player, true)
+    @JvmStatic fun beginClose(player: ServerPlayer): Pending? {
+        val inventoryMenu = player.containerMenu === player.inventoryMenu
+        return begin(player.containerMenu, ContainerAction.CLOSE, player, !inventoryMenu, inventoryMenu)
+    }
+
+    @JvmStatic fun beginCreative(slot: net.minecraft.world.inventory.Slot, player: ServerPlayer): Pending? {
+        if (!MinecraftInventorySnapshotter.isPlayerSlot(slot, player.inventory)) return null
+        return beginPlayerAction(player, ContainerAction.CREATIVE_SET)
+    }
 
     @JvmStatic fun beginPlayerAction(player: ServerPlayer, action: ContainerAction): Pending? = begin(player.containerMenu, action, player, false)
 
-    private fun begin(menu: AbstractContainerMenu, action: ContainerAction, player: Player, includeContainers: Boolean): Pending? {
+    private fun begin(menu: AbstractContainerMenu, action: ContainerAction, player: Player, includeContainers: Boolean, requireEmptyCrafting: Boolean = false): Pending? {
         if (!enabled() || player !is ServerPlayer || player.containerMenu !== menu || !player.server.isSameThread) return null
         val lease = scope.enter(player.uuid) ?: return null
         var retained = false
         try {
             return runCatching {
-                val before = snapshot(menu, player, includeContainers) ?: return@runCatching null
-                Pending(player.uuid, menu, includeContainers, ContainerTransactionCorrelation(MinecraftActorAdapter.player(player), menu.containerId, action, before), lease).also { retained = true }
+                val before = snapshot(menu, player, includeContainers, requireEmptyCrafting) ?: return@runCatching null
+                Pending(player.uuid, menu, includeContainers, requireEmptyCrafting, ContainerTransactionCorrelation(MinecraftActorAdapter.player(player), menu.containerId, action, before), lease).also { retained = true }
             }.onFailure(::failed).getOrNull()
         } finally { if (!retained) lease.close() }
     }
@@ -61,7 +76,7 @@ object PlayerContainerCapture {
         if (pending == null || player !is ServerPlayer || pending.playerId != player.uuid) return
         runCatching {
             // Read the original menu even after doCloseContainer switches back to inventoryMenu.
-            val after = snapshot(pending.menu, player, pending.includeContainers) ?: return@runCatching
+            val after = snapshot(pending.menu, player, pending.includeContainers, pending.requireEmptyCrafting) ?: return@runCatching
             val transaction = pending.correlation.finish(after, true) ?: return@runCatching
             ContainerChangesCodec.encode(transaction.changes)
             when (pipeline()?.submit(ContainerAuditEntry(transaction)) ?: SubmissionResult.NOT_RUNNING) {
@@ -80,12 +95,10 @@ object PlayerContainerCapture {
         if (count == 1L || count and (count - 1L) == 0L) logger.error("Unable to capture item transaction; failures={}", count, error)
     }
 
-    private fun snapshot(menu: AbstractContainerMenu, player: ServerPlayer, includeContainers: Boolean): InventorySnapshot? {
+    private fun snapshot(menu: AbstractContainerMenu, player: ServerPlayer, includeContainers: Boolean, requireEmptyCrafting: Boolean): InventorySnapshot? {
         if (includeContainers && menu.slots.size >= ContainerChangesCodec.MAX_SLOTS) return null
-        val slots = LinkedHashMap<ItemSlotAddress, ItemStackSnapshot>()
-        for (index in 0 until player.inventory.containerSize) {
-            slots[ItemSlotAddress(ItemSlotOwner.PlayerInventory(player.uuid), index)] = MinecraftItemSnapshotter.capture(player.inventory.getItem(index), player.registryAccess())
-        }
+        if (requireEmptyCrafting && !MinecraftInventorySnapshotter.supportsInventoryMenu(menu, player.inventory)) return null
+        val slots = LinkedHashMap(MinecraftInventorySnapshotter.capturePlayer(menu, player.inventory, player.uuid, player.registryAccess()).slots)
         if (includeContainers) {
             var hasBlockContainer = false
             for (slot in menu.slots) {
@@ -97,7 +110,6 @@ object PlayerContainerCapture {
             }
             if (!hasBlockContainer) return null
         }
-        slots[ItemSlotAddress(ItemSlotOwner.Cursor(player.uuid), 0)] = MinecraftItemSnapshotter.capture(menu.carried, player.registryAccess())
         require(slots.size <= ContainerChangesCodec.MAX_SLOTS) { "Inventory capture exceeds the slot budget" }
         return InventorySnapshot(slots)
     }

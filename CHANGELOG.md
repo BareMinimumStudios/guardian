@@ -7,6 +7,23 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.3+1.21.1] - 2026-10-07
+
+### Added
+
+- Player inventory-screen clicks and cursor returns when the crafting area is empty, including armor and offhand slots.
+- `CREATIVE_SET` transactions around accepted server-side writes to player inventory slots, including component-only replacements.
+- Tests using Minecraft inventory-menu classes for logical slot mapping, immutable captures, crafting exclusions, and creative changes.
+- Schema-3 upgrade and creative-action persistence checks on SQLite and DuckDB.
+
+### Changed
+
+- Share player inventory and cursor snapshot code across block menus, inventory screens, and standalone actions.
+- Skip crafting/result clicks, occupied crafting areas, and extended or replaced inventory-menu layouts rather than persist incomplete transactions.
+- Upgrade databases to schema 4 to guard the new creative action name against older readers. Payload formats and block history remain unchanged.
+
+Creative packets that only spawn a dropped item are outside this checkpoint. Player-driven gameplay acceptance, crafting correlation, automated transfers, and container rollback remain pending.
+
 ## [0.4.0-alpha.2+1.21.1] - 2026-10-07
 
 ### Added

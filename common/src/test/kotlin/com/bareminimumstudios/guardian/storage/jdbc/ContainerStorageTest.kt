@@ -87,23 +87,23 @@ class ContainerStorageTest {
     @Test fun standaloneActionKindsPersistAndCanBeQueriedByPlayerName() = backends { factory, path, _ ->
         factory(path).use { backend ->
             backend.open()
-            val records = listOf(ContainerAction.DROP_ONE, ContainerAction.DROP_STACK, ContainerAction.SWAP_OFFHAND).mapIndexed { index, action ->
+            val records = listOf(ContainerAction.DROP_ONE, ContainerAction.DROP_STACK, ContainerAction.SWAP_OFFHAND, ContainerAction.CREATIVE_SET).mapIndexed { index, action ->
                 ContainerAuditEntry(ContainerTransactionSnapshot(UUID.randomUUID(), index.toLong(), actor, 0, action,
                     listOf(ItemSlotChange(ItemSlotAddress(ItemSlotOwner.PlayerInventory(actor.uuid), 0), item, ItemStackSnapshot.EMPTY))))
             }
             backend.append(records)
             val rows = backend.lookupContainers(ContainerLookupQuery(actorName = "TESTER"))
-            assertEquals(listOf(ContainerAction.SWAP_OFFHAND, ContainerAction.DROP_STACK, ContainerAction.DROP_ONE), rows.map { it.action })
+            assertEquals(listOf(ContainerAction.CREATIVE_SET, ContainerAction.SWAP_OFFHAND, ContainerAction.DROP_STACK, ContainerAction.DROP_ONE), rows.map { it.action })
             assertTrue(rows.all { it.containers.isEmpty() })
             assertTrue(backend.lookupContainers(ContainerLookupQuery(dimension, left.position)).isEmpty())
             assertTrue(backend.lookupContainers(ContainerLookupQuery(actorName = "Other")).isEmpty())
         }
-        factory(path).use { backend -> backend.open(); assertEquals(3, backend.lookupContainers(ContainerLookupQuery(actorUuid = actor.uuid)).size) }
+        factory(path).use { backend -> backend.open(); assertEquals(4, backend.lookupContainers(ContainerLookupQuery(actorUuid = actor.uuid)).size) }
     }
     @Test fun upgradesVersionTwoAndRejectsOlderReaders() = backends { factory, path, prefix ->
         Class.forName(if (prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
         DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn -> assertEquals(2, SchemaMigrator(GuardianSchema.migrations.take(2)).migrate(conn)) }
-        factory(path).use { backend -> backend.open(); assertEquals(3, backend.health().schemaVersion) }
+        factory(path).use { backend -> backend.open(); assertEquals(GuardianSchema.CURRENT_VERSION, backend.health().schemaVersion) }
         DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
             assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(2)).migrate(conn) }
         }
@@ -116,4 +116,21 @@ class ContainerStorageTest {
         assertFailsWith<IllegalArgumentException> { ContainerChangesCodec.decode(bytes) }
         assertFailsWith<java.io.EOFException> { ContainerChangesCodec.decode(byteArrayOf(0x47, 0x43, 0x54, 0x31)) }
     }
+    @Test fun upgradesVersionThreeAndRejectsOldCreativeReaders() = backends { factory, path, prefix ->
+        Class.forName(if (prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
+            assertEquals(3, SchemaMigrator(GuardianSchema.migrations.take(3)).migrate(conn))
+        }
+        factory(path).use { backend ->
+            backend.open(); assertEquals(GuardianSchema.CURRENT_VERSION, backend.health().schemaVersion)
+            val value = ContainerTransactionSnapshot(UUID.randomUUID(), 1, actor, 0, ContainerAction.CREATIVE_SET,
+                listOf(ItemSlotChange(ItemSlotAddress(ItemSlotOwner.PlayerInventory(actor.uuid), 0), ItemStackSnapshot.EMPTY, item)))
+            backend.append(listOf(ContainerAuditEntry(value)))
+        }
+        DriverManager.getConnection(prefix + path.toAbsolutePath()).use { conn ->
+            assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(3)).migrate(conn) }
+        }
+        factory(path).use { backend -> backend.open(); assertEquals(ContainerAction.CREATIVE_SET, backend.lookupContainers(ContainerLookupQuery()).single().action) }
+    }
+
 }

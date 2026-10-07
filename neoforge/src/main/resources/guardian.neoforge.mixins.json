@@ -8,7 +8,8 @@
     "CompoundContainerAccessor",
     "ContainerClickMixin",
     "ContainerCloseMixin",
-    "PlayerItemActionMixin"
+    "PlayerItemActionMixin",
+    "CreativeInventoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1
