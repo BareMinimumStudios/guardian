@@ -1,0 +1,50 @@
+{
+  "checkpoint": "0.4.0-alpha.31+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": 224,
+    "minecraft": 49,
+    "total": 273,
+    "failures": 0
+  },
+  "newWriteScopeTests": 11,
+  "buildChecks": {
+    "clean": true,
+    "configurationCacheReused": true,
+    "worldEdit": true,
+    "compilerWarnings": 0
+  },
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    },
+    {
+      "loader": "Neoforge",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    }
+  ],
+  "gameplayPermitIntegration": false,
+  "itemRollbackApplyEnabled": false,
+  "schema": 8,
+  "config": 6,
+  "remaining": "Audited setter integration, remaining mutation exclusion, live identity verification and actual saved-state completion."
+}

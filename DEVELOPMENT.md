@@ -44,7 +44,7 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The current Step 4 checkpoint is version `0.4.0-alpha.30+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
+The current Step 4 checkpoint is version `0.4.0-alpha.31+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
 
 Capture uses [MixinExtras WrapMethod](https://github.com/LlamaLad7/MixinExtras/wiki/WrapMethod) and WrapOperation so hooks can chain with other mods. A player-scoped lease suppresses nested actions; the original operation still runs when no capture is possible. Close capture retains the original menu after vanilla resets the active menu.
 
@@ -99,3 +99,13 @@ The guard uses the existing server/thread binding without item reads, chunk load
 Ordinary item reads and serialization with no pending loot table preserve reservations. Existing read paths that unpack loot, direct getItems/setItems or mutable stack/list/component writes, arbitrary overriding methods and loader capabilities bypassing these APIs remain unverified. Loaded containers with deferred loot are still ineligible for saved-state reconciliation; the setter hooks do not certify every loot callback.
 
 Both loaders exercise the eight existing supported inventories: barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker. This does not widen the owner whitelist or add direct-command mutation history. Trusted write permits and actual save/apply remain pending; item rollback apply stays disabled.
+
+## Explicit write scopes
+
+Alpha.31 adds ItemWriteScope in common code. A synchronous callback receives an explicit permit for one owner of a current lease from the same registry. The permit checks its target, scope identity, thread and lease on every requireCurrent call. Ordinary allowsMutation calls remain denied for the reserved owner; no ambient authorization is exposed to callbacks.
+
+Permits expire when their callback exits and cannot be reused in a later scope or deferred callback. Nested writes on the same scope instance are refused without replacing its active permit. The result is returned only after final lease validation. Callback failure cancels the original whole operation and propagates the exception; cleanup cannot invalidate a newer replacement operation with the same ID. Expiry and server stop retain their own terminal states.
+
+A driver must own one scope instance and pass permits explicitly to audited setter operations. This class does not write inventories, compare live identities, undo partial changes, persist journal transitions or authorize asynchronous work. Different scope instances are not a global reentrancy fence. Partial writes would still need the journal/recovery protocol and verified saves.
+
+Eleven contract tests cover owner/registry mismatch, escaped/deferred permits, release, nesting, failure cleanup, replacement identity, expiry, stop and wrong-thread access. The class is packaged in both loader builds but remains disconnected from gameplay hooks. Connecting it requires a setter protocol that does not grant permission to arbitrary callbacks, plus remaining mutation exclusion and actual saved-state completion. Item rollback apply stays disabled.

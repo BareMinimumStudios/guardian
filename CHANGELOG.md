@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.31+1.21.1] - 2026-10-08
+
+### Added
+
+- Explicit single-owner write scopes backed by a current reservation, with thread checks, callback-lifetime permits and final lease validation.
+- Failure cleanup that revokes the original operation without affecting a replacement lease, plus eleven contract tests for stale, escaped, deferred and nested authorization.
+
+This shared-core contract is not connected to Minecraft setters or the save driver. No gameplay guard is bypassed and item rollback apply remains disabled.
+
 ## [0.4.0-alpha.30+1.21.1] - 2026-10-08
 
 ### Added

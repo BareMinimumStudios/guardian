@@ -1,3 +1,17 @@
+# Guardian explicit write-scope checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.31+1.21.1`.
+
+- All 273 tests passed: 224 common and 49 Minecraft tests. Eleven new contract tests cover single-owner authorization, foreign registries, expired/released leases, leaked and deferred permits, nested scopes, failure cleanup, replacement identity, server stop and wrong-thread access.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. The final clean build reported no compiler warnings. IDEA reported no problems in the new files.
+- Both packaged loader artifacts contain the shared write-scope class. Standard jars remain SQLite-only; schema 8, config 6 and audit formats are unchanged.
+- Normal Fabric and NeoForge restarts without test agents passed, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.31 installed and the matching optional Fabric WorldEdit adapter present.
+- Private guidance, agents, tooling, logs and databases remain outside Git and source archives. See [validation data](validation/write-scope-alpha31.json).
+
+The scope authorizes an explicit synchronous callback for one reserved owner. It does not write inventories or grant ambient permission to gameplay hooks. This milestone changes shared core code only; the previous live mutation matrix was not repeated. Audited setter integration, remaining mutation exclusion, live identity verification and actual saved-state completion remain pending. Item rollback apply stays disabled.
+
+## Historical alpha.30 direct-container checkpoint
+
 # Guardian direct-container checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.30+1.21.1`.
