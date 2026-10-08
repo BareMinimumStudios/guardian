@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.21+1.21.1] - 2026-10-08
+
+### Added
+
+- Menu coordination policy for participating player and container owners, with bounded resolution and conservative refusal of unknown menus during reservations.
+- Cleanup invalidation that releases affected operations before carried items are returned; unknown cleanup invalidates all remaining reservations.
+- Regression coverage for menu access, cleanup, expiry, shutdown and thread confinement.
+
+This is common policy infrastructure. Minecraft menu hooks and item apply remain pending.
+
 ## [0.4.0-alpha.20+1.21.1] - 2026-10-08
 
 ### Added

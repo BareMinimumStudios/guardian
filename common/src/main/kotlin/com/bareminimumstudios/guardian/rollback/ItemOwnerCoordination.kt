@@ -54,6 +54,12 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         reserved[owner]?.let { finish(it, ItemOwnerLeaseState.INVALIDATED) }
     }
 
+    fun invalidateAll() {
+        checkThread()
+        reapExpired()
+        operations.values.toList().forEach { finish(it, ItemOwnerLeaseState.INVALIDATED) }
+    }
+
     fun stop() {
         checkThread()
         if (stopped) return

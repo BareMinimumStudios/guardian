@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.20+1.21.1`.
+Checkpoint: `0.4.0-alpha.21+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -144,3 +144,9 @@ The same wrapper surrounds NeoForge's capability insertion/extraction fast paths
 A temporary reflection-only test agent, kept outside the repository and mod artifacts, acquires/releases reservations on the server thread. Both loaders passed source, destination, hopper and opposite-chest-half tests with hopper logging off and on. Inventories remained unchanged while reserved and successful transfers resumed after release. Each enabled run recorded seven successful transfers; disabled runs recorded none. Fixtures used isolated databases and were removed afterwards.
 
 Menu/player mutation paths, ticking inventories, block replacement/unload and unsupported automation remain uncoordinated. The hopper guard alone cannot satisfy `ItemSavePort` or justify applying/completing an item rollback. The next slice is menu/player access and mutation coordination.
+
+## Menu coordination policy
+
+Alpha.21 adds a common policy for player and menu owners. Mutation checks reject a reserved actor or participating owner. Unknown, failed or oversized menu resolution refuses access while reservations exist. Idle checks do not inspect menus.
+
+Cleanup always remains available. Known cleanup invalidates whole operations touching the actor or resolved owners; unknown cleanup invalidates all remaining operations before items can be returned. Minecraft hooks must call this policy before accepting click prediction or performing cleanup. These hooks are not connected yet, so this policy does not establish menu exclusion.

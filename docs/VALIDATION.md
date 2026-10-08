@@ -1,3 +1,17 @@
+# Guardian menu-policy checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.21+1.21.1`.
+
+- All 253 tests passed: 204 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- Twelve new policy tests cover actor/participant reservations, unrelated menus, bounded and failed resolution, cleanup of whole operations, unknown cleanup, expiry, release, stop and thread confinement.
+- IDEA inspections found no problems in the changed coordinator and policy tests.
+- No Minecraft hooks changed. These tests establish common policy behavior, not gameplay menu exclusion. Dedicated servers remain stopped on the verified alpha.20 build; no server worlds or databases changed.
+- Schema 8, config version 6 and audit formats are unchanged. Standard artifacts remain SQLite-only.
+
+Next: connect packet, player action and menu cleanup hooks on both loaders, verify authoritative inventory resynchronization and actual menu paths, then cover other mutation paths and saved-state completion. Item apply remains disabled.
+
+## Historical alpha.20 hopper-reservation checkpoint
+
 # Guardian hopper-reservation checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.20+1.21.1`.
