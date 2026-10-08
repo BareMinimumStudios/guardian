@@ -10,7 +10,7 @@ object FabricBlockInspectorHooks {
             BlockInspector.inspectInteraction(player, world, pos)
         })
         UseBlockCallback.EVENT.register(UseBlockCallback { player, world, _, hit ->
-            BlockInspector.inspectInteraction(player, world, hit.blockPos)
+            BlockInspector.inspectInteraction(player, world, hit.blockPos, rightClick = true)
         })
         ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
             BlockInspector.set(handler.player, false)

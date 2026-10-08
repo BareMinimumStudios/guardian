@@ -7,6 +7,26 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.5+1.21.1] - 2026-10-07
+
+### Added
+
+- Filter completion for online player names, time units, actions, radius and result limits.
+- `transactions u:<player>` / `user:<player>` with time, radius, coordinates, WorldEdit selection and result limits. Existing coordinate and `player` forms remain supported.
+- `p:` / `page:` pagination for older matching block and item records.
+- Right-click container inspection for item history; left-click keeps block history.
+- Accepted door, trapdoor, gate, lever and button state changes in block history.
+
+### Fixed
+
+- Guardian usage examples now use `/guardian`.
+- Replace raw transaction IDs and cursor/slot dumps with colored, relative-time additions and removals, including clear hopper attribution.
+- Resolve online player names to UUIDs for filtered lookups; report the result cap and dimension scope explicitly.
+- Replace the corrupted lookup progress ellipsis with plain text.
+- Balance placement capture frames on early returns and exceptions from modded placement callbacks.
+
+Opening a container without moving items is not an item transaction. Missing past interaction events cannot be reconstructed. Hopper recording remains opt-in.
+
 ## [0.4.0-alpha.4+1.21.1] - 2026-10-07
 
 ### Added

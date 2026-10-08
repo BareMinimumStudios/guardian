@@ -158,4 +158,50 @@ class ContainerStorageTest {
         }
     }
 
+    @Test fun timeRadiusAndSelectionMatchOnBothDatabases() = backends { factory, path, _ ->
+        factory(path).use { backend ->
+            backend.open(); backend.append(listOf(ContainerAuditEntry(transaction())))
+            val near = ContainerLookupQuery(dimension, BlockPosition(0, 64, 2), radius = 2, afterEpochMillis = 100, actorName = "TESTER")
+            assertTrue(near.matches(transaction()))
+            assertEquals(1, backend.lookupContainers(near).size)
+            assertTrue(backend.lookupContainers(near.copy(afterEpochMillis = 101)).isEmpty())
+            assertTrue(backend.lookupContainers(near.copy(radius = 0)).isEmpty())
+            val selection = ContainerLookupQuery(dimension = dimension, bounds = BlockBounds(right.position, right.position))
+            assertTrue(selection.matches(transaction()))
+            assertEquals(1, backend.lookupContainers(selection).size)
+        }
+    }
+    @Test fun playerUuidFindsRenamedPlayerAndModdedBlocks() = backends { factory, path, _ ->
+        factory(path).use { backend ->
+            backend.open()
+            val old = BlockChangeSnapshot(100, actor, dimension, left.position,
+                BlockStateSnapshot(ResourceId.parse("minecraft:air")), BlockStateSnapshot(ResourceId.parse("example:machine")), ChangeCause.PLAYER, ActionType.BLOCK_PLACE)
+            backend.append(listOf(old))
+            backend.append(listOf(BlockChangeSnapshot(101, actor.copy(lastKnownName = "Renamed"), dimension, right.position,
+                old.before, old.after, ChangeCause.PLAYER, ActionType.BLOCK_PLACE)))
+            val rows = backend.lookupBlocks(BlockLookupQuery(actorUuid = actor.uuid))
+            assertEquals(2, rows.size)
+            assertTrue(rows.all { it.snapshot.after.blockId == ResourceId.parse("example:machine") })
+            assertEquals(2, backend.lookupBlocks(BlockLookupQuery(actorName = "renamed")).size)
+        }
+    }
+
+    @Test fun paginationReturnsOlderBlockAndItemRecordsWithoutDuplicates() = backends { factory, path, _ ->
+        factory(path).use { backend ->
+            backend.open()
+            backend.append(listOf(ContainerAuditEntry(transaction()), ContainerAuditEntry(transaction())))
+            val query = ContainerLookupQuery(actorName = "Tester", limit = 1)
+            val first = backend.lookupContainers(query).single()
+            val second = backend.lookupContainers(query.copy(offset = 1)).single()
+            assertNotEquals(first.transactionId, second.transactionId)
+            assertTrue(backend.lookupContainers(query.copy(offset = 2)).isEmpty())
+            val block = BlockChangeSnapshot(100, actor, dimension, left.position,
+                BlockStateSnapshot(ResourceId.parse("minecraft:air")), BlockStateSnapshot(ResourceId.parse("example:block")), ChangeCause.PLAYER, ActionType.BLOCK_PLACE)
+            backend.append(listOf(block, block.copy(eventId = UUID.randomUUID())))
+            val blocks = BlockLookupQuery(actorName = "Tester", limit = 1)
+            assertNotEquals(backend.lookupBlocks(blocks).single().rowId, backend.lookupBlocks(blocks.copy(offset = 1)).single().rowId)
+            assertTrue(backend.lookupBlocks(blocks.copy(offset = 2)).isEmpty())
+        }
+    }
+
 }

@@ -1,3 +1,18 @@
+# Guardian command and inspector validation
+
+Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.5+1.21.1`.
+
+- All 93 tests passed: 77 common tests and 16 Minecraft tests. Clean build passed, a subsequent normal build reused its configuration cache, and the optional WorldEdit adapter built successfully with Gradle 9.8.0 / Java 21.
+- New regression checks cover alias/player/time completion, pagination parsing, SQLite/DuckDB time/radius/selection filters, paged block/item reads, renamed-player UUID queries, registered modded block IDs, readable net container counts, hopper labels and inspected-container scope.
+- Both dedicated servers started with the final interaction and exception-safe placement mixins. Console commands verified coordinates, user/time filters, radius, pages, Guardian usage text and readable system history. Both stopped normally.
+- Fabric was additionally tested with the exact Lithium 0.15.4 jar from the supplied pack. A temporary chest/hopper/barrel rig transferred three coal, with six unique persisted system transactions and zero capture/write/backpressure failures. Page 2 returned the older matching transfer. Independent database inspection confirmed all six actor/action records.
+- Removed fixture contents/blocks and its temporary force-load; removed the temporary Lithium jar and restored the Fabric configuration. Both hopper switches remain false; both servers are stopped with alpha.5 installed. Prior jars/databases/configuration are backed up outside Git.
+- Reviewed the supplied client and server logs; the server loaded Guardian alpha.4. Dusty Decorations placement exceptions are documented in MODPACK_COMPATIBILITY.md. No Guardian capture/write errors were found in that log. The exact missing-block case and actual audit database remain unverified.
+
+Connected-player acceptance remains necessary for both inspector buttons, autocomplete in the client, door/switch actions, and claims/protection cancellation. Server startup and console checks do not prove these packet paths. The full 395-entry server pack was not installed into the dedicated fixtures. The small Lithium stream is not a load benchmark or comprehensive chunk-boundary test. Simply opening a menu is not currently recorded as an item transaction; missing past interactions cannot be reconstructed.
+
+## Historical hopper checkpoint
+
 # Guardian Step 4 hopper validation
 
 Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.4+1.21.1`.

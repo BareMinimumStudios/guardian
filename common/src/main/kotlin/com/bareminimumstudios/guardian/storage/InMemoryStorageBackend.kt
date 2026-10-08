@@ -69,7 +69,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
                     (row.snapshot.actor is ActorIdentity.Player && row.snapshot.actor.lastKnownName.equals(query.actorName, ignoreCase = true))
             }
             .sortedWith(compareByDescending<MemoryBlockRow> { it.snapshot.timestampEpochMillis }.thenByDescending { it.rowId })
-            .take(query.limit)
+            .drop(query.offset).take(query.limit)
             .map { StoredBlockChange(it.rowId, it.snapshot, it.rollbackState) }
             .toList()
     }
@@ -88,7 +88,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     }
 
     override fun lookupContainers(query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery) = lock.read {
-        containers.filter(query::matches).sortedWith(compareByDescending<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).take(query.limit)
+        containers.filter(query::matches).sortedWith(compareByDescending<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).drop(query.offset).take(query.limit)
     }
 
     override fun flush() = Unit

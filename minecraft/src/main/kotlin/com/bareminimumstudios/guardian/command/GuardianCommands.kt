@@ -75,7 +75,7 @@ object GuardianCommands {
                 1
             }))
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
-            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).executes { context ->
+            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).suggests { context, builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(context.source.server.playerList.players.map { it.gameProfile.name }, builder) }.executes { context ->
                 val history = runtimeProvider()?.history()
                 if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
                 val name = StringArgumentType.getString(context, "name")
@@ -86,6 +86,11 @@ object GuardianCommands {
                 }, { context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
                 1
             })))
+        root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian transactions u:<player> [t:1h] [l:20], or /guardian transactions <x> <y> <z>")); 0 }
+            .then(Commands.argument("filters", StringArgumentType.greedyString())
+                .suggests { context, builder -> suggestFilters(context.source, builder, true) }
+                .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
         dispatcher.register(root)
     }
 
@@ -98,12 +103,13 @@ object GuardianCommands {
         .requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
         .executes { context ->
             context.source.sendSystemMessage(
-                Component.literal("Usage: /co lookup u:<player> t:<time> r:<radius|#worldedit> a:<place|break|change> [x:<x> y:<y> z:<z>] [l:<limit>]")
+                Component.literal("Usage: /guardian lookup u:<player> t:<time> r:<radius|#worldedit> a:<place|break|change> [x:<x> y:<y> z:<z>] [l:<limit>]")
             )
             0
         }
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
+                .suggests { context, builder -> suggestFilters(context.source, builder) }
                 .executes { context ->
                     executeLookup(
                         source = context.source,
@@ -113,6 +119,37 @@ object GuardianCommands {
                     )
                 }
         )
+
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, items: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+        val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
+        val current = builder.input.substring(start)
+        val choices = FilterSuggestions.values(current, source.server.playerList.players.map { it.gameProfile.name }, items)
+        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices, builder.createOffset(start))
+    }
+
+    private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
+        val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
+        val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian transactions: ${it.message}")); return 0 }
+        if (filter.actions.isNotEmpty()) { source.sendFailure(Component.literal("Item history does not accept block action filters.")); return 0 }
+        val scope = resolveScope(source, filter) ?: return 0
+        val limit = filter.limit ?: config.lookup.defaultResults.get()
+        if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
+            source.sendFailure(Component.literal("Guardian transaction limit/radius exceeds the configured maximum (limit at most 500).")); return 0
+        }
+        val profile = filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name, ignoreCase = true) }?.gameProfile }
+        val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(
+            dimension = if (filter.explicitPosition != null || filter.radius != null || scope.bounds != null) scope.dimension else null,
+            position = filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) },
+            actorUuid = profile?.id, actorName = filter.actorName?.takeIf { profile == null }, limit = limit,
+            afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) },
+            radius = filter.radius, bounds = scope.bounds, offset = ((filter.page ?: 1) - 1) * limit
+        )
+        history.lookupContainers(query, { rows ->
+            com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
+            source.sendSystemMessage(Component.literal("Item history page ${filter.page ?: 1}, up to $limit transactions. Use p:${(filter.page ?: 1) + 1} for the next page (l: maximum 500)."))
+        }, { source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
+        return 1
+    }
 
     private fun inspectNode(name: String, permissions: PermissionService) = Commands.literal(name)
         .requires { permissions.has(it, INSPECT_PERMISSION, 2) }
@@ -160,12 +197,13 @@ object GuardianCommands {
         .requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
         .executes { context ->
             context.source.sendSystemMessage(
-                Component.literal("Usage: /co rollback t:<time> [u:<player>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
+                Component.literal("Usage: /guardian rollback t:<time> [u:<player>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
             )
             0
         }
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
+                .suggests { context, builder -> suggestFilters(context.source, builder) }
                 .executes { context ->
                     executeRollback(
                         source = context.source,
@@ -252,16 +290,20 @@ object GuardianCommands {
             position = position,
             bounds = scope.bounds,
             radius = radius,
-            actorName = filter.actorName,
+            actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
+            actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
             afterEpochMillis = filter.lookbackMillis?.let { (now - it).coerceAtLeast(0L) },
-            limit = requestedLimit
+            limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit
         )
 
-        source.sendSystemMessage(Component.literal("Guardian: searching block historyâ€¦"))
+        source.sendSystemMessage(Component.literal("Guardian: searching block history..."))
         history.lookup(
             query,
-            onSuccess = { rows -> BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage) },
+            onSuccess = { rows ->
+                BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
+                source.sendSystemMessage(Component.literal("Scope: ${scope.dimension}; page ${filter.page ?: 1}, up to $requestedLimit block records. Use p:${(filter.page ?: 1) + 1} for the next page or l:<limit> to show more. Item history: /guardian transactions u:<player>."))
+            },
             onFailure = { source.sendFailure(Component.literal("Guardian lookup failed; see the server log.")) }
         )
         return 1
@@ -287,8 +329,8 @@ object GuardianCommands {
             source.sendFailure(Component.literal("Guardian rollback requires a t:<time> filter for safety."))
             return 0
         }
-        if (filter.limit != null) {
-            source.sendFailure(Component.literal("Guardian rollback does not accept l:. Narrow the rollback with t:, r:, or u: instead."))
+        if (filter.limit != null || filter.page != null) {
+            source.sendFailure(Component.literal("Guardian rollback does not accept l: or p:. Narrow the rollback with t:, r:, or u: instead."))
             return 0
         }
 
@@ -305,7 +347,8 @@ object GuardianCommands {
             position = center,
             bounds = scope.bounds,
             radius = radius,
-            actorName = filter.actorName,
+            actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
+            actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,

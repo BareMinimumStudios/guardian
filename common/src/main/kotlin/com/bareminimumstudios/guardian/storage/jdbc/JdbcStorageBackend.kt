@@ -147,17 +147,24 @@ abstract class JdbcStorageBackend(
         if (query.actorName != null) sql.append(" AND LOWER(a.name) = LOWER(?)")
         if (query.dimension != null) {
             sql.append(" AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
-            if (query.position != null) sql.append(" AND l.x = ? AND l.y = ? AND l.z = ?")
+            if (query.position != null || query.bounds != null) sql.append(" AND l.x BETWEEN ? AND ? AND l.y BETWEEN ? AND ? AND l.z BETWEEN ? AND ?")
             sql.append(")")
         }
-        sql.append(" ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ?")
+        if (query.afterEpochMillis != null) sql.append(" AND c.time >= ?")
+        sql.append(" ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ? OFFSET ?")
         conn.prepareStatement(sql.toString()).use { statement ->
             var index = 1
             query.actorUuid?.let { statement.setString(index++, it.toString()) }
             query.actorName?.let { statement.setString(index++, it) }
             query.dimension?.let { statement.setString(index++, it.toString()) }
-            query.position?.let { statement.setInt(index++, it.x); statement.setInt(index++, it.y); statement.setInt(index++, it.z) }
-            statement.setInt(index, query.limit)
+            val center = query.position
+            val radius = query.radius ?: 0
+            val min = query.bounds?.min ?: center?.let { com.bareminimumstudios.guardian.domain.BlockPosition(it.x - radius, it.y - radius, it.z - radius) }
+            val max = query.bounds?.max ?: center?.let { com.bareminimumstudios.guardian.domain.BlockPosition(it.x + radius, it.y + radius, it.z + radius) }
+            if (min != null && max != null) { for (coordinate in listOf(min.x, max.x, min.y, max.y, min.z, max.z)) statement.setInt(index++, coordinate) }
+            query.afterEpochMillis?.let { statement.setLong(index++, it) }
+            statement.setInt(index++, query.limit)
+            statement.setInt(index, query.offset)
             statement.executeQuery().use { result ->
                 buildList {
                     while (result.next()) add(ContainerTransactionSnapshot(
@@ -252,8 +259,9 @@ abstract class JdbcStorageBackend(
                 binders += { statement, index -> statement.setInt(index, action.storageCode) }
             }
         }
-        sql.append(" ORDER BY b.time DESC, b.rowid DESC LIMIT ?")
+        sql.append(" ORDER BY b.time DESC, b.rowid DESC LIMIT ? OFFSET ?")
         binders += { statement, index -> statement.setInt(index, query.limit) }
+        binders += { statement, index -> statement.setInt(index, query.offset) }
 
         conn.prepareStatement(sql.toString()).use { statement ->
             binders.forEachIndexed { index, binder -> binder(statement, index + 1) }

@@ -74,3 +74,14 @@ The hook brackets full push/pull attempts, including the NeoForge capability sho
 Supported menus must expose slots backed by block containers, the player's inventory, or their cursor. Menus with unknown backing inventories are skipped. Ender chests, crafting/trading menus, and entity inventories are outside this checkpoint. Crafting actions, extended inventory menus, direct creative drops, and automated transfers beyond block hoppers are not captured yet. Disconnect-time cursor cleanup is not claimed; the close hook covers calls to the normal server menu-close method. Logging a THROW click describes the item leaving the inventory; it does not add entity tracking.
 
 Container rollback is not enabled. Fluids and entity logging remain outside Step 4. Dedicated idle-server smoke tests establish startup and migration behavior, not player click acceptance.
+
+## Inspector and command acceptance (alpha.5)
+
+- Enable `/guardian inspect`. Left-click a barrel for block history; right-click it for item additions/removals. Inspection should cancel normal breaking/opening, with no new interaction record from the inspector itself.
+- Turn inspection off. Insert 5 coal, remove 2, rearrange slots, then inspect again. Expect net container changes, without cursor duplication or transaction UUIDs in chat.
+- Check `/guardian transactions user:<name> time:1h limit:20 page:1` and the short aliases. Keep the same filters and use `p:2` to reach older results. `transactions player <name-or-uuid>` remains accepted.
+- Tab-complete user names while the player is online, time amounts such as `t:12`, and filter keys after an existing filter. Offline names remain valid as typed filters.
+- Block lookup searches the command source dimension. Test registered modded block placements/breaks and case-insensitive player filters. Report the mod/block ID if its item overrides vanilla placement and is missed.
+- Open and close a door with inspection off, then inspect either half. Test trapdoors/gates/levers/buttons, no-op uses, and protection-mod cancellation. Opening an empty menu is not currently a recorded item movement.
+- Hopper history requires `logging.automatedContainerTransfers=true`. Its actor is Hopper, so it is excluded from a player's `u:` results. Check by container coordinates or right-click inspector.
+- Chunk boundaries are not lookup boundaries: history is indexed by physical positions. Double-chest context indexes both halves; inspecting an unchanged half says the items changed in the other half. Live chunk-boundary transfer acceptance remains pending.

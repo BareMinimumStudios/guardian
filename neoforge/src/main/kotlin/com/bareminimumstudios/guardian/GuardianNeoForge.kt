@@ -63,7 +63,7 @@ class GuardianNeoForge {
         if (BlockInspector.inspectInteraction(event.entity, event.level, event.pos) != InteractionResult.PASS) event.isCanceled = true
     }
     private fun rightClick(event: PlayerInteractEvent.RightClickBlock) {
-        if (BlockInspector.inspectInteraction(event.entity, event.level, event.pos) != InteractionResult.PASS) {
+        if (BlockInspector.inspectInteraction(event.entity, event.level, event.pos, rightClick = true) != InteractionResult.PASS) {
             event.cancellationResult = InteractionResult.SUCCESS
             event.isCanceled = true
         }

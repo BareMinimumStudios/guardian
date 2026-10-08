@@ -44,13 +44,21 @@ object BlockInspector {
 
     fun isEnabled(player: ServerPlayer): Boolean = player.uuid in enabledPlayers
 
-    fun inspectInteraction(player: Player, world: Level, pos: BlockPos): InteractionResult {
+    fun inspectInteraction(player: Player, world: Level, pos: BlockPos, rightClick: Boolean = false): InteractionResult {
         if (world.isClientSide || player !is ServerPlayer || !isEnabled(player)) return InteractionResult.PASS
         val history = historyProvider() ?: run {
             player.sendSystemMessage(Component.literal("Guardian history is not available."))
             return InteractionResult.SUCCESS
         }
         val limit = configProvider()?.lookup?.inspectorResults?.get() ?: 10
+        if (rightClick && world.getBlockEntity(pos) is net.minecraft.world.Container) {
+            val owner = com.bareminimumstudios.guardian.domain.ItemSlotOwner.BlockContainer(
+                ResourceId.parse(world.dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z))
+            history.lookupContainers(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(owner.dimension, owner.position, limit = limit),
+                { rows -> ContainerHistoryFormatter.lines(rows, focus = owner).forEach(player::sendSystemMessage) },
+                { player.sendSystemMessage(Component.literal("Guardian container lookup failed; see the server log.")) })
+            return InteractionResult.SUCCESS
+        }
         val query = BlockLookupQuery(
             dimension = ResourceId.parse(world.dimension().location().toString()),
             position = BlockPosition(pos.x, pos.y, pos.z),

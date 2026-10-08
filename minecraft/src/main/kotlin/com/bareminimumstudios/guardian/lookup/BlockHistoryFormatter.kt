@@ -29,7 +29,11 @@ object BlockHistoryFormatter {
         val change = when (s.action) {
             ActionType.BLOCK_PLACE -> "placed ${s.after.blockId}"
             ActionType.BLOCK_BREAK -> "broke ${s.before.blockId}"
-            else -> "changed ${s.before.blockId} -> ${s.after.blockId}"
+            else -> when {
+                s.before.properties["open"] != s.after.properties["open"] && s.after.properties["open"] != null -> "${if (s.after.properties["open"] == "true") "opened" else "closed"} ${s.after.blockId}"
+                s.before.properties["powered"] != s.after.properties["powered"] && s.after.properties["powered"] != null -> "${if (s.after.properties["powered"] == "true") "activated" else "deactivated"} ${s.after.blockId}"
+                else -> "changed ${s.before.blockId} -> ${s.after.blockId}"
+            }
         }
         val cause = when (s.cause) {
             ChangeCause.WORLD_EDIT -> " via WorldEdit"

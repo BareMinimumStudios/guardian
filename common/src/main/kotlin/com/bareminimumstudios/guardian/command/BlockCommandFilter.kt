@@ -10,5 +10,6 @@ data class BlockCommandFilter(
     val useWorldEditSelection: Boolean = false,
     val explicitPosition: BlockPosition? = null,
     val actions: Set<ActionType> = emptySet(),
-    val limit: Int? = null
+    val limit: Int? = null,
+    val page: Int? = null
 )

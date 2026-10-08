@@ -19,9 +19,11 @@ data class BlockLookupQuery(
     val afterEpochMillis: Long? = null,
     val beforeEpochMillis: Long? = null,
     val includeRolledBack: Boolean = true,
-    val limit: Int = 100
+    val limit: Int = 100,
+    val offset: Int = 0
 ) {
     init {
+        require(offset >= 0)
         require(limit in 1..10_000) { "Lookup limit must be between 1 and 10,000" }
         if (afterEpochMillis != null && beforeEpochMillis != null) {
             require(afterEpochMillis <= beforeEpochMillis) { "afterEpochMillis must not exceed beforeEpochMillis" }

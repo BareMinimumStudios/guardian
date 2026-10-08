@@ -45,8 +45,9 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 | --- | --- |
 | `/guardian lookup` | Search block history with player, time, action, and region filters. |
 | `/guardian transactions <x> <y> <z>` | Show recent container transactions at a block position. |
-| `/guardian transactions player <name-or-uuid>` | Show recent item transactions for a player. |
-| `/guardian inspect` | Toggle the block inspector. |
+| `/guardian transactions u:<player> t:1h l:20 p:1` | Filter and page through item history. |
+| `/guardian transactions player <name-or-uuid>` | Compatibility form for recent player item history. |
+| `/guardian inspect` | Toggle inspection: left-click for block history, right-click a container for item history. |
 | `/guardian rollback` | Preview or apply a block rollback. |
 | `/guardian status` | Show storage, queue, and capture status. |
 
@@ -91,3 +92,5 @@ GitHub uses `GITHUB_TOKEN`. Marketplace uploads require repository variables `MO
 ## License
 
 The core uses the [Bare Minimum License (BML) v1.0](LICENSE). The optional WorldEdit adapter uses [GPL-3.0-or-later](worldedit-adapter/LICENSE). Third-party notices are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Filter arguments offer tab completion for online players, time units and common values. Both `u:`/`user:` and `t:`/`time:` work. Block lookup searches the current dimension; item lookup by user spans recorded dimensions unless a position/radius is supplied. Results are paged: keep the same filters and add `p:2`, `p:3`, etc. Items added to a container appear in green, removals in red; automated transfers name the hopper. Opening a container without moving items does not create an item transaction. Accepted door, gate, trapdoor, lever and button state changes appear in block history.

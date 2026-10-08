@@ -49,10 +49,22 @@ object PlayerBlockCapture {
 
     }
 
+    @JvmStatic
+    fun enterPlacement() { placementFrames.get().addLast(PlacementFrame.Ignored) }
+
+    @JvmStatic
+    fun abortPlacement() {
+        val frames = placementFrames.get()
+        frames.pollLast()
+        if (frames.isEmpty()) placementFrames.remove()
+    }
+
     /** Called from BlockItemMixin after vanilla has resolved any specialized placement context. */
     @JvmStatic
     fun beginPlacement(context: BlockPlaceContext?) {
         val frames = placementFrames.get()
+        // Replace this invocation's placeholder; early returns and exceptions stay balanced.
+        check(frames.pollLast() != null) { "Placement capture requires an invocation frame" }
         if (context == null || !shouldCapture(context.level, context.player)) {
             frames.addLast(PlacementFrame.Ignored)
             return
@@ -181,6 +193,27 @@ object PlayerBlockCapture {
                 before = before, after = after, cause = ChangeCause.PLAYER, action = ActionType.BLOCK_BREAK
             ))
         }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to snapshot after player break at {}", pos, it) }
+    }
+
+    /** Accepted use of a door, trapdoor, gate, lever, or button; not item placement/open-menu packets. */
+    @JvmStatic
+    fun beginInteraction(world: Level, player: Player, pos: BlockPos): BlockStateSnapshot? {
+        if (!shouldCapture(world, player) || com.bareminimumstudios.guardian.lookup.BlockInspector.isEnabled(player as? net.minecraft.server.level.ServerPlayer ?: return null)) return null
+        val block = world.getBlockState(pos).block
+        if (block !is net.minecraft.world.level.block.DoorBlock && block !is net.minecraft.world.level.block.TrapDoorBlock &&
+            block !is net.minecraft.world.level.block.FenceGateBlock && block !is net.minecraft.world.level.block.LeverBlock && block !is net.minecraft.world.level.block.ButtonBlock) return null
+        return runCatching { MinecraftBlockSnapshotter.snapshot(world, pos) }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to snapshot interaction at {}", pos, it) }.getOrNull()
+    }
+
+    @JvmStatic
+    fun finishInteraction(world: Level, player: Player, pos: BlockPos, before: BlockStateSnapshot?, result: InteractionResult) {
+        if (before == null || !result.consumesAction() || !shouldCapture(world, player)) return
+        runCatching {
+            val after = MinecraftBlockSnapshotter.snapshot(world, pos)
+            if (before.blockId != after.blockId || before.properties == after.properties) return@runCatching
+            submit(BlockChangeSnapshot(System.currentTimeMillis(), MinecraftActorAdapter.player(player), dimensionId(world), pos.toDomain(),
+                before, after, ChangeCause.PLAYER, ActionType.BLOCK_CHANGE))
+        }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to capture accepted interaction at {}", pos, it) }
     }
 
     private fun shouldCapture(world: Level, player: Player?): Boolean =
