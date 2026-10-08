@@ -1,3 +1,20 @@
+# Guardian SQLite distribution checkpoint
+
+Date: 2026-10-07. Checkpoint: `0.4.0-alpha.8+1.21.1`.
+
+- Standard Fabric and NeoForge jars bundle SQLite only and are approximately 11.85 MiB each, down from approximately 88 MiB. Release validation rejects extra bundled drivers or a core jar above 16 MiB.
+- All 104 tests pass: 82 common and 22 Minecraft tests. Two new regressions verify missing-driver failure before directory creation and preservation of an existing database.
+- Both default builds started on the dedicated servers and retrieved their existing item history. No DuckDB classes loaded. One diagnostic startup per loader measured 10.523 seconds for Fabric and 11.591 seconds for NeoForge; these are observations, not benchmark guarantees.
+- Both optional `-PbundleDuckDb=true` builds started with DuckDB selected. Standard builds with DuckDB selected produced the explicit missing-driver error and left existing database files unchanged. No automatic database conversion or fallback occurs.
+- The clean build, configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0.
+- Both dedicated servers retain the default alpha.8 SQLite jars, original SQLite configurations and disabled automated hopper logging, and are stopped. Backups and optional artifacts remain outside Git. Production files were not changed.
+
+Schema 5, config version 6 and snapshot formats remain unchanged. Logging continues through the bounded background batch writer. See [distribution options](DISTRIBUTION_SIZE.md) and [historical startup measurements](STARTUP_VALIDATION.md).
+
+Sealed-source and sealed-destination hopper fixtures also passed on both loaders during this milestone: 12 unique balanced records each, expected conservative first-transfer skips and correct final counts. Next is bounded crafting correlation, followed by conservative container rollback. Connected-client NeoForge protection checks and longer component-heavy load runs remain open; entity and fluid logging remain outside Step 4.
+
+## Historical alpha.7 hopper reliability checkpoint
+
 # Guardian hopper reliability checkpoint
 
 Date: 2026-10-07. Checkpoint: `0.4.0-alpha.7+1.21.1`.

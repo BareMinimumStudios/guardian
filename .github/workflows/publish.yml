@@ -68,6 +68,11 @@ jobs:
                           matches.append(jar)
               if len(matches) != 1:
                   raise SystemExit('Expected one runtime artifact for ' + mod_id + ': ' + str(matches))
+              if mod_id == 'guardian':
+                  with zipfile.ZipFile(matches[0]) as archive:
+                      bundled = [entry for entry in archive.namelist() if entry.startswith('META-INF/jars/') and entry.endswith('.jar')]
+                      if len(bundled) != 1 or 'sqlite-jdbc-' not in bundled[0] or matches[0].stat().st_size > 16 * 1024 * 1024:
+                          raise SystemExit('Default Fabric release must bundle only SQLite and stay below 16 MiB')
               shutil.copy2(matches[0], dest / (name + '-' + version + '-fabric.jar'))
           neo = Path('neoforge/build/libs') / ('guardian-neoforge-' + version + '.jar')
           with zipfile.ZipFile(neo) as archive:
@@ -76,6 +81,9 @@ jobs:
                   raise SystemExit('Invalid NeoForge runtime metadata')
               if 'META-INF/jarjar/metadata.json' not in archive.namelist():
                   raise SystemExit('Missing NeoForge JDBC jar-in-jar metadata')
+              bundled = json.loads(archive.read('META-INF/jarjar/metadata.json'))['jars']
+              if len(bundled) != 1 or 'sqlite-jdbc-' not in bundled[0]['path'] or neo.stat().st_size > 16 * 1024 * 1024:
+                  raise SystemExit('Default NeoForge release must bundle only SQLite and stay below 16 MiB')
           shutil.copy2(neo, dest / ('guardian-' + version + '-neoforge.jar'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('version=' + version + '\ntag=' + tag + '\n')

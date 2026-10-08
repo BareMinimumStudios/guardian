@@ -51,10 +51,18 @@ abstract class JdbcStorageBackend(
 
     override fun open() = lock.withLock {
         check(connection == null) { "Storage backend $id is already open" }
+        try {
+            Class.forName(driverClassName)
+        } catch (missing: ClassNotFoundException) {
+            throw IllegalStateException(
+                "Guardian $id JDBC driver ($driverClassName) is unavailable. " +
+                    "Standard builds bundle SQLite only; DuckDB needs a DuckDB-enabled build or a separately supplied runtime driver. " +
+                    "No database fallback or conversion was selected.", missing
+            )
+        }
         path.parent?.let(Files::createDirectories)
         acquireDatabaseFileLock()
         val opened = try {
-            Class.forName(driverClassName)
             DriverManager.getConnection(jdbcUrl(path))
         } catch (t: Throwable) {
             releaseDatabaseFileLock()

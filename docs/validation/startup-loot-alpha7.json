@@ -1,0 +1,203 @@
+{
+  "version": "0.4.0-alpha.7+1.21.1",
+  "date": "2026-10-07",
+  "startup_samples": [
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": true,
+      "round": 1,
+      "ready_seconds": 12.122,
+      "working_set_mib_at_ready": 863.4,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": false,
+      "round": 1,
+      "ready_seconds": 11.09,
+      "working_set_mib_at_ready": 888.4,
+      "duckdb_classes": []
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": false,
+      "round": 2,
+      "ready_seconds": 10.868,
+      "working_set_mib_at_ready": 863.1,
+      "duckdb_classes": []
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": true,
+      "round": 2,
+      "ready_seconds": 11.587,
+      "working_set_mib_at_ready": 893.2,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": true,
+      "round": 3,
+      "ready_seconds": 11.674,
+      "working_set_mib_at_ready": 872.3,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": false,
+      "round": 3,
+      "ready_seconds": 9.164,
+      "working_set_mib_at_ready": 880.4,
+      "duckdb_classes": []
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": true,
+      "round": 1,
+      "ready_seconds": 10.759,
+      "working_set_mib_at_ready": 1150.9,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": false,
+      "round": 1,
+      "ready_seconds": 10.761,
+      "working_set_mib_at_ready": 867.7,
+      "duckdb_classes": []
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": false,
+      "round": 2,
+      "ready_seconds": 11.943,
+      "working_set_mib_at_ready": 850.2,
+      "duckdb_classes": []
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": true,
+      "round": 2,
+      "ready_seconds": 12.905,
+      "working_set_mib_at_ready": 1154.1,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": true,
+      "round": 3,
+      "ready_seconds": 12.865,
+      "working_set_mib_at_ready": 1146.6,
+      "duckdb_classes": [
+        "DuckDBDriver",
+        "DuckDBDriver$1",
+        "io.LimitedInputStream"
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": false,
+      "round": 3,
+      "ready_seconds": 11.612,
+      "working_set_mib_at_ready": 850.6,
+      "duckdb_classes": []
+    }
+  ],
+  "memory_follow_up": [
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": true,
+      "working_set_mib_after_10s": 854.6,
+      "working_set_mib_after_diagnostic_gc": 859.0,
+      "heap_used_mib_before_gc": 293.44,
+      "heap_used_mib_after_gc": 262.77,
+      "heap_committed_mib_after_gc": 545.0
+    },
+    {
+      "loader": "Fabric",
+      "duckdb_bundled": false,
+      "working_set_mib_after_10s": 833.7,
+      "working_set_mib_after_diagnostic_gc": 841.4,
+      "heap_used_mib_before_gc": 309.0,
+      "heap_used_mib_after_gc": 262.68,
+      "heap_committed_mib_after_gc": 531.0
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": true,
+      "working_set_mib_after_10s": 1129.5,
+      "working_set_mib_after_diagnostic_gc": 1132.4,
+      "heap_used_mib_before_gc": 682.55,
+      "heap_used_mib_after_gc": 471.45,
+      "heap_committed_mib_after_gc": 802.0
+    },
+    {
+      "loader": "Neoforge",
+      "duckdb_bundled": false,
+      "working_set_mib_after_10s": 833.7,
+      "working_set_mib_after_diagnostic_gc": 839.3,
+      "heap_used_mib_before_gc": 329.64,
+      "heap_used_mib_after_gc": 240.72,
+      "heap_committed_mib_after_gc": 512.0
+    }
+  ],
+  "stored_nested_driver_samples": [
+    {
+      "ready_seconds": 12.488,
+      "heap_used_mib_after_gc": 472.48,
+      "working_set_mib_after_diagnostic_gc": 1171.5
+    },
+    {
+      "ready_seconds": 12.884,
+      "heap_used_mib_after_gc": 471.99,
+      "working_set_mib_after_diagnostic_gc": 1152.5
+    },
+    {
+      "ready_seconds": 12.747,
+      "heap_used_mib_after_gc": 472.84,
+      "working_set_mib_after_diagnostic_gc": 1146.0
+    }
+  ],
+  "sealed_loot": [
+    {
+      "loader": "Fabric",
+      "balanced_transactions": 12,
+      "sealed_source_subsequent_pulls": 3,
+      "sealed_source_pushes": 4,
+      "sealed_destination_pulls": 3,
+      "sealed_destination_subsequent_pushes": 2,
+      "unobservable_first_transfers_skipped": 2,
+      "failures": 0
+    },
+    {
+      "loader": "Neoforge",
+      "balanced_transactions": 12,
+      "sealed_source_subsequent_pulls": 3,
+      "sealed_source_pushes": 4,
+      "sealed_destination_pulls": 3,
+      "sealed_destination_subsequent_pushes": 2,
+      "unobservable_first_transfers_skipped": 2,
+      "failures": 0
+    }
+  ]
+}

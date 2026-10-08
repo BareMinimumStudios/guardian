@@ -96,3 +96,11 @@ Container rollback is not enabled. Fluids and entity logging remain outside Step
 - Test server-only installation with the actual pack client. If a client mod suppresses the packet before it reaches the server, report that separately; server interception cannot receive an unsent packet.
 
 Console and startup checks do not establish connected-player claim behavior. These remain release acceptance checks.
+
+## Sealed loot acceptance
+
+Both loader fixtures tested a deterministic sealed source chest and sealed destination barrel. Their loot table keys remained present before hoppers were activated. Vanilla then initialized each table on its first transfer. Guardian skipped that first unobservable transfer rather than inventing empty before-state data.
+
+The source fixture produced three subsequent pulls and four pushes; the destination fixture produced three pulls and two subsequent pushes. Each loader persisted exactly 12 balanced system records with zero failures or backpressure. Final destination item totals were four and seven coal, as expected from the initial loot plus actual transfers. Temporary blocks, inventories, force-load and test datapack were removed.
+
+This tests the documented conservative skip on initial loot generation. It does not provide complete history of that first transfer or cover every modded loot container.

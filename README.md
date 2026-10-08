@@ -16,7 +16,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 ## What is Guardian?
 
-Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite or DuckDB and provides commands for lookup, inspection, and rollback.
+Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite and provides commands for lookup, inspection, and rollback.
 
 Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Item transactions record accepted clicks and close-time cursor returns in supported block-backed menus, plus player inventory-screen moves, standalone drops, offhand swaps, and accepted creative slot changes. Inventory-screen capture requires an empty crafting area. Block-to-block hopper capture is available through an opt-in setting. See [Step 4 testing](docs/STEP_4_TESTING.md) for coverage and remaining acceptance checks.
 
@@ -25,7 +25,7 @@ Guardian continues the ExProtect prototype. This checkpoint builds for Fabric an
 - Records player block placement and breaking.
 - Records correlated item changes from supported block-container clicks, menu closes, player inventory moves, drops, offhand swaps, and creative slot changes.
 - Can record hopper transfers between supported block containers, including double chests.
-- Keeps audit history across server restarts with SQLite or DuckDB.
+- Keeps audit history across server restarts with bundled SQLite.
 - Shows block history through commands or an inspector tool.
 - Restores blocks with bounded work per server tick.
 - Logs WorldEdit operations through a separate optional adapter.
@@ -33,7 +33,7 @@ Guardian continues the ExProtect prototype. This checkpoint builds for Fabric an
 
 ## Installation
 
-For Fabric 1.21.1, use the Guardian jar from `build/libs` with Fabric API, Fabric Language Kotlin, and Fzzy Config. For NeoForge 1.21.1, use the jar from `neoforge/build/libs` with Kotlin for Forge and Fzzy Config. Install the jar for your server loader. The JDBC drivers and shared core are bundled; Fzzy Config stays an external dependency.
+For Fabric 1.21.1, use the Guardian jar from `build/libs` with Fabric API, Fabric Language Kotlin, and Fzzy Config. For NeoForge 1.21.1, use the jar from `neoforge/build/libs` with Kotlin for Forge and Fzzy Config. Install the jar for your server loader. SQLite and the shared core are bundled; Fzzy Config stays an external dependency. Standard core jars are about 12 MiB. DuckDB is an optional build-time integration; see [database packaging](docs/DISTRIBUTION_SIZE.md).
 
 For WorldEdit support on Fabric, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
 

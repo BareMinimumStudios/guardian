@@ -1,0 +1,41 @@
+{
+  "version": "0.4.0-alpha.8+1.21.1",
+  "default_runtime": [
+    {
+      "loader": "Fabric",
+      "ready_seconds": 10.523,
+      "used_heap_mib_after_gc": 262.67,
+      "working_set_mib_after_gc": 842.1,
+      "core_bytes": 12424911,
+      "existing_item_history_verified": true
+    },
+    {
+      "loader": "Neoforge",
+      "ready_seconds": 11.591,
+      "used_heap_mib_after_gc": 241.01,
+      "working_set_mib_after_gc": 823.0,
+      "core_bytes": 12415598,
+      "existing_item_history_verified": true
+    }
+  ],
+  "optional_runtime": [
+    {
+      "loader": "Fabric",
+      "missing_driver_message_verified": true,
+      "existing_database_files_unchanged": true,
+      "optional_duckdb_startup_passed": true,
+      "optional_bytes": 92296276
+    },
+    {
+      "loader": "Neoforge",
+      "missing_driver_message_verified": true,
+      "existing_database_files_unchanged": true,
+      "optional_duckdb_startup_passed": true,
+      "optional_bytes": 92286754
+    }
+  ],
+  "tests": 104,
+  "schema": 5,
+  "configuration_version": 6,
+  "notes": "Default startup and post-diagnostic-GC heap measurements are single observations, not statistical performance guarantees."
+}

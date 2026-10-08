@@ -3,9 +3,11 @@ plugins {
     id("net.neoforged.moddev") version "2.0.148"
 }
 
+val bundleDuckDb = providers.gradleProperty("bundleDuckDb").map { it.toBooleanStrict() }.getOrElse(false)
+
 group = providers.gradleProperty("mavenGroup").get()
 version = providers.gradleProperty("modVersion").get()
-base { archivesName.set("guardian-neoforge") }
+base { archivesName.set(if (bundleDuckDb) "guardian-neoforge-with-duckdb" else "guardian-neoforge") }
 
 repositories {
     mavenCentral()
@@ -28,9 +30,11 @@ dependencies {
     implementation("me.fzzyhmstrs:fzzy_config:0.7.6+1.21+neoforge")
     implementation("thedarkcolour:kotlinforforge-neoforge:5.12.0")
     implementation("org.xerial:sqlite-jdbc:${providers.gradleProperty("sqliteJdbcVersion").get()}")
-    implementation("org.duckdb:duckdb_jdbc:${providers.gradleProperty("duckdbJdbcVersion").get()}")
     jarJar("org.xerial:sqlite-jdbc") { version { strictly("[3.53.4.0]"); prefer("3.53.4.0") } }
-    jarJar("org.duckdb:duckdb_jdbc") { version { strictly("[1.4.5.0]"); prefer("1.4.5.0") } }
+    if (bundleDuckDb) {
+        implementation("org.duckdb:duckdb_jdbc:${providers.gradleProperty("duckdbJdbcVersion").get()}")
+        jarJar("org.duckdb:duckdb_jdbc") { version { strictly("[1.4.5.0]"); prefer("1.4.5.0") } }
+    }
 }
 
 sourceSets.main {

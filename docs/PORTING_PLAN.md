@@ -47,7 +47,7 @@ Implemented slices:
 
 The current milestone checks sided furnace slots, loaded chunk boundaries, and controlled hopper load. See [validation](VALIDATION.md) for measured results and the remaining acceptance boundaries.
 
-Next: [optional DuckDB packaging](DISTRIBUTION_SIZE.md) to reduce the default download, then crafting transaction correlation, followed by conservative container rollback with component/count conflict checks and crash recovery. Neither is enabled yet. Other automation mechanisms remain separate future slices. Fluids and entity logging remain outside this step.
+Bundle SQLite by default and retain DuckDB as an [optional build-time integration](DISTRIBUTION_SIZE.md). Next: crafting transaction correlation, followed by conservative container rollback with component/count conflict checks and crash recovery. Neither is enabled yet. Other automation mechanisms remain separate future slices. Fluids and entity logging remain outside this step.
 
 ## Step 5 — Environmental attribution
 

@@ -7,6 +7,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.8+1.21.1] - 2026-10-07
+
+### Added
+
+- Optional `-PbundleDuckDb=true` self-contained build variants with distinct artifact names.
+- Clear missing-driver errors before creating database files or locks, with regression coverage for preserving existing data.
+- Startup/class-loading and memory observations for both loaders, plus live sealed-loot acceptance.
+
+### Changed
+
+- Standard Fabric and NeoForge jars bundle SQLite only, reducing core downloads to about 12 MiB. DuckDB remains a tested optional integration.
+- Default release checks reject DuckDB bundles and core jars over 16 MiB.
+- Database settings explain which backend is bundled and that switching backends does not convert existing history.
+
 ## [0.4.0-alpha.7+1.21.1] - 2026-10-07
 
 ### Added

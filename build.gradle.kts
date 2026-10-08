@@ -11,6 +11,7 @@ val fabricKotlinVersion = providers.gradleProperty("fabricKotlinVersion").get()
 val fzzyConfigVersion = providers.gradleProperty("fzzyConfigVersion").get()
 val fabricPermissionsVersion = providers.gradleProperty("fabricPermissionsVersion").get()
 val sqliteJdbcVersion = providers.gradleProperty("sqliteJdbcVersion").get()
+val bundleDuckDb = providers.gradleProperty("bundleDuckDb").map { it.toBooleanStrict() }.getOrElse(false)
 val duckdbJdbcVersion = providers.gradleProperty("duckdbJdbcVersion").get()
 val modVersion = providers.gradleProperty("modVersion").get()
 val mavenGroup = providers.gradleProperty("mavenGroup").get()
@@ -20,7 +21,7 @@ group = mavenGroup
 version = modVersion
 
 base {
-    archivesName.set(archivesBaseName)
+    archivesName.set(if (bundleDuckDb) "$archivesBaseName-with-duckdb" else archivesBaseName)
 }
 
 repositories {
@@ -48,11 +49,13 @@ dependencies {
     // Compile-only: Guardian detects the API at runtime and falls back to vanilla op levels when absent.
     modCompileOnly("me.lucko:fabric-permissions-api:$fabricPermissionsVersion")
 
-    // Embedded JDBC drivers: Guardian must be self-contained on a dedicated server.
+    // SQLite is self-contained; optional builds can retain DuckDB without a separate add-on.
     implementation("org.xerial:sqlite-jdbc:$sqliteJdbcVersion")
     include("org.xerial:sqlite-jdbc:$sqliteJdbcVersion")
-    implementation("org.duckdb:duckdb_jdbc:$duckdbJdbcVersion")
-    include("org.duckdb:duckdb_jdbc:$duckdbJdbcVersion")
+    if (bundleDuckDb) {
+        implementation("org.duckdb:duckdb_jdbc:$duckdbJdbcVersion")
+        include("org.duckdb:duckdb_jdbc:$duckdbJdbcVersion")
+    }
 
     testImplementation(kotlin("test-junit5"))
 }
