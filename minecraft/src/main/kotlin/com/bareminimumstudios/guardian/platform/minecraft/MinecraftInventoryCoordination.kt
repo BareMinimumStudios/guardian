@@ -1,11 +1,22 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
 import com.bareminimumstudios.guardian.domain.*
+import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
+import com.bareminimumstudios.guardian.rollback.ItemMenuCoordination
 import com.bareminimumstudios.guardian.rollback.ItemOwnerCoordination
 import com.bareminimumstudios.guardian.rollback.ItemTransferCoordination
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.Container
+import net.minecraft.world.CompoundContainer
+import net.minecraft.world.MenuProvider
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.*
+import net.minecraft.world.level.block.entity.*
+import java.util.Collections
+import java.util.IdentityHashMap
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.HopperBlock
@@ -16,6 +27,7 @@ import net.minecraft.world.level.block.state.properties.ChestType
 object MinecraftInventoryCoordination {
     private class Binding(val server: MinecraftServer, val owners: ItemOwnerCoordination) {
         val transfers = ItemTransferCoordination(owners)
+        val menus = ItemMenuCoordination(owners)
     }
     @Volatile private var binding: Binding? = null
 
@@ -40,6 +52,97 @@ object MinecraftInventoryCoordination {
     @JvmStatic fun allowsPull(level: Level, hopper: Hopper): Boolean = allows(level) {
         if (hopper !is HopperBlockEntity) null else endpoints(it, hopper.blockPos, hopper.blockPos.above())
     }
+
+    @JvmStatic fun allowsPlayerMutation(player: ServerPlayer): Boolean {
+        val current = binding ?: return true
+        if (player.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return current.menus.allowsMutation(player.uuid) { emptyList() }
+    }
+
+    @JvmStatic fun allowsMenuMutation(player: ServerPlayer, menu: AbstractContainerMenu): Boolean {
+        val current = binding ?: return true
+        if (player.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return current.menus.allowsMutation(player.uuid) { menuOwners(player, menu) }
+    }
+
+    @JvmStatic fun allowsOpen(player: ServerPlayer, provider: MenuProvider?): Boolean {
+        if (provider == null) return true
+        val current = binding ?: return true
+        if (player.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return current.menus.allowsMutation(player.uuid) {
+            // Do not create a menu or unpack loot to discover its participating inventory.
+            if (provider is BlockEntity && provider is Container && provider.javaClass in supportedBlocks) physicalOwner(player, provider)?.let(::listOf)
+            else null
+        }
+    }
+
+    @JvmStatic fun beforeClose(player: ServerPlayer) {
+        val current = binding ?: return
+        if (player.server !== current.server) return
+        check(current.server.isSameThread)
+        current.menus.beforeCleanup(player.uuid) { menuOwners(player, player.containerMenu) }
+    }
+
+    @JvmStatic fun resynchronize(player: ServerPlayer) {
+        check(player.server.isSameThread)
+        player.inventoryMenu.sendAllDataToRemote()
+        if (player.containerMenu !== player.inventoryMenu) player.containerMenu.sendAllDataToRemote()
+    }
+
+    private fun menuOwners(player: ServerPlayer, menu: AbstractContainerMenu): Set<ItemSlotOwner>? {
+        // Extended menus can mutate inventories not represented by their visible slots.
+        if (menu.javaClass !in supportedMenus || menu.slots.size > 256) return null
+        val result = linkedSetOf<ItemSlotOwner>()
+        val seen = Collections.newSetFromMap(IdentityHashMap<Container, Boolean>())
+        fun visit(container: Container, depth: Int): Boolean {
+            if (depth > 4) return false
+            if (!seen.add(container)) return true
+            if (seen.size > 32) return false
+            when (container) {
+                is Inventory -> {
+                    if (container.javaClass != Inventory::class.java || container.player !is ServerPlayer || container.player.server !== player.server) return false
+                    result.add(ItemSlotOwner.PlayerInventory(container.player.uuid))
+                }
+                is BlockEntity -> result.add(physicalOwner(player, container) ?: return false)
+                is CompoundContainer -> {
+                    val parts = container as CompoundContainerAccessor
+                    if (!visit(parts.`guardian$first`(), depth + 1) || !visit(parts.`guardian$second`(), depth + 1)) return false
+                }
+                is TransientCraftingContainer, is ResultContainer -> {
+                    if (container.javaClass != TransientCraftingContainer::class.java && container.javaClass != ResultContainer::class.java) return false
+                    result.add(ItemSlotOwner.PlayerInventory(player.uuid))
+                }
+                else -> return false
+            }
+            return true
+        }
+        for (slot in menu.slots) if (!visit(slot.container, 0)) return null
+        return result
+    }
+
+    private fun physicalOwner(player: ServerPlayer, block: BlockEntity): ItemSlotOwner.BlockContainer? {
+        if (block.javaClass !in supportedBlocks) return null
+        val level = block.level as? ServerLevel ?: return null
+        if (level.server !== player.server || block.isRemoved) return null
+        val pos = block.blockPos
+        if (level.chunkSource.getChunkNow(pos.x shr 4, pos.z shr 4) == null || level.getBlockEntity(pos) !== block) return null
+        return ItemSlotOwner.BlockContainer(ResourceId.parse(level.dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z))
+    }
+
+    private val supportedBlocks: Set<Class<*>> = setOf(
+        BarrelBlockEntity::class.java, ChestBlockEntity::class.java, HopperBlockEntity::class.java,
+        DispenserBlockEntity::class.java, DropperBlockEntity::class.java, FurnaceBlockEntity::class.java,
+        BlastFurnaceBlockEntity::class.java, SmokerBlockEntity::class.java
+    )
+
+    private val supportedMenus: Set<Class<*>> = setOf(
+        InventoryMenu::class.java, ChestMenu::class.java, HopperMenu::class.java,
+        DispenserMenu::class.java, FurnaceMenu::class.java, BlastFurnaceMenu::class.java,
+        SmokerMenu::class.java, CraftingMenu::class.java
+    )
 
     private fun allows(level: Level, resolve: (ServerLevel) -> Collection<ItemSlotOwner>?): Boolean {
         val current = binding ?: return true

@@ -2,6 +2,7 @@ package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.domain.ContainerAction;
 import com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture;
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
@@ -24,6 +25,10 @@ public abstract class PlayerItemActionMixin {
             default -> null;
         };
         if (action == null) { original.call(packet); return; }
+        if (!MinecraftInventoryCoordination.allowsPlayerMutation(player)) {
+            MinecraftInventoryCoordination.resynchronize(player);
+            return;
+        }
         try (var pending = PlayerContainerCapture.beginPlayerAction(player, action)) {
             original.call(packet);
             PlayerContainerCapture.finish(pending, player);

@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.21+1.21.1`.
+Checkpoint: `0.4.0-alpha.22+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -143,10 +143,22 @@ The same wrapper surrounds NeoForge's capability insertion/extraction fast paths
 
 A temporary reflection-only test agent, kept outside the repository and mod artifacts, acquires/releases reservations on the server thread. Both loaders passed source, destination, hopper and opposite-chest-half tests with hopper logging off and on. Inventories remained unchanged while reserved and successful transfers resumed after release. Each enabled run recorded seven successful transfers; disabled runs recorded none. Fixtures used isolated databases and were removed afterwards.
 
-Menu/player mutation paths, ticking inventories, block replacement/unload and unsupported automation remain uncoordinated. The hopper guard alone cannot satisfy `ItemSavePort` or justify applying/completing an item rollback. The next slice is menu/player access and mutation coordination.
+Alpha.22 connects supported menu/player paths, described below. Ticking inventories, block replacement/unload and unsupported automation remain uncoordinated. These partial guards cannot satisfy `ItemSavePort` or justify applying/completing an item rollback.
 
 ## Menu coordination policy
 
 Alpha.21 adds a common policy for player and menu owners. Mutation checks reject a reserved actor or participating owner. Unknown, failed or oversized menu resolution refuses access while reservations exist. Idle checks do not inspect menus.
 
-Cleanup always remains available. Known cleanup invalidates whole operations touching the actor or resolved owners; unknown cleanup invalidates all remaining operations before items can be returned. Minecraft hooks must call this policy before accepting click prediction or performing cleanup. These hooks are not connected yet, so this policy does not establish menu exclusion.
+Cleanup always remains available. Known cleanup invalidates whole operations touching the actor or resolved owners; unknown cleanup invalidates all remaining operations before items can be returned. Alpha.22 connects Minecraft hooks before accepting click prediction or performing cleanup. This covers the paths below and does not establish exclusion of every inventory mutation.
+
+## Menu and player guards
+
+Alpha.22 checks container click packets on the server thread before vanilla accepts client-predicted slot and cursor contents. Refused packets resend authoritative inventory/menu contents. Recipe-book placement, standalone drop/offhand-swap actions and creative slot/drop packets also check reservations before mutation. Guards operate independently of item transaction capture.
+
+Physical owners are resolved without item reads, loot unpacking or chunk loads. Supported exact vanilla menu implementations are InventoryMenu, ChestMenu, HopperMenu, DispenserMenu, FurnaceMenu, BlastFurnaceMenu, SmokerMenu and CraftingMenu. Physical inventories are verified loaded vanilla barrels, chests, hoppers, dispensers/droppers and the three furnace variants. CompoundContainer parts are checked separately. Player Inventory slots use their actual player's UUID; crafting/cursor activity belongs to the acting player.
+
+Opening a known physical provider checks reservations before createMenu can unpack loot or start opening an inventory. NeoForge's extended opening API shares this gate. An unknown provider, including an anonymous double-chest provider, is temporarily refused while any reservation exists. Unknown/extended menus and inventories follow the same conservative policy. When no reservation exists, these checks leave ordinary menu access alone and do not resolve owners. Reservations expire after ten seconds.
+
+Closing is always allowed. Before vanilla returns carried items, known owners invalidate their whole operations. If ownership cannot be resolved, all remaining reservations are invalidated. This avoids stranding a cursor stack behind a cancelled close.
+
+Runtime checks use synthetic server players and real Minecraft packet handlers on both loaders, with item transaction logging disabled/enabled. They verify rejected prediction, authoritative state resynchronization, valid recipe placement, block/combined-container ownership, pre-creation opening, safe close returns and resumed actions. Actual connected-client visuals, claim/modpack combinations, other inventory ticks and verified saves remain separate acceptance work. Commands still do not acquire leases and item apply remains disabled.

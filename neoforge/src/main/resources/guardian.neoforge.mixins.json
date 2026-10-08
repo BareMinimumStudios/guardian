@@ -8,6 +8,7 @@
     "CompoundContainerAccessor",
     "ContainerClickMixin",
     "ContainerCloseMixin",
+    "ContainerOpenMixin",
     "PlayerItemActionMixin",
     "CreativeInventoryMixin",
     "HopperTransferMixin",
@@ -18,7 +19,8 @@
     "RecipePlacementMixin",
     "ChunkStorageAccessor",
     "IOWorkerAccessor",
-    "RegionStorageAccessor"
+    "RegionStorageAccessor",
+    "NeoForgeContainerOpenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

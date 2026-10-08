@@ -1,3 +1,19 @@
+# Guardian menu/player-reservation checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.22+1.21.1`.
+
+- All 253 tests passed: 204 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA inspections found no problems in the changed coordination bridge and seven menu/player mixins. Both servers loaded the required mixins successfully.
+- Synthetic server players exercised real packet handlers with item transaction logging disabled/enabled. Fabric passed 24 checks per run and NeoForge 25, including its extended opening API: 98 total. Refused click prediction never reached the remote cache; resynchronization sent authoritative slot/cursor contents with an advanced state ID.
+- Reserved drops, swaps, creative slot/direct-drop packets and a valid unlocked recipe placement were refused. Clicks, swaps, creative writes and that recipe resumed after release. Physical barrel and combined-container owner checks passed. Known unrelated opening/cleanup remained available; unknown providers were refused before menu creation and unknown close invalidated remaining operations. Closing returned carried items without loss.
+- Each enabled run recorded exactly six accepted transactions; disabled runs recorded zero. Rejected actions produced no phantom records. The external agent invoked actual server methods and did not replace Minecraft bytecode. Temporary databases, sources, agents and logs stay outside Git and the distribution.
+- Normal restarts without the agent passed both loaders, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Alpha.22 is installed, including the matching optional Fabric WorldEdit adapter. Both servers are stopped; original configs are restored and fixtures/forced chunks are removed.
+- Schema 8, config version 6 and audit formats are unchanged. SQLite remains the standard bundled driver. See [validation data](validation/menu-coordination-alpha22.json).
+
+Connected-client visual behavior and modpack/claim combinations still need player acceptance. Ticking inventories, replacement/unload, other unsupported automation and verified completion saves remain pending. Commands do not acquire reservations and item apply remains disabled.
+
+## Historical alpha.21 menu-policy checkpoint
+
 # Guardian menu-policy checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.21+1.21.1`.

@@ -11,6 +11,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.22+1.21.1] - 2026-10-08
+
+### Added
+
+- Server-side reservation guards for menu click packets, recipe placement, player drops/offhand swaps and creative inventory packets, independent of item audit logging.
+- Authoritative inventory resynchronization when reserved clicks are refused, without accepting client-predicted slot contents.
+- Pre-creation menu opening guards, including NeoForge's extended opening API, and reservation invalidation before close-time item returns.
+- Bounded resolution of verified vanilla menus and physical inventory owners; unknown menus/providers refuse access during active reservations and unknown cleanup invalidates remaining operations.
+
+Commands do not acquire reservations yet. Item rollback apply remains disabled.
+
 ## [0.4.0-alpha.21+1.21.1] - 2026-10-08
 
 ### Added
