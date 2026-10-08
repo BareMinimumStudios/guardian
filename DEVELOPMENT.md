@@ -15,6 +15,8 @@ The core and optional WorldEdit adapter remain separate artifacts with separate 
 3. Implemented: immutable registry-aware item snapshots and correlation of all changed logical slots from an accepted block-container menu click.
 4. Implemented: atomic container persistence and location queries on SQLite/DuckDB. Automated codec, correlation, persistence, retry, and migration tests pass. Exercise actual clicks, shift clicks, offhand swaps, splits, drag actions, cancellation, and restart recovery with a player before claiming gameplay acceptance. Close-time cursor returns, standalone drops, and offhand swaps now share that pipeline. Inventory-screen capture includes populated vanilla crafting grids, recipe-book placement, accepted result takes and close-time returns. Creative capture brackets accepted player-slot writes. Extended crafting layouts, outputs thrown into the world, direct creative drops, other automated transfer mechanisms and unsupported menus remain for later slices. Block-to-block hopper push/pull correlation is now implemented behind an opt-in switch; it observes physical inventories across vanilla and NeoForge capability paths.
 
+5. Implemented: alpha.10 adds bounded, read-only item rollback planning. It checks count/component conservation and current inventories without slot writes. Durable journaling, interruption recovery and item rollback apply remain the next milestone. See [item rollback](docs/ITEM_ROLLBACK.md).
+
 Fluids and entity logging remain outside this stage. Do not claim a loader or transaction path is supported until it passes runtime checks.
 
 ## Build checks

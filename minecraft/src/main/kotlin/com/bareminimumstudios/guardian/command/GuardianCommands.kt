@@ -43,7 +43,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, inspect/i, rollback/rb, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, inspect/i, rollback/rb, rollback-items preview, or status."))
                 1
             }
 
@@ -91,6 +91,12 @@ object GuardianCommands {
             .then(Commands.argument("filters", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
+        root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 2) }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:<time> [u:<player>] [r:<radius|#worldedit>] [x:<x> y:<y> z:<z>]")); 0 }
+            .then(Commands.literal("preview")
+                .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:1h r:10. Preview only; no items change.")); 0 }
+                .then(Commands.argument("filters",StringArgumentType.greedyString()).suggests { context,builder -> suggestFilters(context.source,builder,true,true) }
+                    .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) })))
         dispatcher.register(root)
     }
 
@@ -120,10 +126,11 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, items: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, items: Boolean = false, preview: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
-        val choices = FilterSuggestions.values(current, source.server.playerList.players.map { it.gameProfile.name }, items)
+        val players=source.server.playerList.players.map { it.gameProfile.name }
+        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items)
         return net.minecraft.commands.SharedSuggestionProvider.suggest(choices, builder.createOffset(start))
     }
 
@@ -372,6 +379,19 @@ object GuardianCommands {
             "filter=[$raw], center=${center!!.x},${center.y},${center.z}, radius=$radius"
         }
         return if (rollback.request(source, query, description)) 1 else 0
+    }
+
+    private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig): Int {
+        val preview=runtime?.itemRollbackPreview()
+        if (preview == null) { source.sendFailure(Component.literal("Guardian item rollback preview is unavailable."));return 0 }
+        val filter=ItemRollbackPreviewFilters.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian item rollback preview: ${it.message}"));return 0 }
+        val scope=resolveScope(source,filter) ?: return 0
+        val radius=if (scope.bounds == null) filter.radius ?: config.rollback.defaultRadius.get() else null
+        if (radius != null && radius > config.rollback.maxRadius.get()) { source.sendFailure(Component.literal("Item preview radius exceeds the configured rollback maximum."));return 0 }
+        val center=if (scope.bounds == null) filter.explicitPosition ?: sourcePosition(source) else null
+        val player=filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name,ignoreCase=true) } }
+        val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=scope.dimension,position=center,bounds=scope.bounds,radius=radius,actorUuid=player?.uuid,actorName=if(player==null)filter.actorName else null,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0),limit=51)
+        return if(preview.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))) 1 else 0
     }
 
     private fun resolveScope(source: CommandSourceStack, filter: BlockCommandFilter): QueryScope? {

@@ -23,6 +23,7 @@ class GuardianRuntime(
     private var history: BlockHistoryService? = null
     private var bulk: BulkAuditDispatcher? = null
     private var rollback: BlockRollbackService? = null
+    private var itemPreview: com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService? = null
 
     fun start(server: MinecraftServer) {
         if (!config.general.enabled.get()) return
@@ -50,6 +51,7 @@ class GuardianRuntime(
         bulk = selectedBulk
         history = selectedHistory
         rollback = BlockRollbackService(server, selectedHistory, config)
+        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory)
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
@@ -62,6 +64,8 @@ class GuardianRuntime(
     fun stop(): Boolean {
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ null }, { false })
         com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ null }, { false })
+        itemPreview?.stop()
+        itemPreview = null
         rollback?.stop()
         rollback = null
         GuardianIntegrationApi.detach()
@@ -82,4 +86,5 @@ class GuardianRuntime(
     fun history(): BlockHistoryService? = history
     fun bulk(): BulkAuditDispatcher? = bulk
     fun rollback(): BlockRollbackService? = rollback
+    fun itemRollbackPreview() = itemPreview
 }

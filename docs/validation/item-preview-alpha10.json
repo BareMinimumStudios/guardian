@@ -1,0 +1,58 @@
+{
+  "version": "0.4.0-alpha.10+1.21.1",
+  "mode": "preview only; no item writes",
+  "tests": 135,
+  "live": [
+    {
+      "loader": "Fabric",
+      "cases": {
+        "matching_read_only": true,
+        "outside_endpoint": true,
+        "mismatch_and_chain_read_only": true,
+        "sealed_loot_preserved": true,
+        "over_limit_read_only": true
+      },
+      "transaction_count": 56
+    },
+    {
+      "loader": "Neoforge",
+      "cases": {
+        "matching_read_only": true,
+        "outside_endpoint": true,
+        "mismatch_and_chain_read_only": true,
+        "sealed_loot_preserved": true,
+        "over_limit_read_only": true
+      },
+      "transaction_count": 56
+    }
+  ],
+  "existing_block_and_item_rows_unchanged_after_restart": true,
+  "artifact_integrity": [
+    {
+      "loader": "Fabric",
+      "name": "guardian-0.4.0-alpha.10+1.21.1.jar",
+      "bytes": 12474488,
+      "sha256": "8f5445f5b39f2036d362302a83123b24afef82694e9fff49fb081868eeb159ea"
+    },
+    {
+      "loader": "Neoforge",
+      "name": "guardian-neoforge-0.4.0-alpha.10+1.21.1.jar",
+      "bytes": 12464377,
+      "sha256": "74414d78b7e39a98f2cfebf7a161092a489cedfc8dd44789a0a2048fa31a6459"
+    }
+  ],
+  "schema": 6,
+  "config_version": 6,
+  "limits": {
+    "transactions": 50,
+    "owners": 32,
+    "changed_slots": 2048,
+    "inventory_reads_per_tick": 1
+  },
+  "pending": [
+    "durable journal and interruption recovery",
+    "fresh newer-history/container-identity checks before apply",
+    "player-driven rollback acceptance",
+    "item rollback apply"
+  ]
+}

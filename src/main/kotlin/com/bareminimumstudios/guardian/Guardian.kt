@@ -64,7 +64,7 @@ object Guardian : ModInitializer {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             GuardianCommands.register(dispatcher, permissionService, { runtime }, { config })
         }
-        ServerTickEvents.END_SERVER_TICK.register { _ -> runtime?.rollback()?.tick() }
+        ServerTickEvents.END_SERVER_TICK.register { _ -> runtime?.rollback()?.tick(); runtime?.itemRollbackPreview()?.tick() }
 
         logger.info("Guardian foundation initialized; permission provider={}", permissionService.providerName)
 

@@ -28,6 +28,7 @@ Guardian continues the ExProtect prototype. This checkpoint builds for Fabric an
 - Keeps audit history across server restarts with bundled SQLite.
 - Shows block history through commands or an inspector tool.
 - Restores blocks with bounded work per server tick.
+- Previews eligible container transfers without changing items; item rollback apply is still in development.
 - Logs WorldEdit operations through a separate optional adapter.
 - Runs on the server; players do not need Guardian installed.
 
@@ -49,6 +50,7 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 | `/guardian transactions player <name-or-uuid>` | Compatibility form for recent player item history. |
 | `/guardian inspect` | Toggle inspection: left-click for block history, right-click a container for item history. |
 | `/guardian rollback` | Preview or apply a block rollback. |
+| `/guardian rollback-items preview t:1h r:5` | Check item rollback candidates without changing items. |
 | `/guardian status` | Show storage, queue, and capture status. |
 
 `/co` remains an alias. `l`, `i`, and `rb` are the short subcommands. See [the block testing guide](docs/STEP_2C_TESTING.md) for filter examples and rollback checks.

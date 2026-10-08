@@ -51,7 +51,7 @@ class GuardianNeoForge {
         if (runtime?.stop() == false) logger.error("Guardian did not stop cleanly; check writer and storage errors.")
         runtime = null
     }
-    private fun tick(event: ServerTickEvent.Post) { runtime?.rollback()?.tick() }
+    private fun tick(event: ServerTickEvent.Post) { runtime?.rollback()?.tick(); runtime?.itemRollbackPreview()?.tick() }
     private fun commands(event: RegisterCommandsEvent) {
         GuardianCommands.register(event.dispatcher, permissions, { runtime }, { config })
     }

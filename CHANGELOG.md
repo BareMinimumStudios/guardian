@@ -7,6 +7,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.10+1.21.1] - 2026-10-08
+
+### Added
+
+- Read-only container rollback preview with explicit time and region filters, permissions and tab completion.
+- Component/count conservation checks, checks on both transfer endpoints, and reverse-history simulation without changing live items.
+- Conservative skips for changed inventories, unavailable owners, temporary slots, unsupported actions, uncertain ordering and dependent older transactions.
+- Bounded inventory reads and history limits, with planner regressions and dedicated-server preview checks on both loaders.
+
+
 ## [0.4.0-alpha.9+1.21.1] - 2026-10-08
 
 ### Added

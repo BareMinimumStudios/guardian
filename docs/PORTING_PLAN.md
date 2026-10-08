@@ -45,10 +45,11 @@ Implemented slices:
 - Optional balanced block-hopper transfers, including failed-push suppression and physical double-chest addresses.
 - Filtered item history, five-record inspector pages, clickable navigation, and read-only inspection before normal claim callbacks.
 - Vanilla 2×2/3×3 crafting grids, recipe-book placement, accepted result takes, close returns and recipe remainders in correlated transactions.
+- Read-only container rollback preview with component/count checks, both-endpoint region checks and dependent-history skips.
 
 The current milestone checks sided furnace slots, loaded chunk boundaries, and controlled hopper load. See [validation](VALIDATION.md) for measured results and the remaining acceptance boundaries.
 
-Bundle SQLite by default and retain DuckDB as an [optional build-time integration](DISTRIBUTION_SIZE.md). Next: conservative container rollback with component/count conflict checks and crash recovery. Rollback of temporary crafting grids and recipe transformations requires a separate recovery design; neither is enabled yet. Extended crafting menus and outputs thrown directly into the world remain separate acceptance/ownership work. Other automation mechanisms remain separate future slices. Fluids and entity logging remain outside this step.
+Bundle SQLite by default and retain DuckDB as an [optional build-time integration](DISTRIBUTION_SIZE.md). Next: a durable item rollback journal, interruption recovery and a conservative apply path. The [current preview](ITEM_ROLLBACK.md) never changes items and does not reserve inventories. Rollback of temporary crafting grids and recipe transformations requires a separate recovery design; neither is enabled yet. Extended crafting menus and outputs thrown directly into the world remain separate acceptance/ownership work. Other automation mechanisms remain separate future slices. Fluids and entity logging remain outside this step.
 
 ## Step 5 — Environmental attribution
 

@@ -1,3 +1,18 @@
+# Guardian item rollback preview checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.10+1.21.1`.
+
+- All 135 tests passed: 106 common and 29 Minecraft tests. Clean build, repeated configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. Loom still reports its known four-part SQLite JDBC version metadata warning; there are no compiler or test failures.
+- Dedicated Fabric and NeoForge fixtures each produced 56 unique hopper records in an isolated test database. A two-record transfer chain preview returned two eligible transactions without changing inventory contents.
+- Both loaders skipped an endpoint outside the selected region, rejected a changed destination and its dependent older transaction, preserved sealed loot, and refused a selection above the 50-record cap. Before/after inventory reads matched in the read-only cases.
+- Restarting with the original database retrieved existing three-record and two-record hopper histories. Independent hashes of all stored block and item rows were unchanged.
+- Final SQLite-only alpha.10 jars are installed on both dedicated servers. They are stopped, with original configurations restored and fixtures removed. Test databases, logs and prior jars are archived outside Git. Production files were untouched.
+- Schema 6, config version 6 and snapshot formats are unchanged. See [the validation data](validation/item-preview-alpha10.json) for limits and artifact hashes.
+
+This milestone is preview-only. It observes inventories over several ticks and does not reserve them. Item rollback apply, durable journaling, interruption recovery and player-driven recovery acceptance remain pending. See [item rollback](ITEM_ROLLBACK.md). Existing crafting client/modpack acceptance checks also remain open.
+
+## Historical alpha.9 crafting checkpoint
+
 # Guardian crafting correlation checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.9+1.21.1`.
