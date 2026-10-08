@@ -1,3 +1,17 @@
+# Guardian saved-container reader checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.17+1.21.1`.
+
+- All 205 tests passed: 168 common and 37 Minecraft tests. Clean build, configuration-cache reuse and separate WorldEdit adapter builds passed with Java 21 and Gradle 9.8.0. The known Loom SQLite metadata warning remains.
+- Eight new saved-NBT tests cover exact counts/components, empty slots, unchanged input NBT, malformed item lists/slots, duplicate/missing owners, versions/coordinates/status, unknown layouts/items, physical slot bounds and sealed loot.
+- Fabric and NeoForge actual region reads returned ORIGINAL from saved data while live slots were RESTORED with saving disabled. After explicit server save/flush, saved comparison returned RESTORED. Sealed saved loot returned UNAVAILABLE. The real I/O-worker and region accessor mixins ran on both loaders.
+- Saved/live comparison commands preserved live items and journal/source/owner claims. Normal audit hashes and history queries passed after restart. Alpha.17 SQLite-only jars are installed; both servers are stopped with original configurations restored and isolated rigs removed. Backups and logs stay outside Git.
+- Schema 8, config version 6 and item formats are unchanged. See [validation data](validation/saved-reader-alpha17.json).
+
+This establishes saved block-slot reading, not coordinated save completion or Minecraft crash recovery. Unloaded/missing-region acceptance, saved online-player inventories, unknown modded container layouts, exclusive gameplay coordination and mutating item apply remain pending.
+
+## Historical alpha.16 saved-state protocol checkpoint
+
 # Guardian saved-state protocol checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.16+1.21.1`.

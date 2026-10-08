@@ -15,7 +15,10 @@
     "InspectorPacketMixin",
     "CraftingMenuAccessor",
     "CraftingResultMixin",
-    "RecipePlacementMixin"
+    "RecipePlacementMixin",
+    "ChunkStorageAccessor",
+    "IOWorkerAccessor",
+    "RegionStorageAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

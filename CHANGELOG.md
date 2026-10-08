@@ -7,6 +7,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.17+1.21.1] - 2026-10-08
+
+### Added
+
+- Read-only `/guardian rollback-items recovery saved <operation UUID>` comparison for supported saved vanilla block-container slots.
+- Region reads on the owning Minecraft I/O worker after flushing queued writes, bypassing the pending-write read cache.
+- Bounded saved-chunk NBT decoding with exact item components, physical slot layouts, position/version checks and sealed-loot refusal.
+
+### Changed
+
+- Saved checks preserve live items, journal phases and claims. They do not serialize current live chunks or enable rollback apply.
+
+
 ## [0.4.0-alpha.16+1.21.1] - 2026-10-08
 
 ### Added

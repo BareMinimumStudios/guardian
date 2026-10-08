@@ -99,6 +99,11 @@ object GuardianCommands {
                     .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
             .then(Commands.literal("recovery")
                 .executes { context -> executeRecovery(context.source,null,runtimeProvider()) }
+                .then(Commands.literal("saved")
+                    .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block slots."));0 }
+                    .then(Commands.argument("operation",StringArgumentType.word())
+                        .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
+                        .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
                 .then(Commands.argument("operation",StringArgumentType.word())
                     .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
@@ -386,11 +391,11 @@ object GuardianCommands {
         return if (rollback.request(source, query, description)) 1 else 0
     }
 
-    private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?): Int {
+    private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?,saved: Boolean=false): Int {
         val recovery=runtime?.itemRecovery()
         if(recovery==null) { source.sendFailure(Component.literal("Guardian item recovery view is unavailable."));return 0 }
         val id=if(raw==null) null else runCatching { java.util.UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse { source.sendFailure(Component.literal("Guardian: use a complete operation UUID from /guardian rollback-items recovery."));return 0 }
-        return if(recovery.request(source,id)) 1 else 0
+        return if(recovery.request(source,id,saved)) 1 else 0
     }
 
     private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig): Int {

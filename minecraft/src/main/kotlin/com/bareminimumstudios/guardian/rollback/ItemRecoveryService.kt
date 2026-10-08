@@ -16,9 +16,10 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
     private var recent: List<String> = emptyList()
     fun isBusy()=active!=null
     fun suggestions()=recent
-    fun request(source: CommandSourceStack,id: UUID?=null): Boolean {
+    fun request(source: CommandSourceStack,id: UUID?=null,saved: Boolean=false): Boolean {
+        require(!saved || id!=null)
         if(active!=null || otherBusy()) { source.sendFailure(Component.literal("Guardian already has an item check in progress."));return false }
-        val session=Session(source,id);active=session
+        val session=Session(source,id,saved);active=session
         source.sendSystemMessage(Component.literal("Guardian: checking item recovery journal; no items will be changed..."))
         fence(session) {
             if(id==null) history.recoveryHeaders({ headers ->
@@ -32,6 +33,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
                 if(active !== session) return@recoveryRecord
                 if(record==null) { refuse(session,"Journal entry not found.");return@recoveryRecord }
                 val check=runCatching { ItemRecoveryCheck(record) }.getOrElse { refuse(session,"Journal plan is unsupported or inconsistent.");return@recoveryRecord }
+                if(saved && check.owners.any { it !is ItemSlotOwner.BlockContainer }) { refuse(session,"Saved checks currently support physical vanilla block inventories only.");return@recoveryRecord }
                 session.watch=runCatching { pipeline.observeOwners(check.owners) }.getOrElse { refuse(session,"Owner observation is unavailable.");return@recoveryRecord }
                 session.check=check;session.owners.addAll(check.owners);session.ready=true
             }, { refuse(session,"Journal entry not found or could not be read; see server log.") })
@@ -44,6 +46,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
         if(!session.ready) return
         val owner=session.owners.pollFirst()
         if(owner!=null) {
+            if(session.saved) { readSaved(session,owner as ItemSlotOwner.BlockContainer);return }
             val observation=runCatching { MinecraftInventoryObservation.read(server,owner,session.check!!.addresses(owner)) }.getOrNull()
             session.check!!.accept(owner,observation?.snapshot)
             if(observation!=null) session.bindings[owner]=observation
@@ -56,11 +59,27 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
             if(fresh==null || fresh.phase!=check.record.phase || fresh.createdAt!=check.record.createdAt || fresh.entries.map { it.transactionId }!=check.record.entries.map { it.transactionId } || fresh.entries.zip(check.record.entries).any { (a,b) -> a.changes!=b.changes }) { refuse(session,"Journal changed during observation; try again.");return@recoveryRecord }
             val changed=session.bindings.filterValues { !it.isCurrent() }.keys + (session.watch?.changedOwners() ?: emptySet())
             val observed=check.observe(changed)
-            session.source.sendSystemMessage(Component.literal("Guardian item recovery ${fresh.operationId}: phase=${fresh.phase}, observed=${observed.name}."))
-            session.source.sendSystemMessage(Component.literal(label(observed)))
+            session.source.sendSystemMessage(Component.literal("Guardian item recovery ${fresh.operationId}: phase=${fresh.phase}, ${if(session.saved) "saved" else "observed"}=${observed.name}."))
+            session.source.sendSystemMessage(Component.literal(if(session.saved) "Saved-slot comparison: ${observed.name}. Queued chunk writes were flushed; live chunks were not saved or loaded. This is not coordinated save completion." else label(observed)))
             session.source.sendSystemMessage(Component.literal("Read-only observation: no items changed, no phase changed, no claims cleared. This is not permission to replay items."))
             session.watch?.close();active=null
         }, { refuse(session,"Journal recheck failed; see server log.") }) }
+    }
+    private fun readSaved(session: Session,owner: ItemSlotOwner.BlockContainer) {
+        session.ready=false
+        val key=net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.ResourceLocation.parse(owner.dimension.toString()))
+        val world=server.getLevel(key)
+        if(world==null) { session.check!!.accept(owner,null);session.ready=true;return }
+        val pos=net.minecraft.world.level.ChunkPos(owner.position.x shr 4,owner.position.z shr 4)
+        try {
+            com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedChunkReader.read(world.chunkSource.chunkMap,pos).whenComplete { tag,error -> server.execute {
+                if(active !== session) return@execute
+                val snapshot=if(error!=null || tag==null || tag.isEmpty) null else runCatching {
+                    com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedContainerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),world.registryAccess())
+                }.getOrNull()
+                session.check!!.accept(owner,snapshot);session.ready=true
+            } }
+        } catch(_: Exception) { session.check!!.accept(owner,null);session.ready=true }
     }
     fun stop() { val session=active;active=null;session?.barrier?.cancel();session?.watch?.close();recent=emptyList() }
     private fun fence(session: Session,after: () -> Unit) {
@@ -79,7 +98,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
         ItemRecoveryObservation.CONFLICT -> "Observed items or components match neither expected state; the result is unresolved."
         ItemRecoveryObservation.UNAVAILABLE -> "An owner is offline/busy, missing/unloaded, sealed, replaced or had captured activity during checking; the result is unresolved."
     }
-    private class Session(val source: CommandSourceStack,val id: UUID?) {
+    private class Session(val source: CommandSourceStack,val id: UUID?,val saved: Boolean) {
         val started=System.nanoTime();var barrier: AuditWriteBarrier?=null
         var check: ItemRecoveryCheck?=null;var ready=false
         var watch: AuditOwnerObservation?=null

@@ -1,0 +1,91 @@
+{
+  "version": "0.4.0-alpha.17+1.21.1",
+  "mode": "actual flushed region readback; saved block comparison only; item apply disabled",
+  "tests": 205,
+  "new_saved_decoder_test_methods": 8,
+  "live": [
+    {
+      "loader": "Fabric",
+      "preview_eligible": 2,
+      "observed": [
+        "ORIGINAL",
+        "RESTORED",
+        "PARTIAL",
+        "CONFLICT",
+        "UNAVAILABLE"
+      ],
+      "saved_checks": [
+        "ORIGINAL",
+        "ORIGINAL despite unsaved restored live slots",
+        "RESTORED after explicit flush",
+        "UNAVAILABLE sealed loot"
+      ],
+      "saved_reader_leaves_live_items_unchanged": true,
+      "observations_leave_items_unchanged": true,
+      "journal_and_claims_unchanged": true,
+      "normal_audit_unchanged": true,
+      "normal_unfinished": 0,
+      "schema": 8
+    },
+    {
+      "loader": "Neoforge",
+      "preview_eligible": 2,
+      "observed": [
+        "ORIGINAL",
+        "RESTORED",
+        "PARTIAL",
+        "CONFLICT",
+        "UNAVAILABLE"
+      ],
+      "saved_checks": [
+        "ORIGINAL",
+        "ORIGINAL despite unsaved restored live slots",
+        "RESTORED after explicit flush",
+        "UNAVAILABLE sealed loot"
+      ],
+      "saved_reader_leaves_live_items_unchanged": true,
+      "observations_leave_items_unchanged": true,
+      "journal_and_claims_unchanged": true,
+      "normal_audit_unchanged": true,
+      "normal_unfinished": 0,
+      "schema": 8
+    }
+  ],
+  "schema": 8,
+  "config_version": 6,
+  "max_entries": 50,
+  "max_owners": 32,
+  "max_changed_slots": 2048,
+  "max_retained_payload_bytes": 16777216,
+  "recovery_timeout_seconds": 10,
+  "artifact_integrity": [
+    {
+      "loader": "Fabric",
+      "name": "guardian-0.4.0-alpha.17+1.21.1.jar",
+      "bytes": 12584948,
+      "sha256": "7e2f6d7afd64bf0bfaa943bdbfa6ca59c370ec9d1d5eee0cac548bf43218c45b"
+    },
+    {
+      "loader": "NeoForge",
+      "name": "guardian-neoforge-0.4.0-alpha.17+1.21.1.jar",
+      "bytes": 12572546,
+      "sha256": "5724d172700197b1181b6969eaa3c0d353a5ef4d906a4d6e6b19765e0e386b69"
+    },
+    {
+      "loader": "WorldEdit",
+      "name": "guardian-worldedit-0.4.0-alpha.17+1.21.1.jar",
+      "bytes": 13056,
+      "sha256": "9a9ffc3b82710c2678f6963bdfc7df0401d38c18c8bf9ce15f8309e72075091a"
+    }
+  ],
+  "pending": [
+    "unloaded and missing-region runtime acceptance",
+    "saved player inventories",
+    "unknown modded saved container layouts",
+    "exclusive gameplay coordination",
+    "coordinated save port and journal completion",
+    "mutating item apply and process-crash acceptance"
+  ],
+  "decoded_chunk_limit_bytes": 16777216,
+  "reader_scope": "Queued writes flushed, actual region NBT read through owning worker; current live chunks not serialized; no completion port invoked"
+}

@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.16+1.21.1`.
+Checkpoint: `0.4.0-alpha.17+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -68,6 +68,20 @@ Journal phases are PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED and CANCELLE
 On startup, an APPLYING journal becomes RECOVERY_REQUIRED and retains its claims. It is not replayed. Recovery observations compare exact counts/components with original and restored slots. Partial, conflicting, missing and cyclic indistinguishable states remain unresolved. `/guardian status` reports `itemRecovery`, and startup warns if unfinished operations exist. Ordinary previews do not create journals. Recovery listing reads headers only and loads one bounded payload on request.
 
 The audit-write barrier is available, but apply still needs gameplay coordination and a fresh barrier/history check at the moment of mutation, exclusive live inventory coordination at mutation time, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
+
+## Compare saved block slots
+
+```text
+/guardian rollback-items recovery saved <operation UUID>
+```
+
+This read-only check uses the same permission and bounded journal validation as the live recovery view. It supports journals whose owners are all physical vanilla block inventories: barrels, physical chest halves, hoppers, furnaces, blast furnaces, smokers, dispensers, droppers, brewing stands and shulker boxes. Player inventories and unknown modded layouts are unavailable in this slice.
+
+The reader first flushes the owning chunk worker's queued writes. It then reads region bytes through that worker, bypassing its pending-write read cache. It does not serialize current live chunks, load chunks, unpack loot or advance journals. Unsaved live edits can therefore differ from this saved result. It processes one owner at a time and retains the existing ten-second observation deadline. A flush/read already in progress can finish after timeout or shutdown; stale callbacks are ignored.
+
+Decoded chunk data is limited to 16 MiB. The decoder requires the current Minecraft data version, full chunk status, matching chunk/block coordinates, one matching block entity, a known physical slot layout and valid unique saved slot numbers. Exact item counts and Data Components use the same registry-aware canonical codec as live audit snapshots. Missing saved owners, incompatible data, unknown layouts, unreadable components and sealed loot are unavailable. Missing region files are not opened or created.
+
+Saved owners are still sampled separately and gameplay is not frozen. A RESTORED saved comparison is not permission to complete or replay a journal. Exclusive coordination, live-owner identity checks and verified save acknowledgements must accompany a future completion adapter. The command does not promise protection against power loss.
 
 ## Saved-state completion protocol
 
