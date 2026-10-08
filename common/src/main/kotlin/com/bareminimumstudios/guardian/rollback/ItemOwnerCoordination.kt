@@ -106,6 +106,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
     }
 
     private fun reapExpired() {
+        if (operations.isEmpty()) return
         val now = clock()
         operations.values.filter { now - it.started >= TimeUnit.SECONDS.toNanos(10) }
             .forEach { finish(it, ItemOwnerLeaseState.EXPIRED) }

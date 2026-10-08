@@ -85,6 +85,14 @@ object MinecraftInventoryCoordination {
         }
     }
 
+    @JvmStatic fun beforeBlockInventoryMutation(block: BlockEntity) {
+        if (block !is BaseContainerBlockEntity) return
+        val current = structuralBinding(block.level) ?: return
+        // Inventory writes can run item, loot or component callbacks with unbounded owners.
+        // Cancel coordination, then let the caller's normal mutation proceed.
+        current.owners.invalidateAll()
+    }
+
     @JvmStatic fun beforeBlockEntityRemoval(block: BlockEntity) {
         val level = block.level ?: return
         if (needsStructuralCheck(level)) beforeBlockChange(level, block.blockPos, block.blockState)

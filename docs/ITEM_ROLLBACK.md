@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.29+1.21.1`.
+Checkpoint: `0.4.0-alpha.30+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -230,3 +230,13 @@ Explicit descriptors cover the shared LivingEntity/equipment-slot and ServerPlay
 ItemStack.inventoryTick pauses for ServerPlayer-owned ticks during any reservation, before pop-time changes and item callbacks. It checks the actor's actual level rather than trusting the level passed by the caller. Ordinary Inventory.tick reaches this guard for its nonempty stacks; direct calls to Item.inventoryTick or arbitrary modded replacement methods remain outside this coverage. Non-player tick/damage paths proceed normally.
 
 Live synthetic-player tests cover main/offhand and armor replacement, inherited hand setters, armor/helmet/shield damage and breaks, direct durability calls and callback order, plus pause/resume through direct stack and ordinary inventory ticks. These are coordination hooks, not equipment/damage history or entity logging. Modpack callbacks, connected-client effects, direct mutable stack/list writes, trusted write permits and saved-state completion remain pending. Item rollback apply stays disabled.
+
+## Direct block-container changes
+
+Alpha.30 invalidates all reservations before loaded BaseContainerBlockEntity slot setters, removals, clearing, RandomizableContainerBlockEntity loot-table/seed setters and hopper/furnace overrides. Final BlockEntity NBT reload and component-application entry points use the same guard for base-container instances. Direct changes then proceed normally, including commands and integrations using these APIs.
+
+The guard uses the existing server/thread binding without item reads, chunk loading or loot unpacking. Detached containers and off-thread mutations remain outside the coordination contract. The idle common registry skips expiration clock reads and scans when it has no operations. Arbitrary item/loot/component callbacks can affect inventories beyond the target block, so direct writes conservatively cancel every pending operation. An unrelated hopper transfer that reaches a guarded setter can therefore cancel a reservation while continuing normally; a future apply driver must recheck its lease and abort.
+
+Ordinary item reads and serialization with no pending loot table preserve reservations. Existing read paths that unpack loot, direct getItems/setItems or mutable stack/list/component writes, arbitrary overriding methods and loader capabilities bypassing these APIs remain unverified. Loaded containers with deferred loot are still ineligible for saved-state reconciliation; the setter hooks do not certify every loot callback.
+
+Both loaders exercise the eight existing supported inventories: barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker. This does not widen the owner whitelist or add direct-command mutation history. Trusted write permits and actual save/apply remain pending; item rollback apply stays disabled.

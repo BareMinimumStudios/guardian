@@ -1,3 +1,19 @@
+# Guardian direct-container checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.30+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. Common reservation expiration/permit tests passed after adding an idle-registry fast path.
+- IDEA reported no problems in the changed bridge and five shared mixins. Both loader artifacts package required base/randomizable/hopper/furnace mutation and NBT/component hooks.
+- Fabric and NeoForge each passed 82 live container checks with item logging off/on: 328 total across barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker. Ordinary item reads and serialization preserved reservations. Direct setters/removals/clearing revoked all operations and produced the expected stack counts.
+- NBT reloads through both entry points restored the expected items. Component application through item-stack and direct map/patch entry points cleared contents as expected. Randomizable containers also revoked reservations when setting loot seeds and clearing loaded loot-table metadata. Tests did not unpack/generate loot.
+- The first Fabric run found hopper slot overrides that bypassed the shared setters. Explicit hopper insertion/removal guards repaired the gap; the final complete matrix passed on both loaders. Private agents replaced no Minecraft bytecode and created no world players.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both servers are stopped with alpha.30 installed, original configs restored, temporary blocks/tickets removed and the matching optional Fabric WorldEdit adapter installed.
+- Schema 8, config 6 and audit formats are unchanged. Isolated checks produced zero container records. Standard artifacts remain SQLite-only. Private instructions, agents, tooling, logs and databases stay outside Git and archives. See [validation data](validation/direct-containers-alpha30.json).
+
+Detached/off-thread containers, direct mutable stack/list/component writes, arbitrary overrides, bypassing capabilities, loot-producing reads and actual saved-state completion remain pending. Direct changes proceed normally after cancellation; unrelated guarded writes can also cancel coordination. The owner whitelist is unchanged. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.29 equipment and item-tick checkpoint
+
 # Guardian equipment and item-tick checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.29+1.21.1`.

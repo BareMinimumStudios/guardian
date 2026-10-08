@@ -11,6 +11,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.30+1.21.1] - 2026-10-08
+
+### Added
+
+- Reservation invalidation before direct block-container slot writes, removals, clearing, loot-table/seed setters and hopper/furnace overrides.
+- Guards before loaded block-container NBT reload and Data Component application entry points.
+
+### Changed
+
+- Empty reservation registries skip expiration clock reads and scans on frequent guard calls.
+
+Direct changes proceed normally after cancellation. Detached/off-thread containers, direct mutable lists/stacks, arbitrary overriding methods and verified save/apply remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.29+1.21.1] - 2026-10-08
 
 ### Added
