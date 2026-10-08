@@ -1,3 +1,17 @@
+# Guardian item recovery view checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.14+1.21.1`.
+
+- All 174 tests passed: 145 common and 29 Minecraft tests. Clean build, configuration-cache reuse and the separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. The known Loom SQLite version metadata warning remains.
+- Nine new recovery tests cover exact components, all observation outcomes, incomplete/unavailable observations, owner identity invalidation, immutable owner lists, incoherent/duplicate chains, transient owners, conservation and payload/owner/entry bounds.
+- Fabric and NeoForge isolated fixtures each previewed a complete two-transfer hopper chain. A seeded RECOVERY_REQUIRED journal reported ORIGINAL, RESTORED, PARTIAL, CONFLICT and UNAVAILABLE for controlled live inventories. Every command preserved sampled contents, journal rows, source claims and owner claims. BOTH is covered by a cyclic pure-domain fixture.
+- Normal block/item row hashes and existing three-record/two-record history queries passed after restart on both loaders. Normal journals list zero unfinished operations. Alpha.14 SQLite-only jars are installed; both servers are stopped with original settings restored and test rigs removed. Databases, logs and backups stay outside Git.
+- Schema 8, config version 6 and payload formats are unchanged. See [validation data](validation/item-recovery-alpha14.json).
+
+Recovery remains read-only. Multi-tick observations and live identity checks do not freeze gameplay or certify saved inventories. Connected-client UUID completion, online-player recovery observations, identity replacement during a live check, gameplay coordination and durable save/crash reconciliation remain pending. Item rollback apply is disabled.
+
+## Historical alpha.13 audit barrier checkpoint
+
 # Guardian audit barrier checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.13+1.21.1`.

@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.13+1.21.1`.
+Checkpoint: `0.4.0-alpha.14+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -25,11 +25,31 @@ Recorded block history at or after the container's selected item history invalid
 
 Crafting, creative changes, drops, close-time returns, temporary cursor/grid addresses and item transformations are excluded. The preview does not turn a recipe into its ingredients or recreate a dropped item.
 
-The preview checks at most 50 transactions, or the configured rollback record limit if lower, 32 logical inventories and 2,048 changed slots. Larger selections are refused instead of silently truncated. It reads one inventory per server tick, and only one preview can run at a time.
+The preview checks at most 50 transactions, or the configured rollback record limit if lower, 32 logical inventories and 2,048 changed slots. Larger selections are refused instead of silently truncated. It reads participating slots from one inventory per server tick. Preview and recovery share one active check. Retained item payloads are capped at 16 MiB; an excessive observation is unavailable.
+
+## Inspect unfinished journals
+
+```text
+/guardian rollback-items recovery
+/guardian rollback-items recovery <operation UUID>
+```
+
+The same `guardian.rollback` permission or operator level 2 is required. Listing shows at most ten unfinished headers; click one to suggest its command. Their UUIDs are available for completion after listing. A specific check loads one bounded journal, observes participating slots one owner per tick, waits for the accepted audit prefix again and confirms the journal did not change. It times out after ten seconds. Unloaded chunks stay unloaded and sealed loot stays sealed.
+
+| Observation | Meaning |
+| --- | --- |
+| ORIGINAL | Observed slots match their recorded state before rollback. |
+| RESTORED | Observed slots match the planned restored state. |
+| BOTH | Both states are identical; whether apply occurred is unresolved. |
+| PARTIAL | Slots contain a mixture of original and restored states. |
+| CONFLICT | Items or components match neither expected state. |
+| UNAVAILABLE | An owner could not be read or its live identity changed. |
+
+These commands never change items, advance phases or clear claims. ORIGINAL and RESTORED describe sampled live slots; neither establishes durable chunk/player saves. Owners are sampled across ticks, so the result is not an atomic inventory snapshot. Gameplay continues during the check. Treat partial, conflicting, unavailable and indistinguishable states as unresolved; no automatic replay follows a result.
 
 ## What remains before apply
 
-Observations collected over several ticks can become stale. A successful preview is not a reservation or a promise that a later apply will succeed. It checks persisted newer history and recorded block changes after its accepted-prefix barrier, but cannot prove that an unlogged replacement never occurred or that changes accepted after that barrier are already persisted.
+Observations collected over several ticks can become stale. A successful preview is not a reservation or a promise that a later apply will succeed. After reading owners, it repeats the accepted-prefix barrier and persisted-history check. It then checks captured live object identities, block state, container size, sealed loot and player menu identity. These checks detect observed owner changes but do not freeze contents, prove that no unlogged mutation occurred or cover changes accepted after the final barrier.
 
 The persistent journal now records a bounded transfer chain atomically with inventory reservations and source transaction claims. Preparation verifies the source payloads against stored history and checks owner history, recorded block changes and existing claims inside the same database transaction. A second operation cannot reserve the same logical inventory or claim an already completed source. These reservations coordinate journal operations; they do not freeze ordinary gameplay inventories.
 
@@ -37,7 +57,7 @@ Journal phases are PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED and CANCELLE
 
 On startup, an APPLYING journal becomes RECOVERY_REQUIRED and retains its claims. It is not replayed. Recovery observations compare exact counts/components with original and restored slots. Partial, conflicting, missing and cyclic indistinguishable states remain unresolved. `/guardian status` reports `itemRecovery`, and startup warns if unfinished operations exist. Ordinary previews do not create journals. Recovery listing reads headers only and loads one bounded payload on request.
 
-The audit-write barrier is available, but apply still needs gameplay coordination and a fresh barrier/history check at the moment of mutation, live inventory ownership and container identity, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
+The audit-write barrier is available, but apply still needs gameplay coordination and a fresh barrier/history check at the moment of mutation, exclusive live inventory coordination at mutation time, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
 
 ## Owner index migration
 

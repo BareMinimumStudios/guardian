@@ -16,9 +16,11 @@ object ContainerRollbackPlanner {
     fun supported(value: ContainerTransactionSnapshot): Boolean =
         value.changes.all { it.address.owner is ItemSlotOwner.BlockContainer || it.address.owner is ItemSlotOwner.PlayerInventory }
 
-    fun conserving(value: ContainerTransactionSnapshot): Boolean {
+    fun conserving(value: ContainerTransactionSnapshot): Boolean = conserving(value.changes)
+
+    fun conserving(changes: List<ItemSlotChange>): Boolean {
         val totals = mutableMapOf<Pair<ResourceId?, BinaryPayload?>, Long>()
-        for (change in value.changes) {
+        for (change in changes) {
             if (!change.before.isEmpty) totals.merge(change.before.itemId to change.before.itemData, -change.before.count.toLong(), Long::plus)
             if (!change.after.isEmpty) totals.merge(change.after.itemId to change.after.itemData, change.after.count.toLong(), Long::plus)
         }

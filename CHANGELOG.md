@@ -7,6 +7,21 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.14+1.21.1] - 2026-10-08
+
+### Added
+
+- Read-only item recovery listing and per-operation observations, with suggested commands and operation UUID completion.
+- Bounded recovery validation for coherent transfer chains, exact item components, unavailable owners and ambiguous results.
+- Live container and player identity checks before returning an item observation.
+
+### Changed
+
+- Item previews repeat the accepted audit barrier and persisted-history checks after reading inventories.
+- Preview and recovery checks share one active slot, read only participating item slots and bound retained item payloads to 16 MiB.
+- Item rollback apply remains disabled; recovery observations preserve journal phases and claims.
+
+
 ## [0.4.0-alpha.13+1.21.1] - 2026-10-08
 
 ### Added

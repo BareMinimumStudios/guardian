@@ -38,15 +38,22 @@ object MinecraftBlockContainerSnapshotter {
         return container !is RandomizableContainer || container.lootTable == null
     }
 
-    fun capture(container: Container, level: ServerLevel): InventorySnapshot? {
+    fun capture(container: Container,level: ServerLevel): InventorySnapshot? = captureSelected(container,level,null)
+
+    fun captureSelected(container: Container, level: ServerLevel,wanted: Set<ItemSlotAddress>?): InventorySnapshot? {
         if (!observable(container, level)) return null
         require(container.containerSize in 1..ContainerChangesCodec.MAX_SLOTS)
         val slots = LinkedHashMap<ItemSlotAddress, ItemStackSnapshot>()
         val items = MinecraftItemSnapshotter.CaptureBatch(level.registryAccess())
+        var retainedBytes=0L
         for (index in 0 until container.containerSize) {
             val address = address(container, index, level)
+            if(wanted!=null && address !in wanted) continue
             require(address !in slots) { "Container aliases a logical slot" }
-            slots[address] = items.capture(container.getItem(index))
+            val item=items.capture(container.getItem(index))
+            retainedBytes+=(item.itemData?.size ?: 0)
+            if(wanted!=null) require(retainedBytes<=16L*1024*1024) { "Observation payload budget exceeded" }
+            slots[address] = item
         }
         return InventorySnapshot(slots)
     }

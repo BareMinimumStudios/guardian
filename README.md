@@ -51,6 +51,7 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 | `/guardian inspect` | Toggle inspection: left-click for block history, right-click a container for item history. |
 | `/guardian rollback` | Preview or apply a block rollback. |
 | `/guardian rollback-items preview t:1h r:5` | Check item rollback candidates without changing items. |
+| `/guardian rollback-items recovery [operation UUID]` | List unfinished item journals or check their observed state. |
 | `/guardian status` | Show storage, queue, and capture status. |
 
 `/co` remains an alias. `l`, `i`, and `rb` are the short subcommands. See [the block testing guide](docs/STEP_2C_TESTING.md) for filter examples and rollback checks.

@@ -92,11 +92,16 @@ object GuardianCommands {
                 .suggests { context, builder -> suggestFilters(context.source, builder, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
         root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 2) }
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:<time> [u:<player>] [r:<radius|#worldedit>] [x:<x> y:<y> z:<z>]")); 0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, or recovery [operation UUID]. Both are read-only.")); 0 }
             .then(Commands.literal("preview")
                 .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:1h r:10. Preview only; no items change.")); 0 }
                 .then(Commands.argument("filters",StringArgumentType.greedyString()).suggests { context,builder -> suggestFilters(context.source,builder,true,true) }
-                    .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) })))
+                    .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
+            .then(Commands.literal("recovery")
+                .executes { context -> executeRecovery(context.source,null,runtimeProvider()) }
+                .then(Commands.argument("operation",StringArgumentType.word())
+                    .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
+                    .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
         dispatcher.register(root)
     }
 
@@ -379,6 +384,13 @@ object GuardianCommands {
             "filter=[$raw], center=${center!!.x},${center.y},${center.z}, radius=$radius"
         }
         return if (rollback.request(source, query, description)) 1 else 0
+    }
+
+    private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?): Int {
+        val recovery=runtime?.itemRecovery()
+        if(recovery==null) { source.sendFailure(Component.literal("Guardian item recovery view is unavailable."));return 0 }
+        val id=if(raw==null) null else runCatching { java.util.UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse { source.sendFailure(Component.literal("Guardian: use a complete operation UUID from /guardian rollback-items recovery."));return 0 }
+        return if(recovery.request(source,id)) 1 else 0
     }
 
     private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig): Int {

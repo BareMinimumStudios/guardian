@@ -67,6 +67,19 @@ class BlockHistoryService(
         }
     }
 
+    fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
+        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
+    }
+    fun recoveryHeaders(onSuccess: (List<com.bareminimumstudios.guardian.rollback.ItemRollbackSummary>) -> Unit,onFailure: (Throwable) -> Unit) {
+        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.unfinishedItemRollbacks(10) ?: throw IllegalStateException("Persistent journal unavailable") },onSuccess,onFailure)
+    }
+    private fun <T> recoveryWork(task: () -> T,onSuccess: (T) -> Unit,onFailure: (Throwable) -> Unit) {
+        if(!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) };return }
+        executor.execute {
+            runCatching(task).onSuccess { result -> server.execute { onSuccess(result) } }.onFailure { error -> logger.warn("Item recovery observation failed",error);server.execute { onFailure(error) } }
+        }
+    }
+
     fun setRollbackState(
         rowIds: Collection<Long>,
         state: BlockRollbackState,
