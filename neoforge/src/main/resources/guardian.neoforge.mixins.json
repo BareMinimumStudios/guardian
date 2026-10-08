@@ -33,7 +33,12 @@
     "PlayerTransitionMixin",
     "InventoryMutationMixin",
     "PlayerUseMixin",
-    "OngoingItemUseMixin"
+    "OngoingItemUseMixin",
+    "PlayerEquipmentMixin",
+    "EquipmentDamageMixin",
+    "InventoryItemTickMixin",
+    "ItemDurabilityMixin",
+    "NeoForgeItemDurabilityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

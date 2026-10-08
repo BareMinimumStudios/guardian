@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.28+1.21.1`.
+Checkpoint: `0.4.0-alpha.29+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -220,3 +220,13 @@ Alpha.28 guards LivingEntity item-use entry points for ServerPlayer instances. D
 Active release and stop remain available. They revoke all reservations before original callbacks because release, finish and NeoForge onStopUsing behavior may affect inventories beyond the held stack. Inactive release/stop does not revoke reservations. Cleanup then proceeds normally, including charged bow release. A successful completion can reach stop cleanup and conservatively cancel reservations acquired by callbacks during completion.
 
 This is coordination, not logging of consumption or projectiles. Non-player entities use their normal paths. Synthetic-player checks cover food, milk-bucket returns and bow release on both loaders; connected-client use animations and modpack callbacks remain acceptance work. Direct mutable stack/list writes, arbitrary replacement methods and verified save/apply remain pending. Commands still do not acquire reservations; item rollback apply remains disabled.
+
+## Equipment, durability and inventory-item ticks
+
+Alpha.29 invalidates all reservations before ServerPlayer equipment replacement, shield damage, the shared armor-damage entry point and player-attributed ItemStack durability overloads. Equipment callbacks, enchantment processing and NeoForge armor/damage hooks may mutate inventories beyond the equipped slot, so affected ownership cannot be bounded to that slot. Invalidation cancels coordination and then lets the original operation proceed. Combat and break handling are not denied.
+
+Explicit descriptors cover the shared LivingEntity/equipment-slot and ServerPlayer/callback durability overloads. NeoForge's additional LivingEntity/callback overload has a separate loader-specific guard. Damage with a null or non-player actor is not attributed to a player inventory; direct stack/component writes without an actor remain unverified.
+
+ItemStack.inventoryTick pauses for ServerPlayer-owned ticks during any reservation, before pop-time changes and item callbacks. It checks the actor's actual level rather than trusting the level passed by the caller. Ordinary Inventory.tick reaches this guard for its nonempty stacks; direct calls to Item.inventoryTick or arbitrary modded replacement methods remain outside this coverage. Non-player tick/damage paths proceed normally.
+
+Live synthetic-player tests cover main/offhand and armor replacement, inherited hand setters, armor/helmet/shield damage and breaks, direct durability calls and callback order, plus pause/resume through direct stack and ordinary inventory ticks. These are coordination hooks, not equipment/damage history or entity logging. Modpack callbacks, connected-client effects, direct mutable stack/list writes, trusted write permits and saved-state completion remain pending. Item rollback apply stays disabled.

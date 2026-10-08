@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.29+1.21.1] - 2026-10-08
+
+### Added
+
+- Reservation invalidation before player equipment changes, armor/shield callbacks and player-attributed durability changes, including NeoForge's extra damage overload.
+- Player inventory-item tick guards before stack animation updates and item callbacks during reservations.
+
+Equipment changes and combat continue normally after invalidation. Arbitrary mutable stack/list writes, unattributed damage and verified save/apply remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.28+1.21.1] - 2026-10-08
 
 ### Added

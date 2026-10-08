@@ -1,0 +1,156 @@
+{
+  "checkpoint": "0.4.0-alpha.29+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": 213,
+    "minecraft": 49,
+    "total": 262,
+    "failures": 0
+  },
+  "runtimeChecks": 66,
+  "runs": [
+    {
+      "loader": "Fabric",
+      "logging": false,
+      "checks": [
+        "mainhand equipment replacement revokes all operations while preserving ordinary result",
+        "offhand equipment replacement revokes all operations while preserving ordinary result",
+        "armor equipment replacement revokes all operations while preserving ordinary result",
+        "inherited hand setter revokes all operations while preserving ordinary result",
+        "armor damage revokes all operations while preserving ordinary result",
+        "helmet damage revokes all operations while preserving ordinary result",
+        "direct equipment damage revokes all operations while preserving ordinary result",
+        "armor break revokes all operations while preserving ordinary result",
+        "shield damage revokes all operations while preserving ordinary result",
+        "shield break revokes all operations while preserving ordinary result",
+        "entity-attributed durability revokes all operations while preserving ordinary result",
+        "player damage overload revokes operations before break callback",
+        "direct inventory-item tick pauses animation and callbacks during unrelated reservation",
+        "ordinary player inventory tick retains items and reservation",
+        "direct inventory-item tick resumes after release",
+        "ordinary inventory tick resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Fabric",
+      "logging": true,
+      "checks": [
+        "mainhand equipment replacement revokes all operations while preserving ordinary result",
+        "offhand equipment replacement revokes all operations while preserving ordinary result",
+        "armor equipment replacement revokes all operations while preserving ordinary result",
+        "inherited hand setter revokes all operations while preserving ordinary result",
+        "armor damage revokes all operations while preserving ordinary result",
+        "helmet damage revokes all operations while preserving ordinary result",
+        "direct equipment damage revokes all operations while preserving ordinary result",
+        "armor break revokes all operations while preserving ordinary result",
+        "shield damage revokes all operations while preserving ordinary result",
+        "shield break revokes all operations while preserving ordinary result",
+        "entity-attributed durability revokes all operations while preserving ordinary result",
+        "player damage overload revokes operations before break callback",
+        "direct inventory-item tick pauses animation and callbacks during unrelated reservation",
+        "ordinary player inventory tick retains items and reservation",
+        "direct inventory-item tick resumes after release",
+        "ordinary inventory tick resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": false,
+      "checks": [
+        "mainhand equipment replacement revokes all operations while preserving ordinary result",
+        "offhand equipment replacement revokes all operations while preserving ordinary result",
+        "armor equipment replacement revokes all operations while preserving ordinary result",
+        "inherited hand setter revokes all operations while preserving ordinary result",
+        "armor damage revokes all operations while preserving ordinary result",
+        "helmet damage revokes all operations while preserving ordinary result",
+        "direct equipment damage revokes all operations while preserving ordinary result",
+        "armor break revokes all operations while preserving ordinary result",
+        "shield damage revokes all operations while preserving ordinary result",
+        "shield break revokes all operations while preserving ordinary result",
+        "entity-attributed durability revokes all operations while preserving ordinary result",
+        "player damage overload revokes operations before break callback",
+        "NeoForge LivingEntity damage overload revokes operations before break callback",
+        "direct inventory-item tick pauses animation and callbacks during unrelated reservation",
+        "ordinary player inventory tick retains items and reservation",
+        "direct inventory-item tick resumes after release",
+        "ordinary inventory tick resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": true,
+      "checks": [
+        "mainhand equipment replacement revokes all operations while preserving ordinary result",
+        "offhand equipment replacement revokes all operations while preserving ordinary result",
+        "armor equipment replacement revokes all operations while preserving ordinary result",
+        "inherited hand setter revokes all operations while preserving ordinary result",
+        "armor damage revokes all operations while preserving ordinary result",
+        "helmet damage revokes all operations while preserving ordinary result",
+        "direct equipment damage revokes all operations while preserving ordinary result",
+        "armor break revokes all operations while preserving ordinary result",
+        "shield damage revokes all operations while preserving ordinary result",
+        "shield break revokes all operations while preserving ordinary result",
+        "entity-attributed durability revokes all operations while preserving ordinary result",
+        "player damage overload revokes operations before break callback",
+        "NeoForge LivingEntity damage overload revokes operations before break callback",
+        "direct inventory-item tick pauses animation and callbacks during unrelated reservation",
+        "ordinary player inventory tick retains items and reservation",
+        "direct inventory-item tick resumes after release",
+        "ordinary inventory tick resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    }
+  ],
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    },
+    {
+      "loader": "Neoforge",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    }
+  ],
+  "limitations": [
+    "Item rollback apply remains disabled; commands do not acquire reservations.",
+    "Direct mutable stack/list/component writes, unattributed damage, direct item callbacks and arbitrary modded replacements remain pending.",
+    "Synthetic server players exercise actual methods, not connected-client or modpack acceptance.",
+    "Equipment/durability operations revoke all reservations before callbacks and then proceed normally.",
+    "Inventory-item tick coverage is ItemStack.inventoryTick; direct calls to Item.inventoryTick can bypass it.",
+    "These hooks do not add equipment/damage/entity logging or prove completed world/player saves."
+  ],
+  "fixtureNotes": [
+    "Private reflection-only agent opens modules without replacing Minecraft bytecode.",
+    "Fabric passed 16 checks per logging setting; NeoForge passed 17 including its extra LivingEntity damage overload.",
+    "Break consumers verified reservation invalidation before callback entry.",
+    "Vanilla shield break can retain its active-use flag until subsequent cleanup; the fixture follows ordinary stop behavior without changing gameplay code.",
+    "Temporary blocks and chunk tickets removed; original configs restored. Normal audit/journal tables preserved.",
+    "Both servers stopped with alpha.29 installed and matching optional Fabric WorldEdit adapter.",
+    "Private instructions, tooling, agents, databases and logs excluded from Git and source archive."
+  ]
+}

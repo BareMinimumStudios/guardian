@@ -1,3 +1,19 @@
+# Guardian equipment and item-tick checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.29+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed bridge, four shared mixins or NeoForge-only durability mixin. Required hooks are packaged in the corresponding loader artifacts.
+- Fabric passed 16 live synthetic-player checks per logging setting and NeoForge passed 17: 66 total with logging off/on. Mainhand/offhand/armor replacement and inherited hand setters revoked reservations and retained ordinary contents. Armor/helmet/direct equipment damage applied the expected durability; armor and shield breaks retained ordinary empty-slot behavior.
+- Player-attributed durability overloads revoked reservations before damage. Break consumers observed invalidation before callback entry, including NeoForge's extra LivingEntity overload. Equipment processing continued normally. Vanilla shield-break use flags were cleaned up through ordinary stop behavior in the fixture.
+- An unrelated reservation paused stack pop-time and contents through both direct ItemStack.inventoryTick and ordinary Inventory.tick. Both paths resumed after release without consuming the stack.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both servers are stopped with alpha.29 installed, original configs restored, temporary blocks/tickets removed and the matching optional Fabric WorldEdit adapter installed.
+- Schema 8, config 6 and audit formats are unchanged. Isolated checks produced zero container records. Standard artifacts remain SQLite-only. Private instructions, agents, tooling, logs and databases stay outside Git and archives. See [validation data](validation/equipment-alpha29.json).
+
+Direct mutable stack/list/component writes, unattributed damage, direct item callbacks, arbitrary modded replacements, connected-client acceptance and actual saved-state completion remain pending. These hooks add coordination, not equipment/damage/entity history. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.28 ongoing-item-use checkpoint
+
 # Guardian ongoing-item-use checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.28+1.21.1`.

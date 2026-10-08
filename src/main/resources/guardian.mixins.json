@@ -31,7 +31,11 @@
     "PlayerTransitionMixin",
     "InventoryMutationMixin",
     "PlayerUseMixin",
-    "OngoingItemUseMixin"
+    "OngoingItemUseMixin",
+    "PlayerEquipmentMixin",
+    "EquipmentDamageMixin",
+    "InventoryItemTickMixin",
+    "ItemDurabilityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
