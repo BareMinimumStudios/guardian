@@ -1,0 +1,152 @@
+{
+  "checkpoint": "0.4.0-alpha.26+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": 213,
+    "minecraft": 49,
+    "total": 262,
+    "failures": 0
+  },
+  "runtimeChecks": 56,
+  "runs": [
+    {
+      "loader": "Fabric",
+      "logging": false,
+      "checks": [
+        "inventory copy invalidates donor and recipient whole operations",
+        "copy preserves unrelated reservation and ordinary inventory contents",
+        "known transition menu invalidates connected operation and preserves unrelated owner",
+        "unknown transition menu invalidates all remaining operations",
+        "same-dimension transition proceeds with reservation revoked before callback",
+        "travel preserves unrelated reservation",
+        "cross-dimension transition completes with reservation revoked before callback",
+        "cross-dimension travel preserves unrelated reservation",
+        "death invalidates operation and ordinary death processing completes",
+        "death preserves unrelated reservation",
+        "disconnect invalidates operation before ordinary save/removal path",
+        "disconnect preserves unrelated reservation",
+        "respawn revokes old identity and installs replacement with copied inventory",
+        "respawn preserves unrelated reservation"
+      ],
+      "ordinaryPlayerSaveFilesWritten": true,
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Fabric",
+      "logging": true,
+      "checks": [
+        "inventory copy invalidates donor and recipient whole operations",
+        "copy preserves unrelated reservation and ordinary inventory contents",
+        "known transition menu invalidates connected operation and preserves unrelated owner",
+        "unknown transition menu invalidates all remaining operations",
+        "same-dimension transition proceeds with reservation revoked before callback",
+        "travel preserves unrelated reservation",
+        "cross-dimension transition completes with reservation revoked before callback",
+        "cross-dimension travel preserves unrelated reservation",
+        "death invalidates operation and ordinary death processing completes",
+        "death preserves unrelated reservation",
+        "disconnect invalidates operation before ordinary save/removal path",
+        "disconnect preserves unrelated reservation",
+        "respawn revokes old identity and installs replacement with copied inventory",
+        "respawn preserves unrelated reservation"
+      ],
+      "ordinaryPlayerSaveFilesWritten": true,
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": false,
+      "checks": [
+        "inventory copy invalidates donor and recipient whole operations",
+        "copy preserves unrelated reservation and ordinary inventory contents",
+        "known transition menu invalidates connected operation and preserves unrelated owner",
+        "unknown transition menu invalidates all remaining operations",
+        "same-dimension transition proceeds with reservation revoked before callback",
+        "travel preserves unrelated reservation",
+        "cross-dimension transition completes with reservation revoked before callback",
+        "cross-dimension travel preserves unrelated reservation",
+        "death invalidates operation and ordinary death processing completes",
+        "death preserves unrelated reservation",
+        "disconnect invalidates operation before ordinary save/removal path",
+        "disconnect preserves unrelated reservation",
+        "respawn revokes old identity and installs replacement with copied inventory",
+        "respawn preserves unrelated reservation"
+      ],
+      "ordinaryPlayerSaveFilesWritten": true,
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": true,
+      "checks": [
+        "inventory copy invalidates donor and recipient whole operations",
+        "copy preserves unrelated reservation and ordinary inventory contents",
+        "known transition menu invalidates connected operation and preserves unrelated owner",
+        "unknown transition menu invalidates all remaining operations",
+        "same-dimension transition proceeds with reservation revoked before callback",
+        "travel preserves unrelated reservation",
+        "cross-dimension transition completes with reservation revoked before callback",
+        "cross-dimension travel preserves unrelated reservation",
+        "death invalidates operation and ordinary death processing completes",
+        "death preserves unrelated reservation",
+        "disconnect invalidates operation before ordinary save/removal path",
+        "disconnect preserves unrelated reservation",
+        "respawn revokes old identity and installs replacement with copied inventory",
+        "respawn preserves unrelated reservation"
+      ],
+      "ordinaryPlayerSaveFilesWritten": true,
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    }
+  ],
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    },
+    {
+      "loader": "Neoforge",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    }
+  ],
+  "buildChecks": [
+    "clean build",
+    "build",
+    "repeated build with configuration-cache reuse",
+    "worldedit-adapter build"
+  ],
+  "limits": [
+    "Commands do not acquire reservations; item apply remains disabled.",
+    "Lifecycle methods continue after affected whole operations are invalidated.",
+    "Unknown transition menu ownership invalidates all remaining operations.",
+    "Cancelled death/travel attempts may still conservatively invalidate reservations.",
+    "No player/entity audit capture or verified rollback completion save port is added.",
+    "Connected-client/modpack acceptance and remaining mutation paths still need verification."
+  ],
+  "fixtureNotes": [
+    "Synthetic player UUID files were checked absent before testing, then archived outside Git.",
+    "Initial NeoForge respawn fixture lacked connection channel metadata; a private in-memory channel fixed the test without gameplay changes.",
+    "Reflection-only agent, isolated databases, fixture blocks, drops and chunk tickets stayed outside distributions."
+  ]
+}

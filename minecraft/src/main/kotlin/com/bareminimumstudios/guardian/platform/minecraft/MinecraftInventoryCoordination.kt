@@ -134,6 +134,10 @@ object MinecraftInventoryCoordination {
         }
     }
 
+    // Lifecycle work must proceed, but no operation may retain the old player's
+    // inventory identity or its menu owners across save, copy, death or travel.
+    @JvmStatic fun beforePlayerTransition(player: ServerPlayer) = beforeClose(player)
+
     @JvmStatic fun beforeClose(player: ServerPlayer) {
         val current = binding ?: return
         if (player.server !== current.server) return

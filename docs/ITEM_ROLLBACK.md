@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.25+1.21.1`.
+Checkpoint: `0.4.0-alpha.26+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -192,3 +192,15 @@ The broad pause is deliberate: recipe implementations and brewing/crafting hooks
 Both loaders passed fuel/start and completion checks with item logging off/on, plus crafter ejection, insertion, recipe remainders and animation checks. Brewing made the expected potion and consumed one ingredient after release. A cake recipe delivered one cake and exactly three returned buckets while consuming its ingredients. These checks certify the wrapped vanilla entry points, not arbitrary modded code that bypasses them.
 
 BrewingStandMenu and CrafterMenu remain outside the verified menu/owner whitelist and are conservatively refused during active reservations. No brewing/crafter history, transformation rollback, wider owner whitelist or item apply command is added. Remaining mutation paths, connected-client acceptance and actual saved-state completion still need verification before apply can be enabled.
+
+## Player lifecycle invalidation
+
+Alpha.26 revokes affected operations before PlayerList removes/saves a disconnecting player or begins respawn replacement. ServerPlayer death, dimension changes and restoreFrom inventory copying share the same cleanup policy. Copying checks both the previous and replacement player, so neither UUID's operation survives a transfer of inventory identity.
+
+These hooks cancel coordination and then run the original lifecycle method. They do not prevent death, block disconnect saving or delay respawn/travel. Known player/menu owners invalidate their whole operations, including other participating block owners. Unrelated known operations remain active. If a transitioning player's menu cannot be resolved safely, all remaining reservations are invalidated. No inventory contents are read to resolve menu owners.
+
+Invalidation occurs before NeoForge death/travel/logout hooks and respawn callbacks. A later hook that cancels an attempted death or travel does not restore the reservation. Same-dimension transitions are conservatively included because their callbacks can change inventories. The apply/save driver must treat an invalidated lease as unusable even if vanilla ultimately returns without a transition.
+
+Both loaders passed synthetic-player checks with logging off/on. Inventory copying retained its normal contents, known/unknown menu handling followed the cleanup policy, death processing completed, disconnect wrote ordinary player files and respawn installed a new player instance with copied items. Same-dimension and real Nether transitions invoked their post-transition callbacks only after reservation invalidation. Synthetic players used real server methods; NeoForge used an in-memory connection channel for its networking metadata checks. Private tooling and generated player files remain outside the repository.
+
+This does not log player sessions/deaths, certify arbitrary modded lifecycle replacements or establish verified rollback completion saves. Connected-client behavior, remaining item mutation paths and the trusted save port are still acceptance work. Item apply remains disabled.

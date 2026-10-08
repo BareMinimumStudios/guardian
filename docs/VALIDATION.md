@@ -1,3 +1,19 @@
+# Guardian player lifecycle checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.26+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed bridge and two lifecycle mixins. Required wrappers loaded on both platforms. Existing tested common menu cleanup policy is reused.
+- Fabric and NeoForge each passed 14 live synthetic-player checks with item logging off/on: 56 total. Inventory copying invalidated both donor/recipient operations while retaining normal contents. Known participating menus invalidated whole operations and preserved unrelated reservations; unknown ownership invalidated all remaining operations.
+- Same-dimension and real Nether transitions completed with reservations revoked before their post-transition callbacks. Death processing completed, disconnect saving wrote normal player files, and respawn replaced the player instance with the expected inventory. Unrelated known reservations stayed active throughout these cases.
+- An initial NeoForge respawn fixture lacked connection channel metadata used by sendLevelInfo. Adding an in-memory channel to private test tooling allowed the full vanilla/NeoForge path to run. Gameplay code was unchanged by the test repair; no Minecraft bytecode was replaced.
+- Normal restarts without test agents passed both loaders, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Alpha.26 is installed with the matching optional Fabric WorldEdit adapter. Both servers are stopped, original configs restored and fixture blocks, drops, synthetic player files and temporary chunk tickets removed. Synthetic files were verified absent beforehand and archived outside Git afterwards.
+- Schema 8, config version 6 and audit formats are unchanged. This milestone adds reservation invalidation, not player/entity capture or verified rollback completion saves. Isolated runs produced zero item records. Standard artifacts remain SQLite-only. Private test sources, agents, logs, databases and guidance stay outside Git and distribution archives. See [validation data](validation/player-lifecycle-alpha26.json).
+
+Remaining inventory mutation paths, connected-client/modpack acceptance and actual saved-state completion remain pending. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.25 brewing/crafter checkpoint
+
 # Guardian brewing/crafter checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.25+1.21.1`.

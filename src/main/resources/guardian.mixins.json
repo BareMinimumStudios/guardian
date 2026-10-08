@@ -26,7 +26,9 @@
     "DropperCoordinationMixin",
     "BrewingTickMixin",
     "CrafterTickMixin",
-    "CrafterActivationMixin"
+    "CrafterActivationMixin",
+    "PlayerListLifecycleMixin",
+    "PlayerTransitionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.26+1.21.1] - 2026-10-08
+
+### Added
+
+- Whole-operation reservation invalidation before player disconnect saving, respawn, death, dimension transition and inventory copying on both loaders.
+- Cleanup of known participating menu owners, with conservative invalidation when a transitioning player's menu cannot be resolved.
+
+Lifecycle actions still proceed normally. This does not add player/entity audit capture or enable item rollback apply.
+
 ## [0.4.0-alpha.25+1.21.1] - 2026-10-08
 
 ### Added
