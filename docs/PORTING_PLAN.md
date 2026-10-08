@@ -18,9 +18,9 @@ Native block-state/block-entity snapshots plus reliable primary player place/bre
 
 Asynchronous lookup, inspector, conservative block-only rollback, per-position conflict protection, and the ACTIVE/PENDING/ROLLED_BACK crash journal.
 
-## Step 3 — WorldEdit pressure test — current checkpoint
+## Step 3 — WorldEdit integration and pressure tests — complete
 
-Implemented in this archive:
+Implemented:
 
 - separate optional WorldEdit 7.3.8 adapter module
 - BEFORE_CHANGE extent logging
@@ -31,14 +31,23 @@ Implemented in this archive:
 - `r:#worldedit` / `r:#we` lookup and rollback scope
 - cuboid-only selection safety
 - inclusive cuboid query support in memory/JDBC
-- `/co status` bulk/writer diagnostics
+- `/guardian status` bulk/writer diagnostics
 - pressure/backpressure tests
 
 Success target: a large WorldEdit edit cannot silently outrun the ordinary audit queue, and selection-scoped lookup/rollback reuses the same safe storage/history pipeline without introducing WorldEdit types into the core.
 
-## Step 4 — Containers and item transfers — next
+## Step 4 — Containers and item transactions — in progress
 
-Inventory/container mutations, hoppers, droppers/dispensers, item movement, component-aware item serialization, and transaction attribution without polling entire inventories.
+Implemented slices:
+
+- Immutable Data Component-aware snapshots with registry-aware item codecs and atomic transaction storage.
+- Accepted clicks in supported block-backed menus, normal close handling, player inventory drop/offhand actions, and validated creative slot changes.
+- Optional balanced block-hopper transfers, including failed-push suppression and physical double-chest addresses.
+- Filtered item history, five-record inspector pages, clickable navigation, and read-only inspection before normal claim callbacks.
+
+The current milestone checks sided furnace slots, loaded chunk boundaries, and controlled hopper load. See [validation](VALIDATION.md) for measured results and the remaining acceptance boundaries.
+
+Next: [optional DuckDB packaging](DISTRIBUTION_SIZE.md) to reduce the default download, then crafting transaction correlation, followed by conservative container rollback with component/count conflict checks and crash recovery. Neither is enabled yet. Other automation mechanisms remain separate future slices. Fluids and entity logging remain outside this step.
 
 ## Step 5 — Environmental attribution
 

@@ -7,6 +7,12 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.7+1.21.1] - 2026-10-07
+
+### Added
+
+- Controlled 10/50/100-hopper load results for both loaders, plus live furnace sided-slot and loaded chunk-boundary acceptance.
+
 ### Fixed
 
 - Inventory-only actions recorded while a container is open no longer claim that items changed in its other half. The history names the affected inventory and states when the inspected container was unchanged.
@@ -15,6 +21,7 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 ### Changed
 
 - Hopper routes explicitly label their source with `from` and their destination with `to`.
+- Reuse immutable default-item payloads within each block-inventory snapshot to reduce repeated encoding under hopper load. Modified component patches retain full codec validation; the cache never survives an inventory read.
 
 
 ## [0.4.0-alpha.6+1.21.1] - 2026-10-07

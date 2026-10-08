@@ -63,7 +63,7 @@ Inventory-screen capture reads all player inventory, armor, offhand, and cursor 
 3. Fill the destination with incompatible full stacks. Confirm failed pushes create no history, while successful pulls into the hopper still record their actual changes. Empty source attempts must also be absent.
 4. Check furnaces and other sided block containers separately; verify only vanilla-accepted slots move. Protection/modded capability paths require their own acceptance.
 5. Use an unopened loot chest and confirm capture does not open it or generate loot. Its first transfer may be skipped while vanilla unpacks its loot table; subsequent settled block transfers can be recorded.
-6. Test a sustained hopper stream and then a representative server hopper load. Observe queue/backpressure/failure counters and tick time. This checkpoint's small live fixture is not a large-server performance benchmark.
+6. Test a sustained hopper stream and then a representative server hopper load. Observe queue/backpressure/failure counters and tick time. See [the controlled load report](HOPPER_PRESSURE_TEST.md) for 10/50/100-hopper results; production capacity and longer memory observation still need separate measurements.
 7. Restart and query both endpoints on SQLite and DuckDB. Confirm system attribution, item components, and transaction IDs persist. Player-name/UUID queries must exclude these system records.
 8. Disable the automation switch and confirm transfer behavior continues without new hopper records.
 
@@ -84,7 +84,7 @@ Container rollback is not enabled. Fluids and entity logging remain outside Step
 - Block lookup searches the command source dimension. Test registered modded block placements/breaks and case-insensitive player filters. Report the mod/block ID if its item overrides vanilla placement and is missed.
 - Open and close a door with inspection off, then inspect either half. Test trapdoors/gates/levers/buttons, no-op uses, and protection-mod cancellation. Opening an empty menu is not currently a recorded item movement.
 - Hopper history requires `logging.automatedContainerTransfers=true`. Its actor is Hopper, so it is excluded from a player's `u:` results. Check by container coordinates or right-click inspector.
-- Chunk boundaries are not lookup boundaries: history is indexed by physical positions. Double-chest context indexes both halves; inspecting an unchanged half says the items changed in the other half. Live chunk-boundary transfer acceptance remains pending.
+- Chunk boundaries are not lookup boundaries: history is indexed by physical positions. Double-chest context indexes both halves; inspecting an unchanged half shows the actual item changes at the affected block. Inventory-only actions while a menu is open say that the inspected container was unchanged.
 
 ## Alpha.6 presentation and protected inspection
 

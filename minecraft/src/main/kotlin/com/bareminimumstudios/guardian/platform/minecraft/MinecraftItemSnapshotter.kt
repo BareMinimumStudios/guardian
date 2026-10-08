@@ -17,6 +17,20 @@ object MinecraftItemSnapshotter {
     private const val MAX_ENCODED_BYTES = 1024 * 1024
     private const val MAX_DECODED_BYTES = 8L * 1024 * 1024
 
+    /** A single inventory read can reuse canonical default-item payloads, never patched components. */
+    internal class CaptureBatch(private val registries: HolderLookup.Provider) {
+        private val defaults = HashMap<net.minecraft.world.item.Item, ItemStackSnapshot>()
+        fun capture(stack: ItemStack): ItemStackSnapshot {
+            if (stack.isEmpty) return ItemStackSnapshot.EMPTY
+            if (!stack.componentsPatch.isEmpty) return MinecraftItemSnapshotter.capture(stack, registries)
+            val cached = defaults[stack.item]
+            if (cached != null) return cached.copy(count = stack.count)
+            val snapshot = MinecraftItemSnapshotter.capture(stack, registries)
+            if (defaults.size < 256) defaults[stack.item] = snapshot
+            return snapshot
+        }
+    }
+
     fun capture(stack: ItemStack, registries: HolderLookup.Provider): ItemStackSnapshot {
         if (stack.isEmpty) return ItemStackSnapshot.EMPTY
         // Disk codecs omit transient components. Reject such patches rather than claim a complete snapshot.

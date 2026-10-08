@@ -18,6 +18,40 @@ class MinecraftItemSnapshotterTest {
         init { SharedConstants.tryDetectVersion(); Bootstrap.bootStrap() }
         private val registries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY)
     }
+    @Test fun batchReusesDefaultPayloadWithoutReusingCounts() {
+        val batch = MinecraftItemSnapshotter.CaptureBatch(registries)
+        val first = batch.capture(ItemStack(Items.COAL, 64))
+        val second = batch.capture(ItemStack(Items.COAL, 3))
+        assertSame(first.itemData, second.itemData)
+        assertEquals(64, first.count)
+        assertEquals(3, second.count)
+        assertEquals(MinecraftItemSnapshotter.capture(ItemStack(Items.COAL, 3), registries), second)
+    }
+    @Test fun batchNeverReusesPayloadForPatchedOrRemovedComponents() {
+        val batch = MinecraftItemSnapshotter.CaptureBatch(registries)
+        val stack = ItemStack(Items.DIAMOND_SWORD)
+        val plain = batch.capture(stack)
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal("First"))
+        val named = batch.capture(stack)
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal("Second"))
+        val renamed = batch.capture(stack)
+        stack.remove(DataComponents.ATTRIBUTE_MODIFIERS)
+        val removed = batch.capture(stack)
+        assertNotEquals(plain.itemData, named.itemData)
+        assertNotEquals(named.itemData, renamed.itemData)
+        assertNotEquals(renamed.itemData, removed.itemData)
+        assertEquals("First", MinecraftItemSnapshotter.restore(named, registries).get(DataComponents.CUSTOM_NAME)?.string)
+        assertNull(MinecraftItemSnapshotter.restore(removed, registries).get(DataComponents.ATTRIBUTE_MODIFIERS))
+    }
+    @Test fun batchRejectsTransientPatchAfterCachingDefaultItem() {
+        val batch = MinecraftItemSnapshotter.CaptureBatch(registries)
+        val stack = ItemStack(Items.STONE)
+        batch.capture(stack)
+        val component = net.minecraft.core.component.DataComponentType.builder<String>()
+            .networkSynchronized(net.minecraft.network.codec.StreamCodec.unit("test")).build()
+        stack.set(component, "value")
+        assertFailsWith<IllegalArgumentException> { batch.capture(stack) }
+    }
     @Test fun preservesNameDamageAndExplicitDefaultRemoval() {
         val stack = ItemStack(Items.DIAMOND_SWORD, 1)
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("Guardian test"))

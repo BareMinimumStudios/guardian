@@ -42,10 +42,11 @@ object MinecraftBlockContainerSnapshotter {
         if (!observable(container, level)) return null
         require(container.containerSize in 1..ContainerChangesCodec.MAX_SLOTS)
         val slots = LinkedHashMap<ItemSlotAddress, ItemStackSnapshot>()
+        val items = MinecraftItemSnapshotter.CaptureBatch(level.registryAccess())
         for (index in 0 until container.containerSize) {
             val address = address(container, index, level)
             require(address !in slots) { "Container aliases a logical slot" }
-            slots[address] = MinecraftItemSnapshotter.capture(container.getItem(index), level.registryAccess())
+            slots[address] = items.capture(container.getItem(index))
         }
         return InventorySnapshot(slots)
     }

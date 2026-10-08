@@ -1,3 +1,21 @@
+# Guardian hopper reliability checkpoint
+
+Date: 2026-10-07. Checkpoint: `0.4.0-alpha.7+1.21.1`.
+
+- 102 tests passed: 80 common and 22 Minecraft tests. The clean build passed, the second build reused its configuration cache, and the separate WorldEdit adapter build passed with Gradle 9.8.0 and Java 21.
+- Regression tests cover unchanged-container presentation, actual changes in another physical chest half, explicit hopper endpoints, default-payload reuse with independent counts, patched components and transient-component rejection.
+- Controlled logging-off/on runs exercised 10, 50 and 100 hoppers on Fabric and NeoForge. No capture/write failures or backpressure occurred. Independent decoding after shutdown confirmed every accepted record persisted, with exact item/component conservation and unique transaction IDs.
+- Separate live fixtures passed furnace input/fuel/output slot checks, rejected side fuel insertion and a loaded chunk-boundary transfer. Each loader produced the expected 27 balanced records.
+- The user reports that inspector paging, claim-denied inspection and permission revocation work on the supplied pack server. Screenshots confirmed the permission-removal message and the full-barrel rig recorded the pull into the hopper without a barrel insertion. These are user acceptance results; they do not establish the equivalent connected-client behavior on NeoForge.
+- The single-barrel “other half” message was a formatting error for inventory-only actions associated with an open menu. The formatter now identifies the affected inventory and states that the inspected container was unchanged.
+- Both dedicated servers have alpha.7 installed, are stopped, and have automated hopper logging restored to false. Prior databases, configuration and jars are backed up outside Git. No production server files or supplied production database were changed.
+
+See [the hopper load report](HOPPER_PRESSURE_TEST.md) for sample ranges, fixture details and limits. The optimization is scoped to one inventory read and unmodified component patches; no mutable item stack enters stored history and no long-lived cache was introduced. Schema 5, config version 6 and item payload formats are unchanged.
+
+Remaining staged work includes crafting correlation and conservative container rollback. Sealed-loot runtime acceptance, unloaded-neighbor cases, component-heavy sustained load, longer memory observation and connected-client NeoForge protection/prediction tests remain open. Fluids and entity logging remain outside Step 4.
+
+## Historical alpha.6 validation
+
 # Guardian history presentation and inspector validation
 
 Date: 2026-10-07. Checkpoint: `0.4.0-alpha.6+1.21.1`.

@@ -1,0 +1,20 @@
+[
+  {
+    "artifact": "guardian-0.4.0-alpha.7+1.21.1.jar",
+    "total_bytes": 92295225,
+    "embedded_driver_compressed_bytes": {
+      "META-INF/jars/duckdb_jdbc-1.4.5.0.jar": 79870455,
+      "META-INF/jars/sqlite-jdbc-3.53.4.0.jar": 11969173
+    },
+    "other_bytes": 455597
+  },
+  {
+    "artifact": "guardian-neoforge-0.4.0-alpha.7+1.21.1.jar",
+    "total_bytes": 92285778,
+    "embedded_driver_compressed_bytes": {
+      "META-INF/jarjar/duckdb_jdbc-1.4.5.0.jar": 79870282,
+      "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar": 11968996
+    },
+    "other_bytes": 446500
+  }
+]
