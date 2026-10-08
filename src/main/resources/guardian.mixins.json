@@ -18,7 +18,10 @@
     "RecipePlacementMixin",
     "ChunkStorageAccessor",
     "IOWorkerAccessor",
-    "RegionStorageAccessor"
+    "RegionStorageAccessor",
+    "FurnaceTickMixin",
+    "BlockEntityRemovalMixin",
+    "ContainerChunkLifecycleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

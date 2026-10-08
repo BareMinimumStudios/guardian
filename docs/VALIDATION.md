@@ -1,3 +1,20 @@
+# Guardian furnace/lifecycle checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.23+1.21.1`.
+
+- All 258 tests passed: 209 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- Five new common tests cover chunk-scoped whole-operation invalidation, negative coordinates, dimensions, stale leases, expiry, shutdown and thread confinement. IDEA reported no problems in the changed coordination code, tests and three lifecycle/tick mixins.
+- Fabric and NeoForge each passed 13 lifecycle checks with item logging disabled/enabled: 52 total. Furnace, blast furnace and smoker inputs, fuel, outputs and timers stayed unchanged while reserved and recipes completed after release. An unrelated furnace kept processing.
+- Identical block-state writes kept reservations. Block replacement, same-block inventory object replacement, direct removal, the opposite chest-half change across a chunk boundary and the actual server unload callback invalidated reservations. Unload tests verified the complete live/pending block-entity set belonged only to a temporary fixture. These checks produced no item transaction records; smelting audit capture is not added.
+- Existing hopper guards passed all 16 source/destination/hopper/opposite-half cases across both loaders with automatic logging disabled/enabled. Final powered/enabled state was established before reservations to separate tick exclusion from intentional structural cancellation. Enabled runs each recorded exactly seven transfers; disabled runs recorded zero.
+- Initial test comparisons were corrected for NeoForge's integer furnace timer NBT. The unload harness refused a chunk containing nonfixture block entities, then selected a verified empty chunk. A transient Windows control-file sharing lock received a bounded retry. None of these fixes changed gameplay code or normal databases.
+- Normal restarts without test agents passed both loaders, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Alpha.23 is installed, including the matching optional Fabric WorldEdit adapter. Both servers are stopped, original configs restored and temporary fixtures/chunk tickets removed. Coal item drops in the automated hopper fixture boxes were cleaned up.
+- Schema 8, config version 6 and audit formats are unchanged. Standard artifacts remain SQLite-only. Test sources, agents, logs and databases stay outside Git and distribution archives. See [validation data](validation/furnace-lifecycle-alpha23.json).
+
+Other automation, custom ticking implementations, off-thread mod mutations, connected-client/modpack acceptance and verified completion saves remain pending. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.22 menu/player checkpoint
+
 # Guardian menu/player-reservation checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.22+1.21.1`.

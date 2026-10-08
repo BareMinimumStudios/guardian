@@ -23,6 +23,8 @@ import net.minecraft.world.level.block.HopperBlock
 import net.minecraft.world.level.block.entity.Hopper
 import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.state.properties.ChestType
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 
 object MinecraftInventoryCoordination {
     private class Binding(val server: MinecraftServer, val owners: ItemOwnerCoordination) {
@@ -52,6 +54,50 @@ object MinecraftInventoryCoordination {
     @JvmStatic fun allowsPull(level: Level, hopper: Hopper): Boolean = allows(level) {
         if (hopper !is HopperBlockEntity) null else endpoints(it, hopper.blockPos, hopper.blockPos.above())
     }
+
+    @JvmStatic fun allowsFurnaceTick(level: Level, position: BlockPos): Boolean {
+        val current = binding ?: return true
+        if (level !is ServerLevel || level.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        if (!current.owners.hasReservations()) return current.owners.isRunning()
+        return current.owners.allowsMutation(blockOwner(level, position))
+    }
+
+    @JvmStatic fun needsStructuralCheck(level: Level?): Boolean =
+        structuralBinding(level)?.owners?.hasReservations() == true
+
+    @JvmStatic fun beforeBlockChange(level: Level?, position: BlockPos, previous: BlockState) {
+        val current = structuralBinding(level) ?: return
+        if (!current.owners.hasReservations()) return
+        val serverLevel = level as ServerLevel
+        current.owners.invalidate(blockOwner(serverLevel, position))
+        if (previous.block is ChestBlock && previous.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+            current.owners.invalidate(blockOwner(serverLevel, position.relative(ChestBlock.getConnectedDirection(previous))))
+        }
+    }
+
+    @JvmStatic fun beforeBlockEntityRemoval(block: BlockEntity) {
+        val level = block.level ?: return
+        if (needsStructuralCheck(level)) beforeBlockChange(level, block.blockPos, block.blockState)
+    }
+
+    @JvmStatic fun beforeChunkUnload(chunk: LevelChunk) {
+        val level = chunk.level ?: return
+        val current = structuralBinding(level) ?: return
+        if (!current.owners.hasReservations()) return
+        current.owners.invalidateBlockChunk(ResourceId.parse((level as ServerLevel).dimension().location().toString()), chunk.pos.x, chunk.pos.z)
+    }
+
+    private fun structuralBinding(level: Level?): Binding? {
+        val current = binding ?: return null
+        // World-generation workers cannot own a live coordinated inventory. Unsupported
+        // off-thread mod mutation still needs a separate exclusion contract before apply.
+        return current.takeIf { level is ServerLevel && level.server === it.server && it.server.isSameThread }
+    }
+
+    private fun blockOwner(level: ServerLevel, pos: BlockPos) = ItemSlotOwner.BlockContainer(
+        ResourceId.parse(level.dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z)
+    )
 
     @JvmStatic fun allowsPlayerMutation(player: ServerPlayer): Boolean {
         val current = binding ?: return true

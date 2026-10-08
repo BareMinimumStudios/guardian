@@ -1,6 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
 import com.bareminimumstudios.guardian.domain.ItemSlotOwner
+import com.bareminimumstudios.guardian.domain.ResourceId
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -52,6 +53,15 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         checkThread()
         reapExpired()
         reserved[owner]?.let { finish(it, ItemOwnerLeaseState.INVALIDATED) }
+    }
+
+    fun invalidateBlockChunk(dimension: ResourceId, chunkX: Int, chunkZ: Int) {
+        checkThread()
+        reapExpired()
+        operations.values.filter { lease -> lease.owners.any { owner ->
+            owner is ItemSlotOwner.BlockContainer && owner.dimension == dimension &&
+                owner.position.x shr 4 == chunkX && owner.position.z shr 4 == chunkZ
+        } }.forEach { finish(it, ItemOwnerLeaseState.INVALIDATED) }
     }
 
     fun invalidateAll() {

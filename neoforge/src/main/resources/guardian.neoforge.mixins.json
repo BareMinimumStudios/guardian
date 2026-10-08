@@ -20,7 +20,10 @@
     "ChunkStorageAccessor",
     "IOWorkerAccessor",
     "RegionStorageAccessor",
-    "NeoForgeContainerOpenMixin"
+    "NeoForgeContainerOpenMixin",
+    "FurnaceTickMixin",
+    "BlockEntityRemovalMixin",
+    "ContainerChunkLifecycleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

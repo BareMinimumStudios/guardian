@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.23+1.21.1] - 2026-10-08
+
+### Added
+
+- Reservation guards that pause vanilla furnace, blast furnace and smoker ticks before fuel, cooking progress or slots change.
+- Whole-operation invalidation before loaded container block-state changes, block-entity installation/removal and server chunk unloading, including connected chest halves across chunk boundaries.
+- Chunk invalidation regression tests for whole-operation scope, negative coordinates, dimensions, stale leases, expiry, shutdown and thread confinement.
+
+This adds coordination safeguards, not smelting audit capture. Other automation, unsupported modded mutation paths and verified completion saves remain pending; item apply remains disabled.
+
 ## [0.4.0-alpha.22+1.21.1] - 2026-10-08
 
 ### Added

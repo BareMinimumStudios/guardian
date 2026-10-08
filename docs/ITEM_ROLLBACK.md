@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.22+1.21.1`.
+Checkpoint: `0.4.0-alpha.23+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -143,7 +143,7 @@ The same wrapper surrounds NeoForge's capability insertion/extraction fast paths
 
 A temporary reflection-only test agent, kept outside the repository and mod artifacts, acquires/releases reservations on the server thread. Both loaders passed source, destination, hopper and opposite-chest-half tests with hopper logging off and on. Inventories remained unchanged while reserved and successful transfers resumed after release. Each enabled run recorded seven successful transfers; disabled runs recorded none. Fixtures used isolated databases and were removed afterwards.
 
-Alpha.22 connects supported menu/player paths, described below. Ticking inventories, block replacement/unload and unsupported automation remain uncoordinated. These partial guards cannot satisfy `ItemSavePort` or justify applying/completing an item rollback.
+Alpha.22 connects supported menu/player paths, described below. Alpha.23 adds vanilla furnace tick and loaded container replacement/unload guards. Other automation and unsupported mutation paths remain uncoordinated. These partial guards cannot satisfy `ItemSavePort` or justify applying/completing an item rollback.
 
 ## Menu coordination policy
 
@@ -162,3 +162,13 @@ Opening a known physical provider checks reservations before createMenu can unpa
 Closing is always allowed. Before vanilla returns carried items, known owners invalidate their whole operations. If ownership cannot be resolved, all remaining reservations are invalidated. This avoids stranding a cursor stack behind a cancelled close.
 
 Runtime checks use synthetic server players and real Minecraft packet handlers on both loaders, with item transaction logging disabled/enabled. They verify rejected prediction, authoritative state resynchronization, valid recipe placement, block/combined-container ownership, pre-creation opening, safe close returns and resumed actions. Actual connected-client visuals, claim/modpack combinations, other inventory ticks and verified saves remain separate acceptance work. Commands still do not acquire leases and item apply remains disabled.
+
+## Furnace and container lifecycle guards
+
+Alpha.23 pauses the shared vanilla furnace server tick for a reserved physical inventory, covering furnaces, blast furnaces and smokers. The entire tick is skipped before fuel, input/output stacks, cooking timers or lit state change. It resumes normally after release or expiry, without catching up the skipped time. Unrelated furnaces continue ticking. This does not add smelting transaction logging.
+
+Loaded chunk block-state writes invalidate an operation before vanilla replacement callbacks can mutate or drop items. An identical state write leaves the reservation intact. Block-entity installation and removal also invalidate operations at that location; installation can conservatively cancel an operation even when the same object is reinstalled. Connected chest halves are invalidated together when their old block state identifies a shared inventory.
+
+The server unload callback invalidates every operation owning a block position in that dimension/chunk before block entities are cleared. Invalidating one participating owner revokes the whole operation, including its other block/player owners. Invalidation cancels coordination and allows vanilla lifecycle work to continue; it does not cancel a replacement or unload. A hopper power/enabled-state change can therefore cancel its operation and allow ordinary transfers to resume. The apply/save driver must recheck the reservation before proceeding.
+
+The lifecycle hooks use no item reads, loot unpacking or chunk loading. They avoid extra block-state lookup when no reservations exist. They coordinate main-thread live gameplay; world-generation workers are left alone. Off-thread mod mutations, custom tick implementations and other automation still need an exclusion contract before item apply can be enabled. Region/player saving and final saved-state completion remain unconnected.
