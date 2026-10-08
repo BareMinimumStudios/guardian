@@ -3,7 +3,7 @@ package com.bareminimumstudios.guardian.rollback
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 
-enum class ContainerPreviewReason { ELIGIBLE, UNSUPPORTED_ACTION, AMBIGUOUS_ORDER, UNSUPPORTED_OWNER, NONCONSERVING_ACTION, UNAVAILABLE_OWNER, OUTSIDE_SCOPE, STATE_MISMATCH, BLOCKED_CHAIN }
+enum class ContainerPreviewReason { ELIGIBLE, UNSUPPORTED_ACTION, AMBIGUOUS_ORDER, UNSUPPORTED_OWNER, NONCONSERVING_ACTION, UNAVAILABLE_OWNER, OUTSIDE_SCOPE, STATE_MISMATCH, BLOCKED_CHAIN, NEWER_HISTORY, CHANGED_BLOCK, RESERVED_OWNER, CLAIMED_SOURCE }
 data class ContainerPreviewEntry(val transactionId: UUID, val reason: ContainerPreviewReason, val changedSlots: Int)
 class ContainerRollbackPreview(entries: List<ContainerPreviewEntry>) {
     val entries: List<ContainerPreviewEntry> = java.util.Collections.unmodifiableList(ArrayList(entries))
@@ -29,7 +29,8 @@ object ContainerRollbackPlanner {
         newestFirst: List<ContainerTransactionSnapshot>,
         live: InventorySnapshot,
         unavailable: Set<ItemSlotOwner> = emptySet(),
-        outsideScope: Set<ItemSlotOwner> = emptySet()
+        outsideScope: Set<ItemSlotOwner> = emptySet(),
+        historyGuard: ContainerHistoryGuard = ContainerHistoryGuard()
     ): ContainerRollbackPreview {
         require(newestFirst.size <= 50) { "Item preview exceeds the transaction budget" }
         require(newestFirst.map { it.transactionId }.distinct().size == newestFirst.size) { "Duplicate preview transaction" }
@@ -47,6 +48,10 @@ object ContainerRollbackPlanner {
                 value.transactionId in ambiguous -> ContainerPreviewReason.AMBIGUOUS_ORDER
                 !supported(value) -> ContainerPreviewReason.UNSUPPORTED_OWNER
                 !conserving(value) -> ContainerPreviewReason.NONCONSERVING_ACTION
+                value.transactionId in historyGuard.claimedTransactions -> ContainerPreviewReason.CLAIMED_SOURCE
+                owners.any { it in historyGuard.reservedOwners } -> ContainerPreviewReason.RESERVED_OWNER
+                owners.any { it in historyGuard.changedBlocks } -> ContainerPreviewReason.CHANGED_BLOCK
+                owners.any { it in historyGuard.newerOwners } -> ContainerPreviewReason.NEWER_HISTORY
                 owners.any { it in outsideScope } -> ContainerPreviewReason.OUTSIDE_SCOPE
                 owners.any { it in unavailable } -> ContainerPreviewReason.UNAVAILABLE_OWNER
                 owners.any { it in blocked } -> ContainerPreviewReason.BLOCKED_CHAIN

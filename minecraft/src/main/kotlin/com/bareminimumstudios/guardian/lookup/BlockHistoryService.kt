@@ -57,6 +57,16 @@ class BlockHistoryService(
         }
     }
 
+    fun guardContainers(rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>, onSuccess: (com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard?) -> Unit, onFailure: (Throwable) -> Unit) {
+        if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
+        val immutableRows=rows.toList()
+        executor.execute {
+            runCatching { storage.guardContainerHistory(immutableRows) }
+                .onSuccess { guard -> server.execute { onSuccess(guard) } }
+                .onFailure { error -> logger.error("Container rollback history guard failed",error);server.execute { onFailure(error) } }
+        }
+    }
+
     fun setRollbackState(
         rowIds: Collection<Long>,
         state: BlockRollbackState,

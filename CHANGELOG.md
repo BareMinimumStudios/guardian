@@ -7,6 +7,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.12+1.21.1] - 2026-10-08
+
+### Added
+
+- Schema 8 logical inventory owner index, written atomically with item transactions and backfilled from existing history in bounded pages.
+- Preview checks for excluded newer or equally timed transactions, recorded block changes at a container position, unfinished inventory reservations and claimed source records.
+- The same persisted-history checks inside atomic journal preparation, independent of user and region filters.
+- Migration, hidden-history, player cursor/grid, source retry, block history and journal-claim regressions on SQLite and the optional DuckDB backend.
+
+### Changed
+
+- Item previews now refuse backends that cannot verify persistent history. Item rollback apply remains disabled.
+
+
 ## [0.4.0-alpha.11+1.21.1] - 2026-10-08
 
 ### Added

@@ -47,6 +47,7 @@ Implemented slices:
 - Vanilla 2×2/3×3 crafting grids, recipe-book placement, accepted result takes, close returns and recipe remainders in correlated transactions.
 - Read-only container rollback preview with component/count checks, both-endpoint region checks and dependent-history skips.
 - Persistent item rollback journal, source and inventory claims, interruption detection and component-aware recovery observations.
+- Filter-independent persisted-owner history checks, recorded block-change witnesses and journal-claim checks.
 
 The current milestone checks sided furnace slots, loaded chunk boundaries, and controlled hopper load. See [validation](VALIDATION.md) for measured results and the remaining acceptance boundaries.
 

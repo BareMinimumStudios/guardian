@@ -1,0 +1,59 @@
+{
+  "version": "0.4.0-alpha.12+1.21.1",
+  "mode": "preview and journal preparation guards; item apply disabled",
+  "tests": 154,
+  "new_guard_test_methods": 10,
+  "guard_backends": [
+    "sqlite",
+    "optional duckdb"
+  ],
+  "live": [
+    {
+      "loader": "Fabric",
+      "full_chain_eligible": 2,
+      "filtered_chain_skipped": 1,
+      "block_witness_and_dependent_skips": 2,
+      "preview_items_unchanged": true,
+      "fixture_transactions": 2,
+      "fixture_owner_rows": 4,
+      "normal_backfilled_owner_rows": 64872,
+      "normal_audit_rows_unchanged": true,
+      "schema": 8
+    },
+    {
+      "loader": "Neoforge",
+      "full_chain_eligible": 2,
+      "filtered_chain_skipped": 1,
+      "block_witness_and_dependent_skips": 2,
+      "preview_items_unchanged": true,
+      "fixture_transactions": 2,
+      "fixture_owner_rows": 4,
+      "normal_backfilled_owner_rows": 64860,
+      "normal_audit_rows_unchanged": true,
+      "schema": 8
+    }
+  ],
+  "artifact_integrity": [
+    {
+      "loader": "Fabric",
+      "name": "guardian-0.4.0-alpha.12+1.21.1.jar",
+      "bytes": 12517123,
+      "sha256": "ab7209b0e80542fbdb33b1adfa08e659eacf06d2670e2446fe6262d02e2e7969"
+    },
+    {
+      "loader": "Neoforge",
+      "name": "guardian-neoforge-0.4.0-alpha.12+1.21.1.jar",
+      "bytes": 12506086,
+      "sha256": "2faa251891bd8766b674251643b00d94f84ec160a3882113577a68d51b5ad447"
+    }
+  ],
+  "schema": 8,
+  "config_version": 6,
+  "backfill_page_size": 128,
+  "pending": [
+    "audit-write barrier",
+    "fresh identity/ownership checks at mutation",
+    "durable world/player save reconciliation",
+    "mutating apply and Minecraft crash acceptance"
+  ]
+}

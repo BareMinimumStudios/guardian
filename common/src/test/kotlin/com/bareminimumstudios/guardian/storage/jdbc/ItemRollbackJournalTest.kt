@@ -36,7 +36,7 @@ class ItemRollbackJournalTest {
         factory(path).use { db -> db.open();assertEquals(ItemRollbackPhase.PREPARED,db.itemRollback(id)?.phase);assertEquals(value.changes,db.itemRollback(id)?.entries?.single()?.changes) }
     }
     @Test fun overlappingOwnersFailAtomicallyAndPreparedCancellationReleasesClaims() = backends { factory,path,_ ->
-        val first=row();val second=row(101);val a=UUID.randomUUID();val b=UUID.randomUUID()
+        val first=row(101);val second=row();val a=UUID.randomUUID();val b=UUID.randomUUID()
         factory(path).use { db ->
             db.open();db.append(listOf(ContainerAuditEntry(first),ContainerAuditEntry(second)));db.prepareItemRollback(a,200,listOf(first))
             assertFails { db.prepareItemRollback(b,201,listOf(second)) };assertNull(db.itemRollback(b));assertEquals(1,db.unfinishedItemRollbacks().size)
@@ -46,7 +46,7 @@ class ItemRollbackJournalTest {
         }
     }
     @Test fun applyingSurvivesRestartAsRecoveryRequiredWithOwnerClaimsHeld() = backends { factory,path,_ ->
-        val value=row();val next=row(101);val id=UUID.randomUUID()
+        val value=row(101);val next=row();val id=UUID.randomUUID()
         factory(path).use { db -> db.open();db.append(listOf(ContainerAuditEntry(value),ContainerAuditEntry(next)));db.prepareItemRollback(id,200,listOf(value));assertTrue(db.transitionItemRollback(id,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING)) }
         factory(path).use { db ->
             db.open();assertEquals(ItemRollbackPhase.RECOVERY_REQUIRED,db.itemRollback(id)?.phase)
@@ -59,11 +59,12 @@ class ItemRollbackJournalTest {
     @Test fun completedSourceCannotBeReusedButOwnersAreReleased() = backends { factory,path,_ ->
         val first=row();val second=row(101);val id=UUID.randomUUID()
         factory(path).use { db ->
-            db.open();db.append(listOf(ContainerAuditEntry(first),ContainerAuditEntry(second)));db.prepareItemRollback(id,200,listOf(first))
+            db.open();db.append(listOf(ContainerAuditEntry(first)));db.prepareItemRollback(id,200,listOf(first))
             assertFailsWith<IllegalArgumentException> { db.transitionItemRollback(id,ItemRollbackPhase.PREPARED,ItemRollbackPhase.COMPLETED) }
             assertTrue(db.transitionItemRollback(id,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING))
             assertTrue(db.transitionItemRollback(id,ItemRollbackPhase.APPLYING,ItemRollbackPhase.COMPLETED))
             val retry=UUID.randomUUID();assertFails { db.prepareItemRollback(retry,201,listOf(first)) };assertNull(db.itemRollback(retry))
+            db.append(listOf(ContainerAuditEntry(second)))
             db.prepareItemRollback(UUID.randomUUID(),202,listOf(second));assertEquals(1,db.unfinishedItemRollbacks().size)
         }
     }
@@ -106,7 +107,7 @@ class ItemRollbackJournalTest {
     @Test fun schemaSixMigratesWithoutChangingAuditAndRejectsOlderReader() = backends { factory,path,prefix ->
         Class.forName(if(prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
         DriverManager.getConnection(prefix+path.toAbsolutePath()).use { conn -> assertEquals(6,SchemaMigrator(GuardianSchema.migrations.take(6)).migrate(conn)) }
-        factory(path).use { db -> db.open();assertEquals(7,db.health().schemaVersion);assertTrue(db.unfinishedItemRollbacks().isEmpty()) }
+        factory(path).use { db -> db.open();assertEquals(GuardianSchema.CURRENT_VERSION,db.health().schemaVersion);assertTrue(db.unfinishedItemRollbacks().isEmpty()) }
         DriverManager.getConnection(prefix+path.toAbsolutePath()).use { conn -> assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(6)).migrate(conn) } }
     }
     @Test fun committedApplyIntentSurvivesAbruptChildProcessExit() = backends { factory,path,prefix ->

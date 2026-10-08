@@ -20,7 +20,7 @@ One immutable transaction enters the bounded writer queue as one entry. The SQL 
 - `logging.containerTransactions` is a live switch. The general and logging master switches also apply.
 - `logging.automatedContainerTransfers` enables block-to-block hopper capture. It is live and defaults to false until broader load acceptance.
 
-Back up databases before upgrading. Schemas 1 through 6 are migrated automatically to schema 7. Older readers cannot open upgraded databases. Schema 7 adds recovery tracking without enabling item rollback apply. Flushes are asynchronous, so allow a flush interval before expecting newly queued transactions in lookup results.
+Back up databases before upgrading. Schemas 1 through 7 are migrated automatically to schema 8. Older readers cannot open upgraded databases. Schema 7 adds recovery tracking; schema 8 builds a logical-owner index from existing item payloads without changing them. Item rollback apply remains disabled. Flushes are asynchronous, so allow a flush interval before expecting newly queued transactions in lookup results.
 
 ## Player acceptance on each loader
 

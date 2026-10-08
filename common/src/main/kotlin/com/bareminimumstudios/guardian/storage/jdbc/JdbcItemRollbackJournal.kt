@@ -32,6 +32,7 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
                     require(result.getLong(1) == row.timestampEpochMillis && result.getString(2) == row.action.name && ContainerChangesCodec.decode(result.getBytes(3)) == row.changes) { "Journal source differs from stored history" }
                 }
             }
+            require(ContainerOwnerIndex.guard(connection,rows).clear) { "Newer history, changed blocks or existing journal claims invalidate the plan" }
             connection.prepareStatement("INSERT INTO ex_item_rollback(operation_uuid, created_at, phase) VALUES (?, ?, ?)").use { insert ->
                 insert.setString(1,id.toString());insert.setLong(2,createdAt);insert.setString(3,ItemRollbackPhase.PREPARED.name);insert.executeUpdate()
             }
@@ -96,10 +97,9 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
     }
 
     private fun insertPair(sql: String, first: String, second: String) = connection.prepareStatement(sql).use { it.setString(1,first);it.setString(2,second);it.executeUpdate() }
-    private fun ownerKey(owner: ItemSlotOwner): String = when(owner) {
-        is ItemSlotOwner.PlayerInventory -> "p:${owner.playerId}"
-        is ItemSlotOwner.BlockContainer -> "b:${owner.dimension}:${owner.position.x}:${owner.position.y}:${owner.position.z}"
-        else -> error("Transient inventory cannot be reserved")
+    private fun ownerKey(owner: ItemSlotOwner): String {
+        require(owner is ItemSlotOwner.BlockContainer || owner is ItemSlotOwner.PlayerInventory)
+        return ContainerOwnerIndex.key(owner)
     }
     private fun <T> atomic(action: () -> T): T {
         check(connection.autoCommit)

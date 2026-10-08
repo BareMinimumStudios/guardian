@@ -140,6 +140,7 @@ abstract class JdbcStorageBackend(
             it.setString(5, transaction.action.name); it.setBytes(6, bytes); it.executeUpdate()
         }
         if (inserted == 0) return
+        ContainerOwnerIndex.insert(conn,transaction.transactionId.toString(),transaction.timestampEpochMillis,transaction.changes.map { ContainerOwnerIndex.key(it.address.owner) }.toSet())
         conn.prepareStatement("INSERT INTO ex_container_location(transaction_uuid, wid, x, y, z) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING").use { statement ->
             transaction.containers.forEach { owner ->
                 statement.setString(1, transaction.transactionId.toString()); statement.setInt(2, worldMappings.idFor(conn, owner.dimension.toString()))
@@ -318,6 +319,8 @@ abstract class JdbcStorageBackend(
     override fun flush() = lock.withLock {
         checkpoint(requireConnection())
     }
+
+    override fun guardContainerHistory(rows: List<ContainerTransactionSnapshot>) = lock.withLock { ContainerOwnerIndex.guard(requireConnection(),rows) }
 
     override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst)

@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 7
+    const val CURRENT_VERSION = 8
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -96,6 +96,10 @@ internal object GuardianSchema {
             "CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase, created_at)",
             "CREATE INDEX ex_item_rollback_owner_operation_idx ON ex_item_rollback_owner(operation_uuid)",
             "CREATE INDEX ex_item_rollback_claim_operation_idx ON ex_item_rollback_claim(operation_uuid)"
-        ))
+        )),
+        SchemaMigration(8, "Logical inventory owner index for filtered rollback safety", listOf(
+            "CREATE TABLE ex_container_owner (transaction_uuid VARCHAR NOT NULL, owner_key VARCHAR NOT NULL, time BIGINT NOT NULL, PRIMARY KEY(transaction_uuid, owner_key))",
+            "CREATE INDEX ex_container_owner_time_idx ON ex_container_owner(owner_key, time)"
+        ), ContainerOwnerIndex::backfill)
     )
 }

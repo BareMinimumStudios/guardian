@@ -61,7 +61,7 @@ Fzzy Config manages Guardian's settings under the `guardian` namespace. New inst
 
 Set `logging.automatedContainerTransfers` to true to enable block-to-block hopper history. It defaults to false in this testing checkpoint. The general, logging, and container-transaction master switches also apply. Use block-position lookup for hopper records.
 
-The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 7. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 7. Schema 7 adds item rollback recovery tracking; item rollback apply remains disabled.
+The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 8. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 8. Schema 7 adds item rollback recovery tracking; schema 8 indexes logical inventory owners to check filtered-out history. The first schema-8 startup scans existing item payloads to build that index. Item rollback apply remains disabled.
 
 ## Project structure
 

@@ -12,5 +12,8 @@ interface QueryableStorageBackend : StorageBackend {
 
     fun lookupContainers(query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery): List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>
 
+    /** Null means this backend cannot establish persistent rollback history safety. */
+    fun guardContainerHistory(rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>): com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard? = null
+
     fun health(): StorageHealth
 }

@@ -47,6 +47,7 @@ internal class SchemaMigrator(
                 connection.createStatement().use { statement ->
                     migration.statements.forEach(statement::executeUpdate)
                 }
+                migration.dataMigration?.invoke(connection)
                 connection.prepareStatement(
                     "INSERT INTO ex_schema_migrations(version, applied_at, description) VALUES (?, ?, ?)"
                 ).use { statement ->

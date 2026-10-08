@@ -1,3 +1,19 @@
+# Guardian item rollback history guard checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.12+1.21.1`.
+
+- All 154 tests passed: 125 common and 29 Minecraft tests. Clean build, configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. The known Loom warning about SQLite's four-part JDBC version remains.
+- Ten new guard test methods run on SQLite and the optional DuckDB backend. They cover excluded newer/equal-time transactions, independent/older history, block history including rolled-back events, separate dimensions, active/completed journal claims, cursor/grid player ownership, deduplicated UUID retries and multi-page migration. A corrupt payload aborts migration atomically.
+- Dedicated Fabric and NeoForge fixtures each recorded a two-transfer hopper chain. The full chain preview returned two eligible records. A source-only query hid the later push and returned one skipped record for excluded newer history. Inventory contents stayed unchanged.
+- A synthetic persisted block-change witness at the destination rejected the newest transaction and its dependent older record on both loaders, while inventories stayed unchanged. This tests the history guard, not an unlogged block replacement or live mutation executor.
+- Normal server migration backfilled 64,872 owner rows on Fabric and 64,860 on NeoForge. Independent block/item row hashes were unchanged and existing three-record/two-record hopper queries passed after restart.
+- Both dedicated servers have the final SQLite-only alpha.12 jars installed and are stopped, with original configurations restored and fixtures removed. Test databases, logs and pre-upgrade snapshots are archived outside Git. Production files were untouched.
+- Schema 8 adds the logical-owner index; config version 6 and GCT1/GCT2 payloads are unchanged. See [validation data](validation/item-history-guard-alpha12.json) for artifact hashes and measured fixture counts.
+
+This is a persisted-history safety milestone. Preview observations can still become stale and pending audit writes need a barrier before any apply. Live container identity/ownership, coordinated player/chunk saves and actual Minecraft interruption recovery remain open; item rollback apply is disabled. See [item rollback](ITEM_ROLLBACK.md). Previously pending client/modpack checks also remain open.
+
+## Historical alpha.11 journal checkpoint
+
 # Guardian item rollback journal checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.11+1.21.1`.

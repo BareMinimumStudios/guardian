@@ -33,7 +33,12 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             session.rows=rows
             session.wanted=rows.flatMap { it.changes }.map { it.address }.toSet()
             session.owners.addAll(owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory })
-            session.ready=true
+            history.guardContainers(rows,{ guard ->
+                if(active !== session) return@guardContainers
+                if(guard == null) { refuse(session,"This backend cannot verify persistent item rollback history.");return@guardContainers }
+                session.guard=guard
+                session.ready=true
+            }, { if(active === session) refuse(session,"History safety check failed; see the server log.") })
         }, { if (active === session) refuse(session,"History lookup failed; see the server log.") })
         return true
     }
@@ -57,7 +62,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             }
             return
         }
-        val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside)
+        val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard))
         val summary=preview.entries.groupingBy { it.reason }.eachCount()
         session.source.sendSystemMessage(Component.literal("Guardian item rollback preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
         for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
@@ -101,6 +106,10 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         ContainerPreviewReason.OUTSIDE_SCOPE -> "a transfer endpoint is outside the requested region"
         ContainerPreviewReason.STATE_MISMATCH -> "recorded slots do not match the observed inventory"
         ContainerPreviewReason.BLOCKED_CHAIN -> "an older transaction depends on a skipped inventory"
+        ContainerPreviewReason.NEWER_HISTORY -> "newer or equally timed item history is excluded by the selected filters"
+        ContainerPreviewReason.CHANGED_BLOCK -> "the container position has newer or equally timed block history"
+        ContainerPreviewReason.RESERVED_OWNER -> "an inventory is reserved by an unfinished item rollback journal"
+        ContainerPreviewReason.CLAIMED_SOURCE -> "the transaction is already claimed by an item rollback journal"
         ContainerPreviewReason.ELIGIBLE -> "eligible"
     }
     private class Session(val source: CommandSourceStack,val query: ContainerLookupQuery) {
@@ -110,6 +119,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val unavailable=mutableSetOf<ItemSlotOwner>()
         val outside=mutableSetOf<ItemSlotOwner>()
         var wanted: Set<ItemSlotAddress> = emptySet()
+        var guard: ContainerHistoryGuard? = null
         var ready=false
     }
 }
