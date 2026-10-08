@@ -36,9 +36,12 @@ object ContainerHistoryFormatter {
                 }
                 continue
             }
-            val changes = transaction.changes.filter { focus == null || it.address.owner == focus }
+            val focusedChanges = transaction.changes.filter { focus == null || it.address.owner == focus }
+            // Container context also indexes inventory-only actions while a menu is open.
+            // Do not infer a second chest half from an unchanged inspected block.
+            val changes = if (focus != null && focusedChanges.isEmpty()) transaction.changes else focusedChanges
             val blocks = changes.filter { it.address.owner is ItemSlotOwner.BlockContainer }
-            val visible = if (focus != null || blocks.isNotEmpty()) blocks else changes.filter { it.address.owner is ItemSlotOwner.PlayerInventory }
+            val visible = if (blocks.isNotEmpty()) blocks else changes.filter { it.address.owner is ItemSlotOwner.PlayerInventory }
             val groups = visible.groupBy { it.address.owner }
             var emitted = false
             for ((owner, rows) in groups) {
@@ -58,11 +61,11 @@ object ContainerHistoryFormatter {
                     val itemId = requireNotNull(item.first)
                     val componentChange = rows.any { it.before.itemId == itemId && it.after.itemId == itemId && it.before.itemData != it.after.itemData }
                     val label = itemId.path.replace('_', ' ') + if (itemId.namespace == "minecraft") "" else " (${itemId.namespace})"
-                    add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor $verb ${kotlin.math.abs(count)} $label${if (componentChange) " (components changed)" else ""} $direction $location").withStyle(if (count > 0) ChatFormatting.GREEN else ChatFormatting.RED))
+                    add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor $verb ${kotlin.math.abs(count)} $label${if (componentChange) " (components changed)" else ""} $direction $location${if (focus != null && focusedChanges.isEmpty() && blocks.isEmpty()) "; this container was unchanged" else ""}").withStyle(if (count > 0) ChatFormatting.GREEN else ChatFormatting.RED))
                     emitted = true
                 }
             }
-            if (!emitted && changes.isEmpty() && focus != null) add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor changed items in the other half of this container.").withStyle(ChatFormatting.GRAY))
+            if (!emitted && focus != null && focusedChanges.isEmpty()) add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor changed carried items; this container was unchanged.").withStyle(ChatFormatting.GRAY))
             else if (!emitted) add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor rearranged items${if (focus != null) " in this container" else " (${transaction.action.name.lowercase().replace('_', ' ')})"}.").withStyle(ChatFormatting.GRAY))
         }
     }

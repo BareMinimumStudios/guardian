@@ -7,6 +7,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Fixed
+
+- Inventory-only actions recorded while a container is open no longer claim that items changed in its other half. The history names the affected inventory and states when the inspected container was unchanged.
+- Inspecting an unchanged half of a double chest shows the actual item changes and coordinates of the affected half.
+
+### Changed
+
+- Hopper routes explicitly label their source with `from` and their destination with `to`.
+
+
 ## [0.4.0-alpha.6+1.21.1] - 2026-10-07
 
 ### Added
