@@ -1,6 +1,6 @@
 package com.bareminimumstudios.guardian.logging
 
-import com.bareminimumstudios.guardian.domain.LogEntry
+import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.StorageBackend
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
@@ -41,6 +41,36 @@ class BufferedLogPipeline(
     private val submissionGate = ReentrantLock()
     private val barriers = linkedMapOf<CompletableFuture<AuditWriteFence>, Long>()
     private val maxBarriers = 32
+    private class OwnerWatch(val owners: Set<ItemSlotOwner>) { val changed=mutableSetOf<ItemSlotOwner>() }
+    private val ownerWatches=mutableSetOf<OwnerWatch>()
+
+    /** Bounded watch, ordered with submit attempts; it retains no item snapshots or audit records. */
+    fun observeOwners(owners: Collection<ItemSlotOwner>): AuditOwnerObservation = submissionGate.withLock {
+        val copied=owners.toSet()
+        require(copied.size in 1..32 && copied.all { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory })
+        check(state.get()==PipelineState.RUNNING) { "Audit writer is unavailable" }
+        check(ownerWatches.size<32) { "Too many owner observations" }
+        val watch=OwnerWatch(copied);ownerWatches.add(watch)
+        AuditOwnerObservation({ submissionGate.withLock {
+            if(state.get()!=PipelineState.RUNNING || watch !in ownerWatches) watch.owners.toSet() else watch.changed.toSet()
+        } }, { submissionGate.withLock { ownerWatches.remove(watch) } })
+    }
+
+    private fun invalidateOwners(entry: LogEntry) {
+        if(ownerWatches.isEmpty()) return
+        fun touch(owner: ItemSlotOwner) {
+            val logical=when(owner) {
+                is ItemSlotOwner.Cursor -> ItemSlotOwner.PlayerInventory(owner.playerId)
+                is ItemSlotOwner.CraftingGrid -> ItemSlotOwner.PlayerInventory(owner.playerId)
+                else -> owner
+            }
+            ownerWatches.forEach { if(logical in it.owners) it.changed.add(logical) }
+        }
+        when(entry) {
+            is ContainerAuditEntry -> entry.transaction.changes.forEach { touch(it.address.owner) }
+            is BlockChangeSnapshot -> touch(ItemSlotOwner.BlockContainer(entry.dimension,entry.position))
+        }
+    }
     private val queue = ArrayBlockingQueue<LogEntry>(queueCapacity)
     private val state = AtomicReference(PipelineState.CREATED)
     private val worker = AtomicReference<Thread?>()
@@ -78,6 +108,7 @@ class BufferedLogPipeline(
     }
 
     fun submit(entry: LogEntry): SubmissionResult = submissionGate.withLock {
+        invalidateOwners(entry)
         if (state.get() != PipelineState.RUNNING) return@withLock SubmissionResult.NOT_RUNNING
         if (queue.offer(entry)) {
             accepted.incrementAndGet()
@@ -213,7 +244,7 @@ class BufferedLogPipeline(
     }
 
     private fun failBarriers(error: Throwable) {
-        val pending=submissionGate.withLock { barriers.keys.toList().also { barriers.clear() } }
+        val pending=submissionGate.withLock { ownerWatches.clear();barriers.keys.toList().also { barriers.clear() } }
         pending.forEach { it.completeExceptionally(error) }
     }
 

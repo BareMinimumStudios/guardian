@@ -1,3 +1,17 @@
+# Guardian observation invalidation checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.15+1.21.1`.
+
+- All 183 tests passed: 154 common and 29 Minecraft tests. Clean build, configuration-cache reuse and separate WorldEdit adapter builds passed with Java 21 and Gradle 9.8.0. The known Loom SQLite metadata warning remains.
+- Nine new owner-watch tests cover matching/unrelated owners, dimensions, whole-player temporary-slot ownership, queue rejection, change-and-return activity, detached results, capacity/copy bounds, idempotent release, stopped writers and concurrent submitters.
+- Controlled pipeline tests prove invalidation before queue acceptance and under backpressure. Dedicated Fabric and NeoForge fixtures verify preview/recovery wiring and unchanged ORIGINAL, RESTORED, PARTIAL, CONFLICT and UNAVAILABLE results while otherwise idle. Concurrent gameplay during a live check remains a separate acceptance test.
+- Normal block/item row hashes and existing history queries passed after restart. Alpha.15 SQLite-only jars are installed; both servers are stopped with original settings restored and isolated rigs removed. Logs, databases and backups stay outside Git.
+- Schema 8, config version 6 and payload formats are unchanged. See [validation data](validation/owner-observation-alpha15.json).
+
+These watches observe captured audit attempts; they do not freeze gameplay or cover unsupported/unsubmitted changes. Exclusive mutation coordination, durable world/player saves and item rollback apply remain pending.
+
+## Historical alpha.14 recovery view checkpoint
+
 # Guardian item recovery view checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.14+1.21.1`.

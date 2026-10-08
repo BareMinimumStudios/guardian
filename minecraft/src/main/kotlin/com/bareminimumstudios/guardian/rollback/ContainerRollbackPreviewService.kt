@@ -50,6 +50,8 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
                 if(active !== session) return@guardContainers
                 if(guard == null) { refuse(session,"This backend cannot verify persistent item rollback history.");return@guardContainers }
                 session.guard=guard
+                val watched=owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory }
+                if(watched.isNotEmpty()) session.watch=runCatching { pipeline.observeOwners(watched) }.getOrElse { refuse(session,"Owner observation is unavailable.");return@guardContainers }
                 session.ready=true
             }, { if(active === session) refuse(session,"History safety check failed; see the server log.") })
         }, { if (active === session) refuse(session,"History lookup failed; see the server log.") })
@@ -99,16 +101,17 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
     }
 
     private fun finish(session: Session) {
+        session.watch?.changedOwners()?.let { session.unavailable.addAll(it) }
         session.bindings.filterValues { !it.isCurrent() }.keys.forEach { session.unavailable.add(it) }
         val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard))
         val summary=preview.entries.groupingBy { it.reason }.eachCount()
         session.source.sendSystemMessage(Component.literal("Guardian item rollback preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
         for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
         session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; item rollback apply is not enabled yet."))
-        active=null
+        session.watch?.close();active=null
     }
 
-    fun stop() { val session=active;active=null;session?.barrier?.cancel() }
+    fun stop() { val session=active;active=null;session?.barrier?.cancel();session?.watch?.close() }
 
     private fun inside(owner: ItemSlotOwner.BlockContainer,query: ContainerLookupQuery): Boolean {
         if (owner.dimension != query.dimension) return false
@@ -118,13 +121,13 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val radius=query.radius ?: 0
         return kotlin.math.abs(owner.position.x.toLong()-center.x) <= radius && kotlin.math.abs(owner.position.y.toLong()-center.y) <= radius && kotlin.math.abs(owner.position.z.toLong()-center.z) <= radius
     }
-    private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
+    private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
     private fun label(reason: ContainerPreviewReason) = when(reason) {
         ContainerPreviewReason.UNSUPPORTED_ACTION -> "crafting, creative, drop, close or unsupported action"
         ContainerPreviewReason.AMBIGUOUS_ORDER -> "shared inventory records have the same timestamp; order is uncertain"
         ContainerPreviewReason.UNSUPPORTED_OWNER -> "temporary cursor/crafting or unsupported ownership"
         ContainerPreviewReason.NONCONSERVING_ACTION -> "creation, destruction, drop or recipe transformation"
-        ContainerPreviewReason.UNAVAILABLE_OWNER -> "offline/busy player, missing/unloaded container, sealed loot, changed ownership or unreadable items"
+        ContainerPreviewReason.UNAVAILABLE_OWNER -> "offline/busy player, missing/unloaded container, sealed loot, changed ownership, captured activity during checking or unreadable items"
         ContainerPreviewReason.OUTSIDE_SCOPE -> "a transfer endpoint is outside the requested region"
         ContainerPreviewReason.STATE_MISMATCH -> "recorded slots do not match the observed inventory"
         ContainerPreviewReason.BLOCKED_CHAIN -> "an older transaction depends on a skipped inventory"
@@ -146,6 +149,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         var guard: ContainerHistoryGuard? = null
         var retainedBytes=0L
         val bindings=linkedMapOf<ItemSlotOwner,MinecraftInventoryObservation>()
+        var watch: com.bareminimumstudios.guardian.logging.AuditOwnerObservation? = null
         var finalStarted=false
         var ready=false
     }

@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.14+1.21.1`.
+Checkpoint: `0.4.0-alpha.15+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -46,6 +46,16 @@ The same `guardian.rollback` permission or operator level 2 is required. Listing
 | UNAVAILABLE | An owner could not be read or its live identity changed. |
 
 These commands never change items, advance phases or clear claims. ORIGINAL and RESTORED describe sampled live slots; neither establishes durable chunk/player saves. Owners are sampled across ticks, so the result is not an atomic inventory snapshot. Gameplay continues during the check. Treat partial, conflicting, unavailable and indistinguishable states as unresolved; no automatic replay follows a result.
+
+## Captured activity during observation
+
+Preview starts a watch after its initial persisted-history check; recovery starts one after loading and validating its journal. Each watch contains at most 32 persistent owners. A pipeline supports at most 32 active watches. The normal command services still allow only one item check at a time.
+
+Every submitted item or block snapshot invalidates matching owners before the queue accepts or rejects it. A change to any slot affects the whole logical inventory. Cursor and crafting-grid changes affect their player's inventory owner. Repeated changes, including moving items away and back, never reset a watch. Other owners and dimensions remain independent.
+
+The final result marks affected owners unavailable. Queue rejection does not hide captured activity from these watches. Completion, refusal, timeout and shutdown release the watch; writer failures invalidate outstanding handles. Registration, submission and inspection share a short ordering gate, with no storage calls or completion callbacks under that gate. Watches retain bounded owner identities, not item data or historical transactions.
+
+This only covers snapshots submitted during the watched interval. Disabled logging, unsupported capture paths, failures before submission and other mod writes remain outside the guarantee. The watch does not lock an inventory, prevent a transfer or establish a disk save.
 
 ## What remains before apply
 

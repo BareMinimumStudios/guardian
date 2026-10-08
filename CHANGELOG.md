@@ -7,6 +7,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.15+1.21.1] - 2026-10-08
+
+### Added
+
+- Bounded audit-owner watches for item preview and recovery observations.
+- Invalidation when captured item or block changes touch a participating owner, including rejected queue submissions and temporary player cursor/crafting activity.
+- Regression coverage for concurrent submissions, change-and-return sequences, isolated owners, capacity bounds and lifecycle cleanup.
+
+### Changed
+
+- Captured activity during a multi-tick item check makes the affected owner unavailable, even if its items later return to the same state.
+- Watches are released on completion, refusal, timeout and shutdown. They retain owner identities only, with no item snapshots or audit history.
+
+
 ## [0.4.0-alpha.14+1.21.1] - 2026-10-08
 
 ### Added
