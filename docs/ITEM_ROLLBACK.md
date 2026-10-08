@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.24+1.21.1`.
+Checkpoint: `0.4.0-alpha.25+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -180,3 +180,15 @@ Alpha.24 wraps the shared dispenser and dropper activation methods on Fabric and
 Without reservations, no endpoint resolution, inventory reads or chunk loads are added by these guards. Release, invalidation and expiry restore ordinary activation. A skipped scheduled activation is not queued for replay; a new redstone activation is required. Structural changes still cancel affected operations under the alpha.23 lifecycle rules.
 
 Both loaders passed real redstone activation tests with item logging off/on. A reservation on a separate barrel held dispenser ejection, dropper ejection and dropper-to-barrel insertion unchanged; new activations succeeded after release. These tests verify the activation entry points, including NeoForge's normal inventory capability path. They do not certify modded code that bypasses those entry points or mutates inventories off-thread. Dispenser/dropper audit capture is not added. Remaining unsupported mutation paths, connected-client acceptance and verified saves still prevent enabling item apply.
+
+## Brewing and crafter guards
+
+Alpha.25 pauses the shared brewing stand server tick during any inventory reservation. The guard runs before fuel is consumed, a brew starts or progresses, potion/ingredient stacks change, or NeoForge brewing hooks execute. The timer stays where it was and resumes on the next ordinary tick after reservations end; it does not catch up skipped ticks.
+
+Crafter activation uses the same global gate before creating recipe input, assembling a recipe or consuming ingredients. It therefore covers crafted output and remaining items whether they enter an adjacent container, pass through NeoForge's output handler or are ejected. The separate crafter block-entity tick is also paused before its animation counter or CRAFTING block state changes. Skipped scheduled activations are not replayed; crafting needs a fresh activation after release or expiry.
+
+The broad pause is deliberate: recipe implementations and brewing/crafting hooks can mutate owners outside the visible machine and output destination. An unrelated block or player reservation therefore pauses these paths too. Without reservations, the guard performs no item reads, owner resolution or chunk loading. Installed-server off-thread calls are refused. Guards are independent of transaction capture.
+
+Both loaders passed fuel/start and completion checks with item logging off/on, plus crafter ejection, insertion, recipe remainders and animation checks. Brewing made the expected potion and consumed one ingredient after release. A cake recipe delivered one cake and exactly three returned buckets while consuming its ingredients. These checks certify the wrapped vanilla entry points, not arbitrary modded code that bypasses them.
+
+BrewingStandMenu and CrafterMenu remain outside the verified menu/owner whitelist and are conservatively refused during active reservations. No brewing/crafter history, transformation rollback, wider owner whitelist or item apply command is added. Remaining mutation paths, connected-client acceptance and actual saved-state completion still need verification before apply can be enabled.

@@ -1,3 +1,18 @@
+# Guardian brewing/crafter checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.25+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed bridge and three new mixins. Required brewing tick, crafter activation and crafter animation tick wrappers loaded on both platforms. The existing tested common automation policy is reused.
+- Fabric and NeoForge each passed 12 live checks with item logging off/on: 48 total. Reserved brewing stands held fuel, ingredient, potion and start timer unchanged. After release, fuel consumption and brewing began normally; an unrelated reservation also held a pending brew at completion, then release produced the expected awkward potion and consumed exactly one ingredient.
+- Reserved crafter activation left inputs, output destinations, remainder output and animation untouched. Fresh activations after release produced four planks from one log through ejection and barrel insertion. A cake recipe consumed all nine inputs and delivered one cake plus exactly three returned buckets. Reserved crafter animation counters/block states stayed unchanged and completed normally after release.
+- Normal restarts without test agents passed both loaders, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Alpha.25 is installed with the matching optional Fabric WorldEdit adapter. Both servers are stopped, original configs restored, fixture inventories/blocks and temporary chunk tickets removed. Ejected fixture planks were cleaned throughout the test area's vertical extent.
+- Schema 8, config version 6 and audit formats are unchanged. This milestone adds coordination, not brewing/crafter history or recipe rollback. Isolated runs produced zero item records. Standard artifacts remain SQLite-only. Private test agents, logs, databases and guidance stay outside Git and distribution archives. See [validation data](validation/brewing-crafter-alpha25.json).
+
+Remaining mutation paths, connected-client/modpack acceptance and verified completion saves remain pending. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.24 dispenser/dropper checkpoint
+
 # Guardian dispenser/dropper checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.24+1.21.1`.

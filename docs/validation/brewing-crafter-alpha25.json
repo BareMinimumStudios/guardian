@@ -1,0 +1,141 @@
+{
+  "checkpoint": "0.4.0-alpha.25+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": 213,
+    "minecraft": 49,
+    "total": 262,
+    "failures": 0
+  },
+  "runtimeChecks": 48,
+  "runs": [
+    {
+      "loader": "Fabric",
+      "logging": false,
+      "checks": [
+        "reserved brewing stand held fuel, ingredient, potion and start timer unchanged",
+        "brewing fuel consumption and recipe start resumed after release",
+        "unrelated reservation paused brewing completion before potion or ingredient changes",
+        "brewing completed and consumed exactly one ingredient after release",
+        "crafter plank ejection refused before ingredients, output, remainders or animation changed",
+        "crafter plank ejection consumed expected inputs and delivered exact output after release",
+        "crafter plank insertion refused before ingredients, output, remainders or animation changed",
+        "crafter plank insertion consumed expected inputs and delivered exact output after release",
+        "crafter cake and bucket remainder insertion refused before ingredients, output, remainders or animation changed",
+        "crafter cake and bucket remainder insertion consumed expected inputs and delivered exact output after release",
+        "reserved crafter animation timer and block state remained unchanged",
+        "crafter animation completed normally after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Fabric",
+      "logging": true,
+      "checks": [
+        "reserved brewing stand held fuel, ingredient, potion and start timer unchanged",
+        "brewing fuel consumption and recipe start resumed after release",
+        "unrelated reservation paused brewing completion before potion or ingredient changes",
+        "brewing completed and consumed exactly one ingredient after release",
+        "crafter plank ejection refused before ingredients, output, remainders or animation changed",
+        "crafter plank ejection consumed expected inputs and delivered exact output after release",
+        "crafter plank insertion refused before ingredients, output, remainders or animation changed",
+        "crafter plank insertion consumed expected inputs and delivered exact output after release",
+        "crafter cake and bucket remainder insertion refused before ingredients, output, remainders or animation changed",
+        "crafter cake and bucket remainder insertion consumed expected inputs and delivered exact output after release",
+        "reserved crafter animation timer and block state remained unchanged",
+        "crafter animation completed normally after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": false,
+      "checks": [
+        "reserved brewing stand held fuel, ingredient, potion and start timer unchanged",
+        "brewing fuel consumption and recipe start resumed after release",
+        "unrelated reservation paused brewing completion before potion or ingredient changes",
+        "brewing completed and consumed exactly one ingredient after release",
+        "crafter plank ejection refused before ingredients, output, remainders or animation changed",
+        "crafter plank ejection consumed expected inputs and delivered exact output after release",
+        "crafter plank insertion refused before ingredients, output, remainders or animation changed",
+        "crafter plank insertion consumed expected inputs and delivered exact output after release",
+        "crafter cake and bucket remainder insertion refused before ingredients, output, remainders or animation changed",
+        "crafter cake and bucket remainder insertion consumed expected inputs and delivered exact output after release",
+        "reserved crafter animation timer and block state remained unchanged",
+        "crafter animation completed normally after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": true,
+      "checks": [
+        "reserved brewing stand held fuel, ingredient, potion and start timer unchanged",
+        "brewing fuel consumption and recipe start resumed after release",
+        "unrelated reservation paused brewing completion before potion or ingredient changes",
+        "brewing completed and consumed exactly one ingredient after release",
+        "crafter plank ejection refused before ingredients, output, remainders or animation changed",
+        "crafter plank ejection consumed expected inputs and delivered exact output after release",
+        "crafter plank insertion refused before ingredients, output, remainders or animation changed",
+        "crafter plank insertion consumed expected inputs and delivered exact output after release",
+        "crafter cake and bucket remainder insertion refused before ingredients, output, remainders or animation changed",
+        "crafter cake and bucket remainder insertion consumed expected inputs and delivered exact output after release",
+        "reserved crafter animation timer and block state remained unchanged",
+        "crafter animation completed normally after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    }
+  ],
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true,
+      "fixtureItemEntitiesCleaned": true
+    },
+    {
+      "loader": "Neoforge",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true,
+      "fixtureItemEntitiesCleaned": true
+    }
+  ],
+  "buildChecks": [
+    "clean build",
+    "build",
+    "repeated build with configuration-cache reuse",
+    "worldedit-adapter build"
+  ],
+  "limits": [
+    "Commands do not acquire reservations; item apply remains disabled.",
+    "Any reservation pauses brewing/crafter activation and ticks, including unrelated owners.",
+    "Skipped crafter activations are not replayed; timers resume without catching up.",
+    "Arbitrary bypasses, off-thread mod mutation, player acceptance and verified saves remain pending.",
+    "No brewing/crafter audit capture or recipe transformation rollback is added."
+  ],
+  "fixtureNotes": [
+    "Newly generated chunks warmed to ticking status before activation tests.",
+    "Reflection-only agent and isolated databases stayed outside Git and distributions.",
+    "Fixture inventories, blocks, full-height item drops and temporary chunk tickets removed."
+  ]
+}

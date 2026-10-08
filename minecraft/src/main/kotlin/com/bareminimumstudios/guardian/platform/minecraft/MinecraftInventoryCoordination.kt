@@ -55,7 +55,9 @@ object MinecraftInventoryCoordination {
         if (hopper !is HopperBlockEntity) null else endpoints(it, hopper.blockPos, hopper.blockPos.above())
     }
 
-    @JvmStatic fun allowsDispense(level: Level): Boolean {
+    @JvmStatic fun allowsDispense(level: Level): Boolean = allowsAutomation(level)
+
+    @JvmStatic fun allowsAutomation(level: Level): Boolean {
         val current = binding ?: return true
         if (level !is ServerLevel || level.server !== current.server) return true
         if (!current.server.isSameThread) return false

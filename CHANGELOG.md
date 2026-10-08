@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.25+1.21.1] - 2026-10-08
+
+### Added
+
+- Brewing stand tick guards before fuel, potion, ingredient and timer changes or brewing hooks run.
+- Crafter activation guards before recipe assembly, ingredient consumption, output/remainder insertion or ejection, and tick guards before animation timers change.
+- Shared automation gating on both loaders, independent of transaction logging.
+
+Brewing and crafter automation pause while any inventory reservation exists. No audit capture or rollback of their recipe transformations is added; item apply remains disabled.
+
 ## [0.4.0-alpha.24+1.21.1] - 2026-10-08
 
 ### Added

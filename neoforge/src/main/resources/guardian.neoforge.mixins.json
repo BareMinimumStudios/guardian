@@ -25,7 +25,10 @@
     "BlockEntityRemovalMixin",
     "ContainerChunkLifecycleMixin",
     "DispenserCoordinationMixin",
-    "DropperCoordinationMixin"
+    "DropperCoordinationMixin",
+    "BrewingTickMixin",
+    "CrafterTickMixin",
+    "CrafterActivationMixin"
   ],
   "injectors": {
     "defaultRequire": 1
