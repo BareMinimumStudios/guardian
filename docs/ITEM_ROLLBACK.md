@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.27+1.21.1`.
+Checkpoint: `0.4.0-alpha.28+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -211,4 +211,12 @@ Alpha.27 pauses ServerPlayerGameMode item use and use-on-block before vanilla/Ne
 
 Direct Inventory setters, insertion/removal, loading/copying, clearing, dropping, hotbar picking and returned-item methods invalidate the player's whole operation before proceeding normally. Modifying clearOrCountMatchingItems invalidates all operations because it can also touch an extra container and invoke a predicate. Vanilla count-only queries preserve contents and reservations. Arbitrary predicates with side effects are not certified.
 
-Both overloads of insertion and returned-item methods use explicit descriptors so Fabric remaps each selector independently. Direct mutable stack/list writes, ongoing use ticks, arbitrary modded writes and a trusted apply-write permit remain pending. Item rollback apply stays disabled.
+Both overloads of insertion and returned-item methods use explicit descriptors so Fabric remaps each selector independently. Direct mutable stack/list writes and arbitrary modded writes and a trusted apply-write permit remain pending. Item rollback apply stays disabled.
+
+## Ongoing player item use
+
+Alpha.28 guards LivingEntity item-use entry points for ServerPlayer instances. Direct start, the outer continuation tick, direct use ticks and completion pause while any reservation is active. Guarding the outer tick also prevents NeoForge continuation callbacks from running first. Start refusal refreshes the authoritative inventory state; paused ticks do not send a resynchronization every tick.
+
+Active release and stop remain available. They revoke all reservations before original callbacks because release, finish and NeoForge onStopUsing behavior may affect inventories beyond the held stack. Inactive release/stop does not revoke reservations. Cleanup then proceeds normally, including charged bow release. A successful completion can reach stop cleanup and conservatively cancel reservations acquired by callbacks during completion.
+
+This is coordination, not logging of consumption or projectiles. Non-player entities use their normal paths. Synthetic-player checks cover food, milk-bucket returns and bow release on both loaders; connected-client use animations and modpack callbacks remain acceptance work. Direct mutable stack/list writes, arbitrary replacement methods and verified save/apply remain pending. Commands still do not acquire reservations; item rollback apply remains disabled.

@@ -1,3 +1,18 @@
+# Guardian ongoing-item-use checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.28+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed bridge or shared ongoing-use mixin. Both loader configurations package the required wrappers for start, outer continuation, direct tick, completion, release and stop.
+- Fabric and NeoForge each passed 12 live synthetic-player checks with item logging off/on: 48 total. Reserved direct start refused use and refreshed inventory state. Existing apple use retained its timer, stack, hunger and active state through outer/direct ticks and completion. After release, progress resumed and ordinary completion consumed one apple, restored four hunger points and ended use.
+- Milk completion held its stack while reserved, then returned exactly one empty bucket after release. Active stop revoked all operations before proceeding without food consumption. Charged bow release revoked operations and consumed exactly one arrow. Inactive stop/release preserved reservations and ammunition.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both servers are stopped with alpha.28 installed, original configs restored, temporary blocks/arrows/tickets removed and the matching optional Fabric WorldEdit adapter installed.
+- Schema 8, config 6 and audit formats are unchanged. Isolated checks produced zero container records. Standard artifacts remain SQLite-only. Private instructions, agents, tooling, logs and databases stay outside Git and archives. See [validation data](validation/ongoing-use-alpha28.json).
+
+Direct mutable stack/list writes, arbitrary modded replacements, connected-client acceptance and actual saved-state completion remain pending. This adds use coordination, not consumption/projectile logging. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.27 item-use and inventory checkpoint
+
 # Guardian item-use and inventory checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.27+1.21.1`.

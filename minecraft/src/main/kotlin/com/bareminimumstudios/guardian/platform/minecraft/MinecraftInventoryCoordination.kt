@@ -141,6 +141,8 @@ object MinecraftInventoryCoordination {
         current.owners.invalidate(ItemSlotOwner.PlayerInventory(player.uuid))
     }
 
+    @JvmStatic fun beforeItemUseCleanup(player: ServerPlayer) = beforeBulkInventoryMutation(player)
+
     @JvmStatic fun beforeBulkInventoryMutation(player: net.minecraft.world.entity.player.Player) {
         val current = binding ?: return
         if (player !is ServerPlayer || player.server !== current.server) return

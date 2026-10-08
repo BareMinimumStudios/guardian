@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.28+1.21.1] - 2026-10-08
+
+### Added
+
+- Guards for ongoing player item use: start, progress, direct use ticks and completion pause during reservations.
+- Reservation invalidation before active release/stop callbacks, allowing ordinary cleanup to proceed on both loaders.
+
+These hooks cover standard LivingEntity use paths for server players. Mutable stack/list writes, arbitrary modded callbacks and verified save/apply remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.27+1.21.1] - 2026-10-08
 
 ### Added

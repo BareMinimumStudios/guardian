@@ -32,7 +32,8 @@
     "PlayerListLifecycleMixin",
     "PlayerTransitionMixin",
     "InventoryMutationMixin",
-    "PlayerUseMixin"
+    "PlayerUseMixin",
+    "OngoingItemUseMixin"
   ],
   "injectors": {
     "defaultRequire": 1
