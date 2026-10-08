@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.19+1.21.1`.
+Checkpoint: `0.4.0-alpha.20+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -130,3 +130,17 @@ Saved-readback interruption tests verify that reservation loss leaves the save d
 MixinMCP inspection of the pinned classpaths confirms that vanilla hopper transfer methods remove and mutate stacks directly, while NeoForge can take its capability insertion hook before the vanilla path. Furnace server ticks also consume fuel and alter output independently of menus. Blocking clicks alone is insufficient.
 
 The next platform slice must establish coverage for physical container identities and both transfer endpoints, menu access, player actions, ticking inventories, replacement/unload and player disconnect. Unsupported modded mutation paths must refuse apply. Only then can a Minecraft save port combine reservations, identity/content checks, real save/flush readback and the final journal transition. Current observation watches remain useful for detecting captured activity, but they do not block it.
+
+## Hopper reservation guard
+
+Alpha.20 installs a server-owned reservation registry and checks hopper push/pull attempts before the existing audit wrapper. Commands still do not acquire reservations, and item apply remains disabled. The registry is stopped and detached during server shutdown.
+
+With no reservations, the guard allows ordinary server-thread transfers without resolving endpoints or reading inventory contents. During a reservation it checks the hopper position, the attached/source block position and each connected physical chest half. Chest topology reads use already loaded chunks; the guard does not load chunks, read item stacks or unpack loot. A reservation at any participating physical owner refuses the entire attempt before the original transfer and capture code run. Release/expiry allows later attempts to resume. The guard is independent of all logging switches.
+
+The common transfer gate accepts up to four unique physical block owners. Unavailable, failed or unsupported endpoint resolution refuses an attempt while reservations exist. Stopped gates refuse late work. Non-block hopper pull endpoints are currently unsupported and are refused during an active reservation; ordinary unreserved behavior remains available. Off-thread calls to the installed server are refused.
+
+The same wrapper surrounds NeoForge's capability insertion/extraction fast paths. Runtime acceptance covers vanilla physical hoppers, barrels and double chests on both loaders, including a double chest across a chunk boundary. This does not certify arbitrary modded capability wrappers that redirect to inventories at other positions.
+
+A temporary reflection-only test agent, kept outside the repository and mod artifacts, acquires/releases reservations on the server thread. Both loaders passed source, destination, hopper and opposite-chest-half tests with hopper logging off and on. Inventories remained unchanged while reserved and successful transfers resumed after release. Each enabled run recorded seven successful transfers; disabled runs recorded none. Fixtures used isolated databases and were removed afterwards.
+
+Menu/player mutation paths, ticking inventories, block replacement/unload and unsupported automation remain uncoordinated. The hopper guard alone cannot satisfy `ItemSavePort` or justify applying/completing an item rollback. The next slice is menu/player access and mutation coordination.

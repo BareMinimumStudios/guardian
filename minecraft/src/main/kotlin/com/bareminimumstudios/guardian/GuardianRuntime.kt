@@ -25,6 +25,8 @@ class GuardianRuntime(
     private var rollback: BlockRollbackService? = null
     private var itemPreview: com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService? = null
 
+    private var inventoryCoordination: com.bareminimumstudios.guardian.rollback.ItemOwnerCoordination? = null
+
     private var itemRecovery: com.bareminimumstudios.guardian.rollback.ItemRecoveryService? = null
 
     fun start(server: MinecraftServer) {
@@ -55,6 +57,7 @@ class GuardianRuntime(
         rollback = BlockRollbackService(server, selectedHistory, config)
         itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline) { itemRecovery?.isBusy()==true }
         itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline) { itemPreview?.isBusy()==true }
+        inventoryCoordination = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.install(server)
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
@@ -65,6 +68,8 @@ class GuardianRuntime(
     }
 
     fun stop(): Boolean {
+        com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.uninstall(inventoryCoordination)
+        inventoryCoordination = null
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ null }, { false })
         com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ null }, { false })
         itemRecovery?.stop()
@@ -86,6 +91,7 @@ class GuardianRuntime(
         return bulkClean && pipelineClean
     }
 
+    fun inventoryCoordination() = inventoryCoordination
     fun pipeline(): BufferedLogPipeline? = pipeline
     fun storage(): QueryableStorageBackend? = storage
     fun history(): BlockHistoryService? = history

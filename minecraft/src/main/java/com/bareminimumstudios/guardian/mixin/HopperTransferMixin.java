@@ -1,6 +1,7 @@
 package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture;
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.core.BlockPos;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class HopperTransferMixin {
     @WrapMethod(method = "ejectItems")
     private static boolean guardian$capturePush(Level level, BlockPos position, HopperBlockEntity hopper, Operation<Boolean> original) {
+        if (!MinecraftInventoryCoordination.allowsPush(level, hopper)) return false;
         try (var pending = HopperTransferCapture.beginPush(level, hopper)) {
             boolean result = original.call(level, position, hopper);
             HopperTransferCapture.finish(pending);
@@ -22,6 +24,7 @@ public abstract class HopperTransferMixin {
 
     @WrapMethod(method = "suckInItems")
     private static boolean guardian$capturePull(Level level, Hopper hopper, Operation<Boolean> original) {
+        if (!MinecraftInventoryCoordination.allowsPull(level, hopper)) return false;
         try (var pending = HopperTransferCapture.beginPull(level, hopper)) {
             boolean result = original.call(level, hopper);
             HopperTransferCapture.finish(pending);

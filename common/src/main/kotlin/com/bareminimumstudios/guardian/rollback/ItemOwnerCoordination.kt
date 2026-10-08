@@ -27,6 +27,17 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         }
     }
 
+    fun isRunning(): Boolean {
+        checkThread()
+        return !stopped
+    }
+
+    fun hasReservations(): Boolean {
+        checkThread()
+        reapExpired()
+        return !stopped && operations.isNotEmpty()
+    }
+
     fun allowsMutation(owner: ItemSlotOwner, permit: Lease? = null): Boolean {
         checkThread()
         reapExpired()

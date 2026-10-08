@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.20+1.21.1] - 2026-10-08
+
+### Added
+
+- Hopper push/pull reservation guards on Fabric and NeoForge, independent of audit logging and aware of physical chest halves across chunk boundaries.
+- Server-owned coordination lifecycle and transfer-gate regression tests.
+
+The guards are verified with active test reservations. Commands do not acquire reservations yet; item apply remains disabled.
+
 ## [0.4.0-alpha.19+1.21.1] - 2026-10-08
 
 ### Added

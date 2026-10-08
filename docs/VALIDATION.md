@@ -1,3 +1,19 @@
+# Guardian hopper-reservation checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.20+1.21.1`.
+
+- All 241 tests passed: 192 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- Nine new transfer-gate tests cover idle behavior, each participating owner, unrelated dimensions, failed/unsupported resolution, duplicate physical endpoints, expiry, release/invalidation, stop and thread confinement.
+- IDEA reported no problems in the changed hopper mixin or its Minecraft coordination bridge.
+- Fabric and NeoForge each passed four active reservation cases with logging off and on: source, destination, hopper and the opposite half of a double chest across a chunk boundary. Items remained unchanged while reserved; transfers resumed after release. Enabled runs each recorded seven successful transfers and disabled runs recorded none.
+- The external test agent only scheduled acquisition/release on the server thread. It did not replace hopper code. Initial fixture failures were corrected with real redstone power and asserted double-chest states before acceptance. Test sources, agents, logs, databases and backups stay outside Git and the distribution.
+- Normal restarts without the test agent passed both loaders, returned the expected three/two historical transactions and no unfinished journals, and preserved all normal audit/journal tables. Alpha.20 is installed; both servers are stopped with original configs restored and fixtures/forced chunks removed.
+- Schema 8, config version 6 and audit formats are unchanged. SQLite remains the standard bundled driver. See [validation data](validation/hopper-coordination-alpha20.json).
+
+Hopper coordination is one part of exclusive inventory access. Menus, player actions, ticking inventories, replacement/unload, unsupported modded capabilities, verified save completion and item apply remain pending.
+
+## Historical alpha.19 owner-reservation checkpoint
+
 # Guardian owner-reservation checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.19+1.21.1`.
