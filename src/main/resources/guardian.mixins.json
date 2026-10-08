@@ -11,7 +11,10 @@
     "CreativeInventoryMixin",
     "HopperTransferMixin",
     "BlockInteractionMixin",
-    "InspectorPacketMixin"
+    "InspectorPacketMixin",
+    "CraftingMenuAccessor",
+    "CraftingResultMixin",
+    "RecipePlacementMixin"
   ],
   "injectors": {
     "defaultRequire": 1

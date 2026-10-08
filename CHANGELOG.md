@@ -7,6 +7,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.9+1.21.1] - 2026-10-08
+
+### Added
+
+- Correlated vanilla inventory and crafting-table transactions, including recipe-book ingredient placement, accepted result takes, bulk crafting, ingredient returns on close, and recipe leftovers.
+- Player-owned temporary crafting-grid addresses, distinct from persistent containers and derived recipe previews.
+- Crafting summaries that show items gained and ingredients used, with crafting-table coordinates where available.
+- Schema 6 and bounded GCT2 slot encoding, retaining reads of existing GCT1 item history and preventing older builds from opening upgraded databases.
+- Crafting ownership, component immutability, layout rejection, migration, persistence and presentation regressions; live crafting probes on both loaders.
+
+### Changed
+
+- Vanilla inventory actions are captured with populated crafting grids. Extended menus are still skipped rather than partially recorded.
+
 ## [0.4.0-alpha.8+1.21.1] - 2026-10-07
 
 ### Added

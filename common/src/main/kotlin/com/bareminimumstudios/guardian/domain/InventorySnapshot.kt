@@ -7,6 +7,8 @@ import java.util.UUID
 sealed interface ItemSlotOwner {
     data class PlayerInventory(val playerId: UUID) : ItemSlotOwner
     data class Cursor(val playerId: UUID) : ItemSlotOwner
+    /** Temporary ingredients; never a persistent block inventory or a recipe preview. */
+    data class CraftingGrid(val playerId: UUID, val menuId: Int) : ItemSlotOwner { init { require(menuId >= 0) } }
     data class BlockContainer(val dimension: ResourceId, val position: BlockPosition) : ItemSlotOwner
 }
 data class ItemSlotAddress(val owner: ItemSlotOwner, val index: Int) {

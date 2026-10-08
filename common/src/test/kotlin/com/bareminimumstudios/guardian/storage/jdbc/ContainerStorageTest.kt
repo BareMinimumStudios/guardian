@@ -221,4 +221,15 @@ class ContainerStorageTest {
         }
     }
 
+    @Test fun craftingSurvivesSchemaFiveUpgradeAndOlderReaderIsRejected() = backends { factory,path,prefix ->
+        Class.forName(if(prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")
+        DriverManager.getConnection(prefix+path.toAbsolutePath()).use { conn -> assertEquals(5,SchemaMigrator(GuardianSchema.migrations.take(5)).migrate(conn)) }
+        val grid=ItemSlotAddress(ItemSlotOwner.CraftingGrid(actor.uuid,7),0)
+        val tx=ContainerTransactionSnapshot(UUID.randomUUID(),100,actor,7,ContainerAction.CRAFT,listOf(
+            ItemSlotChange(grid,item,ItemStackSnapshot.EMPTY),
+            ItemSlotChange(ItemSlotAddress(ItemSlotOwner.Cursor(actor.uuid),0),ItemStackSnapshot.EMPTY,item)),listOf(left))
+        factory(path).use { backend -> backend.open();backend.append(listOf(ContainerAuditEntry(tx))) }
+        factory(path).use { backend -> backend.open();val row=backend.lookupContainers(ContainerLookupQuery(dimension,left.position)).single();assertEquals(tx.changes,row.changes);assertEquals(ContainerAction.CRAFT,row.action) }
+        DriverManager.getConnection(prefix+path.toAbsolutePath()).use { conn -> assertFailsWith<IllegalArgumentException>{SchemaMigrator(GuardianSchema.migrations.take(5)).migrate(conn)} }
+    }
 }

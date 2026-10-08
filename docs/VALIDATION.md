@@ -1,3 +1,18 @@
+# Guardian crafting correlation checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.9+1.21.1`.
+
+- 118 tests passed: 89 common and 29 Minecraft tests. The clean build, subsequent configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0.
+- Live synthetic-player probes on Fabric and NeoForge invoked the accepted click packet handler and produced eight unique records each: five CRAFT, one RECIPE_PLACE and two CLOSE. Both reported zero capture failures and backpressure.
+- Independent decoding verified consumed ingredients, actual player/cursor gains, twelve-plank bulk output, cake's three empty-bucket leftovers, conservation in noncraft actions and three records indexed at the real crafting-table location.
+- Regression coverage includes immutable custom components, distinct player/menu grid ownership, preview exclusion, exact-layout rejection, no-op/canceled correlation, schema-5 migration, older-reader rejection, persistence/restart on both JDBC backends and concise crafting presentation.
+- Schema 6 adds guarded crafting ownership and action support. GCT2 encodes grid changes; existing GCT1 records remain readable. Block payloads and config version 6 are unchanged.
+- Both dedicated servers have the final SQLite-only alpha.9 jars installed and are stopped, with original configurations restored. Temporary harness mods/databases were removed or archived outside Git, and the table fixture was removed. Production files and the supplied production database were untouched.
+
+Actual-client tests remain for recipe clicks, full inventories, protection cancellation, modded recipes and prediction on both loaders. Unknown crafting layouts and thrown result outputs remain outside this bounded slice. Container rollback is next; temporary grids and recipe transformations require separate recovery rules. See [the crafting test guide](STEP_4_TESTING.md#crafting-acceptance-on-each-loader).
+
+## Historical alpha.8 SQLite checkpoint
+
 # Guardian SQLite distribution checkpoint
 
 Date: 2026-10-07. Checkpoint: `0.4.0-alpha.8+1.21.1`.

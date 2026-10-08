@@ -3,7 +3,7 @@ package com.bareminimumstudios.guardian.domain
 import java.util.Collections
 import java.util.UUID
 
-enum class ContainerAction { PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT, PICKUP_ALL, CLOSE, DROP_ONE, DROP_STACK, SWAP_OFFHAND, CREATIVE_SET, HOPPER_TRANSFER }
+enum class ContainerAction { PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT, PICKUP_ALL, CLOSE, DROP_ONE, DROP_STACK, SWAP_OFFHAND, CREATIVE_SET, HOPPER_TRANSFER, CRAFT, RECIPE_PLACE }
 data class ItemSlotChange(val address: ItemSlotAddress, val before: ItemStackSnapshot, val after: ItemStackSnapshot) {
     init { require(before != after) { "An item change must change a slot" } }
 }
@@ -29,6 +29,7 @@ class ContainerTransactionSnapshot(
         require(this.changes.all { change ->
             when (val owner = change.address.owner) {
                 is ItemSlotOwner.PlayerInventory -> actor is ActorIdentity.Player && owner.playerId == actor.uuid
+                is ItemSlotOwner.CraftingGrid -> actor is ActorIdentity.Player && owner.playerId == actor.uuid && owner.menuId == menuId
                 is ItemSlotOwner.Cursor -> actor is ActorIdentity.Player && owner.playerId == actor.uuid
                 is ItemSlotOwner.BlockContainer -> owner in this.containers
             }

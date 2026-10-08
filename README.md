@@ -18,12 +18,12 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite and provides commands for lookup, inspection, and rollback.
 
-Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Item transactions record accepted clicks and close-time cursor returns in supported block-backed menus, plus player inventory-screen moves, standalone drops, offhand swaps, and accepted creative slot changes. Inventory-screen capture requires an empty crafting area. Block-to-block hopper capture is available through an opt-in setting. See [Step 4 testing](docs/STEP_4_TESTING.md) for coverage and remaining acceptance checks.
+Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Item transactions record accepted clicks and close-time cursor returns in supported block-backed menus, plus player inventory-screen moves, standalone drops, offhand swaps, and accepted creative slot changes. Vanilla 2×2 and 3×3 crafting captures ingredient grids, recipe-book placement, result takes and close-time returns. Recipe previews are excluded from stored item counts; unknown or extended crafting menus are skipped. Block-to-block hopper capture is available through an opt-in setting. See [Step 4 testing](docs/STEP_4_TESTING.md) for coverage and remaining acceptance checks.
 
 ## At a glance
 
 - Records player block placement and breaking.
-- Records correlated item changes from supported block-container clicks, menu closes, player inventory moves, drops, offhand swaps, and creative slot changes.
+- Records correlated item changes from supported block-container clicks, menu closes, player inventory moves, drops, offhand swaps, creative slot changes, and vanilla crafting.
 - Can record hopper transfers between supported block containers, including double chests.
 - Keeps audit history across server restarts with bundled SQLite.
 - Shows block history through commands or an inspector tool.
@@ -59,7 +59,7 @@ Fzzy Config manages Guardian's settings under the `guardian` namespace. New inst
 
 Set `logging.automatedContainerTransfers` to true to enable block-to-block hopper history. It defaults to false in this testing checkpoint. The general, logging, and container-transaction master switches also apply. Use block-position lookup for hopper records.
 
-The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 5. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 5.
+The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 6. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 6.
 
 ## Project structure
 

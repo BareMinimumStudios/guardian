@@ -40,4 +40,23 @@ class ContainerHistoryFormatterTest {
         assertTrue(lines.any { "-281,111,-26 → -281,110,-26" in it })
         assertTrue(lines.none { "added" in it || "removed" in it })
     }
+    @Test fun craftingShowsIngredientsOutputAndTableWithoutClaimingContainerDeposit() {
+        val grid=ItemSlotOwner.CraftingGrid(actor.uuid,1)
+        val tx=ContainerTransactionSnapshot(UUID.randomUUID(),1000,actor,1,ContainerAction.CRAFT,listOf(
+            ItemSlotChange(ItemSlotAddress(grid,0),coal(2),coal(1)),
+            ItemSlotChange(ItemSlotAddress(ItemSlotOwner.Cursor(actor.uuid),0),ItemStackSnapshot.EMPTY,coal(4).copy(itemId=ResourceId.parse("minecraft:diamond")))),listOf(owner))
+        val lines=ContainerHistoryFormatter.lines(listOf(tx),2000,owner).map{it.string}
+        assertTrue(lines.any{"crafted; gained 4 diamond; used 1 coal" in it})
+        assertTrue(lines.none{"slot" in it || "cursor" in it})
+        assertEquals(2,lines.size)
+        assertTrue(lines.any{"at crafting table @ -281, 111, -26" in it})
+        assertTrue(lines.none{"this container was unchanged" in it || "to container" in it})
+    }
+    @Test fun movingIngredientsIsNotDisplayedAsCrafting() {
+        val grid=ItemSlotOwner.CraftingGrid(actor.uuid,1)
+        val tx=ContainerTransactionSnapshot(UUID.randomUUID(),1000,actor,1,ContainerAction.RECIPE_PLACE,listOf(
+            ItemSlotChange(ItemSlotAddress(grid,0),ItemStackSnapshot.EMPTY,coal(1))))
+        val lines=ContainerHistoryFormatter.lines(listOf(tx),2000).map{it.string}
+        assertTrue(lines.any{"added 1 coal to crafting grid" in it});assertTrue(lines.none{"crafted;" in it})
+    }
 }

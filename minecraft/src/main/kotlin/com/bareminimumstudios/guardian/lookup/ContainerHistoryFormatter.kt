@@ -36,12 +36,30 @@ object ContainerHistoryFormatter {
                 }
                 continue
             }
+            if (transaction.action == ContainerAction.CRAFT) {
+                val net = linkedMapOf<Pair<ResourceId?, BinaryPayload?>, Int>()
+                for (change in transaction.changes) {
+                    if (!change.before.isEmpty) net.merge(change.before.itemId to change.before.itemData, -change.before.count, Int::plus)
+                    if (!change.after.isEmpty) net.merge(change.after.itemId to change.after.itemData, change.after.count, Int::plus)
+                }
+                fun label(item: ResourceId, count: Int) = "${kotlin.math.abs(count)} ${item.path.replace('_', ' ')}" + if (item.namespace == "minecraft") "" else " (${item.namespace})"
+                val gained = net.filterValues { it > 0 }.map { (item, count) -> label(requireNotNull(item.first), count) }
+                val used = net.filterValues { it < 0 }.map { (item, count) -> label(requireNotNull(item.first), count) }
+                val details = buildList {
+                    if (gained.isNotEmpty()) add("gained " + gained.joinToString(", "))
+                    if (used.isNotEmpty()) add("used " + used.joinToString(", "))
+                }.joinToString("; ").ifEmpty { "changed ingredient and inventory slots" }
+                val table = focus ?: transaction.containers.firstOrNull()
+                val location = table?.let { "; at crafting table @ ${it.position.x}, ${it.position.y}, ${it.position.z}" } ?: ""
+                add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor crafted; $details$location").withStyle(ChatFormatting.GREEN))
+                continue
+            }
             val focusedChanges = transaction.changes.filter { focus == null || it.address.owner == focus }
             // Container context also indexes inventory-only actions while a menu is open.
             // Do not infer a second chest half from an unchanged inspected block.
             val changes = if (focus != null && focusedChanges.isEmpty()) transaction.changes else focusedChanges
             val blocks = changes.filter { it.address.owner is ItemSlotOwner.BlockContainer }
-            val visible = if (blocks.isNotEmpty()) blocks else changes.filter { it.address.owner is ItemSlotOwner.PlayerInventory }
+            val visible = if (blocks.isNotEmpty()) blocks else changes.filter { it.address.owner is ItemSlotOwner.PlayerInventory || it.address.owner is ItemSlotOwner.CraftingGrid }
             val groups = visible.groupBy { it.address.owner }
             var emitted = false
             for ((owner, rows) in groups) {
@@ -53,6 +71,8 @@ object ContainerHistoryFormatter {
                 }
                 val location = when (owner) {
                     is ItemSlotOwner.BlockContainer -> "container @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z}"
+                    is ItemSlotOwner.CraftingGrid -> "crafting grid"
+                    is ItemSlotOwner.Cursor -> "cursor"
                     else -> "player inventory"
                 }
                 for ((item, count) in deltas) if (count != 0) {
@@ -61,7 +81,7 @@ object ContainerHistoryFormatter {
                     val itemId = requireNotNull(item.first)
                     val componentChange = rows.any { it.before.itemId == itemId && it.after.itemId == itemId && it.before.itemData != it.after.itemData }
                     val label = itemId.path.replace('_', ' ') + if (itemId.namespace == "minecraft") "" else " (${itemId.namespace})"
-                    add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor $verb ${kotlin.math.abs(count)} $label${if (componentChange) " (components changed)" else ""} $direction $location${if (focus != null && focusedChanges.isEmpty() && blocks.isEmpty()) "; this container was unchanged" else ""}").withStyle(if (count > 0) ChatFormatting.GREEN else ChatFormatting.RED))
+                    add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor $verb ${kotlin.math.abs(count)} $label${if (componentChange) " (components changed)" else ""} $direction $location${if (focus != null && transaction.changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) "; at crafting table @ ${focus.position.x}, ${focus.position.y}, ${focus.position.z}" else if (focus != null && focusedChanges.isEmpty() && blocks.isEmpty()) "; this container was unchanged" else ""}").withStyle(if (count > 0) ChatFormatting.GREEN else ChatFormatting.RED))
                     emitted = true
                 }
             }

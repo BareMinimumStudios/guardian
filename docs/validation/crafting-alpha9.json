@@ -1,0 +1,73 @@
+{
+  "version": "0.4.0-alpha.9+1.21.1",
+  "schema": 6,
+  "configuration_version": 6,
+  "tests": 118,
+  "live": [
+    {
+      "loader": "Fabric",
+      "crafts": 5,
+      "closes": 2,
+      "recipe_placements": 1,
+      "capture_failures": 0,
+      "backpressure": 0,
+      "schema": 6,
+      "core_bytes": 12439005
+    },
+    {
+      "loader": "Neoforge",
+      "crafts": 5,
+      "closes": 2,
+      "recipe_placements": 1,
+      "capture_failures": 0,
+      "backpressure": 0,
+      "schema": 6,
+      "core_bytes": 12429490
+    }
+  ],
+  "independent_decode": [
+    {
+      "loader": "fabric",
+      "unique_transactions": 8,
+      "crafts": 5,
+      "recipe_placements": 1,
+      "closes": 2,
+      "ingredient_and_output_counts_verified": true,
+      "bucket_remainders_verified": true,
+      "noncraft_conservation_verified": true,
+      "table_context_records": 3
+    },
+    {
+      "loader": "neoforge",
+      "unique_transactions": 8,
+      "crafts": 5,
+      "recipe_placements": 1,
+      "closes": 2,
+      "ingredient_and_output_counts_verified": true,
+      "bucket_remainders_verified": true,
+      "noncraft_conservation_verified": true,
+      "table_context_records": 3
+    }
+  ],
+  "limits": [
+    "Synthetic server player; actual-client modpack acceptance remains",
+    "Exact vanilla 2x2 and 3x3 menu layouts",
+    "No entity ownership or crafting rollback"
+  ],
+  "restart_checks": [
+    {
+      "loader": "Fabric",
+      "existing_history_preserved": true,
+      "schema_five_upgrade_to_six_verified": true,
+      "synthetic_trial_records_removed": true,
+      "final_core_sha256": "5871a10f448b788aced716b98e79b143d7a09511860381c7b76f49196e9e99cc"
+    },
+    {
+      "loader": "Neoforge",
+      "existing_history_preserved": true,
+      "schema_five_upgrade_to_six_verified": true,
+      "synthetic_trial_records_removed": true,
+      "final_core_sha256": "abc78443d633f7e2938e5c29d0160f5fd761f76833c17378d4eb82407a2e4daf"
+    }
+  ]
+}

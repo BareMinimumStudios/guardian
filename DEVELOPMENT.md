@@ -2,18 +2,18 @@
 
 Guardian is built with Kotlin, Java 21, and Gradle 9.8.0. Java is reserved for mixins and low-level hooks. The Fabric build uses Loom 1.17.21; NeoForge uses ModDevGradle 2.0.148. Both use official Mojang mappings. Cloche is not needed for this layout.
 
-## Current milestone
+## Baseline
 
 The imported Step 3 Fix 1 source is the baseline. Its two DuckDB lookup failures were reproduced and repaired before the rename. All 38 tests then passed, a repeated `build` reused the configuration cache, and the separate WorldEdit adapter build passed.
 
 The core and optional WorldEdit adapter remain separate artifacts with separate licenses. Do not introduce WorldEdit imports into the core.
 
-## Next milestones
+## Implemented milestones
 
 1. Completed: the platform-neutral domain, storage, queues, filters, and rollback decisions now live in `common`. Minecraft code now lives in the shared `minecraft` source directory; loader lifecycle, events, and permissions live in the corresponding platform module.
 2. Implemented: NeoForge 1.21.1 builds from the same Mojang-mapped Minecraft sources. Dedicated-server startup, status, shutdown, and restart are smoke-tested. Player-driven capture, inspection, and rollback acceptance remains pending on both loaders.
 3. Implemented: immutable registry-aware item snapshots and correlation of all changed logical slots from an accepted block-container menu click.
-4. Implemented: atomic container persistence and location queries on SQLite/DuckDB. Automated codec, correlation, persistence, retry, and migration tests pass. Exercise actual clicks, shift clicks, offhand swaps, splits, drag actions, cancellation, and restart recovery with a player before claiming gameplay acceptance. Close-time cursor returns, standalone drops, and offhand swaps now share that pipeline. Inventory-screen capture now covers player-owned slots while the crafting area is empty. Creative capture brackets accepted player-slot writes. Crafting, direct creative drops, other automated transfer mechanisms, and unsupported menus remain for later slices. Block-to-block hopper push/pull correlation is now implemented behind an opt-in switch; it observes physical inventories across vanilla and NeoForge capability paths.
+4. Implemented: atomic container persistence and location queries on SQLite/DuckDB. Automated codec, correlation, persistence, retry, and migration tests pass. Exercise actual clicks, shift clicks, offhand swaps, splits, drag actions, cancellation, and restart recovery with a player before claiming gameplay acceptance. Close-time cursor returns, standalone drops, and offhand swaps now share that pipeline. Inventory-screen capture includes populated vanilla crafting grids, recipe-book placement, accepted result takes and close-time returns. Creative capture brackets accepted player-slot writes. Extended crafting layouts, outputs thrown into the world, direct creative drops, other automated transfer mechanisms and unsupported menus remain for later slices. Block-to-block hopper push/pull correlation is now implemented behind an opt-in switch; it observes physical inventories across vanilla and NeoForge capability paths.
 
 Fluids and entity logging remain outside this stage. Do not claim a loader or transaction path is supported until it passes runtime checks.
 
@@ -42,6 +42,6 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The current Step 4 checkpoint is version `0.4.0-alpha.4+1.21.1`. It upgrades storage to schema 5 while preserving block history and its existing encodings.
+The current Step 4 checkpoint is version `0.4.0-alpha.9+1.21.1`. It upgrades storage to schema 6 and adds GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
 
 Capture uses [MixinExtras WrapMethod](https://github.com/LlamaLad7/MixinExtras/wiki/WrapMethod) and WrapOperation so hooks can chain with other mods. A player-scoped lease suppresses nested actions; the original operation still runs when no capture is possible. Close capture retains the original menu after vanilla resets the active menu.

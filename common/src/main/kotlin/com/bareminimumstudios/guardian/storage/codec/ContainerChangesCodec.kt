@@ -13,10 +13,11 @@ object ContainerChangesCodec {
         require(changes.size in 1..MAX_SLOTS)
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
-            output.writeInt(0x47435431); output.writeInt(changes.size)
+            output.writeInt(if (changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) 0x47435432 else 0x47435431); output.writeInt(changes.size)
             changes.forEach { change ->
                 when (val owner = change.address.owner) {
                     is ItemSlotOwner.PlayerInventory -> { output.writeByte(1); output.writeUTF(owner.playerId.toString()) }
+                    is ItemSlotOwner.CraftingGrid -> { output.writeByte(4); output.writeUTF(owner.playerId.toString()); output.writeInt(owner.menuId) }
                     is ItemSlotOwner.Cursor -> { output.writeByte(2); output.writeUTF(owner.playerId.toString()) }
                     is ItemSlotOwner.BlockContainer -> {
                         output.writeByte(3); output.writeUTF(owner.dimension.toString())
@@ -33,13 +34,15 @@ object ContainerChangesCodec {
     fun decode(bytes: ByteArray): List<ItemSlotChange> {
         require(bytes.size <= MAX_BYTES)
         return DataInputStream(ByteArrayInputStream(bytes)).use { input ->
-            require(input.readInt() == 0x47435431) { "Unsupported container changes format" }
+            val format = input.readInt()
+            require(format == 0x47435431 || format == 0x47435432) { "Unsupported container changes format" }
             val size = input.readInt(); require(size in 1..MAX_SLOTS)
             val changes = List(size) {
                 val owner = when (input.readUnsignedByte()) {
                     1 -> ItemSlotOwner.PlayerInventory(UUID.fromString(input.readUTF()))
                     2 -> ItemSlotOwner.Cursor(UUID.fromString(input.readUTF()))
                     3 -> ItemSlotOwner.BlockContainer(ResourceId.parse(input.readUTF()), BlockPosition(input.readInt(), input.readInt(), input.readInt()))
+                    4 -> { require(format == 0x47435432); ItemSlotOwner.CraftingGrid(UUID.fromString(input.readUTF()), input.readInt()) }
                     else -> throw IllegalArgumentException("Unknown slot owner")
                 }
                 ItemSlotChange(ItemSlotAddress(owner, input.readInt()), readItem(input), readItem(input))

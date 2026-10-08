@@ -46,26 +46,31 @@ class MinecraftInventorySnapshotterTest {
         assertEquals(3, value.slots.getValue(ItemSlotAddress(ItemSlotOwner.Cursor(playerId), 0)).count)
     }
 
-    @Test fun acceptsInventoryArmorOffhandAndOutsideClicksButNotCraftOrInvalidIndices() {
-        assertTrue(MinecraftInventorySnapshotter.supportsInventoryMenu(menu, inventory))
-        for (index in listOf(5, 8, 9, 35, 36, 44, 45, -999)) {
-            assertTrue(MinecraftInventorySnapshotter.acceptsInventoryClick(menu, inventory, index), "slot $index")
+    @Test fun acceptsInventoryCraftArmorOffhandAndOutsideClicksButNotInvalidIndices() {
+        assertNotNull(MinecraftCraftingSnapshotter.grid(menu, inventory))
+        for (index in listOf(0, 1, 2, 3, 4, 5, 8, 9, 35, 36, 44, 45, -999)) {
+            assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu, inventory, index), "slot $index")
         }
-        for (index in listOf(0, 1, 2, 3, 4, -1, -1000, 46)) {
-            assertFalse(MinecraftInventorySnapshotter.acceptsInventoryClick(menu, inventory, index), "slot $index")
+        for (index in listOf(-1, -1000, 46)) {
+            assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu, inventory, index), "slot $index")
         }
     }
 
-    @Test fun refusesOccupiedCraftingInputsAndResults() {
+    @Test fun thrownCraftingResultIsSkippedUntilEntityOwnershipExists() {
+        assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,0,net.minecraft.world.inventory.ClickType.THROW))
+        assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,1,net.minecraft.world.inventory.ClickType.THROW))
+    }
+
+    @Test fun acceptsOccupiedCraftingInputsAndDerivedResults() {
         // Supply a backing list for the fixture without invoking recipe callbacks.
         val items = NonNullList.withSize(4, ItemStack.EMPTY)
         val crafting = TransientCraftingContainer(menu, 2, 2, items)
         for (index in 1..4) menu.slots[index] = Slot(crafting, index - 1, 0, 0)
         items[0] = ItemStack(Items.STONE)
-        assertFalse(MinecraftInventorySnapshotter.supportsInventoryMenu(menu, inventory))
+        assertNotNull(MinecraftCraftingSnapshotter.grid(menu, inventory))
         items[0] = ItemStack.EMPTY
         menu.slots[0].container.setItem(0, ItemStack(Items.STONE))
-        assertFalse(MinecraftInventorySnapshotter.supportsInventoryMenu(menu, inventory))
+        assertNotNull(MinecraftCraftingSnapshotter.grid(menu, inventory))
     }
 
     @Test fun rejectsExtraOrReplacedMenuSlotsAndOtherInventoryOwners() {
@@ -74,10 +79,10 @@ class MinecraftInventorySnapshotterTest {
         assertFalse(MinecraftInventorySnapshotter.isPlayerSlot(menu.slots[1], inventory))
         assertTrue(MinecraftInventorySnapshotter.isPlayerSlot(menu.slots[45], inventory))
         menu.slots[9] = Slot(SimpleContainer(1), 0, 0, 0)
-        assertFalse(MinecraftInventorySnapshotter.supportsInventoryMenu(menu, inventory))
+        assertNull(MinecraftCraftingSnapshotter.grid(menu, inventory))
         val extended = InventoryMenuFixtures.create(inventory)
         extended.slots.add(Slot(SimpleContainer(1), 0, 0, 0))
-        assertFalse(MinecraftInventorySnapshotter.supportsInventoryMenu(extended, inventory))
+        assertNull(MinecraftCraftingSnapshotter.grid(extended, inventory))
     }
 
     @Test fun inventoryToCursorTransferIsOnePlayerTransactionWithNoBlockLocation() {
