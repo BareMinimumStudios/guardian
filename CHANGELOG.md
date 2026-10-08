@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.19+1.21.1] - 2026-10-08
+
+### Added
+
+- Bounded inventory-owner reservations, operation-scoped mutation permits and whole-operation invalidation for future coordinated item rollback.
+- Regression coverage for overlapping owners, stale permits, timeout, thread confinement and save-completion interruption.
+
+Item apply remains disabled. Reservations have no gameplay hooks yet and do not freeze inventories.
+
 ## [0.4.0-alpha.18+1.21.1] - 2026-10-08
 
 ### Added

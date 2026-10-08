@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.18+1.21.1`.
+Checkpoint: `0.4.0-alpha.19+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -114,3 +114,19 @@ Before fetching history, preview requests a receipt for the pipeline's current a
 There can be at most 32 pending receipts per pipeline. Cancellation removes the waiter; storage flush failures and writer lifecycle failures reject it. Preview has a ten-second limit while waiting for the receipt and history preparation. Shutdown cancels its session and ignores late callbacks. The writer checks pending receipts between batches and polls an idle queue at most every 100 milliseconds.
 
 This receipt covers accepted pipeline entries, not rejected captures, backpressure losses, other work still waiting to submit or future gameplay changes. It is not an inventory reservation or a world/player save receipt. Recovery apply will need those separate checks and a fresh accepted-prefix barrier while participating inventories are coordinated. Callbacks must schedule their work on the appropriate executor; they run outside the pipeline ordering gate.
+
+## Inventory-owner reservations
+
+Alpha.19 adds `ItemOwnerCoordination` in common code. It is a thread-confined reservation registry for future platform hooks. No Minecraft service acquires a reservation yet, and commands still perform read-only comparisons. A reservation does not by itself establish exclusive gameplay access or satisfy `ItemSavePort`.
+
+Acquisition reserves the entire validated owner set or nothing. Each operation can contain 1–32 unique persistent block/player owners, with at most 32 active operations. Duplicate operations, overlaps, temporary cursor/grid owners and oversized requests are refused. Owner sets are immutable copies.
+
+Future mutation hooks can check an owner's reservation with `allowsMutation`. Ordinary access to a reserved owner is refused. Coordinated writes require the exact active lease object for that owner, not an operation UUID. A stale, expired or foreign permit is refused even if that owner is currently unreserved. This prevents a late callback from falling back to ordinary access.
+
+An invalidated owner revokes every owner in its operation. Close, timeout and stop release all reservations without inventory writes or journal transitions. Closing an old lease cannot release a replacement with the same operation ID. The ten-second monotonic deadline is checked on registry/lease calls, including across `nanoTime` wraparound; no background timer is installed. A future driver must advance/check regularly and revalidate immediately before mutation. Shutdown refuses new work. All operations, including lease reads and releases, require the registry's owning thread.
+
+Saved-readback interruption tests verify that reservation loss leaves the save driver unresolved. A late successful read cannot advance that stopped driver or disturb a replacement reservation. This is common-protocol acceptance, not a live server exclusion test.
+
+MixinMCP inspection of the pinned classpaths confirms that vanilla hopper transfer methods remove and mutate stacks directly, while NeoForge can take its capability insertion hook before the vanilla path. Furnace server ticks also consume fuel and alter output independently of menus. Blocking clicks alone is insufficient.
+
+The next platform slice must establish coverage for physical container identities and both transfer endpoints, menu access, player actions, ticking inventories, replacement/unload and player disconnect. Unsupported modded mutation paths must refuse apply. Only then can a Minecraft save port combine reservations, identity/content checks, real save/flush readback and the final journal transition. Current observation watches remain useful for detecting captured activity, but they do not block it.

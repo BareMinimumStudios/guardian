@@ -1,3 +1,18 @@
+# Guardian owner-reservation checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.19+1.21.1`.
+
+- All 232 tests passed: 183 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- Fifteen new tests cover atomic acquisition, overlap/duplicate refusal, bounds, immutable owner sets, exact scope, whole-operation invalidation, stale/foreign permits, timeout, monotonic clock wraparound, shutdown and thread confinement.
+- The save-completion interruption test verifies that an invalidated reservation stops further saves and journal completion. Late readback and stale close cannot affect a replacement reservation with the same operation UUID.
+- IDEA inspections reported no problems in the coordinator and its tests. MixinMCP checked vanilla and NeoForge hopper paths and the NeoForge furnace tick to identify mutation paths that menu locking alone cannot cover.
+- No gameplay hooks or inventory setters were added. No server runtime acceptance is claimed for owner exclusion. Both dedicated servers remain stopped on the previously verified alpha.18 build; no databases or worlds were changed for this milestone.
+- Schema 8, config version 6 and audit formats are unchanged. Standard artifacts remain SQLite-only. See [validation data](validation/owner-coordination-alpha19.json).
+
+The reservation registry is common coordination infrastructure. Live platform exclusion, identity/content checks, verified saves and item apply remain pending.
+
+## Historical alpha.18 saved-player checkpoint
+
 # Guardian saved-player reader checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.18+1.21.1`.
