@@ -21,7 +21,9 @@
     "RegionStorageAccessor",
     "FurnaceTickMixin",
     "BlockEntityRemovalMixin",
-    "ContainerChunkLifecycleMixin"
+    "ContainerChunkLifecycleMixin",
+    "DispenserCoordinationMixin",
+    "DropperCoordinationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

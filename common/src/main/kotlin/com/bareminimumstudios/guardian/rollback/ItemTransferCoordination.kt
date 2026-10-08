@@ -3,6 +3,10 @@ package com.bareminimumstudios.guardian.rollback
 import com.bareminimumstudios.guardian.domain.ItemSlotOwner
 
 class ItemTransferCoordination(private val owners: ItemOwnerCoordination) {
+    // Custom dispense behaviors and capability handlers can mutate owners beyond
+    // the visible source and destination, so they cannot run during any lease.
+    fun allowsUnboundedAutomation(): Boolean = owners.isRunning() && !owners.hasReservations()
+
     fun allowsExternalTransfer(resolve: () -> Collection<ItemSlotOwner>?): Boolean {
         if (!owners.isRunning()) return false
         if (!owners.hasReservations()) return true

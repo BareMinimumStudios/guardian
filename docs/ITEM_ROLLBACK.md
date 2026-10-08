@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.23+1.21.1`.
+Checkpoint: `0.4.0-alpha.24+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -172,3 +172,11 @@ Loaded chunk block-state writes invalidate an operation before vanilla replaceme
 The server unload callback invalidates every operation owning a block position in that dimension/chunk before block entities are cleared. Invalidating one participating owner revokes the whole operation, including its other block/player owners. Invalidation cancels coordination and allows vanilla lifecycle work to continue; it does not cancel a replacement or unload. A hopper power/enabled-state change can therefore cancel its operation and allow ordinary transfers to resume. The apply/save driver must recheck the reservation before proceeding.
 
 The lifecycle hooks use no item reads, loot unpacking or chunk loading. They avoid extra block-state lookup when no reservations exist. They coordinate main-thread live gameplay; world-generation workers are left alone. Off-thread mod mutations, custom tick implementations and other automation still need an exclusion contract before item apply can be enabled. Region/player saving and final saved-state completion remain unconnected.
+
+## Dispenser and dropper guards
+
+Alpha.24 wraps the shared dispenser and dropper activation methods on Fabric and NeoForge. They refuse activation while any inventory reservation exists, including an unrelated block or player reservation. This deliberate global pause avoids treating a visible destination as the complete scope of a custom dispense behavior or NeoForge capability handler. The gate runs before random slot selection, item reads, entity creation or insertion callbacks. An installed server rejects off-thread activations and late work after coordination stops.
+
+Without reservations, no endpoint resolution, inventory reads or chunk loads are added by these guards. Release, invalidation and expiry restore ordinary activation. A skipped scheduled activation is not queued for replay; a new redstone activation is required. Structural changes still cancel affected operations under the alpha.23 lifecycle rules.
+
+Both loaders passed real redstone activation tests with item logging off/on. A reservation on a separate barrel held dispenser ejection, dropper ejection and dropper-to-barrel insertion unchanged; new activations succeeded after release. These tests verify the activation entry points, including NeoForge's normal inventory capability path. They do not certify modded code that bypasses those entry points or mutates inventories off-thread. Dispenser/dropper audit capture is not added. Remaining unsupported mutation paths, connected-client acceptance and verified saves still prevent enabling item apply.

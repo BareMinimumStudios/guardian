@@ -44,10 +44,14 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The current Step 4 checkpoint is version `0.4.0-alpha.20+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
+The current Step 4 checkpoint is version `0.4.0-alpha.24+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
 
 Capture uses [MixinExtras WrapMethod](https://github.com/LlamaLad7/MixinExtras/wiki/WrapMethod) and WrapOperation so hooks can chain with other mods. A player-scoped lease suppresses nested actions; the original operation still runs when no capture is possible. Close capture retains the original menu after vanilla resets the active menu.
 
 ## IntelliJ dependency tools
 
 MixinMCP's Gradle plugin 1.5.0 is applied to Fabric, NeoForge and the WorldEdit adapter. Use IDEA 2026.2 or newer with the MixinMCP and MCP Server plugins enabled. Run genDependencySources through an IDEA Gradle configuration after dependency changes, then sync the project. Dependency caches stay outside Git and are not included in the mod jars. See https://github.com/muon-rw/MixinMCP for installation.
+
+## Dispenser and dropper coordination
+
+Alpha.24 pauses dispenser and dropper activation while any inventory reservation exists. Custom dispense behaviors and NeoForge capability handlers can affect owners beyond their visible targets, so a source-only check would not establish exclusion. Guards run before item reads or callback execution, independent of audit logging. Skipped activations are not replayed; a new activation works after release or expiry. Commands still do not acquire reservations and item apply remains disabled.

@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.24+1.21.1] - 2026-10-08
+
+### Added
+
+- Dispenser and dropper guards on both loaders, before random slot selection, item reads or behavior/capability callbacks.
+- Conservative pause of dispensing during any inventory reservation because custom behaviors and NeoForge handlers can affect owners beyond the visible target.
+- Regression coverage for player and block reservations, multiple operations, expiry, shutdown and thread confinement.
+
+Ordinary dispensing is unchanged without reservations. Commands do not acquire reservations yet, and item rollback apply remains disabled.
+
 ## [0.4.0-alpha.23+1.21.1] - 2026-10-08
 
 ### Added

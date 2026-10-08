@@ -1,3 +1,19 @@
+# Guardian dispenser/dropper checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.24+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed common policy, tests, Minecraft bridge and both new mixins. Required activation wrappers loaded on Fabric and NeoForge.
+- Both loaders passed dispenser ejection, dropper ejection and dropper-to-barrel insertion checks with item logging off/on: 24 checks total. A reservation on a separate barrel held sources, destinations and item creation unchanged. Fresh redstone activation after release resumed dispensing.
+- Four common regression tests cover player/block reservations, multiple simultaneous operations, invalidation, expiry, shutdown and thread confinement. Guards run before random slot selection or item reads and before custom dispense or NeoForge capability callbacks. Any active reservation pauses dispensing; skipped activations are not replayed.
+- An initial server start found an occupied port. Tests used an unused port without editing server properties or interrupting another process. An initial NeoForge fixture check was repeated after warming newly generated chunks to ticking status, so queued activations could not be confused with refused activations.
+- Normal restarts without test agents passed both loaders, returned the expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Alpha.24 is installed with the matching optional Fabric WorldEdit adapter. Both servers are stopped, original configs restored and temporary fixtures/chunk tickets removed.
+- Schema 8, config version 6 and audit formats are unchanged. This milestone adds coordination, not dispenser/dropper audit capture. Isolated runs produced zero item records. Standard artifacts remain SQLite-only. Private test agents, logs, databases and guidance stay outside Git and distribution archives. See [validation data](validation/dispenser-dropper-alpha24.json).
+
+Other ticking inventories, custom mutation paths, connected-client/modpack acceptance and verified completion saves remain pending. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.23 furnace/lifecycle checkpoint
+
 # Guardian furnace/lifecycle checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.23+1.21.1`.

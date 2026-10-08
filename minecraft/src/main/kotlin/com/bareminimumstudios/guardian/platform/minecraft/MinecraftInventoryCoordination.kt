@@ -55,6 +55,13 @@ object MinecraftInventoryCoordination {
         if (hopper !is HopperBlockEntity) null else endpoints(it, hopper.blockPos, hopper.blockPos.above())
     }
 
+    @JvmStatic fun allowsDispense(level: Level): Boolean {
+        val current = binding ?: return true
+        if (level !is ServerLevel || level.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return current.transfers.allowsUnboundedAutomation()
+    }
+
     @JvmStatic fun allowsFurnaceTick(level: Level, position: BlockPos): Boolean {
         val current = binding ?: return true
         if (level !is ServerLevel || level.server !== current.server) return true

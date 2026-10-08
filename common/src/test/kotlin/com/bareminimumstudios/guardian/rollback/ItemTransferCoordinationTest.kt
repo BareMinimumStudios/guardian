@@ -85,4 +85,47 @@ class ItemTransferCoordinationTest {
             assertFailsWith<IllegalStateException> { guard.allowsExternalTransfer { listOf(block(1)) } }
         }.get(5, TimeUnit.SECONDS)
     }
+    @Test fun unboundedAutomationPausesForBlockAndPlayerReservations() {
+        for (owner in listOf(block(1), ItemSlotOwner.PlayerInventory(UUID.randomUUID()))) {
+            val owners = ItemOwnerCoordination()
+            val guard = ItemTransferCoordination(owners)
+            assertTrue(guard.allowsUnboundedAutomation())
+            val lease = assertNotNull(owners.acquire(UUID.randomUUID(), listOf(owner)))
+            assertFalse(guard.allowsUnboundedAutomation())
+            lease.close()
+            assertTrue(guard.allowsUnboundedAutomation())
+        }
+    }
+
+    @Test fun unboundedAutomationResumesOnlyAfterAllReservationsEnd() {
+        val owners = ItemOwnerCoordination()
+        val guard = ItemTransferCoordination(owners)
+        val first = assertNotNull(owners.acquire(UUID.randomUUID(), listOf(block(1))))
+        val second = assertNotNull(owners.acquire(UUID.randomUUID(), listOf(block(2))))
+        first.close()
+        assertFalse(guard.allowsUnboundedAutomation())
+        owners.invalidate(block(2))
+        assertEquals(ItemOwnerLeaseState.INVALIDATED, second.state)
+        assertTrue(guard.allowsUnboundedAutomation())
+    }
+
+    @Test fun unboundedAutomationHandlesExpiryAndShutdown() {
+        var now = 0L
+        val owners = ItemOwnerCoordination { now }
+        val guard = ItemTransferCoordination(owners)
+        val lease = assertNotNull(owners.acquire(UUID.randomUUID(), listOf(block(1))))
+        assertFalse(guard.allowsUnboundedAutomation())
+        now = TimeUnit.SECONDS.toNanos(10)
+        assertTrue(guard.allowsUnboundedAutomation())
+        assertEquals(ItemOwnerLeaseState.EXPIRED, lease.state)
+        owners.stop()
+        assertFalse(guard.allowsUnboundedAutomation())
+    }
+
+    @Test fun unboundedAutomationRejectsOtherThreads() {
+        val guard = ItemTransferCoordination(ItemOwnerCoordination())
+        CompletableFuture.runAsync {
+            assertFailsWith<IllegalStateException> { guard.allowsUnboundedAutomation() }
+        }.get(5, TimeUnit.SECONDS)
+    }
 }
