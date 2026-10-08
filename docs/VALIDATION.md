@@ -1,3 +1,18 @@
+# Guardian audit barrier checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.13+1.21.1`.
+
+- All 165 tests passed: 136 common and 29 Minecraft tests. Clean build, configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. The known Loom SQLite version metadata warning remains.
+- Eleven new barrier tests cover delayed commit, delayed flush, append retry, flush failure/retry, empty prefixes, bounded requests, cancellation, unforgeable internal receipts, reentrant submission callbacks, concurrent submitters and startup/shutdown failure handling.
+- Controlled backends verify that an accepted prefix is not acknowledged before its append and flush, and that later submissions need not finish for an earlier prefix. These are pipeline fault tests, not Minecraft save/recovery tests.
+- Fabric and NeoForge live previews now use the barrier before history lookup. Both loaders still returned two eligible records for a complete hopper chain, rejected a filtered-out newer transfer, and rejected a block-history witness with its dependent older record. Inventory contents stayed unchanged.
+- Existing block/item row hashes and three-record/two-record normal history queries passed after restart on both loaders. Final SQLite-only alpha.13 jars are installed; both servers are stopped with original configurations restored and fixtures removed. Logs, test databases and backups are outside Git; production files were untouched.
+- Schema 8, config version 6 and GCT1/GCT2 formats are unchanged. See [validation data](validation/audit-barrier-alpha13.json) for artifact hashes and limits.
+
+The receipt covers the accepted audit prefix, not rejected captures, pending work outside this pipeline or future gameplay. Preview remains read-only and can become stale. Live inventory coordination, fresh mutation-time checks and durable player/chunk save reconciliation remain open; item rollback apply is disabled. See [item rollback](ITEM_ROLLBACK.md).
+
+## Historical alpha.12 history guard checkpoint
+
 # Guardian item rollback history guard checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.12+1.21.1`.

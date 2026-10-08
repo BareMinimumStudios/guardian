@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.util.ArrayDeque
 
 /** One inventory read per tick, bounded preview only. No slot setters or journal writes. */
-class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService) {
+class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: com.bareminimumstudios.guardian.logging.BufferedLogPipeline) {
     private val logger = LoggerFactory.getLogger("Guardian/ItemRollbackPreview")
     private var active: Session? = null
 
@@ -25,6 +25,17 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val session = Session(source,query)
         active = session
         source.sendSystemMessage(Component.literal("Guardian: checking item rollback candidates; no items will be changed..."))
+        session.barrier=pipeline.writeBarrier()
+        session.barrier!!.result.whenComplete { _, error -> server.execute {
+            if(active !== session) return@execute
+            if(error != null) refuse(session,"Accepted audit writes could not be confirmed; see storage status.")
+            else lookup(session,maxRecords)
+        } }
+        return true
+    }
+
+    private fun lookup(session: Session,maxRecords: Int) {
+        val query=session.query
         history.lookupContainers(query.copy(limit=maxRecords+1,offset=0,oldestFirst=false), { rows ->
             if (active !== session) return@lookupContainers
             if (rows.size > maxRecords) { refuse(session,"More than $maxRecords transactions match. Narrow t:, r:, or u:."); return@lookupContainers }
@@ -40,12 +51,14 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
                 session.ready=true
             }, { if(active === session) refuse(session,"History safety check failed; see the server log.") })
         }, { if (active === session) refuse(session,"History lookup failed; see the server log.") })
-        return true
     }
 
     fun tick() {
         val session=active ?: return
-        if (!session.ready) return
+        if (!session.ready) {
+            if(System.nanoTime()-session.startedAt > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) refuse(session,"Timed out waiting for audit writes or history checks.")
+            return
+        }
         val owner=session.owners.pollFirst()
         if (owner != null) {
             if (owner is ItemSlotOwner.BlockContainer && !inside(owner,session.query)) session.outside.add(owner)
@@ -70,7 +83,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         active=null
     }
 
-    fun stop() { active=null }
+    fun stop() { val session=active;active=null;session?.barrier?.cancel() }
 
     private fun read(owner: ItemSlotOwner): InventorySnapshot? = when (owner) {
         is ItemSlotOwner.BlockContainer -> {
@@ -96,7 +109,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val radius=query.radius ?: 0
         return kotlin.math.abs(owner.position.x.toLong()-center.x) <= radius && kotlin.math.abs(owner.position.y.toLong()-center.y) <= radius && kotlin.math.abs(owner.position.z.toLong()-center.z) <= radius
     }
-    private fun refuse(session: Session, message: String) { session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed."));active=null }
+    private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
     private fun label(reason: ContainerPreviewReason) = when(reason) {
         ContainerPreviewReason.UNSUPPORTED_ACTION -> "crafting, creative, drop, close or unsupported action"
         ContainerPreviewReason.AMBIGUOUS_ORDER -> "shared inventory records have the same timestamp; order is uncertain"
@@ -113,6 +126,8 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         ContainerPreviewReason.ELIGIBLE -> "eligible"
     }
     private class Session(val source: CommandSourceStack,val query: ContainerLookupQuery) {
+        val startedAt=System.nanoTime()
+        var barrier: com.bareminimumstudios.guardian.logging.AuditWriteBarrier? = null
         var rows: List<ContainerTransactionSnapshot> = emptyList()
         val owners=ArrayDeque<ItemSlotOwner>()
         val live=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()

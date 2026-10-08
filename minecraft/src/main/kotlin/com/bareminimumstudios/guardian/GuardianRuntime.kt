@@ -51,7 +51,7 @@ class GuardianRuntime(
         bulk = selectedBulk
         history = selectedHistory
         rollback = BlockRollbackService(server, selectedHistory, config)
-        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory)
+        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline)
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()

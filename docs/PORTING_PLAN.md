@@ -48,6 +48,7 @@ Implemented slices:
 - Read-only container rollback preview with component/count checks, both-endpoint region checks and dependent-history skips.
 - Persistent item rollback journal, source and inventory claims, interruption detection and component-aware recovery observations.
 - Filter-independent persisted-owner history checks, recorded block-change witnesses and journal-claim checks.
+- Bounded asynchronous audit-prefix barriers before item preview history checks, with cancellation and lifecycle failure handling.
 
 The current milestone checks sided furnace slots, loaded chunk boundaries, and controlled hopper load. See [validation](VALIDATION.md) for measured results and the remaining acceptance boundaries.
 

@@ -5,6 +5,10 @@ import com.bareminimumstudios.guardian.storage.StorageBackend
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CancellationException
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
@@ -33,6 +37,10 @@ class BufferedLogPipeline(
         require(retryDelayMillis > 0) { "retryDelayMillis must be > 0" }
     }
 
+    // This gate never covers storage I/O or callback completion. It orders accepted prefixes.
+    private val submissionGate = ReentrantLock()
+    private val barriers = linkedMapOf<CompletableFuture<AuditWriteFence>, Long>()
+    private val maxBarriers = 32
     private val queue = ArrayBlockingQueue<LogEntry>(queueCapacity)
     private val state = AtomicReference(PipelineState.CREATED)
     private val worker = AtomicReference<Thread?>()
@@ -55,6 +63,7 @@ class BufferedLogPipeline(
                 uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, throwable ->
                     lastFailure.set(throwable)
                     this@BufferedLogPipeline.state.set(PipelineState.FAILED)
+                    failBarriers(throwable)
                 }
             }
             worker.set(thread)
@@ -62,19 +71,38 @@ class BufferedLogPipeline(
         } catch (throwable: Throwable) {
             lastFailure.set(throwable)
             state.set(PipelineState.FAILED)
+            failBarriers(throwable)
             runCatching { storage.close() }
             throw throwable
         }
     }
 
-    fun submit(entry: LogEntry): SubmissionResult {
-        if (state.get() != PipelineState.RUNNING) return SubmissionResult.NOT_RUNNING
-        return if (queue.offer(entry)) {
+    fun submit(entry: LogEntry): SubmissionResult = submissionGate.withLock {
+        if (state.get() != PipelineState.RUNNING) return@withLock SubmissionResult.NOT_RUNNING
+        if (queue.offer(entry)) {
             accepted.incrementAndGet()
             SubmissionResult.ACCEPTED
         } else {
             backpressure.incrementAndGet()
             SubmissionResult.BACKPRESSURE
+        }
+    }
+
+    /** Nonblocking accepted-prefix fence; capped separately from the audit queue. */
+    fun writeBarrier(): AuditWriteBarrier {
+        val completion=CompletableFuture<AuditWriteFence>()
+        var failure: Throwable?=null
+        val target=submissionGate.withLock {
+            val value=accepted.get()
+            if(state.get()!=PipelineState.RUNNING) failure=IllegalStateException("Guardian audit writer is not running")
+            else if(barriers.size>=maxBarriers) failure=IllegalStateException("Too many pending audit barriers")
+            else barriers[completion]=value
+            value
+        }
+        failure?.let { completion.completeExceptionally(it) }
+        return AuditWriteBarrier(target,completion) {
+            val removed=submissionGate.withLock { barriers.remove(completion)!=null }
+            if(removed) completion.completeExceptionally(CancellationException("Audit barrier cancelled"))
         }
     }
 
@@ -95,16 +123,19 @@ class BufferedLogPipeline(
     fun stopGracefully(timeout: Duration): Boolean {
         require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
 
-        when (checkNotNull(state.get())) {
-            PipelineState.CREATED -> {
-                state.set(PipelineState.STOPPED)
-                return true
+        submissionGate.withLock {
+            when (checkNotNull(state.get())) {
+                PipelineState.CREATED -> {
+                    state.set(PipelineState.STOPPED)
+                    return true
+                }
+                PipelineState.STOPPED -> return true
+                PipelineState.FAILED -> return false
+                PipelineState.RUNNING -> state.compareAndSet(PipelineState.RUNNING, PipelineState.STOPPING)
+                PipelineState.STOPPING -> Unit
             }
-            PipelineState.STOPPED -> return true
-            PipelineState.FAILED -> return false
-            PipelineState.RUNNING -> state.compareAndSet(PipelineState.RUNNING, PipelineState.STOPPING)
-            PipelineState.STOPPING -> Unit
         }
+        failBarriers(IllegalStateException("Guardian audit writer is stopping"))
 
         val thread = worker.get() ?: return state.get() == PipelineState.STOPPED
         thread.interrupt()
@@ -120,9 +151,10 @@ class BufferedLogPipeline(
         val pendingBatch = ArrayList<LogEntry>(batchSize)
         try {
             while (state.get() == PipelineState.RUNNING || queue.isNotEmpty() || pendingBatch.isNotEmpty()) {
+                satisfyBarriers()
                 if (pendingBatch.isEmpty()) {
                     val first = try {
-                        queue.poll(flushIntervalMillis, TimeUnit.MILLISECONDS)
+                        queue.poll(flushIntervalMillis.coerceAtMost(100L), TimeUnit.MILLISECONDS)
                     } catch (_: InterruptedException) {
                         null
                     }
@@ -157,9 +189,32 @@ class BufferedLogPipeline(
         } catch (throwable: Throwable) {
             lastFailure.set(throwable)
             state.set(PipelineState.FAILED)
+            failBarriers(throwable)
         } finally {
             runCatching { storage.close() }
                 .onFailure { lastFailure.compareAndSet(null, it) }
         }
     }
+    private fun satisfyBarriers() {
+        val through=persisted.get()
+        val ready=submissionGate.withLock { barriers.filterValues { it<=through }.keys.toList() }
+        if(ready.isEmpty()) return
+        try {
+            storage.flush()
+        } catch(error: Throwable) {
+            writeFailures.incrementAndGet()
+            lastFailure.set(error)
+            failBarriers(error)
+            return
+        }
+        val completed=submissionGate.withLock { if(state.get()==PipelineState.RUNNING) ready.mapNotNull { future -> barriers.remove(future)?.let { future to it } } else emptyList() }
+        // Completing outside the gate also allows callbacks to submit or cancel another fence.
+        completed.forEach { (future,target) -> future.complete(AuditWriteFence(target,through)) }
+    }
+
+    private fun failBarriers(error: Throwable) {
+        val pending=submissionGate.withLock { barriers.keys.toList().also { barriers.clear() } }
+        pending.forEach { it.completeExceptionally(error) }
+    }
+
 }

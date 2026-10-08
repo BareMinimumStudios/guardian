@@ -7,6 +7,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.13+1.21.1] - 2026-10-08
+
+### Added
+
+- Asynchronous accepted-prefix audit barriers, acknowledged only after committed batches and a successful storage flush.
+- Bounded pending requests, cancellation and explicit failures during startup, shutdown or flush errors.
+- Regression coverage for delayed writes/flushes, retries, receipt ownership, concurrent submitters, callbacks and lifecycle failures.
+
+### Changed
+
+- Item rollback previews wait for the accepted audit prefix before lookup and owner-history checks. A ten-second preparation timeout releases its pending barrier.
+- Audit submission and shutdown share a short ordering gate; storage I/O and completion callbacks stay outside it.
+
+
 ## [0.4.0-alpha.12+1.21.1] - 2026-10-08
 
 ### Added
