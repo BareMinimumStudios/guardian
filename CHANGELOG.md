@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.27+1.21.1] - 2026-10-08
+
+### Added
+
+- Player item-use and block-use guards before vanilla/NeoForge callbacks, with authoritative inventory resynchronization on refusal.
+- Reservation invalidation before direct player inventory setters, insertion/removal, loading, copying, clearing, returning items and hotbar picking.
+- Conservative invalidation for modifying bulk clears; count-only queries retain reservations.
+
+Direct inventory changes still proceed normally. Existing uses, direct mutable stack/list writes and the trusted save/apply permit remain separate work; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.26+1.21.1] - 2026-10-08
 
 ### Added

@@ -1,0 +1,172 @@
+{
+  "checkpoint": "0.4.0-alpha.27+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": 213,
+    "minecraft": 49,
+    "total": 262,
+    "failures": 0
+  },
+  "runtimeChecks": 84,
+  "runs": [
+    {
+      "loader": "Fabric",
+      "logging": false,
+      "checks": [
+        "setItem revokes connected operation and preserves unrelated owner",
+        "add stack revokes connected operation and preserves unrelated owner",
+        "add slot revokes connected operation and preserves unrelated owner",
+        "remove slot revokes connected operation and preserves unrelated owner",
+        "remove stack revokes connected operation and preserves unrelated owner",
+        "remove without update revokes connected operation and preserves unrelated owner",
+        "remove selected revokes connected operation and preserves unrelated owner",
+        "clear revokes connected operation and preserves unrelated owner",
+        "replace revokes connected operation and preserves unrelated owner",
+        "load revokes connected operation and preserves unrelated owner",
+        "drop all revokes connected operation and preserves unrelated owner",
+        "pick item revokes connected operation and preserves unrelated owner",
+        "pick slot revokes connected operation and preserves unrelated owner",
+        "return stack revokes connected operation and preserves unrelated owner",
+        "return stack flag revokes connected operation and preserves unrelated owner",
+        "count-only clear preserves contents and all reservations",
+        "modifying bulk clear revokes all operations before clearing extra container",
+        "reserved item use refuses consumption and refreshes remote inventory state",
+        "ordinary snowball use resumes after reservation release",
+        "reserved block item use refuses placement before callbacks",
+        "ordinary block placement resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Fabric",
+      "logging": true,
+      "checks": [
+        "setItem revokes connected operation and preserves unrelated owner",
+        "add stack revokes connected operation and preserves unrelated owner",
+        "add slot revokes connected operation and preserves unrelated owner",
+        "remove slot revokes connected operation and preserves unrelated owner",
+        "remove stack revokes connected operation and preserves unrelated owner",
+        "remove without update revokes connected operation and preserves unrelated owner",
+        "remove selected revokes connected operation and preserves unrelated owner",
+        "clear revokes connected operation and preserves unrelated owner",
+        "replace revokes connected operation and preserves unrelated owner",
+        "load revokes connected operation and preserves unrelated owner",
+        "drop all revokes connected operation and preserves unrelated owner",
+        "pick item revokes connected operation and preserves unrelated owner",
+        "pick slot revokes connected operation and preserves unrelated owner",
+        "return stack revokes connected operation and preserves unrelated owner",
+        "return stack flag revokes connected operation and preserves unrelated owner",
+        "count-only clear preserves contents and all reservations",
+        "modifying bulk clear revokes all operations before clearing extra container",
+        "reserved item use refuses consumption and refreshes remote inventory state",
+        "ordinary snowball use resumes after reservation release",
+        "reserved block item use refuses placement before callbacks",
+        "ordinary block placement resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": false,
+      "checks": [
+        "setItem revokes connected operation and preserves unrelated owner",
+        "add stack revokes connected operation and preserves unrelated owner",
+        "add slot revokes connected operation and preserves unrelated owner",
+        "remove slot revokes connected operation and preserves unrelated owner",
+        "remove stack revokes connected operation and preserves unrelated owner",
+        "remove without update revokes connected operation and preserves unrelated owner",
+        "remove selected revokes connected operation and preserves unrelated owner",
+        "clear revokes connected operation and preserves unrelated owner",
+        "replace revokes connected operation and preserves unrelated owner",
+        "load revokes connected operation and preserves unrelated owner",
+        "drop all revokes connected operation and preserves unrelated owner",
+        "pick item revokes connected operation and preserves unrelated owner",
+        "pick slot revokes connected operation and preserves unrelated owner",
+        "return stack revokes connected operation and preserves unrelated owner",
+        "return stack flag revokes connected operation and preserves unrelated owner",
+        "count-only clear preserves contents and all reservations",
+        "modifying bulk clear revokes all operations before clearing extra container",
+        "reserved item use refuses consumption and refreshes remote inventory state",
+        "ordinary snowball use resumes after reservation release",
+        "reserved block item use refuses placement before callbacks",
+        "ordinary block placement resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    },
+    {
+      "loader": "Neoforge",
+      "logging": true,
+      "checks": [
+        "setItem revokes connected operation and preserves unrelated owner",
+        "add stack revokes connected operation and preserves unrelated owner",
+        "add slot revokes connected operation and preserves unrelated owner",
+        "remove slot revokes connected operation and preserves unrelated owner",
+        "remove stack revokes connected operation and preserves unrelated owner",
+        "remove without update revokes connected operation and preserves unrelated owner",
+        "remove selected revokes connected operation and preserves unrelated owner",
+        "clear revokes connected operation and preserves unrelated owner",
+        "replace revokes connected operation and preserves unrelated owner",
+        "load revokes connected operation and preserves unrelated owner",
+        "drop all revokes connected operation and preserves unrelated owner",
+        "pick item revokes connected operation and preserves unrelated owner",
+        "pick slot revokes connected operation and preserves unrelated owner",
+        "return stack revokes connected operation and preserves unrelated owner",
+        "return stack flag revokes connected operation and preserves unrelated owner",
+        "count-only clear preserves contents and all reservations",
+        "modifying bulk clear revokes all operations before clearing extra container",
+        "reserved item use refuses consumption and refreshes remote inventory state",
+        "ordinary snowball use resumes after reservation release",
+        "reserved block item use refuses placement before callbacks",
+        "ordinary block placement resumes after release"
+      ],
+      "testAgentReplacesBytecode": false,
+      "auditRecords": 0
+    }
+  ],
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    },
+    {
+      "loader": "Neoforge",
+      "normalRestart": "passed",
+      "normalAuditAndJournalTablesUnchanged": true,
+      "historyCounts": [
+        3,
+        2
+      ],
+      "unfinished": 0,
+      "stopped": true,
+      "testAgentLoaded": false,
+      "temporaryForcedChunksRemoved": true
+    }
+  ],
+  "limitations": [
+    "Item rollback apply remains disabled; commands do not acquire reservations.",
+    "Existing uses, direct mutable stack/list writes, arbitrary modded writes and trusted write permits remain pending.",
+    "Synthetic server players exercise real methods, not connected-client visuals or modpack acceptance.",
+    "Count-only clear coverage uses a pure vanilla-style predicate, not arbitrary callbacks with side effects.",
+    "Reservation invalidation is not proof of a completed world/player save."
+  ],
+  "fixtureNotes": [
+    "Private reflection-only agent opens modules without replacing Minecraft bytecode.",
+    "Explicit overloaded insertion/returned-item selectors repaired a Fabric remapping gap found by live testing.",
+    "Hotbar picking test expectation corrected against the actual vanilla implementation.",
+    "Temporary blocks, drops, projectile and chunk tickets removed; original configs restored. Normal audit and journal tables preserved.",
+    "Both servers stopped with alpha.27 installed and matching optional Fabric WorldEdit adapter.",
+    "Private instructions, tooling, agents, databases and logs excluded from Git and source archive."
+  ]
+}

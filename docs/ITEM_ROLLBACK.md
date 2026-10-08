@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.26+1.21.1`.
+Checkpoint: `0.4.0-alpha.27+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -204,3 +204,11 @@ Invalidation occurs before NeoForge death/travel/logout hooks and respawn callba
 Both loaders passed synthetic-player checks with logging off/on. Inventory copying retained its normal contents, known/unknown menu handling followed the cleanup policy, death processing completed, disconnect wrote ordinary player files and respawn installed a new player instance with copied items. Same-dimension and real Nether transitions invoked their post-transition callbacks only after reservation invalidation. Synthetic players used real server methods; NeoForge used an in-memory connection channel for its networking metadata checks. Private tooling and generated player files remain outside the repository.
 
 This does not log player sessions/deaths, certify arbitrary modded lifecycle replacements or establish verified rollback completion saves. Connected-client behavior, remaining item mutation paths and the trusted save port are still acceptance work. Item apply remains disabled.
+
+## Item use and direct inventory changes
+
+Alpha.27 pauses ServerPlayerGameMode item use and use-on-block before vanilla/NeoForge callbacks whenever any reservation is active. These callbacks may change inventories beyond the held stack, so their ownership cannot be inferred from that stack. Refused actions refresh the authoritative inventory state. This does not certify connected-client block prediction or item uses already in progress.
+
+Direct Inventory setters, insertion/removal, loading/copying, clearing, dropping, hotbar picking and returned-item methods invalidate the player's whole operation before proceeding normally. Modifying clearOrCountMatchingItems invalidates all operations because it can also touch an extra container and invoke a predicate. Vanilla count-only queries preserve contents and reservations. Arbitrary predicates with side effects are not certified.
+
+Both overloads of insertion and returned-item methods use explicit descriptors so Fabric remaps each selector independently. Direct mutable stack/list writes, ongoing use ticks, arbitrary modded writes and a trusted apply-write permit remain pending. Item rollback apply stays disabled.

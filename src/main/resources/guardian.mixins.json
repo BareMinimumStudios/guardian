@@ -28,7 +28,9 @@
     "CrafterTickMixin",
     "CrafterActivationMixin",
     "PlayerListLifecycleMixin",
-    "PlayerTransitionMixin"
+    "PlayerTransitionMixin",
+    "InventoryMutationMixin",
+    "PlayerUseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

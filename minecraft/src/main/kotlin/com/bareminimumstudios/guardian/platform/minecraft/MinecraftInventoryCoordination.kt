@@ -134,6 +134,21 @@ object MinecraftInventoryCoordination {
         }
     }
 
+    @JvmStatic fun beforeInventoryMutation(player: net.minecraft.world.entity.player.Player) {
+        val current = binding ?: return
+        if (player !is ServerPlayer || player.server !== current.server) return
+        check(current.server.isSameThread)
+        current.owners.invalidate(ItemSlotOwner.PlayerInventory(player.uuid))
+    }
+
+    @JvmStatic fun beforeBulkInventoryMutation(player: net.minecraft.world.entity.player.Player) {
+        val current = binding ?: return
+        if (player !is ServerPlayer || player.server !== current.server) return
+        check(current.server.isSameThread)
+        // Bulk clearing can also mutate an extra container and invoke predicates.
+        current.owners.invalidateAll()
+    }
+
     // Lifecycle work must proceed, but no operation may retain the old player's
     // inventory identity or its menu owners across save, copy, death or travel.
     @JvmStatic fun beforePlayerTransition(player: ServerPlayer) = beforeClose(player)

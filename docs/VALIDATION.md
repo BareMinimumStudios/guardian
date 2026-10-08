@@ -1,3 +1,19 @@
+# Guardian item-use and inventory checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.27+1.21.1`.
+
+- All 262 tests passed: 213 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+- IDEA reported no problems in the changed bridge or two new mixins. Both loader configurations package the required hooks.
+- Fabric and NeoForge each passed 21 live checks with item logging off/on: 84 total. Setters, both insertion overloads, removal variants, clearing, copying, loading, dropping, picking and both returned-item overloads revoked affected whole operations while preserving unrelated reservations and ordinary results.
+- A pure count-only clear query preserved player/extra-container items and all reservations. A modifying clear revoked all operations before removing those items. Reserved item use refused consumption and refreshed remote inventory state; reserved use-on-block refused placement. After release, a snowball consumed one item and a stone block placed normally.
+- The first Fabric run caught an overloaded insertion selector that had remapped only one method. Explicit descriptors for insertion and returned-item overloads resolved the gap. A separate hotbar-picking fixture expectation was corrected against vanilla source. The final matrix passed in full; private agents replaced no Minecraft bytecode.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both servers are stopped with alpha.27 installed, original configs restored, temporary blocks/drops/projectile/tickets removed and the matching optional Fabric WorldEdit adapter installed.
+- Schema 8, config 6 and audit formats are unchanged. Isolated checks produced zero container records. Standard artifacts remain SQLite-only. Private instructions, agents, tooling, logs and databases stay outside Git and archives. See [validation data](validation/inventory-use-alpha27.json).
+
+Ongoing uses, direct mutable stack/list writes, arbitrary modded mutations, connected-client acceptance and actual saved-state completion remain pending. Count-only coverage does not certify predicates with side effects. Commands do not acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.26 player lifecycle checkpoint
+
 # Guardian player lifecycle checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.26+1.21.1`.

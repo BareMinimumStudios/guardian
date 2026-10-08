@@ -44,7 +44,7 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 
 [humanize-text](https://github.com/lynote-ai/humanize-text) was reviewed as requested. Its pipeline requires an LLM provider key and a Niutrans key. It has not been executed in this checkpoint because those services are not configured. Documentation was edited directly for readability and checked against the current implementation. Keep commands, configuration names, API identifiers, and version numbers intact in any later rewrite.
 
-The current Step 4 checkpoint is version `0.4.0-alpha.26+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
+The current Step 4 checkpoint is version `0.4.0-alpha.27+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
 
 Capture uses [MixinExtras WrapMethod](https://github.com/LlamaLad7/MixinExtras/wiki/WrapMethod) and WrapOperation so hooks can chain with other mods. A player-scoped lease suppresses nested actions; the original operation still runs when no capture is possible. Close capture retains the original menu after vanilla resets the active menu.
 
@@ -63,3 +63,11 @@ Alpha.25 extends the common automation gate to brewing stand ticks and crafter a
 ## Player lifecycle coordination
 
 Alpha.26 invalidates affected whole operations before disconnect saving, respawn, death, dimension changes and inventory copying. Lifecycle work continues normally. Known participating menu owners are included; unknown menu ownership conservatively invalidates all remaining operations. This reuses the common cleanup policy and does not add player/entity capture or verified rollback completion saves.
+
+## Item use and direct inventory changes
+
+Alpha.27 pauses ServerPlayerGameMode item use and use-on-block before vanilla/NeoForge callbacks whenever any reservation is active. These callbacks may change inventories beyond the held stack, so their ownership cannot be inferred from that stack. Refused actions refresh the authoritative inventory state. This does not certify connected-client block prediction or item uses already in progress.
+
+Direct Inventory setters, insertion/removal, loading/copying, clearing, dropping, hotbar picking and returned-item methods invalidate the player's whole operation before proceeding normally. Modifying clearOrCountMatchingItems invalidates all operations because it can also touch an extra container and invoke a predicate. Vanilla count-only queries preserve contents and reservations. Arbitrary predicates with side effects are not certified.
+
+Both overloads of insertion and returned-item methods use explicit descriptors so Fabric remaps each selector independently. Direct mutable stack/list writes, ongoing use ticks, arbitrary modded writes and a trusted apply-write permit remain pending. Item rollback apply stays disabled.
