@@ -43,6 +43,7 @@ class GuardianNeoForge {
         runtime = GuardianRuntime(config, permissions, FMLPaths.GAMEDIR.get().resolve("guardian")).also { it.start(event.server) }
         runtime?.storage()?.health()?.let {
             logger.info("Guardian storage ready: backend={}, schema={}", it.backendId, it.schemaVersion)
+            if (it.unfinishedItemRollbacks > 0) logger.warn("Guardian has {} unfinished item rollback journals. Automatic item replay is disabled.", it.unfinishedItemRollbacks)
             if (it.uncleanShutdownDetected) logger.warn("Guardian recovered an unclean storage shutdown; integrity passed={}", it.integrityCheckPassed)
         }
     }

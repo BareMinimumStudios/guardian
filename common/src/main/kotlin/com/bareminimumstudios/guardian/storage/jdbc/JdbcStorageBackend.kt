@@ -36,7 +36,7 @@ abstract class JdbcStorageBackend(
     private val path: Path,
     private val jdbcUrl: (Path) -> String,
     private val driverClassName: String
-) : QueryableStorageBackend {
+) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackJournal {
     private val lock = ReentrantLock()
     private var connection: Connection? = null
     private var fileLockChannel: FileChannel? = null
@@ -93,6 +93,8 @@ abstract class JdbcStorageBackend(
                 integrityCheckPerformed = integrity.performed,
                 integrityCheckPassed = integrity.passed
             )
+            // An interrupted apply is never replayed automatically. Keep its persistent owner claims.
+            opened.createStatement().use { it.executeUpdate("UPDATE ex_item_rollback SET phase = 'RECOVERY_REQUIRED' WHERE phase = 'APPLYING'") }
             connection = opened
         } catch (t: Throwable) {
             runCatching { opened.close() }
@@ -317,7 +319,21 @@ abstract class JdbcStorageBackend(
         checkpoint(requireConnection())
     }
 
-    override fun health(): StorageHealth = storageHealth
+    override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst)
+    }
+    override fun itemRollback(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).read(operationId) }
+    override fun unfinishedItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).unfinished(limit) }
+    override fun transitionItemRollback(operationId: UUID, expected: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase, next: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).transition(operationId,expected,next)
+    }
+
+    override fun health(): StorageHealth = lock.withLock {
+        val count=requireConnection().createStatement().use { statement ->
+            statement.executeQuery("SELECT COUNT(*) FROM ex_item_rollback WHERE phase NOT IN ('COMPLETED','CANCELLED')").use { result -> check(result.next());result.getLong(1) }
+        }
+        storageHealth.copy(unfinishedItemRollbacks=count)
+    }
 
     override fun close(): Unit = lock.withLock {
         val conn = connection ?: return@withLock

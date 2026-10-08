@@ -7,6 +7,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.11+1.21.1] - 2026-10-08
+
+### Added
+
+- Schema 7 item rollback journal with atomic operation entries, persistent inventory reservations and source transaction claims.
+- Guarded phase transitions, idempotent preparation, source-payload verification and bounded recovery headers.
+- Startup detection of interrupted apply intents without automatic item replay, plus unfinished journal counts in status output.
+- Component-aware recovery observations for original, restored, partial, conflicting, unavailable and indistinguishable inventories.
+- Restart, overlapping-plan, cancellation, duplicate-source and actual child-process abrupt-stop regressions on SQLite and the optional DuckDB backend.
+
+
 ## [0.4.0-alpha.10+1.21.1] - 2026-10-08
 
 ### Added

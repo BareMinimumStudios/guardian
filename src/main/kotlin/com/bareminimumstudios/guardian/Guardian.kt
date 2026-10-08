@@ -75,6 +75,7 @@ object Guardian : ModInitializer {
             if (activeStorage != null) {
                 val health = activeStorage.health()
                 logger.info("Guardian storage ready: backend={}, schema={}", health.backendId, health.schemaVersion)
+            if (health.unfinishedItemRollbacks > 0) logger.warn("Guardian has {} unfinished item rollback journals. Automatic item replay is disabled.", health.unfinishedItemRollbacks)
                 if (health.uncleanShutdownDetected) {
                     logger.warn(
                         "Guardian detected a previous unclean storage shutdown; integrityCheckPerformed={}, integrityCheckPassed={}",

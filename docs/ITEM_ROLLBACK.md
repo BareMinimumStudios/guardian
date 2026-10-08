@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.10+1.21.1`.
+Checkpoint: `0.4.0-alpha.11+1.21.1`.
 
 This milestone checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -29,4 +29,10 @@ The preview checks at most 50 transactions, or the configured rollback record li
 
 Observations collected over several ticks can become stale. A successful preview is not a reservation or a promise that a later apply will succeed. It also cannot prove that a container was never replaced or that unrelated newer history is absent.
 
-Apply needs a persistent transaction journal, fresh checks against newer history, inventory ownership and container identity, interruption handling and recovery across world/player saves. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
+The persistent journal now records a bounded transfer chain atomically with inventory reservations and source transaction claims. Preparation verifies the source payloads against stored history. A second operation cannot reserve the same logical inventory or claim an already completed source. These reservations coordinate journal operations; they do not freeze ordinary gameplay inventories.
+
+Journal phases are PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED and CANCELLED. Only a PREPARED operation can be cancelled and release its source claims. Terminal phases release inventory reservations; completed source claims remain to prevent a second reversal. Transitions use an expected phase so stale callbacks cannot advance a changed operation. The future coordinator must establish saved-world durability before calling completion; the storage method itself is not proof that Minecraft saved items.
+
+On startup, an APPLYING journal becomes RECOVERY_REQUIRED and retains its claims. It is not replayed. Recovery observations compare exact counts/components with original and restored slots. Partial, conflicting, missing and cyclic indistinguishable states remain unresolved. `/guardian status` reports `itemRecovery`, and startup warns if unfinished operations exist. Ordinary previews do not create journals. Recovery listing reads headers only and loads one bounded payload on request.
+
+Apply still needs fresh checks against newer history, inventory ownership and container identity, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.

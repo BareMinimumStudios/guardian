@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 6
+    const val CURRENT_VERSION = 7
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -87,6 +87,15 @@ internal object GuardianSchema {
         // New persisted enum names must not reach readers that predate these actions.
         SchemaMigration(4, "Accepted creative inventory action kind", emptyList()),
         SchemaMigration(5, "System actors and block hopper transfers", emptyList()),
-        SchemaMigration(6, "Transient crafting grids and correlated crafting actions", emptyList())
+        SchemaMigration(6, "Transient crafting grids and correlated crafting actions", emptyList()),
+        SchemaMigration(7, "Persistent item rollback journal and exclusive recovery claims", listOf(
+            "CREATE TABLE ex_item_rollback (operation_uuid VARCHAR PRIMARY KEY, created_at BIGINT NOT NULL, phase VARCHAR NOT NULL)",
+            "CREATE TABLE ex_item_rollback_entry (operation_uuid VARCHAR NOT NULL, entry_index INTEGER NOT NULL, transaction_uuid VARCHAR NOT NULL, changes BLOB NOT NULL, PRIMARY KEY(operation_uuid, entry_index))",
+            "CREATE TABLE ex_item_rollback_owner (owner_key VARCHAR PRIMARY KEY, operation_uuid VARCHAR NOT NULL)",
+            "CREATE TABLE ex_item_rollback_claim (transaction_uuid VARCHAR PRIMARY KEY, operation_uuid VARCHAR NOT NULL)",
+            "CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase, created_at)",
+            "CREATE INDEX ex_item_rollback_owner_operation_idx ON ex_item_rollback_owner(operation_uuid)",
+            "CREATE INDEX ex_item_rollback_claim_operation_idx ON ex_item_rollback_claim(operation_uuid)"
+        ))
     )
 }

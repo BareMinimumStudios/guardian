@@ -1,3 +1,19 @@
+# Guardian item rollback journal checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.11+1.21.1`.
+
+- All 144 tests passed: 115 common and 29 Minecraft tests. Clean build, configuration-cache reuse build and separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. The known Loom warning about SQLite's four-part JDBC version remains.
+- Nine journal test methods run on SQLite and the optional DuckDB backend. Coverage includes immutable persisted plans, idempotent retry, source verification, atomic owner/source claims, prepared cancellation, retained completed claims, reverse chains, component mismatches, uncertain cycles and schema-6 migration/older-reader rejection.
+- A child process commits APPLYING and exits abruptly without closing JDBC. Reopening each backend marks the operation RECOVERY_REQUIRED, retains its claims and preserves the audit payload. This tests database interruption, not a Minecraft inventory mutation or world-save crash.
+- Isolated live fixtures on Fabric and NeoForge migrated to schema 7, detected an injected interrupted operation, reported one unfinished journal and retained three inventory reservations and two source claims. Audit rows remained unchanged; there was no automatic item replay.
+- Both normal server databases upgraded to schema 7. Existing three-record and two-record hopper queries passed, and independent hashes of all block/item rows matched before and after startup. Normal databases have no unfinished item journals.
+- Final SQLite-only alpha.11 jars are installed on both dedicated servers, which are stopped with original configurations restored. Temporary databases and logs are archived outside Git. No production database or server files were changed.
+- Schema 7 adds journal tables and indexes. Config version 6 and GCT1/GCT2 item payload formats remain unchanged. See [validation data](validation/item-journal-alpha11.json) for budgets and artifact hashes.
+
+Item rollback apply remains disabled. The journal does not freeze normal gameplay, coordinate player/chunk save durability or prove that item writes occurred. Fresh history/identity checks, save reconciliation and actual Minecraft interruption acceptance precede enabling writes. See [item rollback](ITEM_ROLLBACK.md). Previously pending crafting client/modpack checks remain open.
+
+## Historical alpha.10 item preview checkpoint
+
 # Guardian item rollback preview checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.10+1.21.1`.

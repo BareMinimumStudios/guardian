@@ -248,7 +248,7 @@ object GuardianCommands {
             val h = storage.health()
             context.source.sendSystemMessage(
                 Component.literal(
-                    "Guardian ${h.backendId} schema=${h.schemaVersion} | writer=${p.state} queued=${p.queued} " +
+                    "Guardian ${h.backendId} schema=${h.schemaVersion} itemRecovery=${h.unfinishedItemRollbacks} | writer=${p.state} queued=${p.queued} " +
                         "accepted=${p.accepted} persisted=${p.persisted} backpressure=${p.backpressure} failures=${p.writeFailures}"
                 )
             )
