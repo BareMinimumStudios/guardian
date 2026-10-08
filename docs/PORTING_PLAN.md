@@ -49,6 +49,7 @@ Implemented slices:
 - Persistent item rollback journal, source and inventory claims, interruption detection and bounded read-only recovery commands.
 - Live owner identity observations and a final accepted-prefix/history recheck before returning previews.
 - Bounded observation watches for captured owner activity, including queue rejections and player temporary-slot changes.
+- Common saved-state completion sequencing with controlled-port fault tests and real SQLite claim/restart checks; live save adapters remain pending.
 - Filter-independent persisted-owner history checks, recorded block-change witnesses and journal-claim checks.
 - Bounded asynchronous audit-prefix barriers before item preview history checks, with cancellation and lifecycle failure handling.
 

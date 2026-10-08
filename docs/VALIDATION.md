@@ -1,3 +1,17 @@
+# Guardian saved-state protocol checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.16+1.21.1`.
+
+- All 197 tests passed: 168 common and 29 Minecraft tests. Clean build, configuration-cache reuse and the separate WorldEdit adapter build passed with Java 21 and Gradle 9.8.0. The known Loom SQLite metadata warning remains.
+- Twelve controlled-port tests verify all-owner ordering, exact readbacks, partial failure, ownership loss, journal changes, acknowledgement failure, timeout/stop, phase bounds, recovery-phase completion and callback/thread confinement.
+- Two real SQLite tests verify that partial save failure preserves owner/source claims across restart as RECOVERY_REQUIRED, and successful modeled readbacks release owner claims while keeping completed source claims. The port is synthetic; these do not establish Minecraft disk or process-crash acceptance.
+- Fabric and NeoForge preview/recovery fixtures passed with their existing observation outcomes. Normal history hashes and queries passed after restart. Alpha.16 SQLite-only jars are installed; both servers are stopped with original settings restored and isolated rigs removed. Logs and databases stay outside Git.
+- Schema 8, config version 6 and payload formats are unchanged. See [validation data](validation/save-protocol-alpha16.json).
+
+No live save port is implemented and no command uses the new protocol. Exclusive gameplay coordination, verified Minecraft file flush/readback, process-crash acceptance and item rollback apply remain pending. Read-only observation commands retain their previous scope.
+
+## Historical alpha.15 observation checkpoint
+
 # Guardian observation invalidation checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.15+1.21.1`.

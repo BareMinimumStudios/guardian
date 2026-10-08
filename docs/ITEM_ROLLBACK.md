@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.15+1.21.1`.
+Checkpoint: `0.4.0-alpha.16+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -68,6 +68,20 @@ Journal phases are PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED and CANCELLE
 On startup, an APPLYING journal becomes RECOVERY_REQUIRED and retains its claims. It is not replayed. Recovery observations compare exact counts/components with original and restored slots. Partial, conflicting, missing and cyclic indistinguishable states remain unresolved. `/guardian status` reports `itemRecovery`, and startup warns if unfinished operations exist. Ordinary previews do not create journals. Recovery listing reads headers only and loads one bounded payload on request.
 
 The audit-write barrier is available, but apply still needs gameplay coordination and a fresh barrier/history check at the moment of mutation, exclusive live inventory coordination at mutation time, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
+
+## Saved-state completion protocol
+
+The common `ItemSaveCompletion` driver is implemented and fault-tested, but no Minecraft `ItemSavePort` is installed and no command calls it. It has no inventory setters. This is sequencing infrastructure for a future coordinated apply/recovery path, not runtime save acceptance.
+
+The driver accepts only a bounded, coherent APPLYING or RECOVERY_REQUIRED journal. A trusted platform port must hold exclusive ownership of every participating inventory, keep their identities and restored contents unchanged, finish each owner's save/flush, and return an immutable readback from saved storage. Reading current slots or pending-write cache data cannot satisfy that contract.
+
+Each advance starts or polls at most one owner save. It never waits on an incomplete future. Saved participating slots must match exact restored counts and components. After every owner succeeds, the driver rechecks the journal and exclusive ownership and uses an expected-phase transition to COMPLETED. Completion releases inventory claims through the existing atomic journal method; source transaction claims remain.
+
+Failure, missing slots, mismatching components, ownership loss, changed journals, timeout or stop leaves the driver unresolved. It does not replay items or clear claims. A stop does not cancel a write already in progress; late results cannot advance this stopped driver. If the terminal database write succeeded but its acknowledgement failed, completion remains uncertain and a later driver must reload the journal. APPLYING operations become RECOVERY_REQUIRED on restart through the existing startup handling.
+
+The driver is thread-confined. A future platform integration must marshal exclusive-ownership checks and inventory serialization on the server thread, perform journal and file I/O off it, and serialize driver advances without holding a server tick waiting on disk. The ten-second deadline is checked on advances; it does not interrupt a blocking adapter or database call.
+
+Inspection of the pinned Minecraft 1.21.1 classes established two constraints: `PlayerDataStorage.save` catches save exceptions and logs them before returning, and `IOWorker.loadAsync` can return `PendingStore.copyData` without reading the region file. A method return or generic chunk read is therefore insufficient. Actual flush/readback adapters, gameplay exclusion, process-crash tests and any power-loss guarantees remain separate work.
 
 ## Owner index migration
 

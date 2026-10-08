@@ -7,6 +7,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.16+1.21.1] - 2026-10-08
+
+### Added
+
+- Platform-neutral saved-state completion protocol that requires all participating owner readbacks before a guarded journal completion.
+- Fault tests for partial save failures, missing or conflicting readbacks, ownership loss, changed journals, late callbacks and timeouts.
+- SQLite restart checks showing that failed completion retains claims and requires recovery, while verified completion retains source claims.
+
+### Changed
+
+- Documented the Minecraft save adapter requirements. The protocol is not connected to commands or live saves; item rollback apply remains disabled.
+
+
 ## [0.4.0-alpha.15+1.21.1] - 2026-10-08
 
 ### Added
