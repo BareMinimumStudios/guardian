@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.17+1.21.1`.
+Checkpoint: `0.4.0-alpha.18+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -69,17 +69,21 @@ On startup, an APPLYING journal becomes RECOVERY_REQUIRED and retains its claims
 
 The audit-write barrier is available, but apply still needs gameplay coordination and a fresh barrier/history check at the moment of mutation, exclusive live inventory coordination at mutation time, plus recovery coordinated with durable world/player saves. The journal alone cannot make a multi-inventory Minecraft write atomic. Those checks will precede any slot writes. Player-driven cross-inventory acceptance and crash recovery are still pending; preview-only results do not establish those guarantees.
 
-## Compare saved block slots
+## Compare saved block and player slots
 
 ```text
 /guardian rollback-items recovery saved <operation UUID>
 ```
 
-This read-only check uses the same permission and bounded journal validation as the live recovery view. It supports journals whose owners are all physical vanilla block inventories: barrels, physical chest halves, hoppers, furnaces, blast furnaces, smokers, dispensers, droppers, brewing stands and shulker boxes. Player inventories and unknown modded layouts are unavailable in this slice.
+This read-only check uses the same permission and bounded journal validation as the live recovery view. It supports persistent player inventory owners and physical vanilla block inventories: barrels, physical chest halves, hoppers, furnaces, blast furnaces, smokers, dispensers, droppers, brewing stands and shulker boxes. Unknown modded block layouts and temporary cursor/crafting owners remain unavailable.
 
 The reader first flushes the owning chunk worker's queued writes. It then reads region bytes through that worker, bypassing its pending-write read cache. It does not serialize current live chunks, load chunks, unpack loot or advance journals. Unsaved live edits can therefore differ from this saved result. It processes one owner at a time and retains the existing ten-second observation deadline. A flush/read already in progress can finish after timeout or shutdown; stale callbacks are ignored.
 
 Decoded chunk data is limited to 16 MiB. The decoder requires the current Minecraft data version, full chunk status, matching chunk/block coordinates, one matching block entity, a known physical slot layout and valid unique saved slot numbers. Exact item counts and Data Components use the same registry-aware canonical codec as live audit snapshots. Missing saved owners, incompatible data, unknown layouts, unreadable components and sealed loot are unavailable. Missing region files are not opened or created.
+
+Player owners read the current `<UUID>.dat` in the server world's player-data directory, whether the player is online or offline. The reader does not log in a player, force a player save, use `.dat_old` or data-fix an older file. UUID and current Minecraft data version must match. Saved slots 0–35 map directly, armor slots 100–103 map to logical slots 36–39, and unsigned saved slot 150 maps to offhand slot 40. The vanilla Inventory list must exist; duplicate, invalid or unknown saved slot numbers are refused. Mod-specific inventory attachments are outside this layout.
+
+File I/O uses one background thread and a queue of four. Encoded and decoded player files are each limited to 16 MiB. File identity, size and modification time are checked across the read; a detected change is unavailable. Decoding item components happens on the server thread with its loaded registries. Missing, corrupt, wrong-UUID and incompatible-version files are unavailable. Shutdown fails outstanding reads, rejects new work and ignores late results; it does not write or delete player files.
 
 Saved owners are still sampled separately and gameplay is not frozen. A RESTORED saved comparison is not permission to complete or replay a journal. Exclusive coordination, live-owner identity checks and verified save acknowledgements must accompany a future completion adapter. The command does not promise protection against power loss.
 

@@ -1,3 +1,18 @@
+# Guardian saved-player reader checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.18+1.21.1`.
+
+- All 217 tests passed: 168 common and 49 Minecraft tests. Clean build, configuration-cache reuse and separate WorldEdit adapter builds passed with Java 21 and Gradle 9.8.0. The known Loom SQLite metadata warning remains.
+- Seven decoder tests cover saved main/armor/offhand mapping, unsigned slot 150, counts/components, unchanged input NBT, UUID/version checks, inventory/slot validation and selected-owner scope.
+- Five reader tests cover gzip file reads, no backup fallback, encoded/decoded budgets, queue capacity, background execution, reentrant completion and stopped/late reads. The shutdown test caught and verified a publication-order race fix.
+- Fabric and NeoForge used isolated random-UUID offline player files and a seeded coherent main/offhand journal. Saved comparisons returned ORIGINAL, RESTORED and UNAVAILABLE for UUID mismatch, corruption and missing files. Commands preserved file hashes and journal/claim rows. These are real file-reader/command tests with synthetic player data, not connected-player save/concurrency acceptance.
+- Both loaders retained saved block comparisons and normal history hashes/queries across restart. Alpha.18 SQLite-only jars are installed; both servers are stopped with original configurations restored and test files/rigs removed. Databases, logs and backups stay outside Git.
+- Schema 8, config version 6 and audit formats are unchanged. See [validation data](validation/saved-player-alpha18.json).
+
+Exclusive gameplay coordination, connected-player save/readback concurrency, unknown modded saved inventory layouts, coordinated journal completion and mutating item apply remain pending. Readback does not force a save or establish power-loss durability.
+
+## Historical alpha.17 saved-container checkpoint
+
 # Guardian saved-container reader checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.17+1.21.1`.

@@ -100,7 +100,7 @@ object GuardianCommands {
             .then(Commands.literal("recovery")
                 .executes { context -> executeRecovery(context.source,null,runtimeProvider()) }
                 .then(Commands.literal("saved")
-                    .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block slots."));0 }
+                    .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block/player slots."));0 }
                     .then(Commands.argument("operation",StringArgumentType.word())
                         .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
                         .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))

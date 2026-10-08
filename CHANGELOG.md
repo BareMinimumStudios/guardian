@@ -7,6 +7,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.18+1.21.1] - 2026-10-08
+
+### Added
+
+- Saved-player main, armor and offhand slot comparisons through the existing read-only recovery command.
+- Bounded background player-file reads, exact UUID/version checks and strict saved-to-logical slot mapping.
+- Regression coverage for components, file budgets, queue saturation, missing/corrupt data and reader shutdown.
+
+### Fixed
+
+- Late saved-player read completion cannot report success after the reader stops.
+
+
 ## [0.4.0-alpha.17+1.21.1] - 2026-10-08
 
 ### Added
