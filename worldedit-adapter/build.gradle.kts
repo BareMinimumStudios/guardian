@@ -1,4 +1,5 @@
 plugins {
+    id("dev.mixinmcp.decompile")
     id("fabric-loom") version "1.17.21"
     kotlin("jvm") version "2.4.20"
     `maven-publish`

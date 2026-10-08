@@ -7,6 +7,10 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Added
+
+- MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
+
 ## [0.4.0-alpha.18+1.21.1] - 2026-10-08
 
 ### Added

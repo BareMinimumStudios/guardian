@@ -47,3 +47,7 @@ Keep server worlds, logs, local credentials, generated build outputs, and source
 The current Step 4 checkpoint is version `0.4.0-alpha.13+1.21.1`. It upgrades storage to schema 8 for owner history checks and item rollback tracking and retains GCT2 transient-grid encoding while preserving existing GCT1 item history and block payloads. Standard builds bundle SQLite only; DuckDB is an explicit optional build variant.
 
 Capture uses [MixinExtras WrapMethod](https://github.com/LlamaLad7/MixinExtras/wiki/WrapMethod) and WrapOperation so hooks can chain with other mods. A player-scoped lease suppresses nested actions; the original operation still runs when no capture is possible. Close capture retains the original menu after vanilla resets the active menu.
+
+## IntelliJ dependency tools
+
+MixinMCP's Gradle plugin 1.5.0 is applied to Fabric, NeoForge and the WorldEdit adapter. Use IDEA 2026.2 or newer with the MixinMCP and MCP Server plugins enabled. Run genDependencySources through an IDEA Gradle configuration after dependency changes, then sync the project. Dependency caches stay outside Git and are not included in the mod jars. See AGENTS.md for the Codex workflow and https://github.com/muon-rw/MixinMCP for installation.

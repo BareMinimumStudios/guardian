@@ -1,4 +1,5 @@
 plugins {
+    id("dev.mixinmcp.decompile")
     kotlin("jvm")
     id("net.neoforged.moddev") version "2.0.148"
 }
