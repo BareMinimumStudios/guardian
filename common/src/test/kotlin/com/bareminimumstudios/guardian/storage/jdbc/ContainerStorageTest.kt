@@ -204,4 +204,21 @@ class ContainerStorageTest {
         }
     }
 
+    @Test fun chronologicalOrderingAndPagesMatchBothBackends() = backends { factory, path, _ ->
+        factory(path).use { backend ->
+            backend.open()
+            val first = transaction()
+            val next = ContainerTransactionSnapshot(UUID.randomUUID(), 200, actor, 1, first.action, first.changes, first.containers)
+            backend.append(listOf(ContainerAuditEntry(first), ContainerAuditEntry(next)))
+            val query = ContainerLookupQuery(limit = 1, oldestFirst = true)
+            assertEquals(first.transactionId, backend.lookupContainers(query).single().transactionId)
+            assertEquals(next.transactionId, backend.lookupContainers(query.copy(offset = 1)).single().transactionId)
+            assertEquals(next.transactionId, backend.lookupContainers(query.copy(oldestFirst = false)).single().transactionId)
+            val block = BlockChangeSnapshot(100, actor, dimension, left.position, BlockStateSnapshot(ResourceId.parse("minecraft:air")), BlockStateSnapshot(ResourceId.parse("minecraft:stone")), ChangeCause.PLAYER, ActionType.BLOCK_PLACE)
+            backend.append(listOf(block, block.copy(timestampEpochMillis = 200, eventId = UUID.randomUUID())))
+            assertEquals(100, backend.lookupBlocks(BlockLookupQuery(limit = 1, oldestFirst = true)).single().snapshot.timestampEpochMillis)
+            assertEquals(200, backend.lookupBlocks(BlockLookupQuery(limit = 1, oldestFirst = true, offset = 1)).single().snapshot.timestampEpochMillis)
+        }
+    }
+
 }

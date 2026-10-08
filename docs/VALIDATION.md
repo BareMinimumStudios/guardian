@@ -1,3 +1,18 @@
+# Guardian history presentation and inspector validation
+
+Date: 2026-10-07. Checkpoint: `0.4.0-alpha.6+1.21.1`.
+
+- 97 tests passed: 80 common and 17 Minecraft tests. Clean build passed; the subsequent standard build reused its configuration cache. Java 21, Gradle 9.8.0 and both loader mappings remain unchanged.
+- Regression checks cover filter-preserving clickable commands, order validation, chronological block/item pagination on SQLite and DuckDB, navigation click payloads and availability, and visible hopper endpoints.
+- Read the supplied production database in immutable read-only mode. The furnace transaction removes one item from source chest 1710,86,3872 and inserts it into hopper 1710,85,3872. No furnace insertion into destination barrel 1710,84,3872 exists in the supplied copy. Block placement history independently identifies these positions. The database was not changed or copied into Git.
+- Backed up stopped dedicated-server databases, configs and previous jars outside Git; installed alpha.6 on both fixtures.
+- Fabric started with the pack's exact Open Parties and Claims 0.32.7 and Forge Config API Port 21.1.6 jars. Exported transformed packet-listener bytecode shows Guardian's read-only use handler before vanilla scheduling/gameplay callbacks. This confirms hook insertion, not a connected-player claims test.
+- Both loaders' console lookups verified source/destination route text, oldest/newest filters, pages and compact navigation. Both servers stopped normally. Removed the two temporary Fabric compatibility jars; hopper logging remains disabled on both fixtures.
+
+Connected-player acceptance is still required for claim-denied inspection, permission revocation, both hands, predicted block/item corrections, actual clickable controls, and the pack's client hooks. NeoForge startup does not prove a live packet action. Existing hopper load, sided furnace, chunk-boundary, crafting-correlation and rollback work remains staged after this presentation milestone. No full-pack, load-benchmark or container-rollback completion claim is made.
+
+## Historical alpha.5 validation
+
 # Guardian command and inspector validation
 
 Date: 2026-10-07. Current checkpoint: `0.4.0-alpha.5+1.21.1`.

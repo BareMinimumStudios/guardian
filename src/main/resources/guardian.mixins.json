@@ -10,7 +10,8 @@
     "PlayerItemActionMixin",
     "CreativeInventoryMixin",
     "HopperTransferMixin",
-    "BlockInteractionMixin"
+    "BlockInteractionMixin",
+    "InspectorPacketMixin"
   ],
   "injectors": {
     "defaultRequire": 1

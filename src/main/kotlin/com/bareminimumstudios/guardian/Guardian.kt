@@ -58,7 +58,8 @@ object Guardian : ModInitializer {
         FabricBlockInspectorHooks.install()
         BlockInspector.install(
             historyProvider = { runtime?.history() },
-            configProvider = { config }
+            configProvider = { config },
+            permissions = permissionService
         )
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             GuardianCommands.register(dispatcher, permissionService, { runtime }, { config })

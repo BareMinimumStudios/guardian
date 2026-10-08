@@ -11,5 +11,6 @@ data class BlockCommandFilter(
     val explicitPosition: BlockPosition? = null,
     val actions: Set<ActionType> = emptySet(),
     val limit: Int? = null,
-    val page: Int? = null
+    val page: Int? = null,
+    val oldestFirst: Boolean = false
 )

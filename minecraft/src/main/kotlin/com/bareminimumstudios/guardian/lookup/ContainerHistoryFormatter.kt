@@ -7,13 +7,34 @@ import net.minecraft.ChatFormatting
 object ContainerHistoryFormatter {
     fun lines(transactions: List<ContainerTransactionSnapshot>, nowEpochMillis: Long = System.currentTimeMillis(), focus: ItemSlotOwner.BlockContainer? = null): List<Component> = buildList {
         if (transactions.isEmpty()) add(Component.literal("Guardian: no item transactions found."))
-        else add(Component.literal("Guardian item history (${transactions.size} transactions):").withStyle(ChatFormatting.GOLD))
+        else add(Component.literal("Guardian item history (${transactions.size} ${if (transactions.size == 1) "transaction" else "transactions"}):").withStyle(ChatFormatting.GOLD))
         for (transaction in transactions) {
             val actor = when (val identity = transaction.actor) {
                 is ActorIdentity.Player -> identity.lastKnownName ?: identity.uuid.toString()
                 is ActorIdentity.System -> if (identity.source == "minecraft:hopper") "Hopper" else identity.source
                 is ActorIdentity.Entity -> identity.entityType.toString()
                 ActorIdentity.Unknown -> "unknown"
+            }
+            if (transaction.action == ContainerAction.HOPPER_TRANSFER) {
+                val routes = linkedMapOf<Pair<ResourceId?, BinaryPayload?>, MutableMap<ItemSlotOwner, Int>>()
+                for (change in transaction.changes) {
+                    if (!change.before.isEmpty) routes.getOrPut(change.before.itemId to change.before.itemData) { linkedMapOf() }.merge(change.address.owner, -change.before.count, Int::plus)
+                    if (!change.after.isEmpty) routes.getOrPut(change.after.itemId to change.after.itemData) { linkedMapOf() }.merge(change.address.owner, change.after.count, Int::plus)
+                }
+                for ((identity, owners) in routes) {
+                    val from = owners.filterValues { it < 0 }; val to = owners.filterValues { it > 0 }
+                    if (focus != null && focus !in from && focus !in to) continue
+                    fun positions(values: Map<ItemSlotOwner, Int>) = values.keys.joinToString(" + ") { target ->
+                        val block = target as ItemSlotOwner.BlockContainer
+                        "${block.position.x},${block.position.y},${block.position.z}"
+                    }
+                    val id = requireNotNull(identity.first)
+                    val name = id.path.replace('_', ' ') + if (id.namespace == "minecraft") "" else " (${id.namespace})"
+                    val line = Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: Hopper moved ${to.values.sum()} $name ").withStyle(ChatFormatting.GREEN)
+                    line.append(Component.literal("[${positions(from)} → ${positions(to)}]").withStyle { it.withColor(ChatFormatting.AQUA).withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("${positions(from)} → ${positions(to)}"))) })
+                    add(line)
+                }
+                continue
             }
             val changes = transaction.changes.filter { focus == null || it.address.owner == focus }
             val blocks = changes.filter { it.address.owner is ItemSlotOwner.BlockContainer }

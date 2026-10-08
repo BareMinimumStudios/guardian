@@ -142,11 +142,13 @@ object GuardianCommands {
             position = filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) },
             actorUuid = profile?.id, actorName = filter.actorName?.takeIf { profile == null }, limit = limit,
             afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) },
-            radius = filter.radius, bounds = scope.bounds, offset = ((filter.page ?: 1) - 1) * limit
+            radius = filter.radius, bounds = scope.bounds, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst
         )
+        val navigationRaw = if (filter.radius != null && filter.explicitPosition == null) "$raw x:${query.position!!.x} y:${query.position!!.y} z:${query.position!!.z}" else raw
         history.lookupContainers(query, { rows ->
             com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
-            source.sendSystemMessage(Component.literal("Item history page ${filter.page ?: 1}, up to $limit transactions. Use p:${(filter.page ?: 1) + 1} for the next page (l: maximum 500)."))
+            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst,
+                { page -> HistoryPageCommands.command("transactions", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("transactions", navigationRaw, 1, !filter.oldestFirst)))
         }, { source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
         return 1
     }
@@ -163,6 +165,12 @@ object GuardianCommands {
             context.source.sendSystemMessage(Component.literal("Guardian inspector ${if (enabled) "enabled" else "disabled"}."))
             1
         }
+        .then(Commands.literal("page").then(Commands.argument("page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10000)).executes { context ->
+            val player = context.source.player ?: return@executes 0
+            BlockInspector.showPage(player, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "page")); 1
+        }))
+        .then(Commands.literal("order").then(Commands.literal("oldest").executes { context -> context.source.player?.let { BlockInspector.setOrder(it, true) }; 1 })
+            .then(Commands.literal("newest").executes { context -> context.source.player?.let { BlockInspector.setOrder(it, false) }; 1 }))
         .then(
             Commands.literal("on").executes { context ->
                 val player = context.source.player
@@ -294,15 +302,17 @@ object GuardianCommands {
             actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
             afterEpochMillis = filter.lookbackMillis?.let { (now - it).coerceAtLeast(0L) },
-            limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit
+            limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit, oldestFirst = filter.oldestFirst
         )
 
+        val navigationRaw = if (radius != null && filter.explicitPosition == null) "$raw x:${position!!.x} y:${position.y} z:${position.z}" else raw
         source.sendSystemMessage(Component.literal("Guardian: searching block history..."))
         history.lookup(
             query,
             onSuccess = { rows ->
                 BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
-                source.sendSystemMessage(Component.literal("Scope: ${scope.dimension}; page ${filter.page ?: 1}, up to $requestedLimit block records. Use p:${(filter.page ?: 1) + 1} for the next page or l:<limit> to show more. Item history: /guardian transactions u:<player>."))
+                source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == requestedLimit, filter.oldestFirst,
+                    { page -> HistoryPageCommands.command("lookup", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("lookup", navigationRaw, 1, !filter.oldestFirst)))
             },
             onFailure = { source.sendFailure(Component.literal("Guardian lookup failed; see the server log.")) }
         )

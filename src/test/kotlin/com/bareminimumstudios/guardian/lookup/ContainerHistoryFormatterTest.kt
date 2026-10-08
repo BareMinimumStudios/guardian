@@ -22,7 +22,8 @@ class ContainerHistoryFormatterTest {
         val tx = ContainerTransactionSnapshot(UUID.randomUUID(), 1000, ActorIdentity.System("minecraft:hopper"), 0, ContainerAction.HOPPER_TRANSFER,
             listOf(ItemSlotChange(ItemSlotAddress(owner, 0), coal(2), coal(1)), ItemSlotChange(ItemSlotAddress(dest, 0), ItemStackSnapshot.EMPTY, coal(1))))
         val lines = ContainerHistoryFormatter.lines(listOf(tx), 2000, dest).map { it.string }
-        assertTrue(lines.any { "Hopper added 1 coal" in it })
-        assertTrue(lines.none { "removed" in it })
+        assertTrue(lines.any { "Hopper moved 1 coal" in it })
+        assertTrue(lines.any { "-281,111,-26 → -281,110,-26" in it })
+        assertTrue(lines.none { "added" in it || "removed" in it })
     }
 }

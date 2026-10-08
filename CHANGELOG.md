@@ -7,6 +7,22 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.6+1.21.1] - 2026-10-07
+
+### Added
+
+- Clickable Previous/Next and ordering controls for filtered block/item history and inspector pages.
+- `o:oldest` / `order:oldest` and `o:newest` ordering across SQLite, DuckDB and in-memory storage.
+- Server-thread packet interception for permission-controlled read-only inspection before normal claim interaction callbacks. Inspection respects block reach and does not load target chunks.
+
+### Changed
+
+- Inspector pages show at most five transactions, with navigation for older records.
+- Hopper history shows a single source-to-destination route instead of independent generic container deposits/removals.
+- Recheck inspection permission on clicks and page navigation; acknowledge canceled packet sequences and resynchronize predicted blocks/items.
+
+The supplied audit database confirms the reported furnace entered the hopper at 1710,85,3872 and did not enter the full barrel at 1710,84,3872. No false barrel transaction was found. The presentation obscured the transfer endpoints.
+
 ## [0.4.0-alpha.5+1.21.1] - 2026-10-07
 
 ### Added

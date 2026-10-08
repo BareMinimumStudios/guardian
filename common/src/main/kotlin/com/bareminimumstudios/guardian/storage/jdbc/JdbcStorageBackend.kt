@@ -151,7 +151,7 @@ abstract class JdbcStorageBackend(
             sql.append(")")
         }
         if (query.afterEpochMillis != null) sql.append(" AND c.time >= ?")
-        sql.append(" ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ? OFFSET ?")
+        sql.append(if (query.oldestFirst) " ORDER BY c.time ASC, c.transaction_uuid ASC LIMIT ? OFFSET ?" else " ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ? OFFSET ?")
         conn.prepareStatement(sql.toString()).use { statement ->
             var index = 1
             query.actorUuid?.let { statement.setString(index++, it.toString()) }
@@ -259,7 +259,7 @@ abstract class JdbcStorageBackend(
                 binders += { statement, index -> statement.setInt(index, action.storageCode) }
             }
         }
-        sql.append(" ORDER BY b.time DESC, b.rowid DESC LIMIT ? OFFSET ?")
+        sql.append(if (query.oldestFirst) " ORDER BY b.time ASC, b.rowid ASC LIMIT ? OFFSET ?" else " ORDER BY b.time DESC, b.rowid DESC LIMIT ? OFFSET ?")
         binders += { statement, index -> statement.setInt(index, query.limit) }
         binders += { statement, index -> statement.setInt(index, query.offset) }
 

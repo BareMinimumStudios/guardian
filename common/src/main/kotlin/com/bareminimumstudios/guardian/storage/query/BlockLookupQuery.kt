@@ -20,7 +20,7 @@ data class BlockLookupQuery(
     val beforeEpochMillis: Long? = null,
     val includeRolledBack: Boolean = true,
     val limit: Int = 100,
-    val offset: Int = 0
+    val offset: Int = 0, val oldestFirst: Boolean = false
 ) {
     init {
         require(offset >= 0)

@@ -5,14 +5,12 @@ import com.bareminimumstudios.guardian.config.GuardianConfigManager
 import com.bareminimumstudios.guardian.lookup.BlockInspector
 import com.bareminimumstudios.guardian.permission.NeoForgePermissionService
 import com.bareminimumstudios.guardian.platform.minecraft.PlayerBlockCapture
-import net.minecraft.world.InteractionResult
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.fml.common.Mod
 import net.neoforged.fml.loading.FMLPaths
 import net.neoforged.neoforge.common.NeoForge
 import net.neoforged.neoforge.event.RegisterCommandsEvent
 import net.neoforged.neoforge.event.entity.player.PlayerEvent
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent
 import net.neoforged.neoforge.event.server.ServerStartingEvent
 import net.neoforged.neoforge.event.server.ServerStoppingEvent
 import net.neoforged.neoforge.event.tick.ServerTickEvent
@@ -31,13 +29,11 @@ class GuardianNeoForge {
             { runtime?.pipeline() },
             { config.general.enabled.get() && config.logging.enabled.get() && config.logging.playerBlockChanges.get() }
         )
-        BlockInspector.install({ runtime?.history() }, { config })
+        BlockInspector.install({ runtime?.history() }, { config }, permissions)
         NeoForge.EVENT_BUS.addListener(::starting)
         NeoForge.EVENT_BUS.addListener(::stopping)
         NeoForge.EVENT_BUS.addListener(::tick)
         NeoForge.EVENT_BUS.addListener(::commands)
-        NeoForge.EVENT_BUS.addListener(::leftClick)
-        NeoForge.EVENT_BUS.addListener(::rightClick)
         NeoForge.EVENT_BUS.addListener(::logout)
         logger.info("Guardian NeoForge initialized; permission provider={}", permissions.providerName)
     }
@@ -58,15 +54,6 @@ class GuardianNeoForge {
     private fun tick(event: ServerTickEvent.Post) { runtime?.rollback()?.tick() }
     private fun commands(event: RegisterCommandsEvent) {
         GuardianCommands.register(event.dispatcher, permissions, { runtime }, { config })
-    }
-    private fun leftClick(event: PlayerInteractEvent.LeftClickBlock) {
-        if (BlockInspector.inspectInteraction(event.entity, event.level, event.pos) != InteractionResult.PASS) event.isCanceled = true
-    }
-    private fun rightClick(event: PlayerInteractEvent.RightClickBlock) {
-        if (BlockInspector.inspectInteraction(event.entity, event.level, event.pos, rightClick = true) != InteractionResult.PASS) {
-            event.cancellationResult = InteractionResult.SUCCESS
-            event.isCanceled = true
-        }
     }
     private fun logout(event: PlayerEvent.PlayerLoggedOutEvent) {
         (event.entity as? ServerPlayer)?.let { BlockInspector.set(it, false) }

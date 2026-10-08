@@ -18,6 +18,7 @@ object BlockCommandFilterParser {
         var actions = emptySet<ActionType>()
         var limit: Int? = null
         var page: Int? = null
+        var order: String? = null
 
         for (token in trimmed.split(Regex("\\s+"))) {
             val separator = token.indexOf(':')
@@ -50,6 +51,10 @@ object BlockCommandFilterParser {
                     require(actions.isEmpty()) { "Action filter was specified more than once." }
                     actions = parseActions(value)
                 }
+                "o", "order" -> {
+                    require(order == null) { "Order was specified more than once." }
+                    order = value.lowercase().also { require(it == "oldest" || it == "newest") { "Order must be oldest or newest." } }
+                }
                 "p", "page" -> {
                     require(page == null) { "Page was specified more than once." }
                     page = value.toIntOrNull()?.also { require(it in 1..10000) { "Page must be between 1 and 10,000." } }
@@ -76,7 +81,7 @@ object BlockCommandFilterParser {
             useWorldEditSelection = useWorldEditSelection,
             explicitPosition = if (coordinateCount == 3) BlockPosition(x!!, y!!, z!!) else null,
             actions = actions,
-            limit = limit, page = page
+            limit = limit, page = page, oldestFirst = order == "oldest"
         )
     }
 

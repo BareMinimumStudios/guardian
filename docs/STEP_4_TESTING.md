@@ -85,3 +85,14 @@ Container rollback is not enabled. Fluids and entity logging remain outside Step
 - Open and close a door with inspection off, then inspect either half. Test trapdoors/gates/levers/buttons, no-op uses, and protection-mod cancellation. Opening an empty menu is not currently a recorded item movement.
 - Hopper history requires `logging.automatedContainerTransfers=true`. Its actor is Hopper, so it is excluded from a player's `u:` results. Check by container coordinates or right-click inspector.
 - Chunk boundaries are not lookup boundaries: history is indexed by physical positions. Double-chest context indexes both halves; inspecting an unchanged half says the items changed in the other half. Live chunk-boundary transfer acceptance remains pending.
+
+## Alpha.6 presentation and protected inspection
+
+- Inspect a container with more than five transactions. Expect five or fewer records followed by clickable page/order controls. Verify Previous/Next and oldest/newest toggling in the client.
+- Inspect a chest/hopper/full-barrel rig. A successful pull should show the source chest and hopper coordinates together. A failed push must not show the barrel as a destination. The submitted server database confirms this distinction for the furnace report.
+- In an OPAC claim owned by another player, give the tester `guardian.inspect` but keep ordinary interaction denied. With inspector on, check both clicks return history without opening, breaking, placing, or changing inventories. With inspector off, ensure the claim still denies ordinary interaction.
+- Repeat without the inspect permission and after revoking it while enabled. Unauthorized users must not receive new inspection results or bypass gameplay protection.
+- Test held blocks/items, both hands, rapid clicks, game-mode/reach changes, logout, and client predictions. Inspecting must leave no ghost placements or item count changes. Repeated same-target packets within two ticks should not duplicate query output.
+- Test server-only installation with the actual pack client. If a client mod suppresses the packet before it reaches the server, report that separately; server interception cannot receive an unsent packet.
+
+Console and startup checks do not establish connected-player claim behavior. These remain release acceptance checks.
