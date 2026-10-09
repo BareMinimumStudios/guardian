@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.47+1.21.1] - 2026-10-09
+
+### Added
+
+- Durable item-operation protection registered against an exact prepared journal and its owner/source claims before item writes.
+- Protected completed operations remain visible in recovery listings and retain owner claims after restart. Cancellation cannot clear protected intent.
+- Bounded worker requests and tests for SQLite, the optional DuckDB backend, schema upgrades, late acknowledgments and protected host shutdown.
+
+Database schema is now 9. Protection has no automatic release or replay path. Normal-server admission does not yet register protection; item rollback apply remains disabled.
+
 ## [0.4.0-alpha.46+1.21.1] - 2026-10-09
 
 ### Added

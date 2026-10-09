@@ -33,6 +33,16 @@ class ItemRollbackJournalWorkerTest {
     }
     private fun <T> CompletionStage<T>.await(): T=toCompletableFuture().get(5,TimeUnit.SECONDS)
     private fun finish(worker: ItemRollbackJournalWorker,journal: Journal) {worker.close();journal.release.countDown();worker.drained.await()}
+    @Test fun unsupportedProtectionFailsClosedWithoutJournalCalls() {
+        val record=record(ItemRollbackPhase.PREPARED);val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
+        try {assertFalse(worker.protect(record).await());assertEquals(0,journal.calls.get());assertEquals(0,journal.transitions.get())}
+        finally {finish(worker,journal)}
+    }
+    @Test fun stoppedProtectionCannotSubmitOrRegisterAnything() {
+        val record=record(ItemRollbackPhase.PREPARED);val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
+        worker.close();worker.drained.await()
+        assertFailsWith<ExecutionException>{worker.protect(record).await()};assertEquals(0,journal.calls.get());assertEquals(0,journal.transitions.get())
+    }
     @Test fun oneWorkerSupportsBothJournalProtocols() {
         val record=record(ItemRollbackPhase.PREPARED);val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
         try {assertSame(record,worker.read(record.operationId).await());assertTrue(worker.markApplying(record.operationId).await());assertTrue(worker.complete(worker.read(record.operationId).await()!!).await());assertEquals(ItemRollbackPhase.COMPLETED,worker.read(record.operationId).await()?.phase)} finally {finish(worker,journal)}

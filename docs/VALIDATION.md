@@ -1,4 +1,16 @@
-# Guardian ordered journal shutdown checkpoint
+# Guardian durable operation protection checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.47+1.21.1`.
+
+- All 390 tests passed: 341 common and 49 Minecraft tests. Twenty new tests cover durable protection, the journal worker and protected operation-host shutdown.
+- Fourteen storage regressions run against both SQLite and the optional DuckDB backend. They verify exact prepared-plan matching, idempotency, cancellation refusal, missing/foreign claims, bounded ordered recovery visibility, schema 8 upgrade, interrupted intent, late acknowledgment and queued-request shutdown. Four additional SQLite tests register protection before starting a real operation host and reopen the database after ordered closure.
+- Protected COMPLETED records retain their owner/source claims, audit row and marker and stay visible in recovery/health after restart. Confirmed host completion does not release a durable marker. A stopped late commit retains both runtime protection and persistent claims. Legacy unprotected behavior remains covered by the existing tests.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA using Java 21 and Gradle 9.8.0. Both loader artifacts package the common protection capability. Standard runtime artifacts bundle SQLite only. Schema is 9; config remains 6. See [validation data](validation/durable-protection-alpha47.json).
+- No Minecraft hooks changed, no new dedicated-server run is claimed, and server jars/databases were not replaced or upgraded in this pass. The latest dedicated-server acceptance run remains alpha.45.
+
+The capability must be explicitly confirmed before writes. Normal startup/admission and the legacy host do not automatically register it. Complete expected saved-owner images, authoritative reconciliation acknowledgment, physical exclusion/admission, platform lifecycle integration and real-client acceptance remain pending. There is no release API or automatic replay. Item rollback apply stays disabled.
+
+## Historical alpha.46 ordered shutdown checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.46+1.21.1`.
 

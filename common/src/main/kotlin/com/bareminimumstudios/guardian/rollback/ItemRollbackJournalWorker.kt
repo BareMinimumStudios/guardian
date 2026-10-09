@@ -28,6 +28,14 @@ class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : Item
     val drained: CompletionStage<Void> get() { checkThread(); return drain.minimalCompletionStage() }
     val isStopped: Boolean get() { checkThread(); return synchronized(lock) { stopped } }
 
+    /** Caller must wait for confirmed protection before admitting any inventory writes. */
+    fun protect(record: ItemRollbackRecord): CompletionStage<Boolean> {
+        checkThread()
+        require(record.phase == ItemRollbackPhase.PREPARED)
+        ItemRecoveryCheck(record)
+        return submit { (journal as? ItemRollbackProtectionJournal)?.protectItemRollback(record) ?: false }
+    }
+
     override fun read(operationId: UUID): CompletionStage<ItemRollbackRecord?> = submit { journal.itemRollback(operationId) }
     override fun markApplying(operationId: UUID): CompletionStage<Boolean> = submit {
         journal.transitionItemRollback(operationId, ItemRollbackPhase.PREPARED, ItemRollbackPhase.APPLYING)

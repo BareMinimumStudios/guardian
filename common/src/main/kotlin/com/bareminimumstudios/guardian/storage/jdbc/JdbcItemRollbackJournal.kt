@@ -66,9 +66,35 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
         return ItemRollbackRecord(id,header.first,header.second,entries)
     }
 
+    fun protected(id: UUID): Boolean = connection.prepareStatement("SELECT 1 FROM ex_item_rollback_protection WHERE operation_uuid = ?").use { query ->
+        query.setString(1,id.toString());query.executeQuery().use { it.next() }
+    }
+
+    fun protect(record: ItemRollbackRecord): Boolean {
+        require(record.phase == ItemRollbackPhase.PREPARED)
+        val owners=ItemRecoveryCheck(record).owners.map(::ownerKey).toSet()
+        val sources=record.entries.map { it.transactionId.toString() }.toSet()
+        return atomic {
+            if (!sameSaveRecord(record,read(record.operationId))) return@atomic false
+            val id=record.operationId.toString()
+            // Do not silently repair missing/foreign/extra claims or register protection too late.
+            if (claimSet("ex_item_rollback_owner","owner_key",id) != owners ||
+                claimSet("ex_item_rollback_claim","transaction_uuid",id) != sources) return@atomic false
+            if (!protected(record.operationId)) connection.prepareStatement("INSERT INTO ex_item_rollback_protection(operation_uuid) VALUES (?)").use {
+                it.setString(1,id);it.executeUpdate()
+            }
+            true
+        }
+    }
+
+    private fun claimSet(table: String, column: String, id: String): Set<String> =
+        connection.prepareStatement("SELECT $column FROM $table WHERE operation_uuid = ? LIMIT 51").use { query ->
+            query.setString(1,id);query.executeQuery().use { result -> buildSet { while(result.next()) add(result.getString(1)) } }
+        }
+
     fun unfinished(limit: Int): List<ItemRollbackSummary> {
         require(limit in 1..100)
-        return connection.prepareStatement("SELECT operation_uuid, created_at, phase FROM ex_item_rollback WHERE phase IN ('PREPARED','APPLYING','RECOVERY_REQUIRED') ORDER BY created_at, operation_uuid LIMIT ?").use { query ->
+        return connection.prepareStatement("SELECT j.operation_uuid, j.created_at, j.phase FROM ex_item_rollback j WHERE j.phase IN ('PREPARED','APPLYING','RECOVERY_REQUIRED') OR EXISTS (SELECT 1 FROM ex_item_rollback_protection p WHERE p.operation_uuid = j.operation_uuid) ORDER BY j.created_at, j.operation_uuid LIMIT ?").use { query ->
             query.setInt(1,limit)
             query.executeQuery().use { result -> buildList {
                 while(result.next()) add(ItemRollbackSummary(UUID.fromString(result.getString(1)),result.getLong(2),ItemRollbackPhase.valueOf(result.getString(3))))
@@ -84,10 +110,13 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
             else -> false
         }) { "Invalid journal transition" }
         return atomic {
+            val held=protected(id)
+            // Protected intent cannot be cancelled based on a header alone.
+            if (held && next == ItemRollbackPhase.CANCELLED) return@atomic false
             val changed=connection.prepareStatement("UPDATE ex_item_rollback SET phase = ? WHERE operation_uuid = ? AND phase = ?").use { update ->
                 update.setString(1,next.name);update.setString(2,id.toString());update.setString(3,expected.name);update.executeUpdate()==1
             }
-            if(changed && (next == ItemRollbackPhase.COMPLETED || next == ItemRollbackPhase.CANCELLED)) {
+            if(changed && !held && (next == ItemRollbackPhase.COMPLETED || next == ItemRollbackPhase.CANCELLED)) {
                 connection.prepareStatement("DELETE FROM ex_item_rollback_owner WHERE operation_uuid = ?").use { it.setString(1,id.toString());it.executeUpdate() }
                 // Completed source claims remain forever: the same history cannot be rolled back twice.
                 if(next == ItemRollbackPhase.CANCELLED) connection.prepareStatement("DELETE FROM ex_item_rollback_claim WHERE operation_uuid = ?").use { it.setString(1,id.toString());it.executeUpdate() }

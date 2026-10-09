@@ -20,7 +20,7 @@ class ItemRollbackEntry(val transactionId: UUID, changes: List<ItemSlotChange>) 
 interface ItemRollbackJournal {
     fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord
     fun itemRollback(operationId: UUID): ItemRollbackRecord?
-    /** Headers only: recovery listing must not load every operation payload into memory. */
+    /** Headers only, including protected COMPLETED records still awaiting reconciliation. No payload bulk load. */
     fun unfinishedItemRollbacks(limit: Int = 50): List<ItemRollbackSummary>
     fun transitionItemRollback(operationId: UUID, expected: ItemRollbackPhase, next: ItemRollbackPhase): Boolean
 }

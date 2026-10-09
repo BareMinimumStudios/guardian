@@ -381,3 +381,18 @@ The caller must keep polling after requesting shutdown and must stop any externa
 Neither a drained worker nor a closed database acknowledges unresolved owner protection. A late SQLite COMPLETED outcome still leaves its stopped host protected in memory. Completed journal rows currently release persistent owner claims and disappear from unfinished listings; there is no durable unresolved-host receipt yet. Persistent reconciliation must address that before production admission or item apply is enabled. No automatic retry, undo, release or crash-recovery replay is added here.
 
 Thirteen new tests cover shutdown ordering. Four use actual SQLite prepare/commit, close and reopen to check clean shutdown, recovery phase, audit rows and retained claims. Inventory and save ports in these tests are synthetic. No Minecraft hooks changed in this milestone; alpha.45 remains the latest dedicated-server runtime acceptance run.
+
+
+## Durable operation protection (alpha.47)
+
+Schema 9 adds a durable operation marker through `ItemRollbackProtectionJournal`. A caller registers the exact PREPARED record before any item writes and waits for the worker's confirmed result. Registration verifies the complete bounded plan, creation time, transaction IDs, components and all existing owner/source claims in one transaction. Missing, foreign or extra claims are refused; they are not repaired. Repeated registration is idempotent while the record remains prepared. Unsupported backends fail closed.
+
+Once registered, protection retains persistent owner/source claims even when the journal transitions to COMPLETED. Protected prepared cancellation is refused. Recovery header listings and health counts include these completed records once each. An interrupted APPLYING record still becomes RECOVERY_REQUIRED at startup, without replaying anything. The marker survives close/reopen, protects preview/preparation through the existing owner guard and has no release API.
+
+The schema upgrade preserves historical audit data and existing journal phases/claims. It does not invent markers for older completed operations, whose ownership proof is unavailable. Builds supporting only schema 8 cannot open a database upgraded to schema 9.
+
+This capability is a persistence foundation, not a finished reconciliation or physical exclusion contract. It does not capture complete expected saved-owner images yet. Normal server startup and the legacy internal host do not automatically register it. The new controlled tests explicitly confirm protection before starting their host. Even a successfully confirmed host leaves its durable marker/owner claims held for future reconciliation. No automatic release, retry, undo, inventory write, or crash replay is added.
+
+Twenty new tests cover exact matching, damaged claims, restart visibility, bounded header ordering, schema 8 upgrades, unsupported/stopped/queued workers, late registration acknowledgments and protected SQLite host shutdown. Four host tests use synthetic inventory/save ports with actual SQLite records and close/reopen. The fourteen storage regressions also exercise the optional DuckDB backend; standard runtime artifacts continue bundling only SQLite.
+
+Next: capture bounded complete expected saved-owner images, make protection mandatory for production admission, and implement explicit acknowledgment only after fresh saved-state reconciliation. Ordered server/disk-service shutdown and connected-client acceptance remain pending. Item rollback apply stays disabled.

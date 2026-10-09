@@ -36,7 +36,7 @@ abstract class JdbcStorageBackend(
     private val path: Path,
     private val jdbcUrl: (Path) -> String,
     private val driverClassName: String
-) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackJournal {
+) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackProtectionJournal {
     private val lock = ReentrantLock()
     private var connection: Connection? = null
     private var fileLockChannel: FileChannel? = null
@@ -325,6 +325,10 @@ abstract class JdbcStorageBackend(
     override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst)
     }
+    override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).protect(record)
+    }
+    override fun itemRollbackProtected(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).protected(operationId) }
     override fun itemRollback(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).read(operationId) }
     override fun unfinishedItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).unfinished(limit) }
     override fun transitionItemRollback(operationId: UUID, expected: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase, next: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase) = lock.withLock {
@@ -333,7 +337,7 @@ abstract class JdbcStorageBackend(
 
     override fun health(): StorageHealth = lock.withLock {
         val count=requireConnection().createStatement().use { statement ->
-            statement.executeQuery("SELECT COUNT(*) FROM ex_item_rollback WHERE phase NOT IN ('COMPLETED','CANCELLED')").use { result -> check(result.next());result.getLong(1) }
+            statement.executeQuery("SELECT COUNT(*) FROM ex_item_rollback j WHERE j.phase NOT IN ('COMPLETED','CANCELLED') OR EXISTS (SELECT 1 FROM ex_item_rollback_protection p WHERE p.operation_uuid = j.operation_uuid)").use { result -> check(result.next());result.getLong(1) }
         }
         storageHealth.copy(unfinishedItemRollbacks=count)
     }

@@ -87,7 +87,7 @@ class ContainerHistoryGuardTest {
             assertEquals(7,SchemaMigrator(GuardianSchema.migrations.take(7)).migrate(conn))
             conn.prepareStatement("INSERT INTO ex_container VALUES (?,?,1,0,'HOPPER_TRANSFER',?)").use { insert -> values.forEach { value -> insert.setString(1,value.transactionId.toString());insert.setLong(2,value.timestampEpochMillis);insert.setBytes(3,ContainerChangesCodec.encode(value.changes));insert.addBatch() };insert.executeBatch() }
         }
-        factory(path).use { db -> db.open();assertEquals(8,db.health().schemaVersion);assertTrue(db.guardContainerHistory(listOf(values.last())).clear);assertFalse(db.guardContainerHistory(listOf(values.first())).clear) }
+        factory(path).use { db -> db.open();assertEquals(GuardianSchema.CURRENT_VERSION,db.health().schemaVersion);assertTrue(db.guardContainerHistory(listOf(values.last())).clear);assertFalse(db.guardContainerHistory(listOf(values.first())).clear) }
         DriverManager.getConnection(prefix+path.toAbsolutePath()).use { conn ->
             conn.createStatement().use { statement -> statement.executeQuery("SELECT COUNT(*) FROM ex_container_owner").use { result -> assertTrue(result.next());assertEquals(520,result.getInt(1)) } }
             conn.prepareStatement("SELECT changes FROM ex_container WHERE transaction_uuid=?").use { query -> query.setString(1,values.first().transactionId.toString());query.executeQuery().use { result -> assertTrue(result.next());assertContentEquals(ContainerChangesCodec.encode(values.first().changes),result.getBytes(1)) } }
