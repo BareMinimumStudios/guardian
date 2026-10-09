@@ -11,6 +11,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.53+1.21.1] - 2026-10-09
+
+### Added
+
+- Add explicit internal recovery ownership for complete persisted receipts from a previous server process. Fresh leases are revoked before binding and grant read-only access; item replay and command apply remain disabled.
+- Wait for admission queries and the actual prior disk prefix before reconciling complete live and saved inventories. Confirm the durable decision and worker drain before releasing ownership.
+- Allow bounded explicit retries for unavailable read-only bindings or temporarily unavailable quiescence while retaining the same protected owners.
+- Include restart admission queries and recovery workers in shared runtime shutdown accounting. Missing or inconsistent receipts are refused without inventing new claims or freezing inventory access.
+
+### Fixed
+
+- Preserve unresolved restart ownership through failed reads, mismatched saved slots, timeout, cancellation and late commits. A resource-closure callback cannot turn shutdown into an owner release.
+- Keep the underlying binding exception available for diagnostics while retaining a plain recovery failure reason.
+
 ## [0.4.0-alpha.52+1.21.1] - 2026-10-09
 
 ### Added

@@ -1,0 +1,212 @@
+{
+  "checkpoint": "0.4.0-alpha.53+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 470,
+    "minecraft": 52
+  },
+  "new_tests": 20,
+  "runs": [
+    {
+      "loader": "Fabric",
+      "mode": "resolve",
+      "checks": 13,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "prefix",
+      "checks": 14,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "retry",
+      "checks": 15,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "conflict",
+      "checks": 12,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "missing",
+      "checks": 6,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "corrupt",
+      "checks": 6,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 1,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Fabric",
+      "mode": "stop",
+      "checks": 13,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "resolve",
+      "checks": 13,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "prefix",
+      "checks": 14,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "retry",
+      "checks": 15,
+      "phase": "COMPLETED",
+      "acknowledged": true,
+      "protection_markers": 0,
+      "owner_claims": 0,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "conflict",
+      "checks": 12,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "missing",
+      "checks": 6,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "corrupt",
+      "checks": 6,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 1,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "stop",
+      "checks": 13,
+      "phase": "RECOVERY_REQUIRED",
+      "acknowledged": false,
+      "protection_markers": 1,
+      "owner_claims": 2,
+      "source_claims": 1,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "live_fixture_checks": 158,
+  "artifacts": {
+    "Fabric": {
+      "name": "guardian-0.4.0-alpha.53+1.21.1.jar",
+      "bytes": 12878735,
+      "sha256": "0e64763d5d50b80b56581cc5561942d5a5bafd2331d4561b471fa47bb0bc70d4"
+    },
+    "NeoForge": {
+      "name": "guardian-neoforge-0.4.0-alpha.53+1.21.1.jar",
+      "bytes": 12861102,
+      "sha256": "08e4b064510515affdeba84d7fb8e529787b79df5a3a8929db4cc733cf05b094"
+    }
+  },
+  "gradle": "9.8.0",
+  "java": 21,
+  "builds": {
+    "clean": "passed; build cache used",
+    "repeated": "passed; configuration cache reused in 192ms",
+    "worldedit": "passed"
+  },
+  "schema": 10,
+  "config": 6,
+  "apply_enabled": false,
+  "operator_recovery_commands": "observational only",
+  "restart_admission": "explicit internal handoff; no automatic replay or startup inventory freeze",
+  "minecraft_bytecode_transformed": false,
+  "original_dedicated_servers_modified": false,
+  "limits": [
+    "Controlled loaded vanilla barrel fixtures; no connected clients",
+    "Prior process stopped before world/database copies; quiescence supplied by isolated fixture",
+    "Synthetic prefix tickets verify waiting and cancellation, not a genuinely started chunk save interruption",
+    "Arbitrary mod or off-thread inventory writes are not certified"
+  ]
+}

@@ -1,4 +1,18 @@
-# Guardian runtime coordinator checkpoint
+# Guardian restart ownership checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.53+1.21.1`.
+
+- All 522 tests passed: 470 common and 52 Minecraft tests. Twenty new actual-SQLite reopen regressions cover revoked owner admission, full saved images, pending/failed/cancelled prefix drains, overlapping owners, missing unchanged slots, stale plans, timeout, corrupt claims, retries, callback stop, historical decisions and late acknowledgment.
+- Explicit internal restart admission loads a complete persisted receipt off-thread and waits for that query's actual drain. The host acquires exact receipt owners, registers protection, and revokes the lease before any read-only binding. It waits for prior physical I/O and requires trusted quiescence before reconciling full live and saved inventories. No mutation or save interface is available.
+- Failed bound reads or unavailable inventories retain the exact owners for bounded explicit retry. Missing, corrupt, resolved and unsupported receipts are refused without inventing claims. Stop and resource callbacks cannot release an unresolved owner hold, including after a late durable decision. Loading and reconciliation workers participate in shared database shutdown.
+- Fourteen isolated loader runs passed with 158 reflection-only fixture checks: resolve, prefix wait, explicit retry, live conflict, missing receipt, inconsistent owner claims and stopped recovery on both Fabric and NeoForge. Each started a fresh process with a copy of a real interrupted alpha.52 journal and saved world. Successful outcomes removed the protection marker and both owner claims while keeping the source claim; unresolved outcomes preserved their protection and claims. Intentionally removed receipt/owner rows were not invented or repaired. Every SQLite integrity check and clean-shutdown marker passed. No Minecraft bytecode was transformed, and the original dedicated servers were untouched.
+- An initial fixture froze a server before its forced chunk finished loading. Binding correctly refused the unloaded container and kept ownership protected. Final fixtures explicitly preload the known barrels before freezing, rather than making recovery load chunks.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA using Java 21 and Gradle 9.8.0. Standard runtime jars remain SQLite-only. Schema stays 10 and config stays 6. See [validation data](validation/restart-ownership-alpha53.json).
+
+Startup and operator commands do not automatically acquire recovery holds or replay items. This milestone provides explicit internal read-only handoff under controlled quiescence. Synthetic prefix tickets verify I/O accounting; they do not certify a genuinely started chunk save interruption. Connected-client synchronization and supported-environment exclusion still need acceptance before command apply. Item rollback apply remains disabled.
+
+## Historical alpha.52 runtime coordinator checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.52+1.21.1`.
 

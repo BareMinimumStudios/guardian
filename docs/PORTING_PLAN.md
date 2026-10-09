@@ -98,3 +98,10 @@ The runtime now closes storage after actual audit/history worker termination and
 Protected item hosts now have production lifecycle registration on both loaders: admission, tick, cancellation, explicit read-only recovery and shutdown drain. The shared database waits for every runtime producer; unresolved protection is preserved. Fresh-start journals remain visible for recovery without automatic item replay.
 
 Still required before command apply: connected-client synchronization and lifecycle acceptance, proven physical exclusion in the supported mod environment, and safe fresh-process recovery ownership. No fluids or entity expansion is included in this milestone.
+
+
+### Alpha.53: explicit fresh-process read-only ownership
+
+Persisted unresolved full-image receipts can be handed to a new runtime through explicit internal recovery admission. The new host reacquires revoked read-only ownership, waits for actual prior I/O, reconciles saved files without writing or saving items, and retains failed or stopped ownership for investigation or bounded retry. Runtime shutdown accounts for both loading and recovery workers.
+
+Next: connected-client inventory synchronization/lifecycle acceptance, supported-environment physical exclusion, and genuinely started save interruption evidence. Operator recovery remains observational and command apply stays disabled until those boundaries pass.

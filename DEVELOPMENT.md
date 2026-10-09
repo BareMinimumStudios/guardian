@@ -285,3 +285,14 @@ Cancellation closes the mutating session and revokes write permits. Explicit rea
 Runtime shutdown stops coordinator admission before closing inventory I/O admission. Its physical journal drain can finish without another server tick. The runtime closes SQLite only after item journals, history queries, audit writes and bound disk requests drain. An unrelated retained lease prevents backend closure. Known unresolved operations preserve their RAM protection and durable claims even after a clean database closure; the server reports that retained state and cannot uninstall its coordination binding.
 
 The next acceptance boundary is real connected clients and trusted exclusion across the supported mod environment, plus recovery handoff for retained journals after a fresh process starts. The isolated loader fixtures exercise controlled vanilla barrels and do not certify arbitrary mod inventories or off-thread item mutation. Item rollback apply stays disabled.
+
+
+### Explicit restart recovery ownership (alpha.53)
+
+MinecraftItemOperations can explicitly request a read-only handoff for a journal from a terminated prior process. Receipt loading runs on a bounded journal worker, validates persisted full images and owner/source claims through the backend, and drains that worker before admitting ItemRestartRecoveryHost. Startup does not automatically acquire holds or replay items. Operator commands remain observational.
+
+The restart host acquires the receipt's exact owners, registers an explicit reconciliation barrier, and revokes the lease before binding. It waits for an actual prior disk fence before starting reconciliation. The platform still supplies physical quiescence and pinned supported inventories. Missing, corrupt, resolved or unsupported receipts cannot invent ownership. Unloaded or unavailable inventories keep an admitted hold unresolved, rather than loading chunks or changing items.
+
+Full saved/live verification and durable acknowledgment precede actual worker drain, resource closure and owner release. Failed attempts can be retried up to eight bindings with the same revoked lease and matching plan. Historical acknowledged decisions may resolve an explicit retry without claiming that newly sampled items match an old outcome. Stop revokes admission, drains all query and reconciliation workers, and preserves unresolved holds even when a late acknowledgment succeeds.
+
+Both loader fixtures use copied private worlds and databases containing a real interrupted two-barrel journal from alpha.52. Quiescence is supplied by controlled test conditions. Synthetic physical prefix tickets exercise waiting and shutdown accounting; they are not evidence of a genuinely started chunk save interruption. Real connected-client synchronization and supported-environment exclusion remain acceptance work before command apply.

@@ -4,6 +4,18 @@ import com.bareminimumstudios.guardian.rollback.*
 import net.minecraft.server.MinecraftServer
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+import java.util.UUID
+
+internal enum class RestartAdmissionState { LOADING, OWNED, COMPLETED, RECOVERY_REQUIRED, REFUSED }
+
+internal class RestartRecoveryAdmission(val operationId: UUID,internal val quiescent: () -> Boolean) {
+    var state=RestartAdmissionState.LOADING; internal set
+    var reason: String?=null; internal set
+    internal var host: ItemRestartRecoveryHost?=null
+    internal var query: ItemRollbackJournalWorker?=null
+    internal var result: CompletableFuture<ItemRollbackImageRecord?>?=null
+    internal var started=System.nanoTime()
+}
 
 /** Internal lifecycle wiring. Commands cannot admit apply; exclusion remains a trusted contract. */
 internal class MinecraftItemOperations(
@@ -24,6 +36,7 @@ internal class MinecraftItemOperations(
         var closed = false
     }
     private val entries = arrayListOf<Entry>()
+    private val restarts = arrayListOf<RestartRecoveryAdmission>()
     private var controlling = false
     private var stopped = false
     private var drain: CompletionStage<Void>? = null
@@ -32,7 +45,7 @@ internal class MinecraftItemOperations(
         checkThread()
         check(!stopped && !busy()) { "Item operation admission is unavailable" }
         entries.removeAll { it.host.state == ItemOperationState.COMPLETED && it.recovery == null }
-        check(entries.size < 32)
+        check(entries.size + restarts.size < 32)
         var lease: ItemOwnerCoordination.Lease? = null
         val host = scope.startProtected(record, owners, { acquired ->
             lease = acquired
@@ -61,9 +74,85 @@ internal class MinecraftItemOperations(
         entry.recovery = Recovery(ItemRollbackJournalWorker(journal), fence, quiescent)
     }
 
+    /** Explicit fresh-process handoff only. Startup and commands never automatically replay items. */
+    fun requestRestartRecovery(operationId: UUID,quiescent: () -> Boolean): RestartRecoveryAdmission = control {
+        check(!stopped && !busy())
+        check(entries.size + restarts.size < 32)
+        check(entries.none {it.lease.operationId==operationId} && restarts.none {it.operationId==operationId})
+        check(quiescent()) { "Trusted fresh-process physical quiescence is required" }
+        val admission=RestartRecoveryAdmission(operationId,quiescent)
+        val worker=ItemRollbackJournalWorker(journal)
+        admission.query=worker
+        admission.result=worker.readImages(operationId).toCompletableFuture()
+        restarts.add(admission)
+        admission
+    }
+
+    fun retryRestartRecovery(admission: RestartRecoveryAdmission) = control {
+        check(!stopped && !busy() && admission in restarts)
+        check(admission.state==RestartAdmissionState.RECOVERY_REQUIRED && admission.host?.isJournalDrained==true && admission.query==null)
+        check(admission.quiescent())
+        admission.started=System.nanoTime();admission.reason=null
+        val worker=ItemRollbackJournalWorker(journal)
+        admission.query=worker;admission.result=worker.readImages(admission.operationId).toCompletableFuture()
+        admission.state=RestartAdmissionState.LOADING
+    }
+
+    private fun restartBinding(lease: ItemOwnerCoordination.Lease,quiescent: () -> Boolean): ItemRestartRecoveryBinding {
+        check(quiescent())
+        val fence=MinecraftInventoryCoordination.retainedDiskFence(server,lease)
+        val session=MinecraftInventoryCoordination.bindReadOnlyInventories(server,lease)
+        return ItemRestartRecoveryBinding(MinecraftBoundReconciliationPort(server,lease,session,quiescent),fence)
+    }
+
+    private fun advanceRestart(admission: RestartRecoveryAdmission) {
+        val query=admission.query
+        if(query!=null) {
+            if(System.nanoTime()-admission.started > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) {
+                admission.state=if(admission.host==null)RestartAdmissionState.REFUSED else RestartAdmissionState.RECOVERY_REQUIRED
+                admission.reason="Restart receipt query timed out";query.close()
+            }
+            if(admission.state==RestartAdmissionState.LOADING) {
+                val result=checkNotNull(admission.result)
+                if(!result.isDone)return
+                query.close()
+                if(!query.drained.toCompletableFuture().isDone)return
+                val receipt=checkNotNull(result.join()) { "Complete persisted protection is unavailable" }
+                check(receipt.images.record.operationId==admission.operationId)
+                check(admission.quiescent())
+                if(admission.host==null) {
+                    admission.host=checkNotNull(ItemRestartRecoveryHost.start(receipt,owners,journal,
+                        {restartBinding(it,admission.quiescent)})) { "Recovery owners are unavailable" }
+                } else admission.host!!.retry(receipt.images.record) {restartBinding(it,admission.quiescent)}
+                admission.state=RestartAdmissionState.OWNED
+            }
+            if(query.isStopped && query.drained.toCompletableFuture().isDone) {
+                admission.query=null;admission.result=null
+            }
+        }
+        if(admission.state==RestartAdmissionState.OWNED) {
+            val host=checkNotNull(admission.host)
+            when(host.advance()) {
+                ItemRestartRecoveryState.COMPLETED -> admission.state=RestartAdmissionState.COMPLETED
+                ItemRestartRecoveryState.RECOVERY_REQUIRED -> {admission.state=RestartAdmissionState.RECOVERY_REQUIRED;admission.reason=host.reason}
+                else -> Unit
+            }
+        }
+    }
+
     fun tick() = control {
         checkThread();if(stopped)return@control
         scope.advance()
+        for(admission in restarts.toList()) {
+            try {advanceRestart(admission)}
+            catch(_: Exception) {
+                admission.query?.close()
+                admission.state=if(admission.host==null)RestartAdmissionState.REFUSED else RestartAdmissionState.RECOVERY_REQUIRED
+                admission.reason="Restart recovery could not be admitted; persistent claims remain intact"
+                if(admission.query?.drained?.toCompletableFuture()?.isDone==true) {admission.query=null;admission.result=null}
+            }
+        }
+        restarts.removeAll {it.query==null && it.state in setOf(RestartAdmissionState.COMPLETED,RestartAdmissionState.REFUSED)}
         for(entry in entries.toList()) {
             if(stopped)break
             val recovery=entry.recovery ?: continue
@@ -113,14 +202,17 @@ internal class MinecraftItemOperations(
         drain?.let {return it}
         stopped=true
         val queries=entries.mapNotNull { it.recovery?.worker }.also { workers -> workers.forEach { it.close() } }
+        val restartQueries=restarts.mapNotNull {it.query}.also {it.forEach {worker -> worker.close()}}
+        val restartHosts=restarts.mapNotNull {it.host}.also {it.forEach {host -> host.close()}}
         val hostDrain=scope.stopAndDrain()
         return CompletableFuture.allOf(hostDrain.toCompletableFuture(),
-            *queries.map { it.drained.toCompletableFuture() }.toTypedArray()).minimalCompletionStage().also {drain=it}
+            *(queries.map {it.drained.toCompletableFuture()} + restartQueries.map {it.drained.toCompletableFuture()} +
+                restartHosts.map {it.journalDrain.toCompletableFuture()}).toTypedArray()).minimalCompletionStage().also {drain=it}
     }
 
     fun ownsAllRetentions(): Boolean {
         checkThread()
-        return !owners.hasUnmanagedJournalRetention(entries.map { it.lease }.toSet())
+        return !owners.hasUnmanagedJournalRetention((entries.map {it.lease} + restarts.mapNotNull {it.host?.lease}).toSet())
     }
     private inline fun <T> control(action: () -> T): T {
         checkThread()
