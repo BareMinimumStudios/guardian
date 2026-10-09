@@ -139,12 +139,13 @@ class ItemRollbackProtectionTest {
         lateinit var record: ItemRollbackRecord
         factory(path).use { db ->db.open();record=prepare(db);db.transitionItemRollback(record.operationId,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING);db.transitionItemRollback(record.operationId,ItemRollbackPhase.APPLYING,ItemRollbackPhase.COMPLETED)}
         DriverManager.getConnection(url+path).use { c -> c.createStatement().use {
+            it.executeUpdate("DROP TABLE ex_item_rollback_images")
             it.executeUpdate("DROP TABLE ex_item_rollback_protection")
-            it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version = 9")
+            it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 9")
             it.executeUpdate("UPDATE ex_meta SET meta_value = '8' WHERE meta_key = 'schema_version'")
         } }
         factory(path).use { db ->
-            db.open();assertEquals(9,db.health().schemaVersion)
+            db.open();assertEquals(GuardianSchema.CURRENT_VERSION,db.health().schemaVersion)
             assertFalse(db.itemRollbackProtected(record.operationId));assertEquals(ItemRollbackPhase.COMPLETED,db.itemRollback(record.operationId)?.phase)
             assertEquals(1,db.lookupContainers(ContainerLookupQuery()).size);assertTrue(db.unfinishedItemRollbacks().isEmpty())
         }

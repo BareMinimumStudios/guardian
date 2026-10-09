@@ -1,0 +1,176 @@
+{
+  "checkpoint": "0.4.0-alpha.48+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 398,
+    "minecraft": 49
+  },
+  "totalTests": 447,
+  "newTestCount": 57,
+  "newSuites": [
+    {
+      "suite": "com.bareminimumstudios.guardian.rollback.ItemReconciliationDriverTest",
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "repeatedFreshRecoveryUsesDurableDecisionWithoutNewOwnerReads()",
+        "partialLiveStateCannotReleaseEvenIfSavedStateMatches()",
+        "completedRecordUsesEverySavedSlotAndConfirmsDurableRelease()",
+        "stoppedStartedAcknowledgmentKeepsItsRealLateDurableOutcome()",
+        "changedSavedTransferSlotRefusesAcknowledgment()",
+        "recoveryRecordCompletesOnlyFromExactSavedAndLiveExpectedImages()",
+        "stopBeforePollingSubmitsNoSavedReadOrAcknowledgment()",
+        "omittedEmptySavedSlotRefusesCompleteComparison()",
+        "timeoutDuringSavedReadKeepsFutureAndProtectionIntact()",
+        "missingTrustedQuiescenceRefusesBeforeSavedReads()",
+        "stopFromLiveReadCallbackCannotBeOverwrittenByProgress()",
+        "changedUnloggedSavedComponentsRefuseAcknowledgment()",
+        "missingSavedFileLeavesProtectionHeld()",
+        "stopFromJournalReceiptCallbackCannotReviveDriver()",
+        "extraSavedOwnerCannotMasqueradeAsAFullOwnerImage()",
+        "committedDecisionWithFailedReplyCanBeConfirmedWithoutReadingOrWritingItemsAgain()",
+        "stopDuringSavedReadDoesNotCancelIoOrAcknowledgeLateResults()",
+        "nestedPollingIsRefusedWithoutDuplicatingRequests()",
+        "stopFromSavedReadCallbackCannotAdvanceToAcknowledgment()",
+        "changedUnloggedLiveComponentsRefuseBeforeSavedReads()",
+        "refusedDatabaseAcknowledgmentLeavesReceiptAndClaimsHeld()",
+        "markerOnlyLegacyRecordCannotBeResolvedBySlotObservations()",
+        "controlsRejectOtherThreads()",
+        "changedJournalPhaseDuringSavedReadsRefusesFinalAcknowledgment()",
+        "stopFromAcknowledgmentCallbackPreservesSubmittedOutcomeWithoutRevival()",
+        "timeoutDuringAcknowledgmentDoesNotCancelOrRetryDecision()"
+      ]
+    },
+    {
+      "suite": "com.bareminimumstudios.guardian.rollback.ItemRollbackImagesTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "wrongObservedChangedSlotRefusesBeforePersistence()",
+        "extraOwnerOrTemporarySlotIsRefused()",
+        "codecRoundTripsAllImagesAcrossJournalPhaseChanges()",
+        "codecRejectsAnotherOperationTimestampOrSourceManifest()",
+        "maximumSlotBudgetRoundTripsAndExtraSlotIsRefused()",
+        "reverseChainIncludesTheCompleteUnchangedInventory()",
+        "checksumValidUnknownVersionAndNegativeItemCountAreRefused()",
+        "fullImagesPreserveUnchangedComponentsAndEmptySlots()",
+        "corruptionTruncationAndTrailingBytesAreRefused()",
+        "imagesCopyMutableInputAndExposeImmutableMaps()",
+        "missingMiddleOrChangedSlotRefusesCompleteImage()",
+        "playerRequiresAllMainArmorAndOffhandSlots()",
+        "itemAndWholePayloadBudgetsAreRefusedWithoutTruncation()"
+      ]
+    },
+    {
+      "suite": "com.bareminimumstudios.guardian.storage.jdbc.ItemRollbackImagesStorageTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "repeatedRegistrationCannotOverwriteAnUntouchedSlot()",
+        "interruptedApplyingImagesReopenForExplicitReadOnlyReconciliation()",
+        "fullPlayerArmorAndOffhandComponentsSurviveDurableAcknowledgmentAndRestart()",
+        "corruptedPayloadCannotBeReadOrAcknowledged()",
+        "sqliteFailureRollsBackPhaseDecisionAndOwnerReleaseTogether()",
+        "imagesCannotBeAttachedAfterIntentOrCompletion()",
+        "preparedRecordCannotBeAcknowledgedFromAnyImage()",
+        "legacyMarkerWithoutImagesCannotBeReleased()",
+        "inconsistentAcknowledgmentFlagCannotMasqueradeAsAReleasedDecision()",
+        "markerOnlyPreparedRecordCanUpgradeBeforeWrites()",
+        "completedAcknowledgmentRetainsSourcesAndDecisionAcrossRestart()",
+        "schemaNineMarkerUpgradesWithoutFabricatedImagesOrRelease()",
+        "originalPartialMissingExtraAndChangedUnloggedSavedSlotsStayHeld()",
+        "recoveryAcknowledgmentPromotesPhaseAndReleasesClaimsAtomically()",
+        "repeatedOldDecisionNeverDeletesANewerOperationsOwnerClaims()",
+        "staleHeaderOrForeignReceiptCannotAcknowledge()",
+        "missingSourceClaimsRefuseWithoutRegisteringImages()",
+        "completeImagesSurviveRestartIncludingUnchangedAndEmptySlots()"
+      ]
+    }
+  ],
+  "builds": {
+    "clean": "passed",
+    "repeatedBuild": "passed, configuration cache reused",
+    "worldEditAdapter": "passed",
+    "runner": "IntelliJ IDEA Gradle configurations",
+    "java": 21,
+    "gradle": "9.8.0"
+  },
+  "snapshots": {
+    "contents": [
+      "every owner slot",
+      "unchanged and empty slots",
+      "opaque item/component bytes",
+      "complete 41-slot player main/armor/offhand"
+    ],
+    "limits": {
+      "owners": 32,
+      "totalSlots": 2048,
+      "slotsPerOwner": 256,
+      "itemPayloadBytes": 1048576,
+      "encodedReceiptBytes": 16777216
+    },
+    "binding": [
+      "operation UUID",
+      "creation time",
+      "ordered source transaction UUIDs",
+      "complete immutable journal plan",
+      "SHA-256 payload checksum"
+    ]
+  },
+  "reconciliation": {
+    "inventoryWrites": false,
+    "forcedSaves": false,
+    "requires": [
+      "exact current journal and receipt",
+      "trusted physical exclusion and identity",
+      "actual prior journal/disk drain",
+      "complete live expected image",
+      "complete actual saved expected image"
+    ],
+    "atomicDecision": [
+      "optional RECOVERY_REQUIRED to COMPLETED promotion",
+      "acknowledged receipt",
+      "protection marker removal",
+      "only this operation owner-claim release"
+    ],
+    "retained": [
+      "source claims",
+      "audit history",
+      "complete decision images"
+    ],
+    "retry": "Confirm durable decision; never replay or undo",
+    "legacyMarkerOnlyRelease": false
+  },
+  "storageRegressionTests": {
+    "dualBackend": 17,
+    "sqliteFailureInjection": 1,
+    "driverWithRealSqliteWorkerAndSyntheticImages": 26
+  },
+  "minecraftAdapter": {
+    "class": "MinecraftBoundReconciliationPort",
+    "bothLoaderArtifactsPackaged": true,
+    "actualRegionAndPlayerReaders": true,
+    "newLiveRuntimeAcceptance": false,
+    "mixinsChanged": false
+  },
+  "schemaVersion": 10,
+  "configVersion": 6,
+  "standardDatabase": "SQLite",
+  "itemApplyEnabled": false,
+  "dedicatedServers": {
+    "newRuntimeRuns": 0,
+    "latestAcceptedVersion": "0.4.0-alpha.45+1.21.1",
+    "changedJarsOrDatabases": false
+  },
+  "limitations": [
+    "Internal implementation conditional on a trusted exclusion/quiescence port",
+    "Complete receipts not mandatory in normal startup/admission yet",
+    "Does not automatically release in-memory retention or close caller-owned worker/backend",
+    "Caller must keep protection/backend until actual worker drain",
+    "Legacy marker-only records remain held without fabricated images",
+    "Production coordination, server/disk lifecycle, actual adapter live acceptance and real clients remain pending"
+  ]
+}

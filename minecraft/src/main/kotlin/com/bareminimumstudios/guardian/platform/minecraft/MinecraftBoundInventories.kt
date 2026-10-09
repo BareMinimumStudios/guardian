@@ -91,7 +91,12 @@ class MinecraftBoundInventories internal constructor(
     }
 
     /** Save one pinned owner, flush/read real storage, then validate all live owners and the full saved image. */
-    fun saveAndReadBack(owner: ItemSlotOwner): CompletionStage<InventorySnapshot> {
+    fun saveAndReadBack(owner: ItemSlotOwner): CompletionStage<InventorySnapshot> = readBack(owner,true)
+
+    /** Read actual saved data without queueing a chunk/player save or changing inventory contents. */
+    fun readSaved(owner: ItemSlotOwner): CompletionStage<InventorySnapshot> = readBack(owner,false)
+
+    private fun readBack(owner: ItemSlotOwner, save: Boolean): CompletionStage<InventorySnapshot> {
         checkThread()
         check(pending.isEmpty()) { "A bound inventory save is already pending" }
         val pin = checkNotNull(pins[owner]) { "Owner is not bound" }
@@ -104,16 +109,18 @@ class MinecraftBoundInventories internal constructor(
             val request = when (owner) {
                 is ItemSlotOwner.BlockContainer -> {
                     val chunk = checkNotNull(pin.chunk)
-                    chunk.setUnsaved(true)
-                    if (!(pin.level.chunkSource.chunkMap as ChunkMapSaveInvoker).`guardian$saveChunk`(chunk)) {
+                    if(save) {
                         chunk.setUnsaved(true)
-                        error("Chunk save was not queued")
+                        if (!(pin.level.chunkSource.chunkMap as ChunkMapSaveInvoker).`guardian$saveChunk`(chunk)) {
+                            chunk.setUnsaved(true)
+                            error("Chunk save was not queued")
+                        }
                     }
                     MinecraftSavedChunkReader.read(pin.level.chunkSource.chunkMap,chunk.pos)
                 }
                 is ItemSlotOwner.PlayerInventory -> {
                     val player = (pin.container as Inventory).player as ServerPlayer
-                    (server.playerList as PlayerListSaveInvoker).`guardian$savePlayer`(player)
+                    if(save) (server.playerList as PlayerListSaveInvoker).`guardian$savePlayer`(player)
                     players().read(server.getWorldPath(LevelResource.PLAYER_DATA_DIR),owner.playerId)
                 }
                 else -> error("Unsupported bound owner")

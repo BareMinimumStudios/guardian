@@ -328,6 +328,13 @@ abstract class JdbcStorageBackend(
     override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).protect(record)
     }
+    override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord, original: InventorySnapshot) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).protect(record,original)
+    }
+    override fun itemRollbackImages(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).images(operationId) }
+    override fun acknowledgeItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord, images: com.bareminimumstudios.guardian.rollback.ItemRollbackImages, saved: InventorySnapshot) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).acknowledge(record,images,saved)
+    }
     override fun itemRollbackProtected(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).protected(operationId) }
     override fun itemRollback(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).read(operationId) }
     override fun unfinishedItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).unfinished(limit) }

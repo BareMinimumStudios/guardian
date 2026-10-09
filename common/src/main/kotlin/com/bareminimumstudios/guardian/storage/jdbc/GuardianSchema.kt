@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 9
+    const val CURRENT_VERSION = 10
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -103,6 +103,9 @@ internal object GuardianSchema {
         ), ContainerOwnerIndex::backfill),
         SchemaMigration(9, "Durable unresolved item operation protection", listOf(
             "CREATE TABLE ex_item_rollback_protection (operation_uuid VARCHAR PRIMARY KEY)"
+        )),
+        SchemaMigration(10, "Complete owner images and durable reconciliation decisions", listOf(
+            "CREATE TABLE ex_item_rollback_images (operation_uuid VARCHAR PRIMARY KEY, payload BLOB NOT NULL, acknowledged SMALLINT NOT NULL DEFAULT 0)"
         ))
     )
 }

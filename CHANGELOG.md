@@ -11,6 +11,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.48+1.21.1] - 2026-10-09
+
+### Added
+
+- Complete immutable before/expected-after inventory receipts, preserving unchanged and empty slots and item components.
+- Read-only saved-state reconciliation with guarded atomic acknowledgment, persistent decision receipts and idempotent recovery after a lost reply.
+- Internal Minecraft read-only adapter for complete actual saved container/player data, without forcing new saves.
+- Regression coverage for corruption, bounds, stale evidence, partial saves, late decisions, restart, callback stops and full player armor/offhand snapshots.
+
+Database schema is now 10. Legacy marker-only records remain protected without fabricated images. Production admission, lifecycle integration and live acceptance remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.47+1.21.1] - 2026-10-09
 
 ### Added

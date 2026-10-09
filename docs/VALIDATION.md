@@ -1,4 +1,17 @@
-# Guardian durable operation protection checkpoint
+# Guardian complete images and reconciliation checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.48+1.21.1`.
+
+- All 447 tests passed: 398 common and 49 Minecraft tests. Fifty-seven new tests cover complete immutable images, real-database acknowledgment and the nonblocking reconciliation driver.
+- Thirteen image/codec tests cover unchanged and empty slots, components, complete player main/armor/offhand slots, reverse chains, 2,048-slot limits, payload limits, plan fingerprints and corrupted/truncated/checksum-valid invalid data.
+- Eighteen storage tests cover registration, close/reopen, exact saved evidence, legacy markers, phase promotion, stale receipts, corruption, retained source claims, newer owner claims, full player receipts and schema 9 upgrades. Seventeen run on SQLite and optional DuckDB; one SQLite trigger test proves phase/decision/owner release roll back together on failure.
+- Twenty-six driver tests use actual SQLite workers and controlled synthetic live/saved ports. They cover matching/missing/partial/changed images, stale phases, absent quiescence, stopped reads, timeouts, late acknowledgment, cancellation copies, failed replies, fresh idempotent recovery and callback/thread ownership. No inventory writes or forced saves are available through the reconciliation port.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA using Java 21 and Gradle 9.8.0. Both loader artifacts package the new actual-file reconciliation adapter. Standard runtime artifacts still bundle SQLite only. Schema is 10; config remains 6. See [validation data](validation/full-images-reconciliation-alpha48.json).
+- The Minecraft session adds complete saved-data reads without queuing new saves. No mixins changed. No new dedicated-server run is claimed, and test-server jars/databases were not replaced or upgraded. The latest live acceptance remains alpha.45; runtime verification of the new read-only adapter is pending.
+
+This completes the internal snapshot and reconciliation implementation, conditional on the trusted exclusion/quiescence port contract. It does not establish production admission, disk-service drain or real-client exclusion, and it does not automatically release in-memory retention. Complete receipts are not yet mandatory in normal startup/host admission. The caller must keep the backend open until actual worker drain; late decisions are confirmed from durable receipts without replay. Item rollback apply stays disabled.
+
+## Historical alpha.47 durable protection checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.47+1.21.1`.
 

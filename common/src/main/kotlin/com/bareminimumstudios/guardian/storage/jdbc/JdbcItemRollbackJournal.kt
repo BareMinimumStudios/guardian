@@ -3,6 +3,7 @@ package com.bareminimumstudios.guardian.storage.jdbc
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
+import com.bareminimumstudios.guardian.storage.codec.ItemRollbackImagesCodec
 import java.sql.Connection
 import java.util.UUID
 
@@ -83,6 +84,72 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
             if (!protected(record.operationId)) connection.prepareStatement("INSERT INTO ex_item_rollback_protection(operation_uuid) VALUES (?)").use {
                 it.setString(1,id);it.executeUpdate()
             }
+            true
+        }
+    }
+
+    fun images(id: UUID): ItemRollbackImageRecord? {
+        val record=read(id) ?: return null
+        return connection.prepareStatement("SELECT payload, acknowledged FROM ex_item_rollback_images WHERE operation_uuid = ?").use { query ->
+            query.setString(1,id.toString());query.executeQuery().use { result ->
+                if(!result.next()) null else {
+                    val flag=result.getInt(2);require(flag==0 || flag==1)
+                    val images=ItemRollbackImagesCodec.decode(record,result.getBytes(1))
+                    val sources=record.entries.map { it.transactionId.toString() }.toSet()
+                    require(claimSet("ex_item_rollback_claim","transaction_uuid",id.toString())==sources) { "Receipt source claims differ" }
+                    if(flag==1) require(record.phase==ItemRollbackPhase.COMPLETED && !protected(id) &&
+                        claimSet("ex_item_rollback_owner","owner_key",id.toString()).isEmpty()) { "Durable decision is inconsistent" }
+                    else require(protected(id) && claimSet("ex_item_rollback_owner","owner_key",id.toString())==
+                        ItemRecoveryCheck(record).owners.map(::ownerKey).toSet()) { "Unresolved receipt claims differ" }
+                    ItemRollbackImageRecord(images,flag==1)
+                }
+            }
+        }
+    }
+
+    fun protect(record: ItemRollbackRecord, original: InventorySnapshot): Boolean {
+        require(record.phase==ItemRollbackPhase.PREPARED)
+        val image=ItemRollbackImages(record,original)
+        val payload=ItemRollbackImagesCodec.encode(image)
+        return atomic {
+            if(!sameSaveRecord(record,read(record.operationId))) return@atomic false
+            val id=record.operationId.toString()
+            if(claimSet("ex_item_rollback_owner","owner_key",id)!=ItemRecoveryCheck(record).owners.map(::ownerKey).toSet() ||
+                claimSet("ex_item_rollback_claim","transaction_uuid",id)!=record.entries.map { it.transactionId.toString() }.toSet()) return@atomic false
+            val existing=images(record.operationId)
+            if(existing!=null && (existing.acknowledged || !sameRollbackImages(image,existing.images))) return@atomic false
+            if(!protected(record.operationId)) connection.prepareStatement("INSERT INTO ex_item_rollback_protection(operation_uuid) VALUES (?)").use { it.setString(1,id);it.executeUpdate() }
+            if(existing==null) connection.prepareStatement("INSERT INTO ex_item_rollback_images(operation_uuid, payload, acknowledged) VALUES (?, ?, 0)").use {
+                it.setString(1,id);it.setBytes(2,payload);it.executeUpdate()
+            }
+            true
+        }
+    }
+
+    fun acknowledge(record: ItemRollbackRecord, expected: ItemRollbackImages, saved: InventorySnapshot): Boolean {
+        require(record.phase==ItemRollbackPhase.COMPLETED || record.phase==ItemRollbackPhase.RECOVERY_REQUIRED)
+        ItemRecoveryCheck(record)
+        if(!sameSaveRecord(record,expected.record,expected.record.phase) || saved.slots!=expected.expected.slots) return false
+        return atomic {
+            val actual=read(record.operationId) ?: return@atomic false
+            val receipt=images(record.operationId) ?: return@atomic false
+            if(!sameRollbackImages(expected,receipt.images)) return@atomic false
+            val id=record.operationId.toString()
+            if(claimSet("ex_item_rollback_claim","transaction_uuid",id)!=record.entries.map { it.transactionId.toString() }.toSet()) return@atomic false
+            if(receipt.acknowledged) {
+                // A durable prior decision is retried, never re-applied. Later owners may have new claims.
+                return@atomic actual.phase==ItemRollbackPhase.COMPLETED && sameSaveRecord(record,actual,ItemRollbackPhase.COMPLETED) &&
+                    !protected(record.operationId) && claimSet("ex_item_rollback_owner","owner_key",id).isEmpty()
+            }
+            if(!sameSaveRecord(record,actual) || !protected(record.operationId) ||
+                claimSet("ex_item_rollback_owner","owner_key",id)!=ItemRecoveryCheck(record).owners.map(::ownerKey).toSet()) return@atomic false
+            if(record.phase==ItemRollbackPhase.RECOVERY_REQUIRED) connection.prepareStatement("UPDATE ex_item_rollback SET phase = 'COMPLETED' WHERE operation_uuid = ? AND phase = 'RECOVERY_REQUIRED'").use {
+                it.setString(1,id);check(it.executeUpdate()==1)
+            }
+            connection.prepareStatement("UPDATE ex_item_rollback_images SET acknowledged = 1 WHERE operation_uuid = ? AND acknowledged = 0").use {it.setString(1,id);check(it.executeUpdate()==1)}
+            connection.prepareStatement("DELETE FROM ex_item_rollback_owner WHERE operation_uuid = ?").use {it.setString(1,id);it.executeUpdate()}
+            connection.prepareStatement("DELETE FROM ex_item_rollback_protection WHERE operation_uuid = ?").use {it.setString(1,id);check(it.executeUpdate()==1)}
+            // Retain the source claims and complete images as a durable idempotent decision receipt.
             true
         }
     }

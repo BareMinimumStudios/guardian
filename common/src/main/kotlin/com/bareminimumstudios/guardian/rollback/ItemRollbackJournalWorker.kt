@@ -1,6 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
 import java.util.UUID
+import com.bareminimumstudios.guardian.domain.InventorySnapshot
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * already-started journal operations; drained completes only after all their results settle.
  * The host must retain exclusion and keep the backend open until drain, then reconcile results.
  */
-class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : ItemApplyJournalPort, ItemSaveJournalPort, AutoCloseable {
+class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : ItemApplyJournalPort, ItemSaveJournalPort, ItemReconciliationJournalPort, AutoCloseable {
     private val thread = Thread.currentThread()
     private val lock = Any()
     private val tasks = linkedSetOf<Request<*>>()
@@ -34,6 +35,20 @@ class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : Item
         require(record.phase == ItemRollbackPhase.PREPARED)
         ItemRecoveryCheck(record)
         return submit { (journal as? ItemRollbackProtectionJournal)?.protectItemRollback(record) ?: false }
+    }
+
+    fun protect(record: ItemRollbackRecord, original: InventorySnapshot): CompletionStage<Boolean> {
+        checkThread();require(record.phase==ItemRollbackPhase.PREPARED)
+        val immutable=ItemRollbackImages(record,original)
+        return submit { (journal as? ItemRollbackProtectionJournal)?.protectItemRollback(record,immutable.original) ?: false }
+    }
+    override fun readImages(operationId: UUID): CompletionStage<ItemRollbackImageRecord?> = submit {
+        (journal as? ItemRollbackProtectionJournal)?.itemRollbackImages(operationId)
+    }
+    override fun acknowledge(record: ItemRollbackRecord, images: ItemRollbackImages, saved: InventorySnapshot): CompletionStage<Boolean> {
+        checkThread();require(record.phase==ItemRollbackPhase.COMPLETED || record.phase==ItemRollbackPhase.RECOVERY_REQUIRED)
+        ItemRecoveryCheck(record)
+        return submit { (journal as? ItemRollbackProtectionJournal)?.acknowledgeItemRollback(record,images,saved) ?: false }
     }
 
     override fun read(operationId: UUID): CompletionStage<ItemRollbackRecord?> = submit { journal.itemRollback(operationId) }
