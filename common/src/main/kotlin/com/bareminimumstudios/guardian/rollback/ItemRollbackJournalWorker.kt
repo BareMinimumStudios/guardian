@@ -27,6 +27,7 @@ class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : Item
 
     /** Closing this worker does not close the caller-owned journal backend. */
     val drained: CompletionStage<Void> get() { checkThread(); return drain.minimalCompletionStage() }
+    internal val isActuallyDrained: Boolean get() { checkThread(); return drain.isDone }
     val isStopped: Boolean get() { checkThread(); return synchronized(lock) { stopped } }
 
     /** Caller must wait for confirmed protection before admitting any inventory writes. */
@@ -55,6 +56,17 @@ class ItemRollbackJournalWorker(private val journal: ItemRollbackJournal) : Item
     override fun markApplying(operationId: UUID): CompletionStage<Boolean> = submit {
         journal.transitionItemRollback(operationId, ItemRollbackPhase.PREPARED, ItemRollbackPhase.APPLYING)
     }
+    /** After actual apply drain only: classify interruption for read-only recovery, never replay. */
+    fun markRecovery(record: ItemRollbackRecord): CompletionStage<Boolean> {
+        checkThread()
+        require(record.phase == ItemRollbackPhase.APPLYING)
+        ItemRecoveryCheck(record)
+        return submit {
+            sameSaveRecord(record, journal.itemRollback(record.operationId)) &&
+                journal.transitionItemRollback(record.operationId, ItemRollbackPhase.APPLYING, ItemRollbackPhase.RECOVERY_REQUIRED)
+        }
+    }
+
     override fun complete(record: ItemRollbackRecord): CompletionStage<Boolean> {
         checkThread()
         require(record.phase == ItemRollbackPhase.APPLYING || record.phase == ItemRollbackPhase.RECOVERY_REQUIRED)

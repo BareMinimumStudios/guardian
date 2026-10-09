@@ -34,6 +34,7 @@ object MinecraftInventoryCoordination {
         val lifecycleCopy = MinecraftLifecycleInventoryCopy(server)
         val lifecycleRemoval = MinecraftLifecycleItemRemoval(server)
         val actualIo = com.bareminimumstudios.guardian.rollback.ActualIoDrain()
+        var operations: MinecraftItemOperations? = null
         var stopping = false
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
@@ -46,6 +47,14 @@ object MinecraftInventoryCoordination {
         check(server.isSameThread)
         check(binding == null) { "Inventory coordination is already installed" }
         return ItemOwnerCoordination().also { binding = Binding(server, it) }
+    }
+
+    /** Attach only this server's runtime-owned coordinator; it grants no command admission. */
+    internal fun attachOperations(server: MinecraftServer, operations: MinecraftItemOperations) {
+        check(server.isSameThread)
+        val current=checkNotNull(binding)
+        check(current.server === server && !current.stopping && current.operations == null)
+        current.operations=operations
     }
 
     fun uninstall(owners: ItemOwnerCoordination?) {

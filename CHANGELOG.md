@@ -11,6 +11,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.52+1.21.1] - 2026-10-09
+
+### Added
+- Register the protected item operation coordinator in the shared server runtime, with internal admission, cancellation and read-only reconciliation. Both loaders use the same tick order. Item rollback commands still cannot apply changes.
+- Wait for actual item journal work alongside audit, history and inventory disk work before closing the shared database, including work that finishes after the last server tick.
+- Read fresh interrupted-operation headers off the server thread, classify drained applying intents for recovery without replay, and require complete saved images before releasing retained owners.
+
+### Fixed
+- Release legacy drain-only reservations from the actual worker completion signal, avoiding races between copied observers. Explicit protected reconciliation barriers remain mandatory.
+- Refuse shutdown authority for another worker's retained lease, reentrant lifecycle callbacks, changed recovery plans and unavailable physical quiescence.
+- Explain retained item protection in shutdown diagnostics instead of implying every retained journal means a database shutdown failure.
+
 ## [0.4.0-alpha.51+1.21.1] - 2026-10-09
 
 ### Fixed

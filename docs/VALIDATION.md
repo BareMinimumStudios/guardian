@@ -1,4 +1,18 @@
-# Guardian production drain checkpoint
+# Guardian runtime coordinator checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.52+1.21.1`.
+
+- All 502 tests passed: 450 common and 52 Minecraft tests. Thirteen new regressions cover journal drain without another tick, shared database closure, foreign retained leases, fresh recovery-plan identity, interruption classification and a blocked-observer legacy retention race.
+- Both loaders register the same runtime-owned protected coordinator. Internal prepared admission uses complete durable images; the shared runtime ticks operations, owns cancellation and performs explicit read-only recovery through revoked retained leases. Commands still cannot apply item rollback.
+- Recovery waits for the original journal worker and an actual disk prefix fence before reading a fresh matching header off-thread. Interrupted applying intent can be classified for recovery without replay. Read-only adapters cannot write or force saves. Full saved-image acknowledgment and new worker drain precede owner release.
+- Shared SQLite closure waits for item journal, audit, history and bound disk drains, even after the last server tick. Unknown workers cannot authorize closure. Known unresolved operations keep RAM protection, full-image receipts, source claims and owner claims through clean backend closure; shutdown reports that retained state.
+- Eight final isolated server runs passed: successful actual two-barrel save/acknowledgment, cancellation followed by read-only recovery, interrupted operation shutdown and fresh-process restart on each loader. Successful recovery releases both owner claims and the protection marker while retaining the source claim. Interrupted restart preserves the marker, both owner claims, unacknowledged complete images and the source claim, and promotes the intent to recovery without automatic replay. SQLite integrity and clean shutdown metadata passed on every run. Reflection-only fixtures transformed no Minecraft bytecode; original dedicated servers were untouched.
+- Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA using Java 21 and Gradle 9.8.0. Standard artifacts remain SQLite-only. Schema stays 10 and config stays 6. See [validation data](validation/runtime-coordinator-alpha52.json).
+
+These fixtures supply controlled physical exclusion and quiescence for vanilla barrels in isolated worlds. They do not certify real connected clients, arbitrary mod inventories or off-thread item mutations. Fresh-process recovery ownership and client synchronization remain acceptance work before command apply. Item rollback apply stays disabled.
+
+## Historical alpha.51 production drain checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.51+1.21.1`.
 

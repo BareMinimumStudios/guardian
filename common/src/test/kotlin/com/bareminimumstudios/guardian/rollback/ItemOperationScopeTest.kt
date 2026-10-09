@@ -70,6 +70,92 @@ class ItemOperationScopeTest {
         val deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5)
         while(!condition()) { check(System.nanoTime()<deadline);host.advance();Thread.sleep(1) }
     }
+    @Test fun sharedJournalDrainSettlesWithoutAnotherTickOrBackendClosure() {
+        block=true;val scope=scope();val record=record();val host=assertNotNull(scope.start(record,coordination,{Port(record)}))
+        host.advance()
+        try {
+            assertTrue(entered.await(5,TimeUnit.SECONDS))
+            val drain=scope.stopAndDrain()
+            assertFalse(drain.toCompletableFuture().isDone)
+            assertTrue(drain.toCompletableFuture().cancel(false))
+            release.countDown()
+            scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS)
+            assertEquals(0,calls.get());assertTrue(coordination.hasJournalRetention())
+            assertFailsWith<IllegalStateException>{scope.start(record(),coordination,{error("Late bind")})}
+        } finally {release.countDown();scope.close();finish(scope)}
+    }
+    @Test fun sharedDrainWaitsForEveryStoppedHost() {
+        block=true;val scope=scope()
+        val a=record();val b=record()
+        val first=assertNotNull(scope.start(a,coordination,{Port(a)}))
+        val second=assertNotNull(scope.start(b,coordination,{Port(b)}))
+        first.advance();second.advance()
+        try {
+            assertTrue(entered.await(5,TimeUnit.SECONDS));val drain=scope.stopAndDrain()
+            assertFalse(drain.toCompletableFuture().isDone);release.countDown()
+            drain.toCompletableFuture().get(5,TimeUnit.SECONDS)
+            assertTrue(first.isJournalDrained && second.isJournalDrained);assertEquals(0,calls.get())
+        } finally {release.countDown();scope.close();finish(scope)}
+    }
+    @Test fun shutdownDrainCannotBeCapturedDuringBinding() {
+        val scope=scope();val record=record()
+        scope.start(record,coordination,{
+            assertFailsWith<IllegalStateException>{scope.stopAndDrain()};Port(record)
+        })
+        scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS)
+        assertEquals(0,calls.get());finish(scope)
+    }
+    @Test fun emptySharedDrainDoesNotCloseBackend() {
+        val scope=scope();scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS)
+        assertEquals(0,calls.get());assertEquals(ItemOperationScopeState.DRAINING,scope.state);finish(scope)
+    }
+
+    @Test fun managedRetentionRequiresExactLeaseIdentityEvenAfterShutdown() {
+        val scope=scope();val record=record();var managed: ItemOwnerCoordination.Lease?=null
+        scope.start(record,coordination,{lease ->managed=lease;Port(record)})
+        assertFalse(coordination.hasUnmanagedJournalRetention(setOf(checkNotNull(managed))))
+        val foreign=ItemOwnerCoordination()
+        val duplicate=assertNotNull(foreign.acquire(record.operationId,checkNotNull(managed).owners))
+        assertTrue(coordination.hasUnmanagedJournalRetention(setOf(duplicate)))
+        scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS);coordination.stop()
+        assertTrue(coordination.hasJournalRetention())
+        assertFalse(coordination.hasUnmanagedJournalRetention(setOf(checkNotNull(managed))))
+        finish(scope);duplicate.close()
+    }
+    @Test fun anotherWorkersRetentionCannotGrantSharedBackendShutdownAuthority() {
+        val scope=scope();val record=record();var managed: ItemOwnerCoordination.Lease?=null
+        scope.start(record,coordination,{lease ->managed=lease;Port(record)})
+        val another=record();val other=assertNotNull(coordination.acquire(another.operationId,ItemRecoveryCheck(another).owners))
+        val worker=ItemRollbackJournalWorker(journal);val hold=other.retainUntilJournalReconciled(worker)
+        try {
+            assertTrue(coordination.hasUnmanagedJournalRetention(setOf(checkNotNull(managed))))
+            scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS)
+            assertTrue(coordination.hasUnmanagedJournalRetention(setOf(checkNotNull(managed))))
+        } finally {other.close();worker.close();worker.drained.toCompletableFuture().get(5,TimeUnit.SECONDS);hold.releaseAfterReconciliation();finish(scope)}
+    }
+    @Test fun sharedDatabaseShutdownUsesActualDrainWithoutAnotherServerTick() {
+        block=true;val scope=ItemOperationScope(journal) {error("Scope does not own the shared backend")}
+        val record=record();val host=assertNotNull(scope.start(record,coordination,{Port(record)}));host.advance()
+        try {
+            assertTrue(entered.await(5,TimeUnit.SECONDS))
+            val journalDrain=scope.stopAndDrain();val external=CompletableFuture<Void>()
+            val shutdown=com.bareminimumstudios.guardian.storage.StorageShutdown(listOf(journalDrain,external.minimalCompletionStage())) {calls.incrementAndGet();closed.countDown()}
+            assertFalse(shutdown.closed.toCompletableFuture().isDone);release.countDown()
+            journalDrain.toCompletableFuture().get(5,TimeUnit.SECONDS);assertEquals(0,calls.get())
+            external.complete(null);shutdown.closed.toCompletableFuture().get(5,TimeUnit.SECONDS)
+            assertEquals(1,calls.get());assertTrue(coordination.hasJournalRetention())
+        } finally {release.countDown();scope.close()}
+    }
+
+    @Test fun recoveryHeaderMayChangePhaseButCannotChangeTheAdmittedPlan() {
+        val scope=scope();val record=record();val host=assertNotNull(scope.start(record,coordination,{Port(record)}))
+        assertTrue(host.matchesRecord(ItemRollbackRecord(record.operationId,record.createdAt,ItemRollbackPhase.RECOVERY_REQUIRED,record.entries)))
+        assertFalse(host.matchesRecord(ItemRollbackRecord(UUID.randomUUID(),record.createdAt,record.phase,record.entries)))
+        assertFalse(host.matchesRecord(ItemRollbackRecord(record.operationId,record.createdAt+1,record.phase,record.entries)))
+        assertFalse(host.matchesRecord(ItemRollbackRecord(record.operationId,record.createdAt,record.phase,record.entries.reversed().map {ItemRollbackEntry(UUID.randomUUID(),it.changes)})))
+        scope.stopAndDrain().toCompletableFuture().get(5,TimeUnit.SECONDS);finish(scope)
+    }
+
     @Test fun emptyScopeClosesBackendOffThreadExactlyOnce() {
         val scope=scope();assertEquals(ItemOperationScopeState.OPEN,scope.advance())
         scope.close();scope.close();finish(scope);scope.close();scope.advance()

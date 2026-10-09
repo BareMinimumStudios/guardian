@@ -27,6 +27,9 @@ class GuardianRuntime(
 
     private var inventoryCoordination: com.bareminimumstudios.guardian.rollback.ItemOwnerCoordination? = null
 
+    private var itemOperations: com.bareminimumstudios.guardian.platform.minecraft.MinecraftItemOperations? = null
+    private var managedRetentions = false
+
     private var shutdown: com.bareminimumstudios.guardian.storage.StorageShutdown? = null
     private var shutdownDrains: List<java.util.concurrent.CompletionStage<Void>>? = null
     private var shutdownClean = true
@@ -65,6 +68,12 @@ class GuardianRuntime(
         itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline) { itemRecovery?.isBusy()==true }
         itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline) { itemPreview?.isBusy()==true }
         inventoryCoordination = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.install(server)
+        itemOperations = (selectedStorage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.let { journal ->
+            com.bareminimumstudios.guardian.platform.minecraft.MinecraftItemOperations(server, checkNotNull(inventoryCoordination), journal) {
+                itemPreview?.isBusy() == true || itemRecovery?.isBusy() == true
+            }
+        }
+        itemOperations?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.attachOperations(server,it) }
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
@@ -76,6 +85,8 @@ class GuardianRuntime(
 
     fun stop(): Boolean {
         if (shutdownDrains != null) return finishShutdown()
+        val itemDrain = itemOperations?.stopAndDrain()
+        managedRetentions = itemOperations?.ownsAllRetentions() == true
         val diskDrain = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.beginShutdown(inventoryCoordination)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ null }, { false })
         com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ null }, { false })
@@ -96,13 +107,13 @@ class GuardianRuntime(
         val pipelineClean = active?.stopGracefully(Duration.ofSeconds(15)) ?: true
         pipeline = null
         shutdownClean = bulkClean && pipelineClean
-        shutdownDrains = listOfNotNull(diskDrain, activeHistory?.drained, active?.drained)
+        shutdownDrains = listOfNotNull(itemDrain, diskDrain, activeHistory?.drained, active?.drained)
         return finishShutdown()
     }
 
     /** Stop timeouts never grant authority to close a backend with active work. */
     private fun finishShutdown(): Boolean {
-        if(inventoryCoordination?.hasJournalRetention() == true) return false
+        if(inventoryCoordination?.hasJournalRetention() == true && !managedRetentions) return false
         val backend = storage
         if(shutdown == null && backend != null) {
             shutdown = com.bareminimumstudios.guardian.storage.StorageShutdown(checkNotNull(shutdownDrains)) {backend.close()}
@@ -110,12 +121,22 @@ class GuardianRuntime(
         try {shutdown?.closed?.toCompletableFuture()?.get(5L,java.util.concurrent.TimeUnit.SECONDS)}
         catch(_: Exception){return false}
         if(!com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.tryUninstall(inventoryCoordination)) return false
+        itemOperations = null
         inventoryCoordination = null
         storage = null
         shutdownDrains = null
         return shutdownClean
     }
 
+    /** Both loaders use the same tick order and item lifecycle. */
+    fun tick() {
+        rollback?.tick()
+        itemPreview?.tick()
+        itemRecovery?.tick()
+        itemOperations?.tick()
+    }
+
+    internal fun itemOperations() = itemOperations
     fun inventoryCoordination() = inventoryCoordination
     fun pipeline(): BufferedLogPipeline? = pipeline
     fun storage(): QueryableStorageBackend? = storage

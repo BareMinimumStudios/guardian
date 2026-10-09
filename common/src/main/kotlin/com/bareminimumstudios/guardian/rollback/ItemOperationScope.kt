@@ -7,8 +7,9 @@ enum class ItemOperationScopeState { OPEN, DRAINING, CLOSING_BACKEND, CLOSED, FA
 
 /**
  * Internal, bounded owner of one journal backend and up to 32 operation hosts.
- * The caller must give this scope sole use of the backend: external journal workers/writers
- * must already be stopped or use a different backend. This is not server lifecycle registration.
+ * A closing callback may own the backend only when external journal workers/writers are stopped.
+ * Shared runtimes use a no-op callback and stopAndDrain(), then independently close the backend
+ * after every producer drains. This scope never unregisters platform protection.
  * Close revokes admission first, stops hosts, then polls actual journal drain. Backend closure
  * runs off the owning thread exactly once. It never acknowledges an unresolved retention barrier.
  * When platform disk drain is registered, backend closure also waits for that actual drain.
@@ -24,6 +25,7 @@ class ItemOperationScope(
     private val backendClosed = CompletableFuture<Void>()
     private var advancing = false
     private var binding = false
+    private var stoppedJournalDrain: CompletionStage<Void>? = null
     private var diskDrain: CompletableFuture<Void>? = null
     var state = ItemOperationScopeState.OPEN; private set
     var failure: Throwable? = null; private set
@@ -93,6 +95,20 @@ class ItemOperationScope(
         state = ItemOperationScopeState.DRAINING
         // State changes before platform callbacks, so they cannot admit another operation.
         hosts.toList().forEach { it.close() }
+    }
+
+    /**
+     * Close all journal producers and return their physical drain, independently of tick polling.
+     * This does not close the backend or release retained owners. A shared runtime must also
+     * stop and drain its audit, history and disk producers before closing that backend.
+     */
+    fun stopAndDrain(): CompletionStage<Void> {
+        checkThread()
+        check(!advancing && !binding) { "Shutdown drain cannot be captured from a callback" }
+        stoppedJournalDrain?.let { return it }
+        close()
+        return CompletableFuture.allOf(*hosts.map { it.journalDrain.toCompletableFuture() }.toTypedArray())
+            .minimalCompletionStage().also { stoppedJournalDrain = it }
     }
 
     /** Nonblocking: the caller must continue polling on the owning thread after close. */

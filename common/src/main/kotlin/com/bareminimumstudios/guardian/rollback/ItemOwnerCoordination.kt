@@ -47,6 +47,13 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         return operations.values.any { it.retainedUntil != null }
     }
 
+    /** Exact lease identity prevents an unrelated host from authorizing backend closure. */
+    fun hasUnmanagedJournalRetention(managed: Set<Lease>): Boolean {
+        checkThread()
+        reapExpired()
+        return operations.values.any { it.retainedUntil != null && it !in managed }
+    }
+
     fun allowsMutation(owner: ItemSlotOwner, permit: Lease? = null): Boolean {
         checkThread()
         reapExpired()
@@ -91,6 +98,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         internal val started: Long
     ) : AutoCloseable {
         internal var currentState = ItemOwnerLeaseState.ACTIVE
+        internal var legacyDrainWorker: ItemRollbackJournalWorker? = null
         internal var retainedUntil: CompletableFuture<Void>? = null
         val state: ItemOwnerLeaseState
             get() {
@@ -127,6 +135,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
             check(isCurrent(owners)) { "A current lease is required for journal retention" }
             check(retainedUntil == null) { "Journal retention is already registered" }
             check(!worker.isStopped) { "Journal retention must precede worker shutdown" }
+            legacyDrainWorker = worker
             retainedUntil = worker.drained.toCompletableFuture()
         }
 
@@ -151,8 +160,9 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         if (operations.isEmpty()) return
         val now = clock()
         operations.values.toList().forEach { lease ->
-            if (lease.retainedUntil?.isDone == true) {
+            if (lease.retainedUntil?.isDone == true || lease.legacyDrainWorker?.isActuallyDrained == true) {
                 lease.retainedUntil = null
+                lease.legacyDrainWorker = null
                 if (lease.currentState != ItemOwnerLeaseState.ACTIVE) detach(lease)
             }
             if (lease.currentState == ItemOwnerLeaseState.ACTIVE && now - lease.started >= TimeUnit.SECONDS.toNanos(10))
@@ -171,6 +181,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         operations.remove(lease.operationId)
         lease.owners.forEach { if (reserved[it] === lease) reserved.remove(it) }
         lease.retainedUntil = null
+        lease.legacyDrainWorker = null
     }
 
     private fun persistent(owner: ItemSlotOwner) =

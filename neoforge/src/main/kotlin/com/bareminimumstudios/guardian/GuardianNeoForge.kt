@@ -49,10 +49,10 @@ class GuardianNeoForge {
     }
     private fun stopping(event: ServerStoppingEvent) {
         BlockInspector.clear()
-        if (runtime?.stop() == false) logger.error("Guardian did not stop cleanly; check writer and storage errors.")
+        if (runtime?.stop() == false) logger.error("Guardian shutdown retained protected item operations or incomplete storage work; check recovery journals and writer errors.")
         runtime = null
     }
-    private fun tick(event: ServerTickEvent.Post) { runtime?.rollback()?.tick(); runtime?.itemRollbackPreview()?.tick(); runtime?.itemRecovery()?.tick() }
+    private fun tick(event: ServerTickEvent.Post) { runtime?.tick() }
     private fun commands(event: RegisterCommandsEvent) {
         GuardianCommands.register(event.dispatcher, permissions, { runtime }, { config })
     }

@@ -17,6 +17,20 @@ class ItemJournalRetentionTest {
         override fun unfinishedItemRollbacks(limit: Int): List<ItemRollbackSummary> = error("No list")
     }
     private fun drain(worker: ItemRollbackJournalWorker,journal: Journal) {worker.close();journal.release.countDown();worker.drained.toCompletableFuture().get(5,TimeUnit.SECONDS)}
+    @Test fun actualLegacyDrainDoesNotWaitForAnUnrelatedObserverToPropagate() {
+        val gate=ItemOwnerCoordination();val journal=Journal();val worker=ItemRollbackJournalWorker(journal)
+        val observed=CountDownLatch(1);val unblock=CountDownLatch(1)
+        try {
+            val lease=assertNotNull(gate.acquire(UUID.randomUUID(),listOf(a)));lease.retainUntilJournalDrained(worker)
+            worker.read(lease.operationId);assertTrue(journal.entered.await(5,TimeUnit.SECONDS));lease.close()
+            // Registered after the retained projection: deliberately block completion propagation.
+            worker.drained.thenRun {observed.countDown();check(unblock.await(5,TimeUnit.SECONDS))}
+            worker.close();journal.release.countDown();assertTrue(observed.await(5,TimeUnit.SECONDS))
+            assertTrue(worker.isActuallyDrained)
+            assertFalse(gate.hasReservations());assertTrue(gate.allowsMutation(a))
+        } finally {unblock.countDown();drain(worker,journal)}
+    }
+
     @Test fun journalRetentionPausesUnrelatedTransfersAndMenusBeforeResolution() {
         val gate=ItemOwnerCoordination();val journal=Journal();val worker=ItemRollbackJournalWorker(journal)
         try {

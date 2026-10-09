@@ -33,6 +33,35 @@ class ItemRollbackJournalWorkerTest {
     }
     private fun <T> CompletionStage<T>.await(): T=toCompletableFuture().get(5,TimeUnit.SECONDS)
     private fun finish(worker: ItemRollbackJournalWorker,journal: Journal) {worker.close();journal.release.countDown();worker.drained.await()}
+    @Test fun recoveryClassificationReadsFreshPlanAndNeverCompletesOrReplaysIt() {
+        val record=record();val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
+        try {
+            assertTrue(worker.markRecovery(record).await())
+            assertEquals(ItemRollbackPhase.RECOVERY_REQUIRED,journal.value.phase)
+            assertFalse(worker.markRecovery(record).await());assertEquals(1,journal.transitions.get())
+        } finally {finish(worker,journal)}
+    }
+    @Test fun changedPlanCannotBeClassifiedAsThisInterruptedOperation() {
+        val record=record();val journal=Journal(record()).apply {value=ItemRollbackRecord(record.operationId,record.createdAt+1,record.phase,record.entries)}
+        val worker=ItemRollbackJournalWorker(journal)
+        try {assertFalse(worker.markRecovery(record).await());assertEquals(0,journal.transitions.get())}
+        finally {finish(worker,journal)}
+    }
+    @Test fun startedRecoveryClassificationMustPhysicallyDrainAfterStop() {
+        val record=record();val journal=Journal(record).apply {blockTransition=true};val worker=ItemRollbackJournalWorker(journal)
+        try {
+            val result=worker.markRecovery(record);assertTrue(journal.entered.await(5,TimeUnit.SECONDS));worker.close()
+            result.toCompletableFuture().cancel(false);assertFalse(worker.drained.toCompletableFuture().isDone)
+            journal.release.countDown();worker.drained.await();assertEquals(ItemRollbackPhase.RECOVERY_REQUIRED,journal.value.phase)
+        } finally {finish(worker,journal)}
+    }
+    @Test fun recoveryClassificationRejectsPreparedAndStoppedAdmission() {
+        val record=record();val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
+        assertFailsWith<IllegalArgumentException>{worker.markRecovery(record(ItemRollbackPhase.PREPARED))}
+        worker.close();worker.drained.await()
+        assertFailsWith<ExecutionException>{worker.markRecovery(record).await()};assertEquals(0,journal.transitions.get())
+    }
+
     @Test fun unsupportedProtectionFailsClosedWithoutJournalCalls() {
         val record=record(ItemRollbackPhase.PREPARED);val journal=Journal(record);val worker=ItemRollbackJournalWorker(journal)
         try {assertFalse(worker.protect(record).await());assertEquals(0,journal.calls.get());assertEquals(0,journal.transitions.get())}

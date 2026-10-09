@@ -64,7 +64,7 @@ object Guardian : ModInitializer {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             GuardianCommands.register(dispatcher, permissionService, { runtime }, { config })
         }
-        ServerTickEvents.END_SERVER_TICK.register { _ -> runtime?.rollback()?.tick(); runtime?.itemRollbackPreview()?.tick(); runtime?.itemRecovery()?.tick() }
+        ServerTickEvents.END_SERVER_TICK.register { _ -> runtime?.tick() }
 
         logger.info("Guardian foundation initialized; permission provider={}", permissionService.providerName)
 
@@ -94,7 +94,7 @@ object Guardian : ModInitializer {
             val clean = runtime?.stop() ?: true
             runtime = null
             if (!clean) {
-                logger.error("Guardian audit runtime did not stop cleanly; check writer/bulk/storage errors before shutting down.")
+                logger.error("Guardian shutdown retained protected item operations or incomplete storage work; check recovery journals and writer errors.")
             }
         }
     }

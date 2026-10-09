@@ -274,3 +274,14 @@ The verified comparison is the decision point. Started acknowledgment may still 
 Fifty-seven new tests cover immutable images, codec budgets/corruption, database acknowledgment and reconciliation control. Storage cases exercise SQLite and the optional DuckDB backend, including full player armor/offhand receipts and restart. SQLite failure injection verifies rollback of phase, decision and owner release together. Driver tests use real SQLite workers with synthetic live/saved ports, including late decisions and failed replies; these do not establish real-client physical exclusion.
 
 Next: require complete receipts and protection in production admission, coordinate quiescence and worker/disk-service shutdown, connect confirmed reconciliation to held-owner lifecycle handling, validate the actual-file adapter on both loaders and complete connected-client acceptance. Item rollback apply remains disabled.
+
+
+### Runtime coordinator (alpha.52)
+
+GuardianRuntime now owns MinecraftItemOperations. Fabric and NeoForge tick it through the same runtime method. Internal prepared admission always uses complete durable protection; commands remain disconnected from apply. Bound ports require a caller-supplied physical exclusion contract. Reservations and matching snapshots alone do not prove that contract.
+
+Cancellation closes the mutating session and revokes write permits. Explicit read-only recovery waits for the original worker's actual drain and a physical disk prefix fence, then reads a fresh matching journal off-thread. A drained APPLYING intent may be classified RECOVERY_REQUIRED; it is never replayed. Recovery uses revoked retained leases, full live images and actual saved files. Failed checks keep protection in place.
+
+Runtime shutdown stops coordinator admission before closing inventory I/O admission. Its physical journal drain can finish without another server tick. The runtime closes SQLite only after item journals, history queries, audit writes and bound disk requests drain. An unrelated retained lease prevents backend closure. Known unresolved operations preserve their RAM protection and durable claims even after a clean database closure; the server reports that retained state and cannot uninstall its coordination binding.
+
+The next acceptance boundary is real connected clients and trusted exclusion across the supported mod environment, plus recovery handoff for retained journals after a fresh process starts. The isolated loader fixtures exercise controlled vanilla barrels and do not certify arbitrary mod inventories or off-thread item mutation. Item rollback apply stays disabled.

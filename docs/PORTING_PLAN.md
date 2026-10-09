@@ -91,3 +91,10 @@ Protected internal admission now persists full receipts before writes. Confirmed
 ### Alpha.51 production disk and database shutdown
 
 The runtime now closes storage after actual audit/history worker termination and bound disk drain. Prior-work disk fences keep new read-only I/O admission available. Retained revoked inventories have an explicit read-only binding that cannot write or save. Both loaders passed isolated startup/restart/shutdown and actual saved-barrel read-only checks. Next connect protected item operation admission/ticking/shutdown to this runtime ownership, then establish physical exclusion and real-client acceptance. No normal command admits item rollback operations yet.
+
+
+### Alpha.52: shared runtime registration
+
+Protected item hosts now have production lifecycle registration on both loaders: admission, tick, cancellation, explicit read-only recovery and shutdown drain. The shared database waits for every runtime producer; unresolved protection is preserved. Fresh-start journals remain visible for recovery without automatic item replay.
+
+Still required before command apply: connected-client synchronization and lifecycle acceptance, proven physical exclusion in the supported mod environment, and safe fresh-process recovery ownership. No fluids or entity expansion is included in this milestone.

@@ -69,6 +69,21 @@ class ItemOperationHost private constructor(
     }
     private val apply = ItemApplyDriver(record, worker, applyPort, clock)
     private var save: AsyncItemSaveCompletion? = null
+    /** A refreshed header cannot authorize recovery or classification of a different plan. */
+    fun matchesRecord(record: ItemRollbackRecord): Boolean {
+        checkThread()
+        return sameSaveRecord(plan, record, record.phase)
+    }
+
+    /** Actual journal drain snapshot, captured after close; no platform callbacks run off-thread. */
+    internal val journalDrain: CompletionStage<Void> get() {
+        checkThread()
+        check(worker.isStopped && (recoveryWorker == null || recoveryWorker!!.isStopped))
+        return java.util.concurrent.CompletableFuture.allOf(
+            worker.drained.toCompletableFuture(),
+            recoveryWorker?.drained?.toCompletableFuture() ?: java.util.concurrent.CompletableFuture.completedFuture(null)
+        ).minimalCompletionStage()
+    }
     val completionAttempt: CompletionStage<Boolean>? get() { checkThread(); return save?.completionAttempt }
     val isJournalDrained: Boolean get() { checkThread(); return retention.isDrained && (recoveryWorker == null || recoveryWorker!!.drained.toCompletableFuture().isDone) }
 
