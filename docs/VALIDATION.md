@@ -1,4 +1,18 @@
-# Guardian journal worker shutdown checkpoint
+# Guardian journal owner-retention checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.37+1.21.1`.
+
+- All 329 tests passed: 280 common and 49 Minecraft tests. Eight new registry tests exercise expiry, whole-operation invalidation, close/stop, thread confinement, foreign-worker/duplicate registration, drain polling, active lease lifecycle and capacity limits. One SQLite test exercises delayed commits with successful and lost acknowledgements in two isolated databases.
+- Expired/revoked retained leases reject write permits and overlapping acquisitions while started journal work is pending. Registry entries detach only after the owning thread observes drain; no worker callback mutates the registry. A still-active lease retains its original deadline and normal close behavior after an early drain.
+- The SQLite tests held expired owner entries through an actual delayed completion and restart. Both successful and failed acknowledgements reopened as COMPLETED after the real SQLite commit, with owner claims released and source claims retained. This demonstrates journal/registry lifetime handling, not physical Minecraft exclusion.
+- Fabric and NeoForge each passed the existing 172 live inventory/setter/journal/save checks with logging off/on: 688 regression checks total. Thirty-six actual owner save/readbacks again matched full inventories and components. Twelve isolated journal scenarios reopened as RECOVERY_REQUIRED with both owner claims, source claim and original audit row retained. Test databases produced zero container records.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.37 installed, original configs restored, synthetic player files archived and test blocks/tickets removed. The matching optional Fabric WorldEdit adapter is present.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA reported no problems in the changed registry and new tests. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. Private guidance, agents, tooling, logs, databases and source archives remain outside Git. See [validation data](validation/journal-owner-retention-alpha37.json).
+
+No live code registers journal retention yet. Hooks that invalidate and then permit normal writes, binding detachment at shutdown, raw/off-thread mutations, persistent outcome reconciliation and client synchronization still need production integration. Keeping registry entries does not establish complete exclusion. Item rollback apply remains disabled.
+
+## Historical alpha.36 journal worker shutdown checkpoint
+
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.36+1.21.1`.
 

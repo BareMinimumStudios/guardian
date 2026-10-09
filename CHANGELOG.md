@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.37+1.21.1] - 2026-10-08
+
+### Added
+
+- Owner reservations retained until their journal worker drains, including after expiry, invalidation, close or stop.
+- Revoked retained leases deny write permits and prevent overlapping acquisition until settled journal results are observed.
+- SQLite checks for delayed commits and lost acknowledgements while expired owner entries remain reserved.
+
+Retention does not establish physical mutation exclusion. Item rollback apply remains disabled pending live guards and ordered binding shutdown.
+
 ## [0.4.0-alpha.36+1.21.1] - 2026-10-08
 
 ### Added

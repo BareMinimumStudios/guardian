@@ -5,6 +5,7 @@ import com.bareminimumstudios.guardian.domain.ResourceId
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.CompletableFuture
 
 enum class ItemOwnerLeaseState { ACTIVE, RELEASED, INVALIDATED, EXPIRED, STOPPED }
 
@@ -36,7 +37,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
     fun hasReservations(): Boolean {
         checkThread()
         reapExpired()
-        return !stopped && operations.isNotEmpty()
+        return operations.isNotEmpty()
     }
 
     fun allowsMutation(owner: ItemSlotOwner, permit: Lease? = null): Boolean {
@@ -44,7 +45,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         reapExpired()
         if (stopped) return false
         // A supplied stale/foreign permit must never become ordinary uncoordinated access.
-        if (permit != null && (operations[permit.operationId] !== permit || owner !in permit.owners)) return false
+        if (permit != null && (operations[permit.operationId] !== permit || permit.currentState != ItemOwnerLeaseState.ACTIVE || owner !in permit.owners)) return false
         val holder = reserved[owner] ?: return permit == null
         return holder === permit
     }
@@ -83,6 +84,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         internal val started: Long
     ) : AutoCloseable {
         internal var currentState = ItemOwnerLeaseState.ACTIVE
+        internal var retainedUntil: CompletableFuture<Void>? = null
         val state: ItemOwnerLeaseState
             get() {
                 checkThread()
@@ -98,6 +100,21 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
                 owners.all { reserved[it] === this }
         }
 
+        /**
+         * Retain this registry's owner entries until the worker closes and all journal results settle.
+         * This prevents reuse after expiry/invalidation/close; it is not proof of mutation exclusion.
+         * Register before submitting journal mutations. The host must close/drain the worker and poll
+         * this registry on its owning thread; worker callbacks never modify owner entries directly.
+         */
+        fun retainUntilJournalDrained(worker: ItemRollbackJournalWorker) {
+            checkThread()
+            reapExpired()
+            check(isCurrent(owners)) { "A current lease is required for journal retention" }
+            check(retainedUntil == null) { "Journal retention is already registered" }
+            check(!worker.isStopped) { "Journal retention must precede worker shutdown" }
+            retainedUntil = worker.drained.toCompletableFuture()
+        }
+
         override fun close() {
             checkThread()
             reapExpired()
@@ -108,15 +125,27 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
     private fun reapExpired() {
         if (operations.isEmpty()) return
         val now = clock()
-        operations.values.filter { now - it.started >= TimeUnit.SECONDS.toNanos(10) }
-            .forEach { finish(it, ItemOwnerLeaseState.EXPIRED) }
+        operations.values.toList().forEach { lease ->
+            if (lease.retainedUntil?.isDone == true) {
+                lease.retainedUntil = null
+                if (lease.currentState != ItemOwnerLeaseState.ACTIVE) detach(lease)
+            }
+            if (lease.currentState == ItemOwnerLeaseState.ACTIVE && now - lease.started >= TimeUnit.SECONDS.toNanos(10))
+                finish(lease, ItemOwnerLeaseState.EXPIRED)
+        }
     }
 
     private fun finish(lease: Lease, state: ItemOwnerLeaseState) {
         if (operations[lease.operationId] !== lease) return
+        lease.currentState = state
+        if (lease.retainedUntil?.isDone != false) detach(lease)
+    }
+
+    private fun detach(lease: Lease) {
+        if (operations[lease.operationId] !== lease) return
         operations.remove(lease.operationId)
         lease.owners.forEach { if (reserved[it] === lease) reserved.remove(it) }
-        lease.currentState = state
+        lease.retainedUntil = null
     }
 
     private fun persistent(owner: ItemSlotOwner) =
