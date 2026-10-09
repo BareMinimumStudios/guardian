@@ -11,7 +11,9 @@ enum class ItemOperationScopeState { OPEN, DRAINING, CLOSING_BACKEND, CLOSED, FA
  * must already be stopped or use a different backend. This is not server lifecycle registration.
  * Close revokes admission first, stops hosts, then polls actual journal drain. Backend closure
  * runs off the owning thread exactly once. It never acknowledges an unresolved retention barrier.
- * Disk saves may finish later, but stopped hosts cannot submit another journal request.
+ * When platform disk drain is registered, backend closure also waits for that actual drain.
+ * A failed disk drain retains the backend and barriers for investigation. No platform lifecycle
+ * is registered here; the caller must stop disk producers and supply their actual drain signal.
  */
 class ItemOperationScope(
     private val journal: ItemRollbackJournal,
@@ -22,6 +24,7 @@ class ItemOperationScope(
     private val backendClosed = CompletableFuture<Void>()
     private var advancing = false
     private var binding = false
+    private var diskDrain: CompletableFuture<Void>? = null
     var state = ItemOperationScopeState.OPEN; private set
     var failure: Throwable? = null; private set
     /** Observer cancellation cannot cancel backend closure or make advance report success. */
@@ -45,6 +48,27 @@ class ItemOperationScope(
         } finally { binding = false }
     }
 
+    /** Attach the actual platform I/O drain before shutdown; observer futures are insufficient. */
+    fun awaitDiskDrain(actualDrain: CompletionStage<Void>) {
+        checkThread()
+        check(state == ItemOperationScopeState.OPEN && !advancing && !binding)
+        check(diskDrain == null) { "Platform disk drain is already registered" }
+        // Keep an independent result: cancelling a caller's observer cannot signal our drain.
+        val result = CompletableFuture<Void>()
+        diskDrain = result
+        actualDrain.whenComplete { _, error ->
+            if (error == null) result.complete(null) else result.completeExceptionally(error)
+        }
+    }
+
+    /** Stop only a host admitted by this scope. Its held owners remain until reconciliation. */
+    fun cancel(host: ItemOperationHost) {
+        checkThread()
+        check(!advancing && !binding) { "Operation cancellation is not reentrant" }
+        check(host in hosts) { "Operation does not belong to this scope" }
+        host.close()
+    }
+
     override fun close() {
         checkThread()
         if (state != ItemOperationScopeState.OPEN) return
@@ -60,9 +84,25 @@ class ItemOperationScope(
         advancing = true
         try {
             when (state) {
+                ItemOperationScopeState.OPEN -> {
+                    // Callbacks may close the scope. A stable copy prevents late admission,
+                    // while the state check leaves remaining hosts to shutdown polling.
+                    for (host in hosts.toList()) {
+                        if (state != ItemOperationScopeState.OPEN) break
+                        host.advance()
+                    }
+                    hosts.removeAll { it.state == ItemOperationState.COMPLETED }
+                }
                 ItemOperationScopeState.DRAINING -> {
                     hosts.forEach { it.advance() }
-                    if (hosts.all { it.isJournalDrained }) {
+                    if (hosts.all { it.isJournalDrained } && diskDrain?.isDone != false) {
+                        try { diskDrain?.join() }
+                        catch (error: RuntimeException) {
+                            failure = error.cause ?: error
+                            state = ItemOperationScopeState.FAILED
+                            backendClosed.completeExceptionally(failure!!)
+                            return state
+                        }
                         state = ItemOperationScopeState.CLOSING_BACKEND
                         Thread({
                             try { closeBackend(); backendClosed.complete(null) }

@@ -1,4 +1,15 @@
-# Guardian complete images and reconciliation checkpoint
+# Guardian scope ticking checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.49+1.21.1`.
+
+- All 456 tests passed: 407 common and 49 Minecraft tests. Nine new regressions cover open-scope ticking, owned cancellation, foreign-host refusal, pending/failed/cancelled disk drains, registration constraints, callback shutdown and reentrant admission/polling.
+- The scope now polls admitted hosts while open. Shutdown stops admission and operations before waiting for actual journal drain and any registered platform disk drain. A failed disk drain reports failure and keeps the backend open.
+- Clean build, repeated build with configuration-cache reuse, and the separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. Standard loader artifacts remain SQLite-only. Schema stays 10; config stays 6. See [validation data](validation/scope-ticking-alpha49.json).
+- No mixins or Minecraft platform adapters changed. No dedicated server run or jar/database replacement is claimed.
+
+This milestone fixes scope scheduling and provides a disk-drain attachment point. The caller must stop platform I/O producers and supply their actual completion signal; an observer future alone is insufficient. Mandatory full-receipt admission, durable acknowledgment before runtime owner release, and production server lifecycle registration remain pending. Item rollback apply stays disabled.
+
+## Historical alpha.48 complete images and reconciliation checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.48+1.21.1`.
 

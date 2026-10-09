@@ -48,10 +48,11 @@ class ItemOperationScopeTest {
         val slots=record.entries.flatMap { it.changes }.associate { it.address to it.after }.toMutableMap()
         var onClose: () -> Unit = {}
         var writes=0
+        var onWrite: () -> Unit = {}
         var pending: CompletableFuture<InventorySnapshot?>?=null
         override fun isExclusiveAndCurrent(owners: Set<ItemSlotOwner>) = true
         override fun readOwners(owners: Set<ItemSlotOwner>) = InventorySnapshot(slots)
-        override fun writeSlot(address: ItemSlotAddress,expected: ItemStackSnapshot,replacement: ItemStackSnapshot) { assertEquals(expected,slots[address]);slots[address]=replacement;writes++ }
+        override fun writeSlot(address: ItemSlotAddress,expected: ItemStackSnapshot,replacement: ItemStackSnapshot) { assertEquals(expected,slots[address]);slots[address]=replacement;writes++;onWrite() }
         override fun saveAndReadBack(owner: ItemSlotOwner,addresses: Set<ItemSlotAddress>): CompletionStage<InventorySnapshot?> =
             pending ?: CompletableFuture.completedFuture(InventorySnapshot(slots.filterKeys { it.owner == owner }))
         override fun close() { onClose() }
@@ -144,4 +145,77 @@ class ItemOperationScopeTest {
         try { pool.submit { assertFailsWith<IllegalStateException>{scope.close()};assertFailsWith<IllegalStateException>{scope.advance()};assertFailsWith<IllegalStateException>{scope.shutdown} }.get(5,TimeUnit.SECONDS) }
         finally {pool.shutdownNow();scope.close();finish(scope)}
     }
+    @Test fun openScopeTicksItsHostsWithoutIndividualPolling() {
+        val scope=scope();val record=record();val port=Port(record)
+        val host=assertNotNull(scope.start(record,coordination,{port}))
+        val deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5)
+        while(host.state!=ItemOperationState.COMPLETED) {
+            check(System.nanoTime()<deadline);assertEquals(ItemOperationScopeState.OPEN,scope.advance());Thread.sleep(1)
+        }
+        assertEquals(2,port.writes);assertEquals(0,calls.get())
+        assertFalse(coordination.hasJournalRetention())
+        scope.close();finish(scope);assertEquals(1,calls.get())
+    }
+    @Test fun scopeCancellationStopsAnOwnedHostWithoutClosingAdmission() {
+        val scope=scope();val record=record();val port=Port(record)
+        val host=assertNotNull(scope.start(record,coordination,{port}))
+        scope.cancel(host);scope.advance()
+        assertEquals(ItemOperationState.RECOVERY_REQUIRED,host.state)
+        assertEquals(ItemOperationScopeState.OPEN,scope.state);assertEquals(0,port.writes)
+        assertTrue(coordination.hasJournalRetention());scope.close();finish(scope)
+    }
+    @Test fun scopeRefusesCancellationOfAnotherScopesHost() {
+        val first=scope();val second=scope();val record=record()
+        val host=assertNotNull(first.start(record,coordination,{Port(record)}))
+        assertFailsWith<IllegalStateException>{second.cancel(host)}
+        first.close();finish(first);second.close();finish(second)
+    }
+    @Test fun actualDiskDrainMustFinishBeforeBackendClosure() {
+        val scope=scope();val disk=CompletableFuture<Void>();scope.awaitDiskDrain(disk.minimalCompletionStage())
+        scope.close();repeat(5){scope.advance()}
+        assertEquals(ItemOperationScopeState.DRAINING,scope.state);assertEquals(0,calls.get())
+        scope.shutdown.toCompletableFuture().cancel(false)
+        disk.complete(null);finish(scope);assertEquals(ItemOperationScopeState.CLOSED,scope.state);assertEquals(1,calls.get())
+    }
+    @Test fun diskFailureKeepsBackendOpenAndReportsFailure() {
+        val scope=scope();val disk=CompletableFuture<Void>();scope.awaitDiskDrain(disk.minimalCompletionStage())
+        scope.close();disk.completeExceptionally(IllegalStateException("Disk writer did not drain"));scope.advance()
+        assertEquals(ItemOperationScopeState.FAILED,scope.state);assertEquals(0,calls.get())
+        assertEquals("Disk writer did not drain",scope.failure?.message)
+        assertFailsWith<ExecutionException>{scope.shutdown.toCompletableFuture().get()}
+        scope.close();scope.advance();assertEquals(0,calls.get())
+    }
+    @Test fun diskRegistrationRejectsReplacementAndLateRegistration() {
+        val scope=scope();scope.awaitDiskDrain(CompletableFuture.completedFuture(null))
+        assertFailsWith<IllegalStateException>{scope.awaitDiskDrain(CompletableFuture.completedFuture(null))}
+        scope.close();assertFailsWith<IllegalStateException>{scope.awaitDiskDrain(CompletableFuture.completedFuture(null))}
+        finish(scope)
+    }
+
+    @Test fun cancelledDiskDrainIsFailureRatherThanProofOfCompletion() {
+        val scope=scope();val disk=CompletableFuture<Void>();scope.awaitDiskDrain(disk.minimalCompletionStage())
+        scope.close();disk.cancel(false);scope.advance()
+        assertEquals(ItemOperationScopeState.FAILED,scope.state);assertEquals(0,calls.get())
+        assertIs<CancellationException>(scope.failure)
+    }
+    @Test fun closeFromTickCallbackPreventsFurtherWrites() {
+        val scope=scope();val record=record();val port=Port(record).apply {onWrite={scope.close()}}
+        val host=assertNotNull(scope.start(record,coordination,{port}))
+        finish(scope)
+        assertEquals(1,port.writes);assertEquals(ItemOperationState.RECOVERY_REQUIRED,host.state)
+        assertTrue(coordination.hasJournalRetention());assertEquals(1,calls.get())
+    }
+    @Test fun tickCallbacksCannotReenterPollingOrAdmission() {
+        val scope=scope();val record=record();var refused=false
+        val port=Port(record).apply {onWrite={
+            assertFailsWith<IllegalStateException>{scope.advance()}
+            assertFailsWith<IllegalStateException>{scope.start(record(),coordination,{error("Unexpected bind")})}
+            refused=true
+        }}
+        val host=assertNotNull(scope.start(record,coordination,{port}))
+        val deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5)
+        while(host.state!=ItemOperationState.COMPLETED){check(System.nanoTime()<deadline);scope.advance();Thread.sleep(1)}
+        assertTrue(refused);assertEquals(2,port.writes);scope.close();finish(scope)
+    }
+
 }

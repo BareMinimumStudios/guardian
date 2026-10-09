@@ -11,6 +11,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.49+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Internal operation scopes now tick admitted operations while open, rather than only during shutdown.
+- Callback-triggered shutdown prevents further tick admission and inventory writes.
+
+### Added
+
+- Scope-owned cancellation and an explicit actual platform disk-drain gate for backend shutdown.
+- Failed or cancelled disk drain keeps the backend open and reports failure; observer cancellation cannot substitute for completion.
+
+This is an internal lifecycle milestone. Durable receipt admission and held-owner reconciliation still need to be connected to the production coordinator. Item rollback apply remains disabled; no dedicated server jars or databases were changed.
+
 ## [0.4.0-alpha.48+1.21.1] - 2026-10-09
 
 ### Added

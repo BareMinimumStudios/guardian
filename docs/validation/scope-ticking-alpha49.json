@@ -1,0 +1,17 @@
+{
+  "version": "0.4.0-alpha.49+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 407,
+    "minecraft": 49
+  },
+  "new_scope_tests": 9,
+  "live_runs": 0,
+  "apply_enabled": false,
+  "server_data_changed": false,
+  "limitations": [
+    "Production snapshot admission and durable acknowledgment are not connected to this scope.",
+    "The actual disk drain signal is caller supplied; no Minecraft lifecycle registration is claimed.",
+    "A failed or cancelled disk drain retains the backend and runtime barriers."
+  ]
+}
