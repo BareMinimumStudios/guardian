@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.45+1.21.1] - 2026-10-09
+
+### Added
+
+- Internal operation host connecting journal intent, audited inventory writes, complete saved-owner verification and confirmed completion.
+- Explicit owner protection through persistent-outcome reconciliation, including late commits after cancellation.
+- Regression and live-server checks for complete handoff, partial writes and cancellation during an actual SQLite commit.
+
+Item rollback apply remains disabled pending persistent reconciliation, verified live admission/scheduling and real-client acceptance.
+
 ## [0.4.0-alpha.44+1.21.1] - 2026-10-09
 
 ### Fixed

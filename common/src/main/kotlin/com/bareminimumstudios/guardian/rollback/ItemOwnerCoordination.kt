@@ -122,6 +122,16 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
             retainedUntil = worker.drained.toCompletableFuture()
         }
 
+        /** Keep owners after worker drain until the trusted host reconciles the persistent outcome. */
+        fun retainUntilJournalReconciled(worker: ItemRollbackJournalWorker): ItemJournalRetention {
+            checkThread()
+            reapExpired()
+            check(isCurrent(owners)) { "A current lease is required for journal retention" }
+            check(retainedUntil == null) { "Journal retention is already registered" }
+            check(!worker.isStopped) { "Journal retention must precede worker shutdown" }
+            return ItemJournalRetention(worker.drained.toCompletableFuture()).also { retainedUntil = it.barrier }
+        }
+
         override fun close() {
             checkThread()
             reapExpired()

@@ -1,4 +1,18 @@
-# Guardian combined death and travel checkpoint
+# Guardian internal operation-host checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.45+1.21.1`.
+
+- All 357 tests passed: 308 common and 49 Minecraft tests. Twenty-four new common regressions cover full handoff, unchanged-slot readback, partial writes, expiry, unavailable exclusion, canceled completion copies, late commits, failed acknowledgment, closure callbacks, reentrancy and thread ownership. Explicit retention keeps revoked owners after drain until trusted reconciliation acknowledgment.
+- Fabric and NeoForge each passed 409 live checks with logging off/on: 1,636 total. Thirty new checks per run use the actual operation host, bound adapter, guarded setters, full 27-slot block/41-slot player disk readback and SQLite journals. Normal completion confirms the durable record and then releases owners. Stop after a first setter preserves the partial change without retries or undo. Stop during a deliberately blocked commit preserves its real late COMPLETED outcome while keeping ordinary APIs, owner reuse and uninstall blocked after worker drain.
+- Twelve final operation-host databases were reopened and independently queried: normal and late-commit cases stay COMPLETED with the source claim retained; partial cases become RECOVERY_REQUIRED with both owner claims and the source claim preserved. All retain their original audit row. The late-commit host remains RECOVERY_REQUIRED even though its journal is COMPLETED. Private fixture teardown explicitly removes the held barrier; this is not a production reconciliation path.
+- The prior 379 checks per run passed again. Together the bound and host cases verify 52 complete actual saved-owner images, plus the earlier disconnect readback. Twelve separate legacy recovery journals still preserve both owners, the source claim and audit row. Logging-enabled server fixture databases contain exactly one CLOSE audit record, and disabled databases contain none.
+- Normal restarts without agents passed both loaders, with original history and normal audit/journal tables unchanged, zero unfinished journals, restored configurations and removed Overworld/Nether test tickets. Synthetic players and test databases remain private. Both dedicated servers are stopped with alpha.45 installed; the optional Fabric WorldEdit adapter matches.
+- Final clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0, with no compiler warnings. IDEA reported no problems in the new host, token, adapter, registry changes or tests. Standard builds remain SQLite-only; schema 8 and config 6 are unchanged. See [validation data](validation/operation-host-alpha45.json).
+
+The host is internal and commands do not construct it. A bound inventory and lease are not proof of live exclusion; only the controlled frozen fixtures supply that assertion here. Production retention/admission/scheduling, persistent reconciliation of late or ambiguous outcomes, crash recovery, ordered backend/server shutdown and real-client acceptance remain pending. No unresolved-host release path exists in production. Item rollback apply remains disabled.
+
+## Historical alpha.44 combined death and travel checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.44+1.21.1`.
 
