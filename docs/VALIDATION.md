@@ -1,3 +1,7 @@
+# Additional started-write acceptance
+
+Date: 2026-10-09. Runtime remains alpha.53. Ten isolated processes passed 150 fixture checks on Fabric and NeoForge. A real region-file payload write was paused before header commit to verify cancellation, shutdown, fresh-process recovery and process-termination refusal. Durable claims survived interruption; recovery released them only when complete saved images matched. See [scope and limits](STARTED_WRITE_ACCEPTANCE.md) and [validation data](validation/started-chunk-write-alpha53.json). Item apply remains disabled.
+
 # Additional container acceptance
 
 Date: 2026-10-09. Runtime remains alpha.53. Two isolated loader runs passed 154 checks across eight supported container types and four refusal cases. Actual changed slot counts persisted after their save result observers were closed; physical prefix drains preceded full saved-image verification. No runtime code changed. See [scope and remaining gates](CONTAINER_ACCEPTANCE.md) and [validation data](validation/container-acceptance-alpha53.json). Item apply remains disabled.

@@ -9,6 +9,7 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Added
 
+- Document started chunk-write acceptance on both loaders, including protected cancellation, shutdown waiting, fresh-process recovery and safe refusal after process termination before region-header commit.
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
