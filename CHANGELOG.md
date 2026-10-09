@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.33+1.21.1] - 2026-10-08
+
+### Added
+
+- An internal journal-confirmed apply driver that checks full inventory images, waits for committed APPLYING intent and reads it back before calling audited slot setters.
+- An asynchronous journal adapter that refuses live-thread I/O and inline/rejected worker execution, with twenty-one new driver and adapter contract tests.
+- Recovery-preserving handling of partial writes, setter side effects, lost ownership, journal changes, timeouts and late results after stopping.
+
+Written items are not marked completed. Verified saves, remaining mutation exclusion and a production Minecraft apply port are still required; item rollback apply remains disabled.
+
 ## [0.4.0-alpha.32+1.21.1] - 2026-10-08
 
 ### Added

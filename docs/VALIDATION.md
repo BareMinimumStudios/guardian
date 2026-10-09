@@ -1,3 +1,19 @@
+# Guardian journal-confirmed apply checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.33+1.21.1`.
+
+- All 294 tests passed: 245 common and 49 Minecraft tests. Twenty-one new contracts cover journal barriers/failures, full live images, unchanged slots, partial setters, ownership changes, timeouts, stop/late results, net no-op histories and worker/thread rules.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. The final clean build reported no compiler warnings. IDEA reported no problems in the new driver, adapter and tests.
+- Fabric and NeoForge each passed 115 live checks with logging off/on: 460 total. The existing setter and ticket matrix passed again. Twelve additional checks per run connected the common driver, real Minecraft setters and private SQLite journals through a controlled test apply port.
+- Three SQLite scenarios per run verified committed APPLYING before any setter, normal written contents, failure after the first actual setter, and unrelated mutation before writing. Only successful writes published the save-handoff record. Every scenario reopened as RECOVERY_REQUIRED; twelve private journals retained both owner claims, their source claim and unchanged source audit row.
+- Live scenarios used a synthetic controlled port while ticking was frozen. This is not a production Minecraft exclusivity implementation or saved-state certification. Private agents replaced no Minecraft bytecode.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both servers are stopped with alpha.33 installed, original configs restored, synthetic player files archived, test blocks/tickets removed and the matching optional Fabric WorldEdit adapter present.
+- Schema 8, config 6 and audit formats are unchanged. Isolated main test databases produced zero container records; deliberately seeded journal-scenario databases are separate private files. Standard artifacts remain SQLite-only. Guidance, agents, tooling, logs and databases stay outside Git and source archives. See [validation data](validation/journal-apply-alpha33.json).
+
+WRITTEN does not mean saved or completed. A setter may change items before throwing; the driver neither undoes nor replays partial changes. Pending journal work is not cancelled on stop. Production apply/save ports, full-owner preflight, remaining mutation exclusion, connected-client synchronization and actual saved-state completion remain pending. Commands never invoke this driver; item rollback apply stays disabled.
+
+## Historical alpha.32 reserved setter checkpoint
+
 # Guardian reserved setter checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.32+1.21.1`.
