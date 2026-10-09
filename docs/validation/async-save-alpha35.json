@@ -1,0 +1,31 @@
+{
+  "checkpoint": "0.4.0-alpha.35+1.21.1",
+  "date": "2026-10-08",
+  "tests": {
+    "common": {
+      "tests": 258,
+      "failures": 0,
+      "errors": 0
+    },
+    "minecraft": {
+      "tests": 49,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "newProtocolTests": 13,
+  "cleanBuild": true,
+  "repeatedBuildCacheReuse": true,
+  "worldeditBuild": true,
+  "ideaInspections": {
+    "source": [],
+    "tests": []
+  },
+  "liveServers": "No alpha.35 deployment or live matrix; both stopped with alpha.34 from prior checkpoint.",
+  "applyEnabled": false,
+  "remaining": [
+    "Complete mutation exclusion",
+    "Production apply/save orchestration and shutdown reconciliation",
+    "Connected-client synchronization"
+  ]
+}

@@ -1,4 +1,17 @@
-# Guardian bound inventory and actual save checkpoint
+# Guardian asynchronous save-completion checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.35+1.21.1`.
+
+- All 307 tests passed: 258 common and 49 Minecraft tests. Thirteen new protocol tests cover worker journal access, main-thread inventory calls, pending reads, full-record mismatches, bad saved contents, absent exclusivity, completion acknowledgement/readback, failures, thread confinement and late commits after stop/timeout.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. Source/test inspections reported no problems. Standard Fabric and NeoForge artifacts include the shared coordinator and SQLite-only packaging.
+- The coordinator polls asynchronous journal requests and inventory saves without blocking the driver thread. A successful completion requires all owner saved results, matching journal records, an acknowledged phase transition and a matching COMPLETED record read afterwards.
+- Submitted completion attempts remain observable after stopping. No cancellation or retry hides a possible persistent commit. Hosts must keep exclusive coordination until pending completion settles and reconcile its persistent outcome.
+- This is common protocol work. No new live-server matrix or alpha.35 deployment was performed. The stopped dedicated servers retain the alpha.34 artifacts and prior validated configuration. Schema 8, config 6 and audit formats remain unchanged. Private guidance, tooling, logs and archives stay outside Git. See [validation data](validation/async-save-alpha35.json).
+
+Complete mutation exclusion, production session/driver orchestration with shutdown reconciliation and connected-client synchronization remain pending. Bound-session identity checks do not certify exclusivity. Item rollback apply remains disabled.
+
+## Historical alpha.34 bound inventory and actual save checkpoint
+
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.34+1.21.1`.
 

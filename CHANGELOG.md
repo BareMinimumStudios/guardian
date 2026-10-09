@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.35+1.21.1] - 2026-10-08
+
+### Added
+
+- Asynchronous save-completion protocol with inventory calls on the driver thread and journal work on a separate worker.
+- Full journal checks around owner saves and completion, plus a fresh completed-record read before reporting success.
+- Explicit reconciliation of stopped or timed-out completion attempts, without cancelling or retrying submitted database writes.
+
+Item rollback apply remains disabled pending complete mutation exclusion and production orchestration.
+
 ## [0.4.0-alpha.34+1.21.1] - 2026-10-08
 
 ### Added
