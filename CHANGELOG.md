@@ -11,6 +11,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.42+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Cleanup during retained journal work now revokes all active operations before menu-owner resolution, preserving pending owner protection through worker drain.
+
+### Added
+
+- Regression checks for normal cursor/crafting item returns during retained cleanup, including audit capture with logging enabled.
+
+Item rollback apply remains disabled pending lifecycle acceptance, exclusive production integration and persistent outcome reconciliation.
+
 ## [0.4.0-alpha.41+1.21.1] - 2026-10-09
 
 ### Added

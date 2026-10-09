@@ -119,4 +119,78 @@ class ItemMenuCoordinationTest {
             assertFailsWith<IllegalStateException> { guard.beforeCleanup(player) { emptyList() } }
         }.get(5, TimeUnit.SECONDS)
     }
+    private class PendingJournal : ItemRollbackJournal {
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        override fun itemRollback(operationId: UUID): ItemRollbackRecord? {
+            entered.countDown()
+            check(release.await(5, TimeUnit.SECONDS))
+            return null
+        }
+        override fun transitionItemRollback(operationId: UUID, expected: ItemRollbackPhase, next: ItemRollbackPhase) = false
+        override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord = error("Unexpected prepare")
+        override fun unfinishedItemRollbacks(limit: Int): List<ItemRollbackSummary> = error("Unexpected list")
+    }
+
+    @Test fun retainedCleanupRevokesAllPermitsBeforeResolvingAndKeepsPendingOwners() {
+        val owners = ItemOwnerCoordination()
+        val retained = reserve(owners, inventory, block(1))
+        val unrelated = reserve(owners, block(3))
+        val journal = PendingJournal()
+        val worker = ItemRollbackJournalWorker(journal)
+        try {
+            retained.retainUntilJournalDrained(worker)
+            worker.read(retained.operationId)
+            assertTrue(journal.entered.await(5, TimeUnit.SECONDS))
+            ItemMenuCoordination(owners).beforeCleanup(player) { throw AssertionError("Pending cleanup must not resolve owners") }
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, retained.state)
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, unrelated.state)
+            assertTrue(owners.hasJournalRetention())
+            assertFalse(owners.allowsMutation(inventory, retained))
+            assertNull(owners.acquire(UUID.randomUUID(), listOf(inventory)))
+            worker.close()
+            assertFalse(worker.drained.toCompletableFuture().isDone)
+            journal.release.countDown()
+            worker.drained.toCompletableFuture().get(5, TimeUnit.SECONDS)
+            assertFalse(owners.hasJournalRetention())
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, retained.state)
+            assertTrue(owners.allowsMutation(inventory))
+            val fresh = reserve(owners, block(1))
+            val stillUnrelated = reserve(owners, block(3))
+            ItemMenuCoordination(owners).beforeCleanup(player) { listOf(block(1)) }
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, fresh.state)
+            assertEquals(ItemOwnerLeaseState.ACTIVE, stillUnrelated.state)
+        } finally {
+            journal.release.countDown()
+            worker.close()
+            worker.drained.toCompletableFuture().get(5, TimeUnit.SECONDS)
+        }
+    }
+
+    @Test fun releasedRetentionStillRevokesNewCleanupOperationsWithoutResolving() {
+        val owners = ItemOwnerCoordination()
+        val retained = reserve(owners, block(1))
+        val journal = PendingJournal()
+        val worker = ItemRollbackJournalWorker(journal)
+        try {
+            retained.retainUntilJournalDrained(worker)
+            worker.read(retained.operationId)
+            assertTrue(journal.entered.await(5, TimeUnit.SECONDS))
+            retained.close()
+            assertEquals(ItemOwnerLeaseState.RELEASED, retained.state)
+            val fresh = reserve(owners, block(3))
+            ItemMenuCoordination(owners).beforeCleanup(UUID.randomUUID()) { throw AssertionError("Released retention still prevents resolution") }
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, retained.state)
+            assertEquals(ItemOwnerLeaseState.INVALIDATED, fresh.state)
+            assertTrue(owners.hasJournalRetention())
+            assertNull(owners.acquire(UUID.randomUUID(), listOf(block(1))))
+        } finally {
+            journal.release.countDown()
+            worker.close()
+            worker.drained.toCompletableFuture().get(5, TimeUnit.SECONDS)
+        }
+        assertFalse(owners.hasJournalRetention())
+        assertTrue(owners.allowsMutation(block(1)))
+    }
+
 }

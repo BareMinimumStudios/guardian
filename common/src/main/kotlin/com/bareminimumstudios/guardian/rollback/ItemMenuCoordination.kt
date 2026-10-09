@@ -17,6 +17,12 @@ class ItemMenuCoordination(private val owners: ItemOwnerCoordination) {
     /** Cleanup must run; revoke affected operations before vanilla returns carried items. */
     fun beforeCleanup(playerId: UUID, resolve: () -> Collection<ItemSlotOwner>?) {
         if (!owners.isRunning() || !owners.hasReservations()) return
+        if (owners.hasJournalRetention()) {
+            // Cleanup can call mods or return items outside the visible menu owners.
+            // Revoke permits before any owner resolver; retained entries survive drain.
+            owners.invalidateAll()
+            return
+        }
         owners.invalidate(ItemSlotOwner.PlayerInventory(playerId))
         if (!owners.hasReservations()) return
         val participating = resolveOwners(resolve)

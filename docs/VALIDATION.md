@@ -1,4 +1,18 @@
-# Guardian player-menu eligibility checkpoint
+# Guardian retained cleanup checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.42+1.21.1`.
+
+- All 333 tests passed: 284 common and 49 Minecraft tests. Two new common cases prove retained cleanup revokes all active operations without invoking a menu resolver, preserves retained owners through actual worker drain, and restores selective cleanup after drain. They also cover an already-released retained lease. Forbidden resolvers throw AssertionError so exception handling cannot mask an unexpected invocation.
+- Fabric and NeoForge each passed 315 live checks with logging off/on: 1,260 total. Ten new checks per run exercised actual doCloseContainer while a journal request was running. Five persistent coal plus two cursor coal and three crafting coal became ten persistent coal; the cursor, crafting grid and result were empty. Vanilla cleanup completed without losing returned items. All active permits were revoked before callbacks, the old bound session and audited permit were refused, owner reuse and uninstall remained blocked until actual drain, and fresh binding/writes resumed afterward without reviving the old operation.
+- Each logging-enabled test database contained exactly one CLOSE audit record for this real return; logging-disabled databases contained none. The archived private fixture databases were queried again to verify the action. Normal audit/journal data stayed untouched.
+- The prior 305 checks per run passed again, including idle-player eligibility, pending-save refusal, direct player/block guards, bulk/hotbar policies, audited setter chains, ordered uninstall refusal, 36 complete actual saved-owner readbacks and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.42 installed; configurations were restored and synthetic players, test blocks and forced chunks were cleaned up. The optional Fabric WorldEdit adapter matches alpha.42.
+- Final clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA found no problems in the changed policy and tests. MixinMCP verified vanilla and NeoForge menu-close ordering. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. See [validation data](validation/retained-cleanup-alpha42.json).
+
+Production code still does not register journal retention or enable item apply. This policy revokes old operations while allowing mandatory cleanup; it does not make cleanup physically exclusive. Returned items can change the persistent inventory, and late journal commit outcomes still require reconciliation. Disconnect, death, respawn and travel use the shared policy via existing hooks, but complete retained lifecycle and connected-client acceptance tests remain pending. Trusted production apply/save integration, ordered shutdown scheduling and raw/off-thread mutation coverage remain pending. Item rollback apply remains disabled.
+
+## Historical alpha.41 player-menu eligibility checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.41+1.21.1`.
 
