@@ -1,3 +1,7 @@
+# Additional container acceptance
+
+Date: 2026-10-09. Runtime remains alpha.53. Two isolated loader runs passed 154 checks across eight supported container types and four refusal cases. Actual changed slot counts persisted after their save result observers were closed; physical prefix drains preceded full saved-image verification. No runtime code changed. See [scope and remaining gates](CONTAINER_ACCEPTANCE.md) and [validation data](validation/container-acceptance-alpha53.json). Item apply remains disabled.
+
 # Guardian restart ownership checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.53+1.21.1`.
