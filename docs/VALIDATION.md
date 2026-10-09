@@ -1,4 +1,17 @@
-# Guardian asynchronous save-completion checkpoint
+# Guardian journal worker shutdown checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.36+1.21.1`.
+
+- All 320 tests passed: 271 common and 49 Minecraft tests. Ten new worker lifecycle tests cover both journal protocols, queue saturation, rejection at shutdown, uninterruptible running operations, callback reentry, caller cancellation, failed results, record validation, thread confinement and idempotent close. Three SQLite tests exercise four isolated database fixtures.
+- SQLite queued completion requests rejected at shutdown retain both owner claims and reopen as RECOVERY_REQUIRED. Already-running completion writes can finish after close and reopen as COMPLETED. A simulated acknowledgement failure after the actual SQLite commit still reopens as COMPLETED. Completed records release owner claims and retain their source claim; unresolved records retain both.
+- The full asynchronous save-completion protocol completed through the bounded worker and actual SQLite journal with controlled save results and inventory calls on the driver thread. This does not certify Minecraft exclusion or world/player saved data.
+- Final clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA reported no problems in the worker and both test files after explicit callback types resolved an IDE annotation inference issue. Standard loader artifacts package the shared worker and remain SQLite-only.
+- No new dedicated-server deployment or live matrix was performed for this dormant common protocol work. Both servers remain stopped with the previously validated alpha.34 artifacts. Schema 8, config 6 and audit formats remain unchanged. Private instructions, tooling, logs and archives stay outside Git. See [validation data](validation/journal-worker-alpha36.json).
+
+Draining a worker does not establish commit success. Running results and persistent phases must be reconciled before backend disposal and protection release. Current ten-second reservations cannot supply complete exclusion through a pending commit. Production bound-session orchestration, stronger mutation exclusion and connected-client synchronization remain pending. Item rollback apply stays disabled.
+
+## Historical alpha.35 asynchronous save-completion checkpoint
+
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.35+1.21.1`.
 
