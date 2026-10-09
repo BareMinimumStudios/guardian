@@ -1,4 +1,18 @@
-# Guardian journal owner-retention checkpoint
+# Guardian block-retention guard checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.38+1.21.1`.
+
+- All 331 tests passed: 282 common and 49 Minecraft tests. The new retention query covers active, revoked and stopped entries through actual worker drain; a second policy test denies unrelated transfers and menus before endpoint resolution; prior registry, worker and SQLite suites passed again.
+- Fabric and NeoForge each passed 254 live checks with logging off/on: 1,016 total. Eight supported physical inventories refused ordinary setItem, removal, no-update removal and clear calls while a journal read was running. Full slot/component images remained unchanged; removals returned ItemStack.EMPTY. Unrelated block setters were conservatively refused too. Five randomized container types refused loot seed writes. Transfer/menu policies refused unrelated operations before resolving endpoints; live checks paused unrelated furnace ticks and player menu actions during protection, avoiding partial processing around denied block APIs.
+- Exact audited ticket chains remained usable during retention. Revoked retained entries continued blocking ordinary writes until drain; writes resumed afterwards. Shutdown checks left the binding and pinned sessions intact, legacy uninstall refused premature detachment, and nonblocking uninstall succeeded after drain. Existing shutdown callback protections passed again.
+- The prior 172 checks per run passed again, including 36 actual complete owner save/readbacks. Twelve final private SQLite journal scenarios reopened as RECOVERY_REQUIRED with both owner claims, source claim and original audit row retained. Test databases produced zero container records. The first test attempt used the player removal mapping for a container; MixinMCP verified the corrected Container.removeItem mapping before rerunning. Its three journal fixtures and log remain in the private archive. An earlier successful matrix and its twelve journals were preserved before adding the unrelated-operation guard checks and repeating the final matrix.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.38 installed, original configurations restored, synthetic player files archived and test blocks/tickets removed. The optional Fabric WorldEdit adapter matches alpha.38.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA reported no problems in all four changed mixins, the bridge, registry, transfer/menu policies and new tests. MixinMCP verified vanilla mutation ordering and signatures in Fabric/NeoForge sources. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. Private guidance, agents, tooling, logs, databases and archives remain outside Git. See [validation data](validation/block-retention-guards-alpha38.json).
+
+Production code still does not register retention or enable item apply. This main-thread block API slice does not cover player/lifecycle/data mutations, raw stacks/lists, unsupported overrides or off-thread writes. Scheduling shutdown retries, trusted apply/save integration, persistent outcome reconciliation and connected-client synchronization remain pending. Item rollback apply remains disabled.
+
+## Historical alpha.37 journal owner-retention checkpoint
+
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.37+1.21.1`.
 

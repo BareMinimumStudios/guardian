@@ -11,6 +11,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.38+1.21.1] - 2026-10-09
+
+### Added
+
+- Main-thread block-inventory API denial while journal protection is retained, with empty removal results and cancelled void writes.
+- Exact audited setter chains remain available without allowing ordinary writes to borrow their authorization.
+- Nonblocking uninstall checks that preserve the coordination binding and sessions until journal protection drains.
+- Related transfer/menu entry points and unrelated furnace ticks pause during retention to avoid partial moves around blocked block APIs.
+
+Item rollback apply remains disabled pending the remaining mutation/lifecycle guards and trusted production integration.
+
 ## [0.4.0-alpha.37+1.21.1] - 2026-10-08
 
 ### Added

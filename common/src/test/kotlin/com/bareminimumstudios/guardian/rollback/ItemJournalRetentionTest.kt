@@ -17,6 +17,25 @@ class ItemJournalRetentionTest {
         override fun unfinishedItemRollbacks(limit: Int): List<ItemRollbackSummary> = error("No list")
     }
     private fun drain(worker: ItemRollbackJournalWorker,journal: Journal) {worker.close();journal.release.countDown();worker.drained.toCompletableFuture().get(5,TimeUnit.SECONDS)}
+    @Test fun journalRetentionPausesUnrelatedTransfersAndMenusBeforeResolution() {
+        val gate=ItemOwnerCoordination();val journal=Journal();val worker=ItemRollbackJournalWorker(journal)
+        try {
+            val lease=assertNotNull(gate.acquire(UUID.randomUUID(),listOf(a)));lease.retainUntilJournalDrained(worker)
+            val transfers=ItemTransferCoordination(gate);val menus=ItemMenuCoordination(gate);var resolved=0
+            val other=ItemSlotOwner.BlockContainer(dimension,BlockPosition(2,64,1));val player=UUID.randomUUID()
+            assertFalse(transfers.allowsExternalTransfer {resolved++;listOf(other)});assertFalse(menus.allowsMutation(player) {resolved++;listOf(other)});assertEquals(0,resolved)
+            lease.close();drain(worker,journal);assertTrue(transfers.allowsExternalTransfer {resolved++;listOf(other)});assertTrue(menus.allowsMutation(player) {resolved++;listOf(other)});assertEquals(0,resolved)
+        } finally {drain(worker,journal)}
+    }
+    @Test fun retentionQueryIncludesRevokedEntriesAndStopsOnlyAfterDrain() {
+        val gate=ItemOwnerCoordination();val journal=Journal();val worker=ItemRollbackJournalWorker(journal)
+        try {
+            assertFalse(gate.hasJournalRetention())
+            val lease=assertNotNull(gate.acquire(UUID.randomUUID(),listOf(a)));lease.retainUntilJournalDrained(worker)
+            assertTrue(gate.hasJournalRetention());lease.close();assertTrue(gate.hasJournalRetention());gate.stop();assertTrue(gate.hasJournalRetention())
+            drain(worker,journal);assertFalse(gate.hasJournalRetention())
+        } finally {drain(worker,journal)}
+    }
     @Test fun expiryKeepsOwnersReservedAndRejectsExpiredPermitUntilDrain() {
         var now=0L;val gate=ItemOwnerCoordination {now};val journal=Journal();val worker=ItemRollbackJournalWorker(journal)
         try {

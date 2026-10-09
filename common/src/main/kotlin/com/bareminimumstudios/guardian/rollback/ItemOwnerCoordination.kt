@@ -40,6 +40,13 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         return operations.isNotEmpty()
     }
 
+    /** Pending journal protection, including revoked leases still retained through drain. */
+    fun hasJournalRetention(): Boolean {
+        checkThread()
+        reapExpired()
+        return operations.values.any { it.retainedUntil != null }
+    }
+
     fun allowsMutation(owner: ItemSlotOwner, permit: Lease? = null): Boolean {
         checkThread()
         reapExpired()

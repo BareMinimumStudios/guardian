@@ -7,6 +7,7 @@ import java.util.UUID
 class ItemMenuCoordination(private val owners: ItemOwnerCoordination) {
     fun allowsMutation(playerId: UUID, resolve: () -> Collection<ItemSlotOwner>?): Boolean {
         if (!owners.isRunning()) return false
+        if (owners.hasJournalRetention()) return false
         if (!owners.hasReservations()) return true
         if (!owners.allowsMutation(ItemSlotOwner.PlayerInventory(playerId))) return false
         val participating = resolveOwners(resolve) ?: return false

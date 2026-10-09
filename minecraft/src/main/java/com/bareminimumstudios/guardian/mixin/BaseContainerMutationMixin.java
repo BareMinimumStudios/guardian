@@ -15,18 +15,26 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 
 @Mixin(BaseContainerBlockEntity.class)
 public abstract class BaseContainerMutationMixin {
-    @Inject(method = "setItem", at = @At("HEAD"))
+    @Inject(method = "setItem", at = @At("HEAD"), cancellable = true)
     private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
-        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.BASE);
+        if (!MinecraftInventoryCoordination.allowsReservedBlockSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.BASE)) callback.cancel();
     }
 
-    @Inject(method = {"clearContent"}, at = @At("HEAD"))
+    @Inject(method = {"clearContent"}, at = @At("HEAD"), cancellable = true)
     private void guardian$beforeWrite(CallbackInfo callback) {
+        if (!MinecraftInventoryCoordination.allowsBlockInventoryMutation((BlockEntity) (Object) this)) {
+            callback.cancel();
+            return;
+        }
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }
 
-    @Inject(method = {"removeItem", "removeItemNoUpdate"}, at = @At("HEAD"))
+    @Inject(method = {"removeItem", "removeItemNoUpdate"}, at = @At("HEAD"), cancellable = true)
     private void guardian$beforeRemoval(CallbackInfoReturnable<ItemStack> callback) {
+        if (!MinecraftInventoryCoordination.allowsBlockInventoryMutation((BlockEntity) (Object) this)) {
+            callback.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }
 }

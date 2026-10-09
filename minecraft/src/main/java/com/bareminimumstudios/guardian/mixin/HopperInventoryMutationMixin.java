@@ -14,13 +14,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(HopperBlockEntity.class)
 public abstract class HopperInventoryMutationMixin {
-    @Inject(method = "setItem", at = @At("HEAD"))
+    @Inject(method = "setItem", at = @At("HEAD"), cancellable = true)
     private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
-        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.HOPPER);
+        if (!MinecraftInventoryCoordination.allowsReservedBlockSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.HOPPER)) callback.cancel();
     }
 
-    @Inject(method = "removeItem", at = @At("HEAD"))
+    @Inject(method = "removeItem", at = @At("HEAD"), cancellable = true)
     private void guardian$beforeRemoval(CallbackInfoReturnable<ItemStack> callback) {
+        if (!MinecraftInventoryCoordination.allowsBlockInventoryMutation((BlockEntity) (Object) this)) {
+            callback.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }
 }

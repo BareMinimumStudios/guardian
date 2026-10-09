@@ -13,8 +13,8 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class FurnaceInventoryMutationMixin {
-    @Inject(method = "setItem", at = @At("HEAD"))
+    @Inject(method = "setItem", at = @At("HEAD"), cancellable = true)
     private void guardian$beforeSlotWrite(int slot, net.minecraft.world.item.ItemStack stack, CallbackInfo callback) {
-        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.FURNACE);
+        if (!MinecraftInventoryCoordination.allowsReservedBlockSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.FURNACE)) callback.cancel();
     }
 }

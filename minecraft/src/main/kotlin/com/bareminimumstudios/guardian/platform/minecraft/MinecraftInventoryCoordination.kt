@@ -45,12 +45,19 @@ object MinecraftInventoryCoordination {
     }
 
     fun uninstall(owners: ItemOwnerCoordination?) {
-        val current = binding ?: return
-        if (owners !== current.owners) return
+        check(tryUninstall(owners)) { "Journal protection must drain before inventory coordination is uninstalled" }
+    }
+
+    /** Nonblocking: the host closes its journal worker, polls drain, then retries shutdown. */
+    fun tryUninstall(owners: ItemOwnerCoordination?): Boolean {
+        val current = binding ?: return true
+        if (owners !== current.owners) return true
         check(current.server.isSameThread)
+        if (current.owners.hasJournalRetention()) return false
         current.owners.stop()
         current.closeSessions()
         binding = null
+        return true
     }
 
     @JvmStatic fun allowsPush(level: Level, hopper: HopperBlockEntity): Boolean = allows(level) {
@@ -74,6 +81,7 @@ object MinecraftInventoryCoordination {
         val current = binding ?: return true
         if (level !is ServerLevel || level.server !== current.server) return true
         if (!current.server.isSameThread) return false
+        if (current.owners.hasJournalRetention()) return false
         if (!current.owners.hasReservations()) return current.owners.isRunning()
         return current.owners.allowsMutation(blockOwner(level, position))
     }
@@ -110,6 +118,23 @@ object MinecraftInventoryCoordination {
                           expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
         val current = checkNotNull(binding) { "Inventory coordination is not installed" }
         current.slotWriter.write(lease, container, slot, expected, replacement)
+    }
+
+    /** Main-thread block API guard. Unknown callbacks can affect owners beyond this block. */
+    @JvmStatic fun allowsBlockInventoryMutation(block: BlockEntity): Boolean {
+        val current = structuralBinding(block.level) ?: return true
+        return !current.owners.hasJournalRetention()
+    }
+
+    /** Keep the exact audited setter chain usable; refuse ordinary block writes during retention. */
+    @JvmStatic fun allowsReservedBlockSlotWrite(container: Container, slot: Int,
+                                               stack: net.minecraft.world.item.ItemStack, entry: ReservedSlotEntry): Boolean {
+        val current = binding
+        if (current != null && current.server.isSameThread && current.slotWriter.consume(container, slot, stack, entry)) return true
+        val block = container as BlockEntity
+        if (!allowsBlockInventoryMutation(block)) return false
+        beforeBlockInventoryMutation(block)
+        return true
     }
 
     @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,
