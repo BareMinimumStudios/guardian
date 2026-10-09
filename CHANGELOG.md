@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.46+1.21.1] - 2026-10-09
+
+### Added
+
+- Internal ordered shutdown for a bounded group of item rollback hosts: stop admission, drain started journal work, then close its database off the server thread.
+- Tests for callback admission, late commits, observer cancellation, pending saves and actual SQLite close/reopen recovery.
+
+Unresolved operations keep their in-process owner protection after database closure. Persistent reconciliation and normal-server lifecycle integration remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.45+1.21.1] - 2026-10-09
 
 ### Added

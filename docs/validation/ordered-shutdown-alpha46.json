@@ -1,0 +1,72 @@
+{
+  "checkpoint": "0.4.0-alpha.46+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 321,
+    "minecraft": 49
+  },
+  "totalTests": 370,
+  "newSuites": [
+    {
+      "suite": "com.bareminimumstudios.guardian.rollback.ItemOperationScopeTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "closeCallbackCannotAdmitAnotherOperation()",
+        "observerCancellationCannotMaskBackendFailureOrRetryClosure()",
+        "pendingDiskSaveDoesNotSubmitJournalWorkAfterStop()",
+        "multipleHostsAllDrainBeforeSharedBackendCloses()",
+        "closeDuringBindingStopsReturnedHostBeforeAnyRequest()",
+        "lateCompletedCommitRemainsProtectedAfterBackendClosure()",
+        "controlsRejectOtherThreads()",
+        "startedReadMustDrainBeforeBackendClosure()",
+        "emptyScopeClosesBackendOffThreadExactlyOnce()"
+      ]
+    },
+    {
+      "suite": "com.bareminimumstudios.guardian.storage.jdbc.ItemOperationScopeSqliteTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "confirmedHostReleasesOwnersAndDatabaseClosesCleanly()",
+        "stoppedIntentFinishesBeforeClosureAndReopensForRecovery()",
+        "lateRealCommitClosesSafelyWithoutReleasingRuntimeProtection()",
+        "stopBeforeRequestsKeepsPreparedClaimsAcrossRestart()"
+      ]
+    }
+  ],
+  "builds": {
+    "clean": "passed",
+    "repeatedBuild": "passed, configuration cache reused",
+    "worldEditAdapter": "passed",
+    "runner": "IntelliJ IDEA Gradle configurations",
+    "java": 21,
+    "gradle": "9.8.0"
+  },
+  "scope": "Internal common-only ordered journal shutdown; no normal-server lifecycle registration",
+  "databaseChecks": [
+    "PREPARED owner and source claims survive restart",
+    "Late APPLYING reopens RECOVERY_REQUIRED with owner claims",
+    "Late real COMPLETED commit preserves source claim and in-process protection",
+    "Confirmed completion releases owners",
+    "Audit row survives every close/reopen",
+    "Normal backend closure sets clean shutdown"
+  ],
+  "dedicatedServers": {
+    "newRuntimeRuns": 0,
+    "latestAcceptedVersion": "0.4.0-alpha.45+1.21.1",
+    "state": "Existing NeoForge process detected; no server launch, shutdown or jar replacement in this pass"
+  },
+  "schemaVersion": 8,
+  "configVersion": 6,
+  "standardDatabase": "SQLite",
+  "itemApplyEnabled": false,
+  "limitations": [
+    "Requires sole backend ownership and owning-thread polling",
+    "Does not drain platform disk services or close server",
+    "No durable unresolved-host receipt for late COMPLETED outcomes",
+    "Persistent reconciliation, production admission and real-client acceptance remain pending"
+  ]
+}

@@ -229,3 +229,14 @@ Stop, expiry, partial writes, changed identities, mismatched saved data and clos
 Twenty-four common regressions cover this handoff and failure matrix. Both loaders also run the complete host against real setters, 27-slot block and 41-slot player saves, and SQLite journals. The three live cases complete normally, stop after a first setter, and stop during a deliberately blocked commit. Unresolved hosts still block ordinary APIs, owner reuse and uninstall after actual worker drain. Private fixture teardown explicitly removes its barrier after recording the outcome; production code has no unresolved-host release or reconciliation path yet.
 
 The bound adapter requires a trusted exclusion assertion. A lease or successful bind does not establish that guarantee. Only the controlled frozen fixtures provide that assertion in this milestone. Commands and normal server startup do not construct hosts or register their retention, and item rollback apply remains disabled. Next: persistent reconciliation for late/ambiguous completion, crash recovery and ordered shutdown, then admission/scheduling with a verified live exclusion contract and real-client acceptance.
+
+
+## Internal ordered journal shutdown (alpha.46)
+
+`ItemOperationScope` owns one exclusively assigned journal backend and at most 32 unfinished hosts. It closes admission before platform callbacks, stops hosts without cancelling started work, and waits for every journal worker to actually drain. Backend closure runs once on a separate thread. Polling and admission belong to the creating thread; a cancelled observer cannot cancel closure or hide its failure. Reentrant admission and polling during binding are refused.
+
+The caller must keep polling after requesting shutdown and must stop any external users of this backend first. The scope does not close the server or register a normal startup/shutdown hook. A pending disk save can finish after journal shutdown, but its stopped host cannot submit a later journal request. Disk-service draining remains a separate platform lifecycle requirement.
+
+Neither a drained worker nor a closed database acknowledges unresolved owner protection. A late SQLite COMPLETED outcome still leaves its stopped host protected in memory. Completed journal rows currently release persistent owner claims and disappear from unfinished listings; there is no durable unresolved-host receipt yet. Persistent reconciliation must address that before production admission or item apply is enabled. No automatic retry, undo, release or crash-recovery replay is added here.
+
+Thirteen new tests cover shutdown ordering. Four use actual SQLite prepare/commit, close and reopen to check clean shutdown, recovery phase, audit rows and retained claims. Inventory and save ports in these tests are synthetic. No Minecraft hooks changed in this milestone; alpha.45 remains the latest dedicated-server runtime acceptance run.

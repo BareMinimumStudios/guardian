@@ -1,4 +1,15 @@
-# Guardian internal operation-host checkpoint
+# Guardian ordered journal shutdown checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.46+1.21.1`.
+
+- All 370 tests passed: 321 common and 49 Minecraft tests. Nine new scope regressions cover actual drain before closure, multiple hosts, callback admission, stop during binding, cancellation and closure failure, owning-thread control and saves finishing after shutdown.
+- Four additional integration tests use real SQLite records and close/reopen: PREPARED retains owner/source claims; a stopped APPLYING intent reopens as RECOVERY_REQUIRED; a late commit stays COMPLETED with its source claim and runtime protection; confirmed completion releases runtime owners. All audit rows survive and normal closure records a clean shutdown.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA using Java 21 and Gradle 9.8.0. Standard artifacts bundle SQLite only; schema 8 and config 6 are unchanged. See [validation data](validation/ordered-shutdown-alpha46.json).
+- This milestone changes the internal common host lifecycle only. No Minecraft hooks changed and no new dedicated-server run is claimed. Server jars were not replaced. An existing NeoForge server process was detected during checkpoint verification; neither server was started or stopped in this pass.
+
+The scope needs sole backend ownership and continued main-thread polling. It does not install normal server lifecycle hooks or drain platform disk services. Unresolved protection is retained in process; completed records still lack a persistent unresolved-host receipt. Persistent reconciliation, production admission/scheduling, disk-service lifecycle integration and real-client acceptance remain pending. Item rollback apply stays disabled.
+
+## Historical alpha.45 operation-host checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.45+1.21.1`.
 
