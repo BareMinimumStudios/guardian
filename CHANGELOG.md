@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.34+1.21.1] - 2026-10-08
+
+### Added
+
+- Bounded live inventory sessions that pin registered players, physical containers, loaded chunks, block states and complete logical slot layouts.
+- Narrow chunk/player saves followed by actual disk readback, full inventory/component comparison and stale identity/lease checks.
+- One session per lease, shared bounded player-file reading and cleanup of pending results when sessions or server coordination close.
+
+Sessions verify identities and saved inventory images; they do not certify complete mutation exclusion or mark rollback journals complete. Item rollback apply remains disabled.
+
 ## [0.4.0-alpha.33+1.21.1] - 2026-10-08
 
 ### Added

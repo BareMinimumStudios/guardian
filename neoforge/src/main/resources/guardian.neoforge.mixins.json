@@ -43,7 +43,9 @@
     "RandomizableContainerMutationMixin",
     "FurnaceInventoryMutationMixin",
     "BlockInventoryDataMixin",
-    "HopperInventoryMutationMixin"
+    "HopperInventoryMutationMixin",
+    "ChunkMapSaveInvoker",
+    "PlayerListSaveInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,3 +1,20 @@
+# Guardian bound inventory and actual save checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.34+1.21.1`.
+
+- All 294 tests passed: 245 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. The final clean build reported no compiler warnings. IDEA reported no problems in the session, bridge and two save invokers after refresh/build.
+- Fabric and NeoForge each passed 172 live checks with logging off/on: 688 total. The setter, ticket and journal matrices passed again. Fifty-seven additional checks per run exercised actual bound sessions and saves.
+- All eight supported physical block inventory types and a registered synthetic player bound complete slot layouts, wrote exact component-aware snapshots and refused off-thread access. Thirty-six actual owner saves across the four runs matched full live inventory images and damage components after disk readback. Closed sessions refused reuse while leaving lease disposal to the caller.
+- Duplicate bindings, foreign/released leases, unloaded owners, sealed loot and brewing inventories were refused. Direct stack changes during readback failed both block and player results. Closing a session or invalidating its lease rejected pending results.
+- Shutdown tests stopped the registry and failed pending readback, then attempted rebinding from the completion callback. Stopping coordination before notifying callbacks prevented new sessions during shutdown. Private agents replaced no Minecraft bytecode; asynchronous continuations returned control to the server while storage work completed.
+- Twelve separate SQLite journal scenarios again reopened as RECOVERY_REQUIRED with both owner claims, their source claim and original audit row retained. Main isolated test databases produced zero container records.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.34 installed, original configs restored, synthetic player files archived, test blocks/tickets removed and the matching optional Fabric WorldEdit adapter present.
+- Schema 8, config 6 and audit formats are unchanged. Standard artifacts remain SQLite-only. Guidance, agents, tooling, logs and databases stay outside Git and source archives. See [validation data](validation/bound-inventories-alpha34.json).
+
+The session proves pinned identities and matching saved inventory images, not complete mutation exclusion. It never transitions journals or clears claims. Saves may still finish after a session closes or a later check fails. Exclusive apply/save ports, asynchronous save/journal completion orchestration, connected-client synchronization and remaining mutation coverage are pending. Item rollback apply stays disabled.
+
+## Historical alpha.33 journal-confirmed apply checkpoint
+
 # Guardian journal-confirmed apply checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.33+1.21.1`.

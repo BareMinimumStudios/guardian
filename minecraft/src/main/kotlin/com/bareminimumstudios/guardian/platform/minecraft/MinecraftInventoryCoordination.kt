@@ -31,6 +31,10 @@ object MinecraftInventoryCoordination {
         val transfers = ItemTransferCoordination(owners)
         val menus = ItemMenuCoordination(owners)
         val slotWriter = MinecraftReservedSlotWriter(server, owners)
+        val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
+        private var savedPlayers: MinecraftSavedPlayerReader? = null
+        fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader().also { savedPlayers = it }
+        fun closeSessions() { sessions.values.toList().forEach { it.close() };savedPlayers?.close();savedPlayers = null }
     }
     @Volatile private var binding: Binding? = null
 
@@ -45,6 +49,7 @@ object MinecraftInventoryCoordination {
         if (owners !== current.owners) return
         check(current.server.isSameThread)
         current.owners.stop()
+        current.closeSessions()
         binding = null
     }
 
@@ -85,6 +90,20 @@ object MinecraftInventoryCoordination {
             current.owners.invalidate(blockOwner(serverLevel, position.relative(ChestBlock.getConnectedDirection(previous))))
         }
     }
+
+    fun bindInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): MinecraftBoundInventories {
+        check(server.isSameThread)
+        val current = checkNotNull(binding)
+        check(current.server === server && currentLease(current,lease)) { "A current lease from this server is required" }
+        current.sessions.values.filter { !it.isCurrent() }.forEach { it.close() }
+        check(!current.sessions.containsKey(lease)) { "This lease already has a bound session" }
+        check(current.sessions.size < 32) { "Bound inventory session limit reached" }
+        return MinecraftBoundInventories(server,lease,{ binding === current && currentLease(current,lease) },
+            { current.playerReader() },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }).also { current.sessions[lease] = it }
+    }
+
+    private fun currentLease(current: Binding,lease: ItemOwnerCoordination.Lease): Boolean =
+        lease.isCurrent(lease.owners) && lease.owners.all { current.owners.allowsMutation(it,lease) }
 
     /** Internal apply primitive only; commands never call this or acquire a lease. */
     fun writeReservedSlot(lease: ItemOwnerCoordination.Lease, container: Container, slot: Int,
