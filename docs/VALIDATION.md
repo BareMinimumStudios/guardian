@@ -1,4 +1,17 @@
-# Guardian player slot protection checkpoint
+# Guardian bulk and hotbar protection checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.40+1.21.1`.
+
+- All 331 existing tests passed: 282 common and 49 Minecraft tests. This Minecraft API change adds runtime coverage rather than mirrored unit tests.
+- Fabric and NeoForge each passed 275 live checks with logging off/on: 1,100 total. Eleven new checks per run exercised hotbar selection, swaps and bulk calls against a started journal request. Full 41-slot images, selected index, damaged-item components, extra-container image and cursor image stayed unchanged. Bulk limits -1, 1 and 0 returned zero without evaluating a throwing predicate. Revoked retention kept protecting all three inventories. After actual worker drain, count-only queries returned the correct combined item count, hotbar operations resumed with exact components, and bounded clearing removed the expected item count.
+- The prior 264 checks per run passed again, including direct player/block guards, exact audited setter chains, ordered uninstall refusal, 36 complete actual saved-owner readbacks and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening. Temporary test databases produced zero container records.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.40 installed; original configurations were restored and synthetic players, test blocks and forced chunks were cleaned up. The optional Fabric WorldEdit adapter matches alpha.40.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA found no problems in the changed mixin. MixinMCP verified the mutation order on both loaders and traced insertion callers. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. See [validation data](validation/bulk-hotbar-retention-alpha40.json).
+
+Production code still does not register retention or enable item apply. During pending protection, a bulk return value of zero means refusal before work, not a certified empty inventory; count-only behavior outside retention is unchanged. Insertion still needs coordinated menu cleanup: placeItemBackInInventory splits its input before add, and AbstractContainerMenu.removed clears the cursor unconditionally after the return attempt. Cancelling either API alone can lose items. Other insertion callers, lifecycle/data mutation paths, scheduled shutdown, trusted live apply/save integration, persistent outcome reconciliation, raw/off-thread mutation coverage and connected-client synchronization remain pending. Item rollback apply remains disabled.
+
+## Historical alpha.39 player slot protection checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.39+1.21.1`.
 

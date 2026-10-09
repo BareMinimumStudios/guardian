@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.40+1.21.1] - 2026-10-09
+
+### Added
+
+- Hotbar selection and swaps are refused while journal protection is pending, preserving stacks, components and the selected slot.
+- Bulk inventory operations return zero before predicates, extra-container access or cursor changes during pending protection, including count-only calls.
+
+Item rollback apply remains disabled. Insertion refusal still needs coordinated menu cleanup to avoid losing returned items.
+
 ## [0.4.0-alpha.39+1.21.1] - 2026-10-09
 
 ### Added

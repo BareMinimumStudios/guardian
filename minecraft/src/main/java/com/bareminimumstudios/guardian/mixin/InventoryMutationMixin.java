@@ -25,8 +25,17 @@ public abstract class InventoryMutationMixin {
         if (!MinecraftInventoryCoordination.allowsReservedPlayerSlotWrite((Inventory) (Object) this, slot, stack)) callback.cancel();
     }
 
-    @Inject(method = {"load", "dropAll", "replaceWith", "clearContent", "setPickedItem", "pickSlot", "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;)V", "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V"}, at = @At("HEAD"))
+    @Inject(method = {"load", "dropAll", "replaceWith", "clearContent", "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;)V", "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V"}, at = @At("HEAD"))
     private void guardian$beforeVoidMutation(CallbackInfo callback) {
+        MinecraftInventoryCoordination.beforeInventoryMutation(player);
+    }
+
+    @Inject(method = {"setPickedItem", "pickSlot"}, at = @At("HEAD"), cancellable = true)
+    private void guardian$beforeHotbarMutation(CallbackInfo callback) {
+        if (!MinecraftInventoryCoordination.allowsInventoryMutation(player)) {
+            callback.cancel();
+            return;
+        }
         MinecraftInventoryCoordination.beforeInventoryMutation(player);
     }
 
@@ -55,6 +64,9 @@ public abstract class InventoryMutationMixin {
 
     @WrapMethod(method = "clearOrCountMatchingItems")
     private int guardian$beforeBulkClear(Predicate<ItemStack> predicate, int limit, Container extra, Operation<Integer> original) {
+        // Even count-only calls evaluate unknown predicates and can touch the cursor.
+        // Refuse before entering the composite operation while journal protection is pending.
+        if (!MinecraftInventoryCoordination.allowsInventoryMutation(player)) return 0;
         if (limit != 0) MinecraftInventoryCoordination.beforeBulkInventoryMutation(player);
         return original.call(predicate, limit, extra);
     }
