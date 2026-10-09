@@ -1,6 +1,8 @@
 package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
+import com.bareminimumstudios.guardian.platform.minecraft.ReservedSlotEntry;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +15,12 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 
 @Mixin(BaseContainerBlockEntity.class)
 public abstract class BaseContainerMutationMixin {
-    @Inject(method = {"setItem", "clearContent"}, at = @At("HEAD"))
+    @Inject(method = "setItem", at = @At("HEAD"))
+    private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
+        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.BASE);
+    }
+
+    @Inject(method = {"clearContent"}, at = @At("HEAD"))
     private void guardian$beforeWrite(CallbackInfo callback) {
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }

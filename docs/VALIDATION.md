@@ -1,3 +1,19 @@
+# Guardian reserved setter checkpoint
+
+Date: 2026-10-08. Checkpoint: `0.4.0-alpha.32+1.21.1`.
+
+- All 273 tests passed: 224 common and 49 Minecraft tests. Clean build, repeated build with configuration-cache reuse and the separate WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0. The clean build reported no compiler warnings.
+- IDEA reported no problems in the new writer, changed bridge and five setter mixins. Both loader artifacts package the writer and setter entry types.
+- Fabric and NeoForge each passed 103 live checks with logging off/on: 412 total. All eight supported block-container types and a registered synthetic player accepted planned replacements/empty slots and preserved item damage components and reservations. Ordinary setters after a trusted call still cancelled coordination.
+- Before-image mismatch, oversized replacement, invalid slot, wrong owner, off-thread calls and released leases were refused without changing contents. Detached players were refused. All five randomizable types rejected deferred loot without unpacking it.
+- Private ticket probes verified exact slot, stack object, container identity and entry ordering, consumption before side effects and refusal of duplicate entries. An unrelated guarded callback during a ticket cancelled all block coordination rather than borrowing authorization. These probes exercised the actual bridge on server threads; the private agent replaced no Minecraft bytecode.
+- Normal restarts without agents passed both loaders, returned expected three/two historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.32 installed, original configs restored, synthetic player files archived, test blocks/tickets removed and the matching optional Fabric WorldEdit adapter present.
+- Schema 8, config 6 and audit formats are unchanged. Isolated checks produced zero container records. Standard jars remain SQLite-only. Private instructions, agents, tooling, logs and databases stay outside Git and source archives. See [validation data](validation/reserved-setter-alpha32.json).
+
+This is an internal single-slot write primitive, not a transaction or save acknowledgement. Setter side effects may precede a failed postcondition; cancellation does not undo writes. Full-owner preconditions, remaining mutation exclusion, connected-client synchronization, journal integration and actual saved-state completion remain pending. Commands never call this primitive or acquire reservations; item rollback apply remains disabled.
+
+## Historical alpha.31 explicit write-scope checkpoint
+
 # Guardian explicit write-scope checkpoint
 
 Date: 2026-10-08. Checkpoint: `0.4.0-alpha.31+1.21.1`.

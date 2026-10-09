@@ -11,6 +11,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.32+1.21.1] - 2026-10-08
+
+### Added
+
+- Reserved single-slot writes for current vanilla player inventories and loaded barrels, chests, hoppers, dispensers, droppers, furnaces, blast furnaces and smokers.
+- Exact container/slot/stack authorization that consumes the audited setter entry sequence before setter side effects, with immutable before/after checks and data-component-aware restore.
+- Conservative refusal of stale identities, unsupported inventories, wrong owners, deferred loot, invalid slots, oversized stacks and off-thread writes.
+
+The primitive remains internal to the unfinished apply path. Item rollback apply stays disabled until remaining mutation exclusion, journaling and saved-state completion are verified.
+
 ## [0.4.0-alpha.31+1.21.1] - 2026-10-08
 
 ### Added

@@ -30,6 +30,7 @@ object MinecraftInventoryCoordination {
     private class Binding(val server: MinecraftServer, val owners: ItemOwnerCoordination) {
         val transfers = ItemTransferCoordination(owners)
         val menus = ItemMenuCoordination(owners)
+        val slotWriter = MinecraftReservedSlotWriter(server, owners)
     }
     @Volatile private var binding: Binding? = null
 
@@ -82,6 +83,23 @@ object MinecraftInventoryCoordination {
         current.owners.invalidate(blockOwner(serverLevel, position))
         if (previous.block is ChestBlock && previous.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
             current.owners.invalidate(blockOwner(serverLevel, position.relative(ChestBlock.getConnectedDirection(previous))))
+        }
+    }
+
+    /** Internal apply primitive only; commands never call this or acquire a lease. */
+    fun writeReservedSlot(lease: ItemOwnerCoordination.Lease, container: Container, slot: Int,
+                          expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
+        val current = checkNotNull(binding) { "Inventory coordination is not installed" }
+        current.slotWriter.write(lease, container, slot, expected, replacement)
+    }
+
+    @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,
+                                           stack: net.minecraft.world.item.ItemStack, entry: ReservedSlotEntry) {
+        val current = binding
+        if (current != null && current.server.isSameThread && current.slotWriter.consume(container, slot, stack, entry)) return
+        when (container) {
+            is Inventory -> beforeInventoryMutation(container.player)
+            is BlockEntity -> beforeBlockInventoryMutation(container)
         }
     }
 

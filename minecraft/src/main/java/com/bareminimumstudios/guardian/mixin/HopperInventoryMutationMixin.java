@@ -1,6 +1,8 @@
 package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
+import com.bareminimumstudios.guardian.platform.minecraft.ReservedSlotEntry;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.item.ItemStack;
@@ -13,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(HopperBlockEntity.class)
 public abstract class HopperInventoryMutationMixin {
     @Inject(method = "setItem", at = @At("HEAD"))
-    private void guardian$beforeWrite(CallbackInfo callback) {
-        MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
+    private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
+        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.HOPPER);
     }
 
     @Inject(method = "removeItem", at = @At("HEAD"))

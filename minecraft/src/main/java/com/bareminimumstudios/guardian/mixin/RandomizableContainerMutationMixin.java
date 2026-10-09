@@ -1,6 +1,8 @@
 package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
+import com.bareminimumstudios.guardian.platform.minecraft.ReservedSlotEntry;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +15,12 @@ import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 
 @Mixin(RandomizableContainerBlockEntity.class)
 public abstract class RandomizableContainerMutationMixin {
-    @Inject(method = {"setItem", "setLootTable", "setLootTableSeed"}, at = @At("HEAD"))
+    @Inject(method = "setItem", at = @At("HEAD"))
+    private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
+        MinecraftInventoryCoordination.beforeReservedSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.RANDOMIZED);
+    }
+
+    @Inject(method = {"setLootTable", "setLootTableSeed"}, at = @At("HEAD"))
     private void guardian$beforeWrite(CallbackInfo callback) {
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }

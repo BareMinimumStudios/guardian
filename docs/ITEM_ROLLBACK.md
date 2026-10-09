@@ -1,6 +1,6 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.31+1.21.1`.
+Checkpoint: `0.4.0-alpha.32+1.21.1`.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
@@ -250,3 +250,13 @@ Permits expire when their callback exits and cannot be reused in a later scope o
 A driver must own one scope instance and pass permits explicitly to audited setter operations. This class does not write inventories, compare live identities, undo partial changes, persist journal transitions or authorize asynchronous work. Different scope instances are not a global reentrancy fence. Partial writes would still need the journal/recovery protocol and verified saves.
 
 Eleven contract tests cover owner/registry mismatch, escaped/deferred permits, release, nesting, failure cleanup, replacement identity, expiry, stop and wrong-thread access. The class is packaged in both loader builds but remains disconnected from gameplay hooks. Connecting it requires a setter protocol that does not grant permission to arbitrary callbacks, plus remaining mutation exclusion and actual saved-state completion. Item rollback apply stays disabled.
+
+## Reserved single-slot setter integration
+
+Alpha.32 connects explicit write scopes to an internal Minecraft single-slot writer. It accepts one current lease, an exact inventory object, a logical slot and immutable expected/replacement snapshots. It checks live identity, supported class, deferred loot, stack limits and the before image, restores components through the registry-aware codec, calls the ordinary setter, then verifies the consumed hook sequence, current lease, live identity and resulting snapshot.
+
+The setter ticket matches container identity, slot, restored stack identity and ordered entry points. Barrels/chests/dispensers/droppers consume randomizable and base entries; hoppers, furnaces and players consume their dedicated entry. The last entry removes authorization before setter side effects. Other guarded writes retain their cancellation behavior. Callers cannot supply a callback to this writer or borrow its ticket. Normal player setters revoke their operation; normal block setters revoke all operations.
+
+Supported owners remain exact vanilla Inventory instances belonging to the current registered ServerPlayer, and exact loaded barrel/chest/hopper/dispenser/dropper/furnace/blast-furnace/smoker block entities. Double chests are written per physical half. This does not authorize CompoundContainer wrappers, temporary grids, cursors, brewing stands, crafters or modded inventory classes.
+
+This is not a transaction, save acknowledgement or recovery driver. Setter side effects can occur before a postcondition failure; failure cancels the reservation but does not undo writes. A future apply driver must journal before the first write, verify full owner images, synchronize connected clients and reconcile actual saves. Unguarded mutable stack/list/component writes and arbitrary mod callbacks remain acceptance gaps. Commands never invoke this primitive or acquire reservations. Item rollback apply stays disabled.
