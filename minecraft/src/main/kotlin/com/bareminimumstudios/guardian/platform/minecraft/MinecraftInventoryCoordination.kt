@@ -31,6 +31,7 @@ object MinecraftInventoryCoordination {
         val transfers = ItemTransferCoordination(owners)
         val menus = ItemMenuCoordination(owners)
         val slotWriter = MinecraftReservedSlotWriter(server, owners)
+        val lifecycleCopy = MinecraftLifecycleInventoryCopy(server)
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
         fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader().also { savedPlayers = it }
@@ -150,10 +151,32 @@ object MinecraftInventoryCoordination {
                                                 stack: net.minecraft.world.item.ItemStack): Boolean {
         val current = binding
         if (current != null && current.server.isSameThread &&
-            current.slotWriter.consume(inventory, slot, stack, ReservedSlotEntry.PLAYER)) return true
+            (current.lifecycleCopy.consume(inventory, slot, stack) ||
+                current.slotWriter.consume(inventory, slot, stack, ReservedSlotEntry.PLAYER))) return true
         if (!allowsInventoryMutation(inventory.player)) return false
         beforeInventoryMutation(inventory.player)
         return true
+    }
+
+    /** Called only around restoreFrom's vanilla replaceWith invocation. No lease is revived. */
+    @JvmStatic fun restoreLifecycleInventory(target: Inventory, source: Inventory, operation: Runnable) {
+        val current = binding
+        if (current == null || target.player !is ServerPlayer || target.player.server !== current.server) {
+            operation.run(); return
+        }
+        check(current.server.isSameThread)
+        if (!current.owners.hasJournalRetention()) { operation.run(); return }
+        current.owners.invalidateAll()
+        current.lifecycleCopy.restore(target, source, operation)
+    }
+
+    @JvmStatic fun setLifecycleCopiedSlot(target: Inventory, slot: Int,
+                                         stack: net.minecraft.world.item.ItemStack, operation: Runnable) {
+        val current = binding
+        if (current == null || target.player !is ServerPlayer || target.player.server !== current.server) {
+            operation.run(); return
+        }
+        current.lifecycleCopy.setCopiedSlot(target, slot, stack, operation)
     }
 
     @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,

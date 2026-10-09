@@ -1,4 +1,18 @@
-# Guardian retained cleanup checkpoint
+# Guardian retained lifecycle checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.43+1.21.1`.
+
+- All 333 existing tests passed: 284 common and 49 Minecraft tests.
+- Fabric and NeoForge each passed 335 live checks with logging off/on: 1,340 total. Twenty new checks per run exercised actual registered-player respawn and disconnect while a journal request was running. Respawn preserved all 41 immutable slot snapshots, item damage components and the selected slot. Disconnect completed removal and its actual current player file decoded to the complete original 41-slot image.
+- Old bound sessions and all active permits stayed revoked. Ordinary setters and a direct replaceWith could not borrow the completed lifecycle authorization. Owner reuse and uninstall stayed blocked until actual worker drain. Fresh binding afterward preserved every item without reviving the old operation.
+- The prior 315 checks per run passed again, including no-loss cursor/crafting cleanup, 36 complete actual saved-owner images and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening. Logging-enabled fixture databases each contained exactly one CLOSE record; logging-disabled databases contained none.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.43 installed; configurations were restored and synthetic players, test blocks and forced chunks were cleaned up. The optional Fabric WorldEdit adapter matches alpha.43.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA reported no problems in either changed mixin, the helper or bridge. MixinMCP verified the vanilla copy/setter call chain and NeoForge's respawn ordering. Standard packaging remains SQLite-only; schema 8 and config 6 are unchanged. See [validation data](validation/retained-lifecycle-alpha43.json).
+
+These fixtures use synthetic server players, not connected clients. Keep-inventory respawn and disconnect are covered; death/drop, travel, mod callbacks and client synchronization remain pending. The narrow copy scope preserves mandatory lifecycle behavior and permanently invalidates old permits; it does not make lifecycle callbacks physically exclusive. Production retention registration, trusted exclusive apply/save integration, ordered shutdown and persistent outcome reconciliation remain pending. Item rollback apply remains disabled.
+
+## Historical alpha.42 retained cleanup checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.42+1.21.1`.
 

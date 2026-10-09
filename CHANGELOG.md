@@ -11,6 +11,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.43+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Respawn preserves the complete player inventory while journal protection is retained. Only the exact vanilla copy receives temporary setter authorization; ordinary writes stay blocked and old rollback permits stay revoked.
+
+### Added
+
+- Live checks for retained respawn and disconnect on both loaders, including all 41 inventory slots, item components and actual player-file contents.
+
+Item rollback apply remains disabled pending remaining lifecycle acceptance, exclusive production integration and persistent outcome reconciliation.
+
 ## [0.4.0-alpha.42+1.21.1] - 2026-10-09
 
 ### Fixed

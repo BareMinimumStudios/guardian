@@ -3,6 +3,7 @@ package com.bareminimumstudios.guardian.mixin;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import java.util.function.Predicate;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -70,4 +71,10 @@ public abstract class InventoryMutationMixin {
         if (limit != 0) MinecraftInventoryCoordination.beforeBulkInventoryMutation(player);
         return original.call(predicate, limit, extra);
     }
+
+    @WrapOperation(method = "replaceWith", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
+    private void guardian$setCopiedSlot(Inventory target, int slot, ItemStack stack, Operation<Void> original) {
+        MinecraftInventoryCoordination.setLifecycleCopiedSlot(target, slot, stack, () -> original.call(target, slot, stack));
+    }
+
 }
