@@ -82,3 +82,8 @@ Large queues, interrupted writes, crash recovery, corrupt data, modded registrie
 ## Step 10 — Config/release polish
 
 Advanced Fzzy Config pages, server-only remote credentials, documentation, publishing and upgrade guides.
+
+
+### Alpha.50 protected coordinator boundary
+
+Protected internal admission now persists full receipts before writes. Confirmed complete saves and durable decisions control owner release; scope-owned reconciliation also waits for its actual worker drain. Production registration remains pending because the audit pipeline currently owns database closure. Platform disk-service completion and a read-only binding for retained revoked owners must be integrated before commands can admit item rollback operations. Neither a lease nor an observational future establishes physical quiescence. Apply remains disabled until both-loader and real-client acceptance pass.

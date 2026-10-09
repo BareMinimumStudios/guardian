@@ -32,7 +32,7 @@ class ItemOperationScope(
 
     fun start(record: ItemRollbackRecord, coordination: ItemOwnerCoordination,
               bind: (ItemOwnerCoordination.Lease) -> ItemOperationPort,
-              clock: () -> Long = System::nanoTime): ItemOperationHost? {
+              clock: () -> Long = System::nanoTime, requireDurableImages: Boolean = false): ItemOperationHost? {
         checkThread()
         check(state == ItemOperationScopeState.OPEN) { "Item operation admission is closed" }
         check(!advancing && !binding) { "Operation admission is not reentrant" }
@@ -41,10 +41,28 @@ class ItemOperationScope(
         // Binding invokes platform callbacks; close from a callback must not admit a late host.
         binding = true
         try {
-            val host = ItemOperationHost.start(record, coordination, journal, bind, clock) ?: return null
+            val host = ItemOperationHost.start(record, coordination, journal, bind, clock, requireDurableImages) ?: return null
             hosts.add(host)
             if (state != ItemOperationScopeState.OPEN) host.close()
             return host
+        } finally { binding = false }
+    }
+
+    /** Production admission uses this path; complete persistent images are mandatory. */
+    fun startProtected(record: ItemRollbackRecord, coordination: ItemOwnerCoordination,
+                       bind: (ItemOwnerCoordination.Lease) -> ItemOperationPort,
+                       clock: () -> Long = System::nanoTime): ItemOperationHost? =
+        start(record, coordination, bind, clock, requireDurableImages = true)
+
+    fun reconcile(host: ItemOperationHost, record: ItemRollbackRecord, port: ItemReconciliationPort,
+                  actualDiskDrain: CompletionStage<Void>) {
+        checkThread()
+        check(state == ItemOperationScopeState.OPEN && !advancing && !binding)
+        check(host in hosts) { "Operation does not belong to this scope" }
+        binding = true
+        try {
+            host.reconcile(record, journal, port, actualDiskDrain)
+            if (state != ItemOperationScopeState.OPEN) host.close()
         } finally { binding = false }
     }
 
@@ -56,7 +74,7 @@ class ItemOperationScope(
         // Keep an independent result: cancelling a caller's observer cannot signal our drain.
         val result = CompletableFuture<Void>()
         diskDrain = result
-        actualDrain.whenComplete { _, error ->
+        actualDrain.whenComplete { _: Void?, error: Throwable? ->
             if (error == null) result.complete(null) else result.completeExceptionally(error)
         }
     }

@@ -1,0 +1,37 @@
+{
+  "version": "0.4.0-alpha.50+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 418,
+    "minecraft": 49
+  },
+  "new_sqlite_cases": [
+    "shutdownFromReconciliationResourceClosureCannotReleaseOwners()",
+    "stoppingStartedProtectionWaitsForItsActualDatabaseResult()",
+    "refusedDurableAcknowledgmentKeepsRuntimeAndPersistentProtection()",
+    "pendingActualDiskDrainRefusesReconciliation()",
+    "stoppingReconciliationKeepsOwnersAfterWorkerDrain()",
+    "protectedScopePersistsImagesBeforeWritesAndAcknowledgesBeforeRelease()",
+    "missingProtectionCapabilityRefusesEveryWrite()",
+    "cancelledSavedOperationReconcilesBeforeReleasingHeldOwners()",
+    "refusedFullImageRegistrationPreventsIntentAndWrites()",
+    "incompleteSavedRecoveryNeverReleasesOwners()",
+    "stoppingStartedAcknowledgmentKeepsOwnersDespiteLateDecision()"
+  ],
+  "live_runs": 0,
+  "apply_enabled": false,
+  "server_data_changed": false,
+  "contracts": [
+    "Protected scope admission stores immutable complete images before Applying or any setter.",
+    "Saved full images and durable acknowledgment are confirmed before runtime release.",
+    "Reconciliation requires actual prior journal/disk drain and a trusted quiescent read-only port.",
+    "The scope owns recovery workers and waits for their actual drain before backend closure."
+  ],
+  "limitations": [
+    "Legacy internal start remains for existing synthetic fixtures; production admission must use startProtected.",
+    "Normal startup and commands do not register or admit item rollback operations.",
+    "Audit pipeline database ownership and platform actual disk-service drain require production lifecycle integration.",
+    "Revoked inventory sessions need a platform recovery binding without restoring mutation permits.",
+    "Live-client exclusion and both-loader saved-read acceptance remain pending."
+  ]
+}

@@ -11,6 +11,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.50+1.21.1] - 2026-10-09
+
+### Added
+
+- Protected scope admission registers full immutable inventory receipts before applying any item changes.
+- Confirmed complete saves now feed atomic durable acknowledgment; protected hosts release runtime owners only after acknowledgment confirmation and actual journal drain.
+- Scope-owned read-only reconciliation can release held owners after actual prior disk/journal drain and a confirmed durable decision.
+- Real SQLite regressions cover refused admission, failed acknowledgment, cancellation, partial saved recovery, pending disk work and late database outcomes.
+
+The protected coordinator is internal and requires a trusted platform exclusion/quiescence contract. Normal server startup and commands do not admit item rollback operations. Production lifecycle registration and live-client verification remain pending; item rollback apply stays disabled.
+
 ## [0.4.0-alpha.49+1.21.1] - 2026-10-09
 
 ### Fixed

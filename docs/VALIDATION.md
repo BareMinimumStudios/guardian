@@ -1,4 +1,16 @@
-# Guardian scope ticking checkpoint
+# Guardian protected coordinator checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.50+1.21.1`.
+
+- All 467 tests passed: 418 common and 49 Minecraft tests. Eleven new tests use actual SQLite and synthetic complete inventory ports, including close/reopen checks for decision receipts and protection markers.
+- Protected scope admission registers immutable complete images before any Applying transition or setter. Successful complete saves feed durable acknowledgment and receipt confirmation before actual worker drain and runtime owner release.
+- Scope-owned read-only recovery waits for actual prior worker/disk drain, confirms a durable decision, drains its new worker, closes resources, and then releases runtime retention. Stopping during acknowledgment keeps runtime owners even when the late durable decision succeeds. Shutdown callbacks from resource closure cannot authorize release.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. Standard builds remain SQLite-only. Schema stays 10; config stays 6. See [validation data](validation/protected-coordinator-alpha50.json).
+- No mixins or Minecraft adapters changed. No dedicated-server run, deployment or database change is claimed.
+
+This connects the internal protected host and recovery worker lifecycle. Normal startup and commands still do not admit item rollback operations. Production registration must first coordinate the audit pipeline's ownership of database closure with platform disk-service drain, and supply a read-only recovery binding for revoked owners without reviving mutation permits. The existing legacy start remains for synthetic fixtures; production admission must use `startProtected`. Trusted exclusion/quiescence and real-client acceptance remain required. Item rollback apply stays disabled.
+
+## Historical alpha.49 scope ticking checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.49+1.21.1`.
 
