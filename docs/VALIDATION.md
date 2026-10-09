@@ -1,4 +1,19 @@
-# Guardian retained lifecycle checkpoint
+# Guardian combined death and travel checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.44+1.21.1`.
+
+- All 333 existing tests passed: 284 common and 49 Minecraft tests.
+- Fabric and NeoForge each passed 379 live checks with logging off/on: 1,516 total. Forty-four new checks per run covered actual death/drop and same-level/cross-dimension travel while journal work was running. Normal death dropped exactly the ordinary coal and damaged pickaxe, removed the vanishing pickaxe, and left no duplicated inventory contents. Keep-inventory death preserved the complete original image, including the cursed item, through normal respawn.
+- Dead-player binding was refused without consuming its fresh lease. Overworld/Nether travel and return preserved all 41 immutable slot snapshots, damage components and selection. Post-transition callbacks saw revoked permits and refused ordinary setters. Binding waited for vanilla's transition acknowledgment; the synthetic fixture invoked that method explicitly.
+- Old sessions and permits remained revoked. Held owners and uninstall stayed blocked until actual worker drain, after which independent fresh binding succeeded only for settled live players.
+- The prior 335 checks per run passed again, including retained respawn/disconnect, actual 41-slot player-file readback, no-loss cursor/crafting cleanup, 36 complete saved-owner images and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening. Logging-enabled fixture databases each held exactly one CLOSE record; logging-disabled databases held none.
+- Normal restarts without agents passed both loaders and preserved normal audit/journal tables, historical lookups and zero unfinished journals. Temporary Overworld and Nether tickets were removed, original configurations and keepInventory rules restored, synthetic-player files archived privately and owned drops discarded. Both dedicated servers are stopped with alpha.44 installed; the optional Fabric WorldEdit adapter matches.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA reported no problems in both changed mixins, the helper, bridge and eligibility check. MixinMCP verified both loaders' death/removal selectors and NeoForge travel/drop ordering. SQLite-only standard packaging, schema 8 and config 6 are unchanged. See [validation data](validation/death-travel-alpha44.json).
+
+These tests use synthetic server players. Real-client synchronization, network acknowledgment timing and third-party lifecycle callbacks remain pending. Mandatory lifecycle work can change inventories after invalidating an operation; these guards do not make that work physically exclusive. Production retention registration and operation-host integration, coordinated insertion/menu cleanup, ordered shutdown and crash/late-commit reconciliation remain pending. Item rollback apply remains disabled.
+
+## Historical alpha.43 retained lifecycle checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.43+1.21.1`.
 

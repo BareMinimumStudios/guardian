@@ -32,6 +32,7 @@ object MinecraftInventoryCoordination {
         val menus = ItemMenuCoordination(owners)
         val slotWriter = MinecraftReservedSlotWriter(server, owners)
         val lifecycleCopy = MinecraftLifecycleInventoryCopy(server)
+        val lifecycleRemoval = MinecraftLifecycleItemRemoval(server)
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
         fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader().also { savedPlayers = it }
@@ -177,6 +178,24 @@ object MinecraftInventoryCoordination {
             operation.run(); return
         }
         current.lifecycleCopy.setCopiedSlot(target, slot, stack, operation)
+    }
+
+    @JvmStatic fun removeLifecycleVanishingItem(inventory: Inventory, slot: Int,
+                                              operation: java.util.function.Supplier<net.minecraft.world.item.ItemStack>): net.minecraft.world.item.ItemStack {
+        val current = binding
+        if (current == null || inventory.player !is ServerPlayer || inventory.player.server !== current.server) return operation.get()
+        check(current.server.isSameThread)
+        if (!current.owners.hasJournalRetention()) return operation.get()
+        current.owners.invalidateAll()
+        return current.lifecycleRemoval.removeVanishing(inventory, slot, operation)
+    }
+
+    @JvmStatic fun allowsLifecycleSlotRemoval(inventory: Inventory, slot: Int): Boolean {
+        val current = binding
+        if (current != null && current.server.isSameThread && current.lifecycleRemoval.consume(inventory, slot)) return true
+        if (!allowsInventoryMutation(inventory.player)) return false
+        beforeInventoryMutation(inventory.player)
+        return true
     }
 
     @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,

@@ -54,13 +54,18 @@ public abstract class InventoryMutationMixin {
         MinecraftInventoryCoordination.beforeInventoryMutation(player);
     }
 
-    @Inject(method = {"removeItem(II)Lnet/minecraft/world/item/ItemStack;", "removeItemNoUpdate", "removeFromSelected"}, at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"removeItem(II)Lnet/minecraft/world/item/ItemStack;", "removeFromSelected"}, at = @At("HEAD"), cancellable = true)
     private void guardian$beforeRemoval(CallbackInfoReturnable<ItemStack> callback) {
         if (!MinecraftInventoryCoordination.allowsInventoryMutation(player)) {
             callback.setReturnValue(ItemStack.EMPTY);
             return;
         }
         MinecraftInventoryCoordination.beforeInventoryMutation(player);
+    }
+
+    @Inject(method = "removeItemNoUpdate", at = @At("HEAD"), cancellable = true)
+    private void guardian$beforeNoUpdateRemoval(int slot, CallbackInfoReturnable<ItemStack> callback) {
+        if (!MinecraftInventoryCoordination.allowsLifecycleSlotRemoval((Inventory) (Object) this, slot)) callback.setReturnValue(ItemStack.EMPTY);
     }
 
     @WrapMethod(method = "clearOrCountMatchingItems")

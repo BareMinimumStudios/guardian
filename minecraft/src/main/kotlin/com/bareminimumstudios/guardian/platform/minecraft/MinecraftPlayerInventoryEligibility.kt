@@ -6,6 +6,7 @@ import net.minecraft.world.inventory.InventoryMenu
 /** Preflight only. Empty temporary ownership is not proof of exclusive mutation access. */
 internal object MinecraftPlayerInventoryEligibility {
     fun isIdle(player: ServerPlayer): Boolean {
+        if (!player.isAlive || player.hasDisconnected() || player.isChangingDimension) return false
         val menu = player.inventoryMenu
         if (player.containerMenu !== menu || menu.javaClass != InventoryMenu::class.java) return false
         val grid = MinecraftCraftingSnapshotter.grid(menu, player.inventory) ?: return false

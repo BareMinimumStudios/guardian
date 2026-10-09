@@ -29,6 +29,7 @@
     "CrafterActivationMixin",
     "PlayerListLifecycleMixin",
     "PlayerTransitionMixin",
+    "PlayerDeathInventoryMixin",
     "InventoryMutationMixin",
     "PlayerUseMixin",
     "OngoingItemUseMixin",

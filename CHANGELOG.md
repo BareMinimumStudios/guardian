@@ -11,6 +11,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.44+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Curse of Vanishing removes cursed items during retained death cleanup instead of letting the ordinary removal guard turn them into drops.
+- Inventory binding now refuses dead, disconnected and dimension-changing players until their lifecycle state settles.
+
+### Added
+
+- Combined checks for normal death drops, keep-inventory death, vanishing items and same-level/Nether travel on both loaders.
+
+Item rollback apply remains disabled pending production integration, real-client acceptance and persistent outcome reconciliation.
+
 ## [0.4.0-alpha.43+1.21.1] - 2026-10-09
 
 ### Fixed
