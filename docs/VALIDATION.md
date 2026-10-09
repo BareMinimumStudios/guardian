@@ -1,4 +1,18 @@
-# Guardian bulk and hotbar protection checkpoint
+# Guardian player-menu eligibility checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.41+1.21.1`.
+
+- All 331 existing tests passed: 282 common and 49 Minecraft tests. The new Minecraft player eligibility behavior is covered by live tests rather than mirrored unit tests.
+- Fabric and NeoForge each passed 305 live checks with logging off/on: 1,220 total. Thirty new checks per run exercised cursor items, crafting inputs, result items and active chest menus. Binding and direct audited setters refused each busy state without moving persistent or temporary items. Eligibility changes after binding permanently rejected the session and invalidated its original operation while an unrelated operation stayed active. Read, write and save calls were refused. Returning to idle could not revive the session or lease; a fresh lease and independently checked session succeeded.
+- Two new pending save/readback scenarios per run changed cursor/crafting ownership after actual player save submission. Their sessions and operations stayed rejected after temporary items were removed; saved-image completion failed rather than acknowledging the changed ownership. Initial eligibility refusal performs no cleanup or saving. These checks are preflight/latch coverage, not proof of complete exclusion.
+- The prior 275 checks per run passed again, including direct player/block guards, bulk/hotbar policies, exact audited setter chains, ordered uninstall refusal, 36 complete actual saved-owner readbacks and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening. The bulk-policy test now uses only its reservation because its deliberately nonempty cursor cannot qualify for a bound session. Temporary test databases produced zero container records.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.41 installed; configurations were restored and synthetic players, test blocks and forced chunks were cleaned up. The optional Fabric WorldEdit adapter matches alpha.41.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA found no problems in all four changed/new Kotlin files. MixinMCP verified menu cleanup and player tick ordering on both loaders. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. See [validation data](validation/player-menu-eligibility-alpha41.json).
+
+Production code still does not register journal retention or enable item apply. Idle-player eligibility does not coordinate menu cleanup or establish complete physical exclusion. Lifecycle/data mutation paths, insertion and cleanup ownership, scheduled shutdown, trusted live apply/save integration, persistent outcome reconciliation, raw/off-thread mutation coverage and connected-client synchronization remain pending. Normal cleanup continues invalidating coordination and proceeding. Item rollback apply remains disabled.
+
+## Historical alpha.40 bulk and hotbar protection checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.40+1.21.1`.
 

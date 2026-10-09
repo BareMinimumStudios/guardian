@@ -81,6 +81,7 @@ internal class MinecraftReservedSlotWriter(
             val player = inventory.player as? ServerPlayer ?: error("A live server player is required")
             check(player.server === server && player.inventory === inventory &&
                 server.playerList.getPlayer(player.uuid) === player) { "Player inventory identity changed" }
+            check(MinecraftPlayerInventoryEligibility.isIdle(player)) { "Player menu or temporary items are not idle" }
             return ItemSlotOwner.PlayerInventory(player.uuid)
         }
         check(container.javaClass in supportedBlocks) { "Unsupported reserved inventory" }

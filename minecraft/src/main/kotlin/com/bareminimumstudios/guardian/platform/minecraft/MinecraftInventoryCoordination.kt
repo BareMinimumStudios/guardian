@@ -107,7 +107,7 @@ object MinecraftInventoryCoordination {
         check(!current.sessions.containsKey(lease)) { "This lease already has a bound session" }
         check(current.sessions.size < 32) { "Bound inventory session limit reached" }
         return MinecraftBoundInventories(server,lease,{ binding === current && currentLease(current,lease) },
-            { current.playerReader() },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }).also { current.sessions[lease] = it }
+            { current.playerReader() },{ current.owners.invalidate(it) },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }).also { current.sessions[lease] = it }
     }
 
     private fun currentLease(current: Binding,lease: ItemOwnerCoordination.Lease): Boolean =

@@ -28,6 +28,7 @@ class MinecraftBoundInventories internal constructor(
     private val lease: ItemOwnerCoordination.Lease,
     private val currentLease: () -> Boolean,
     private val players: () -> MinecraftSavedPlayerReader,
+    private val onPlayerStateRejected: (ItemSlotOwner.PlayerInventory) -> Unit,
     private val onClose: (MinecraftBoundInventories) -> Unit
 ) : AutoCloseable {
     private data class Pin(val owner: ItemSlotOwner, val container: Container, val level: ServerLevel,
@@ -37,6 +38,7 @@ class MinecraftBoundInventories internal constructor(
         DispenserBlockEntity::class.java to 9, DropperBlockEntity::class.java to 9, FurnaceBlockEntity::class.java to 3,
         BlastFurnaceBlockEntity::class.java to 3, SmokerBlockEntity::class.java to 3
     )
+    private var playerStateRejected = false
     private val pins = lease.owners.associateWith(::resolve)
     private var closed = false
     private val pending = mutableSetOf<CompletableFuture<InventorySnapshot>>()
@@ -45,12 +47,21 @@ class MinecraftBoundInventories internal constructor(
 
     fun isCurrent(): Boolean {
         checkThread()
-        if (closed || !currentLease()) return false
-        return pins.all { (owner, pin) -> runCatching {
-            val fresh = resolve(owner)
-            fresh.container === pin.container && fresh.level === pin.level && fresh.chunk === pin.chunk &&
-                fresh.state == pin.state && fresh.size == pin.size
-        }.getOrDefault(false) }
+        if (closed || playerStateRejected || !currentLease()) return false
+        return pins.all { (owner, pin) ->
+            val matches = runCatching {
+                val fresh = resolve(owner)
+                fresh.container === pin.container && fresh.level === pin.level && fresh.chunk === pin.chunk &&
+                    fresh.state == pin.state && fresh.size == pin.size
+            }.getOrDefault(false)
+            if (!matches && owner is ItemSlotOwner.PlayerInventory) {
+                // Returning to an empty menu cannot revive an operation whose temporary
+                // ownership changed. Revoke its lease; retained journal protection remains.
+                playerStateRejected = true
+                onPlayerStateRejected(owner)
+            }
+            matches
+        }
     }
 
     /** Captures every logical persistent slot without unpacking loot or loading chunks. */
@@ -151,6 +162,7 @@ class MinecraftBoundInventories internal constructor(
                 val player = checkNotNull(server.playerList.getPlayer(owner.playerId)) { "Player is not online" }
                 val inventory = player.inventory
                 check(player.server === server && !player.isRemoved && inventory.javaClass == Inventory::class.java && inventory.player === player && inventory.containerSize == 41)
+                check(MinecraftPlayerInventoryEligibility.isIdle(player)) { "Player menu or temporary items are not idle" }
                 Pin(owner,inventory,player.serverLevel(),null,null,41)
             }
             is ItemSlotOwner.BlockContainer -> {
