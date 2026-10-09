@@ -314,3 +314,9 @@ The exact audited setter ticket chain remains usable during retention, including
 tryUninstall returns false without stopping the registry, closing sessions or removing the binding while journal retention is pending. The host must close its worker, poll drain on the server thread and retry. The legacy uninstall entry point refuses premature detachment. Once retention has drained, ordinary stop/session cleanup and callback protections still run.
 
 This is a bounded API slice, not complete exclusion. Player inventory writes, player lifecycle, block/chunk replacement, NBT/component loads, loot unpacking through reads, direct stacks/lists, unsupported overrides and off-thread mutation need further guards or a conservative refusal contract. The application still needs trusted apply/save integration, persistent outcome reconciliation, shutdown scheduling and connected-client synchronization. Item rollback apply remains disabled.
+
+## Direct player slot protection during journal retention
+
+Alpha.39 refuses ordinary player Inventory.setItem, removeItem(slot, count), removeItemNoUpdate, removeFromSelected and identity-based removeItem(stack) calls while journal protection is retained. Removals return ItemStack.EMPTY; void calls leave the inventory unchanged. The guard runs before the existing invalidation hook. The exact audited player setter ticket remains usable. Revoked retained entries continue denying ordinary calls until actual worker drain; normal behavior resumes afterward.
+
+This covers direct slot APIs only. Insertion and placeItemBackInInventory need a combined caller contract: Minecraft splits the offered stack before calling add, so refusing add alone could consume items without inserting them. Bulk clear, load, dropAll, replaceWith, hotbar rearrangement and lifecycle paths still need separate handling. These limits prevent this checkpoint from establishing complete inventory exclusion. Item rollback apply remains disabled.

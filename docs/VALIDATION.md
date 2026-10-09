@@ -1,4 +1,17 @@
-# Guardian block-retention guard checkpoint
+# Guardian player slot protection checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.39+1.21.1`.
+
+- All 331 existing tests passed: 282 common and 49 Minecraft tests. This Minecraft API change adds runtime coverage rather than mirrored unit tests.
+- Fabric and NeoForge each passed 264 live checks with logging off/on: 1,056 total. Ten new checks per run exercised direct player setters and removals against a started journal request. Full 41-slot images and the offered stack stayed unchanged; count, no-update and selected-slot removals returned empty results; identity-based removal was refused. Audited player setters remained usable. Revoked retention continued blocking ordinary writes and normal writes/removals resumed after actual worker drain. Unrelated block writes remained conservatively refused during player retention.
+- The prior 254 checks per run passed again, including block guards, ordered uninstall refusal, 36 complete actual saved-owner readbacks, and twelve SQLite recovery journals preserving both owner claims, the source claim and original audit row after reopening. Temporary test databases produced zero container records.
+- Normal restarts without agents passed both loaders, returned expected historical transactions and zero unfinished journals, and preserved normal audit/journal tables. Both dedicated servers are stopped with alpha.39 installed; original configurations were restored and synthetic players, test blocks and forced chunks were cleaned up. The optional Fabric WorldEdit adapter matches alpha.39.
+- Clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. IDEA found no problems in the changed mixin or bridge. MixinMCP verified vanilla/NeoForge method signatures and mutation ordering. Schema 8, config 6 and audit formats remain unchanged; standard packaging stays SQLite-only. See [validation data](validation/player-slot-retention-alpha39.json).
+
+Production code still does not register retention or enable item apply. Composite inventory insertion and bulk operations, lifecycle/data mutation paths, scheduled shutdown, trusted live apply/save integration, persistent outcome reconciliation, raw/off-thread mutation coverage and connected-client synchronization remain pending. Minecraft splits an offered stack before its placeItemBackInInventory insertion attempt, so an add-only refusal would be unsafe; this milestone does not add that incomplete guard. Item rollback apply remains disabled.
+
+## Historical alpha.38 block-retention guard checkpoint
+
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.38+1.21.1`.
 

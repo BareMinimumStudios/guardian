@@ -137,6 +137,25 @@ object MinecraftInventoryCoordination {
         return true
     }
 
+    /** Direct player slot APIs only; composite operations need their own caller contracts. */
+    @JvmStatic fun allowsInventoryMutation(player: net.minecraft.world.entity.player.Player): Boolean {
+        val current = binding ?: return true
+        if (player !is ServerPlayer || player.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return !current.owners.hasJournalRetention()
+    }
+
+    /** Consume the exact player setter ticket before checking ordinary mutation denial. */
+    @JvmStatic fun allowsReservedPlayerSlotWrite(inventory: Inventory, slot: Int,
+                                                stack: net.minecraft.world.item.ItemStack): Boolean {
+        val current = binding
+        if (current != null && current.server.isSameThread &&
+            current.slotWriter.consume(inventory, slot, stack, ReservedSlotEntry.PLAYER)) return true
+        if (!allowsInventoryMutation(inventory.player)) return false
+        beforeInventoryMutation(inventory.player)
+        return true
+    }
+
     @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,
                                            stack: net.minecraft.world.item.ItemStack, entry: ReservedSlotEntry) {
         val current = binding

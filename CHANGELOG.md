@@ -11,6 +11,15 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.39+1.21.1] - 2026-10-09
+
+### Added
+
+- Direct player inventory slot writes and removals are refused while journal protection is pending, without changing the offered stack or inventory.
+- Audited player setter authorization remains available during protection; ordinary operations resume after actual journal drain.
+
+Item rollback apply remains disabled pending composite operations, lifecycle handling and trusted production integration.
+
 ## [0.4.0-alpha.38+1.21.1] - 2026-10-09
 
 ### Added
