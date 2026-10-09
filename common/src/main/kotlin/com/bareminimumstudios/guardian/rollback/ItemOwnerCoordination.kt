@@ -107,6 +107,14 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
                 owners.all { reserved[it] === this }
         }
 
+        /** Read-only authority for owners still held by this exact registry; never a write permit. */
+        fun isRetained(expectedOwners: Set<ItemSlotOwner>): Boolean {
+            checkThread()
+            reapExpired()
+            return !stopped && operations[operationId] === this && owners == expectedOwners &&
+                retainedUntil?.isDone == false && owners.all { reserved[it] === this }
+        }
+
         /**
          * Retain this registry's owner entries until the worker closes and all journal results settle.
          * This prevents reuse after expiry/invalidation/close; it is not proof of mutation exclusion.

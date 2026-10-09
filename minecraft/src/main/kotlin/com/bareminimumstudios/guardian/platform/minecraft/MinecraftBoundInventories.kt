@@ -29,7 +29,9 @@ class MinecraftBoundInventories internal constructor(
     private val currentLease: () -> Boolean,
     private val players: () -> MinecraftSavedPlayerReader,
     private val onPlayerStateRejected: (ItemSlotOwner.PlayerInventory) -> Unit,
-    private val onClose: (MinecraftBoundInventories) -> Unit
+    private val onClose: (MinecraftBoundInventories) -> Unit,
+    private val actualIo: com.bareminimumstudios.guardian.rollback.ActualIoDrain,
+    private val readOnly: Boolean = false
 ) : AutoCloseable {
     private data class Pin(val owner: ItemSlotOwner, val container: Container, val level: ServerLevel,
                            val chunk: LevelChunk?, val state: BlockState?, val size: Int)
@@ -84,6 +86,7 @@ class MinecraftBoundInventories internal constructor(
     fun write(address: ItemSlotAddress, expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
         checkThread()
         check(isCurrent()) { "Bound inventory identities are no longer current" }
+        check(!readOnly) { "A recovery binding cannot write inventory slots" }
         val pin = checkNotNull(pins[address.owner]) { "Slot belongs to another inventory" }
         require(address.index in 0 until pin.size)
         MinecraftInventoryCoordination.writeReservedSlot(lease,pin.container,address.index,expected,replacement)
@@ -98,6 +101,7 @@ class MinecraftBoundInventories internal constructor(
 
     private fun readBack(owner: ItemSlotOwner, save: Boolean): CompletionStage<InventorySnapshot> {
         checkThread()
+        check(!save || !readOnly) { "A recovery binding cannot save inventory contents" }
         check(pending.isEmpty()) { "A bound inventory save is already pending" }
         val pin = checkNotNull(pins[owner]) { "Owner is not bound" }
         val baseline = read()
@@ -105,18 +109,26 @@ class MinecraftBoundInventories internal constructor(
         val expected = baseline.slots.filterKeys { it.owner == owner }
         val result = CompletableFuture<InventorySnapshot>()
         pending.add(result)
+        var chunkTicket: com.bareminimumstudios.guardian.rollback.ActualIoDrain.Ticket? = null
+        var saveStarted = false
+        var readStarted = false
         try {
             val request = when (owner) {
                 is ItemSlotOwner.BlockContainer -> {
+                    chunkTicket = actualIo.begin()
                     val chunk = checkNotNull(pin.chunk)
                     if(save) {
+                        saveStarted = true
                         chunk.setUnsaved(true)
                         if (!(pin.level.chunkSource.chunkMap as ChunkMapSaveInvoker).`guardian$saveChunk`(chunk)) {
                             chunk.setUnsaved(true)
                             error("Chunk save was not queued")
                         }
                     }
-                    MinecraftSavedChunkReader.read(pin.level.chunkSource.chunkMap,chunk.pos)
+                    MinecraftSavedChunkReader.read(pin.level.chunkSource.chunkMap,chunk.pos).also { physical ->
+                        readStarted = true
+                        physical.whenComplete { _, _ -> chunkTicket.close() }
+                    }
                 }
                 is ItemSlotOwner.PlayerInventory -> {
                     val player = (pin.container as Inventory).player as ServerPlayer
@@ -148,7 +160,12 @@ class MinecraftBoundInventories internal constructor(
                     }
                 } catch (error: Exception) { result.completeExceptionally(error) }
             }
-        } catch (error: Exception) { pending.remove(result);result.completeExceptionally(error) }
+        } catch (error: Exception) {
+            // A queued save without an installed physical completion is an unknown outcome.
+            // Keep its ticket rather than falsely claim drain; the backend must remain open.
+            if (!saveStarted && !readStarted) chunkTicket?.close()
+            pending.remove(result);result.completeExceptionally(error)
+        }
         return result
     }
 

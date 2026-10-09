@@ -26,7 +26,8 @@ class BufferedLogPipeline(
     queueCapacity: Int,
     private val batchSize: Int,
     private val flushIntervalMillis: Long,
-    private val retryDelayMillis: Long = 250L
+    private val retryDelayMillis: Long = 250L,
+    private val closeStorageOnStop: Boolean = true
 ) : AutoCloseable {
 
     init {
@@ -74,6 +75,9 @@ class BufferedLogPipeline(
     private val queue = ArrayBlockingQueue<LogEntry>(queueCapacity)
     private val state = AtomicReference(PipelineState.CREATED)
     private val worker = AtomicReference<Thread?>()
+    private val termination = CompletableFuture<Void>()
+    /** Actual writer termination, including storage closure when owned; never an audit fence. */
+    val drained: java.util.concurrent.CompletionStage<Void> get() = termination.minimalCompletionStage()
     private val lastFailure = AtomicReference<Throwable?>(null)
 
     private val accepted = AtomicLong()
@@ -103,6 +107,7 @@ class BufferedLogPipeline(
             state.set(PipelineState.FAILED)
             failBarriers(throwable)
             runCatching { storage.close() }
+            termination.complete(null)
             throw throwable
         }
     }
@@ -158,6 +163,7 @@ class BufferedLogPipeline(
             when (checkNotNull(state.get())) {
                 PipelineState.CREATED -> {
                     state.set(PipelineState.STOPPED)
+                    termination.complete(null)
                     return true
                 }
                 PipelineState.STOPPED -> return true
@@ -222,8 +228,9 @@ class BufferedLogPipeline(
             state.set(PipelineState.FAILED)
             failBarriers(throwable)
         } finally {
-            runCatching { storage.close() }
+            if (closeStorageOnStop) runCatching { storage.close() }
                 .onFailure { lastFailure.compareAndSet(null, it) }
+            termination.complete(null)
         }
     }
     private fun satisfyBarriers() {

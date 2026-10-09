@@ -11,6 +11,21 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.51+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Saved-player reader closure no longer interrupts running file reads or mistakes failed result futures for actual I/O drain.
+- Production runtime database closure waits for the audit writer, history executor and bound disk work to actually finish; a timeout does not authorize closure.
+
+### Added
+
+- Bounded physical I/O accounting with cancellation-resistant drain observers and explicit storage shutdown ownership.
+- Read-only bindings for retained revoked inventory owners, without restoring mutation permits or permitting item writes and saves.
+- Shutdown regressions for blocked work, queued reads, cancellation, independent database ownership and retained read authority.
+
+Item rollback admission remains disabled in normal startup and commands. Production operation registration and real-client exclusion acceptance are still pending.
+
 ## [0.4.0-alpha.50+1.21.1] - 2026-10-09
 
 ### Added

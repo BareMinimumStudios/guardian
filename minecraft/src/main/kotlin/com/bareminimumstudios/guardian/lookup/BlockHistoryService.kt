@@ -21,6 +21,8 @@ class BlockHistoryService(
 ) {
     private val logger = LoggerFactory.getLogger("Guardian/History")
     private val running = AtomicBoolean(true)
+    private val termination = java.util.concurrent.CompletableFuture<Void>()
+    val drained: java.util.concurrent.CompletionStage<Void> get() = termination.minimalCompletionStage()
     private val executor: ExecutorService = Executors.newSingleThreadExecutor { task ->
         Thread(task, "Guardian-History").apply { isDaemon = true }
     }
@@ -108,6 +110,12 @@ class BlockHistoryService(
     fun stopAndAwait(timeoutSeconds: Long = 5L) {
         if (!running.compareAndSet(true, false)) return
         executor.shutdown()
+        Thread({
+            try {
+                while(!executor.awaitTermination(1L,TimeUnit.SECONDS)) { /* Actual executor termination, not the stop timeout. */ }
+                termination.complete(null)
+            } catch(error: InterruptedException){termination.completeExceptionally(error);Thread.currentThread().interrupt()}
+        }, "Guardian-HistoryDrain").apply {isDaemon=true}.start()
         if (!executor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
             executor.shutdownNow()
             executor.awaitTermination(1L, TimeUnit.SECONDS)

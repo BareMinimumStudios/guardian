@@ -1,0 +1,145 @@
+{
+  "version": "0.4.0-alpha.51+1.21.1",
+  "date": "2026-10-09",
+  "tests": {
+    "common": 437,
+    "minecraft": 52
+  },
+  "new_regressions": 22,
+  "cases": {
+    "com.bareminimumstudios.guardian.logging.BufferedLogPipelineOwnershipTest": [
+      "externallyOwnedStorageRemainsOpenAfterWriterDrain()",
+      "neverStartedWriterCanDrainWithoutClosingUnopenedBackend()",
+      "defaultOwnershipClosesStorageBeforeReportingActualDrain()"
+    ],
+    "com.bareminimumstudios.guardian.rollback.ActualIoDrainTest": [
+      "cancelledFenceObserverCannotMaskOldWork()",
+      "pendingFencesAreBoundedAndEmptyFenceIsImmediate()",
+      "observerCancellationCannotMaskOutstandingWork()",
+      "boundsAndStoppedAdmissionAreEnforced()",
+      "admissionMustCloseBeforeEmptyWorkIsDrained()",
+      "ticketCompletionIsIdempotentAndCrossThread()",
+      "prefixFenceWaitsForOldWorkWithoutClosingNewReadAdmission()",
+      "allActualTicketsMustFinishAfterClose()"
+    ],
+    "com.bareminimumstudios.guardian.rollback.RetainedReadAuthorityTest": [
+      "unretainedLeaseCannotAuthorizeReadOnlyRecovery()",
+      "revokedRetainedLeaseIsReadAuthorityAndNeverWriteAuthority()",
+      "stoppedRegistryAndWrongOwnerSetRefuseReadAuthority()"
+    ],
+    "com.bareminimumstudios.guardian.storage.StorageShutdownTest": [
+      "waitsForEveryActualDrainAndClosesOffCallerThread()",
+      "failedDrainCannotCloseBackend()",
+      "cancelledActualDrainCannotCloseBackend()",
+      "cancelledClosureObserverCannotMaskRealClosure()",
+      "closureFailureIsReportedWithoutRetry()"
+    ],
+    "com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerReaderTest": [
+      "queueCapacityIsBoundedAndRejectsExcessWithoutBlockingCaller()",
+      "resultFailureOnCloseDoesNotPretendBlockedFileWorkDrained()",
+      "corruptEncodedAndDecodedOversizedFilesAreRejected()",
+      "queuedReadsAreRemovedWithoutInvokingFileLoaderDuringClose()",
+      "cancelledResultCannotCancelOrMaskActualFileWork()",
+      "fileIoRunsOffCallerThreadAndCallbackCanScheduleAnotherRead()",
+      "readsOnlyCurrentUuidFileWithoutWritingOrUsingOldFallback()",
+      "stoppedReaderFailsPendingWorkAndIgnoresLateCompletion()"
+    ]
+  },
+  "isolated_startup_shutdown_runs": [
+    {
+      "loader": "Fabric",
+      "run": 1,
+      "exit_code": 0,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok",
+      "transactions": 21,
+      "metadata": {
+        "clean_shutdown": "true",
+        "schema_version": "10",
+        "block_properties_codec": "1",
+        "storage_format": "exprotect-native-v1"
+      },
+      "final_build": true
+    },
+    {
+      "loader": "Fabric",
+      "run": 2,
+      "exit_code": 0,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok",
+      "transactions": 21,
+      "metadata": {
+        "clean_shutdown": "true",
+        "schema_version": "10",
+        "block_properties_codec": "1",
+        "storage_format": "exprotect-native-v1"
+      },
+      "final_build": true
+    },
+    {
+      "loader": "Neoforge",
+      "run": 1,
+      "exit_code": 0,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok",
+      "transactions": 21,
+      "metadata": {
+        "clean_shutdown": "true",
+        "schema_version": "10",
+        "block_properties_codec": "1",
+        "storage_format": "exprotect-native-v1"
+      },
+      "final_build": true
+    },
+    {
+      "loader": "Neoforge",
+      "run": 2,
+      "exit_code": 0,
+      "clean_shutdown": true,
+      "sqlite_integrity": "ok",
+      "transactions": 21,
+      "metadata": {
+        "clean_shutdown": "true",
+        "schema_version": "10",
+        "block_properties_codec": "1",
+        "storage_format": "exprotect-native-v1"
+      },
+      "final_build": true
+    }
+  ],
+  "isolated_readonly_bindings": [
+    {
+      "loader": "Fabric",
+      "checks": 13,
+      "full_slots": 27,
+      "live_saved_match": true,
+      "slot_write_refused": true,
+      "save_refused": true,
+      "mutation_permit_revived": false,
+      "clean_shutdown": true,
+      "scope": "synthetic hold with no journal requests; actual empty barrel file read"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 13,
+      "full_slots": 27,
+      "live_saved_match": true,
+      "slot_write_refused": true,
+      "save_refused": true,
+      "mutation_permit_revived": false,
+      "clean_shutdown": true,
+      "scope": "synthetic hold with no journal requests; actual empty barrel file read"
+    }
+  ],
+  "original_servers_changed": false,
+  "apply_enabled": false,
+  "schema": 10,
+  "config": 6,
+  "limits": [
+    "The read-only fixture uses a synthetic hold whose journal worker submits no requests; it is not production item rollback recovery.",
+    "Actual disk drain tracks bound Guardian requests, not arbitrary concurrent vanilla or mod writes.",
+    "Trusted physical exclusion/quiescence, production item-operation admission/ticking/shutdown registration and real-client acceptance remain pending.",
+    "A queued save without a physical completion hook conservatively holds its I/O ticket. Failed drains cannot authorize backend closure.",
+    "Runtime shutdown refuses backend closure while unregistered item journal retention remains; no stopped lease is revived."
+  ]
+}

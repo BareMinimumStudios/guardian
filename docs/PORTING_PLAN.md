@@ -87,3 +87,7 @@ Advanced Fzzy Config pages, server-only remote credentials, documentation, publi
 ### Alpha.50 protected coordinator boundary
 
 Protected internal admission now persists full receipts before writes. Confirmed complete saves and durable decisions control owner release; scope-owned reconciliation also waits for its actual worker drain. Production registration remains pending because the audit pipeline currently owns database closure. Platform disk-service completion and a read-only binding for retained revoked owners must be integrated before commands can admit item rollback operations. Neither a lease nor an observational future establishes physical quiescence. Apply remains disabled until both-loader and real-client acceptance pass.
+
+### Alpha.51 production disk and database shutdown
+
+The runtime now closes storage after actual audit/history worker termination and bound disk drain. Prior-work disk fences keep new read-only I/O admission available. Retained revoked inventories have an explicit read-only binding that cannot write or save. Both loaders passed isolated startup/restart/shutdown and actual saved-barrel read-only checks. Next connect protected item operation admission/ticking/shutdown to this runtime ownership, then establish physical exclusion and real-client acceptance. No normal command admits item rollback operations yet.

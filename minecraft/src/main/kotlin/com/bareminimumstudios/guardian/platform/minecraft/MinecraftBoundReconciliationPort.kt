@@ -16,7 +16,7 @@ internal class MinecraftBoundReconciliationPort(
     private var closed=false
     override fun isExclusiveAndQuiescent(owners: Set<ItemSlotOwner>): Boolean {
         check(server.isSameThread)
-        return !closed && owners==lease.owners && lease.isCurrent(owners) && quiescent() && session.isCurrent()
+        return !closed && owners==lease.owners && lease.isRetained(owners) && !lease.isCurrent(owners) && quiescent() && session.isCurrent()
     }
     override fun readLiveOwners(owners: Set<ItemSlotOwner>): InventorySnapshot? =
         if(isExclusiveAndQuiescent(owners))session.read() else null

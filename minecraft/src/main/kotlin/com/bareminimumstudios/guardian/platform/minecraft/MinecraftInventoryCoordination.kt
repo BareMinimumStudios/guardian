@@ -33,9 +33,11 @@ object MinecraftInventoryCoordination {
         val slotWriter = MinecraftReservedSlotWriter(server, owners)
         val lifecycleCopy = MinecraftLifecycleInventoryCopy(server)
         val lifecycleRemoval = MinecraftLifecycleItemRemoval(server)
+        val actualIo = com.bareminimumstudios.guardian.rollback.ActualIoDrain()
+        var stopping = false
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
-        fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader().also { savedPlayers = it }
+        fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader(actualIo, false).also { savedPlayers = it }
         fun closeSessions() { sessions.values.toList().forEach { it.close() };savedPlayers?.close();savedPlayers = null }
     }
     @Volatile private var binding: Binding? = null
@@ -56,10 +58,24 @@ object MinecraftInventoryCoordination {
         if (owners !== current.owners) return true
         check(current.server.isSameThread)
         if (current.owners.hasJournalRetention()) return false
+        if (!current.stopping) beginShutdown(owners)
+        if (!current.actualIo.isDrained) return false
         current.owners.stop()
         current.closeSessions()
         binding = null
         return true
+    }
+
+    /** Stop bound I/O admission before disposing sessions. Result completion is not disk drain. */
+    fun beginShutdown(owners: ItemOwnerCoordination?): java.util.concurrent.CompletionStage<Void> {
+        val current = binding
+        if (current == null || current.owners !== owners) return java.util.concurrent.CompletableFuture.completedFuture<Void>(null).minimalCompletionStage()
+        check(current.server.isSameThread)
+        current.stopping = true
+        current.actualIo.close()
+        current.owners.stop()
+        current.closeSessions()
+        return current.actualIo.drained
     }
 
     @JvmStatic fun allowsPush(level: Level, hopper: HopperBlockEntity): Boolean = allows(level) {
@@ -104,12 +120,34 @@ object MinecraftInventoryCoordination {
     fun bindInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): MinecraftBoundInventories {
         check(server.isSameThread)
         val current = checkNotNull(binding)
-        check(current.server === server && currentLease(current,lease)) { "A current lease from this server is required" }
+        check(!current.stopping && current.server === server && currentLease(current,lease)) { "A current lease from this server is required" }
         current.sessions.values.filter { !it.isCurrent() }.forEach { it.close() }
         check(!current.sessions.containsKey(lease)) { "This lease already has a bound session" }
         check(current.sessions.size < 32) { "Bound inventory session limit reached" }
         return MinecraftBoundInventories(server,lease,{ binding === current && currentLease(current,lease) },
-            { current.playerReader() },{ current.owners.invalidate(it) },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }).also { current.sessions[lease] = it }
+            { current.playerReader() },{ current.owners.invalidate(it) },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }, current.actualIo).also { current.sessions[lease] = it }
+    }
+
+    /** Close the old mutating session first. A prefix fence leaves new read-only I/O admission open. */
+    internal fun retainedDiskFence(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): java.util.concurrent.CompletionStage<Void> {
+        check(server.isSameThread)
+        val current = checkNotNull(binding)
+        check(current.server === server && !current.stopping && lease.isRetained(lease.owners) && !lease.isCurrent(lease.owners))
+        check(current.sessions[lease] == null) { "The prior mutating session must be closed before its disk fence" }
+        return current.actualIo.fence()
+    }
+
+    /** Retained revoked owners may be read without restoring any mutation permit. */
+    internal fun bindReadOnlyInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): MinecraftBoundInventories {
+        check(server.isSameThread)
+        val current = checkNotNull(binding)
+        fun held() = binding === current && !current.stopping && lease.isRetained(lease.owners) && !lease.isCurrent(lease.owners)
+        check(current.server === server && held()) { "Retained ownership from this server is required" }
+        current.sessions.values.filter { !it.isCurrent() }.forEach { it.close() }
+        check(!current.sessions.containsKey(lease) && current.sessions.size < 32)
+        return MinecraftBoundInventories(server, lease, { held() }, { current.playerReader() },
+            { current.owners.invalidate(it) }, { if(current.sessions[lease] === it) current.sessions.remove(lease) },
+            current.actualIo, readOnly = true).also { current.sessions[lease] = it }
     }
 
     private fun currentLease(current: Binding,lease: ItemOwnerCoordination.Lease): Boolean =

@@ -1,4 +1,17 @@
-# Guardian protected coordinator checkpoint
+# Guardian production drain checkpoint
+
+Date: 2026-10-09. Checkpoint: `0.4.0-alpha.51+1.21.1`.
+
+- All 489 tests passed: 437 common and 52 Minecraft tests. Twenty-two new regressions cover actual I/O tickets, blocked/cancelled drains, off-thread one-time storage closure, pipeline ownership, retained read authority and started/queued saved-player reads.
+- The production runtime owns database closure independently of the audit writer. Closure waits for actual audit/history termination and bound disk drain; timeout or outstanding journal retention cannot grant closure authority. Default standalone pipeline ownership remains compatible.
+- Saved-player closure fails observers immediately but removes only unstarted work, does not interrupt started file reads, and keeps physical tickets until loaders actually return. Saved chunk requests have separate physical tickets, independent of session result futures.
+- Bounded prefix fences wait for prior disk work without closing admission for new read-only requests. Read-only recovery bindings pin complete supported inventories under exact retained ownership. They cannot write slots, force saves or restore mutation permits. Admission stops before shutdown disposes sessions.
+- Four normal isolated server runs passed: initial startup and restart on Fabric and NeoForge, 21 persisted hopper transaction records on each, clean SQLite shutdown markers and integrity checks. Two further reflection-only fixtures each passed 13 checks, reading all 27 actual saved barrel slots while refusing writes and saves and preserving revoked mutation permits. No Minecraft bytecode was transformed. These use fresh private worlds/databases copied from the dedicated installations; the dedicated servers were not modified.
+- Clean build, repeated build with configuration-cache reuse and the separate WorldEdit build passed through IDEA with Java 21 and Gradle 9.8.0. Standard artifacts remain SQLite-only. Schema remains 10; config remains 6. See [validation data](validation/production-drain-alpha51.json).
+
+This verifies production shutdown ownership and the retained read-only binding. It does not establish exclusion from arbitrary vanilla/mod writes or real clients. The fixture journal worker submits no requests; this is not an end-to-end production item rollback recovery test. Production item-operation admission/ticking/shutdown registration and real-client acceptance remain pending. Unknown queued-save completion conservatively prevents drain. Item rollback apply stays disabled.
+
+## Historical alpha.50 protected coordinator checkpoint
 
 Date: 2026-10-09. Checkpoint: `0.4.0-alpha.50+1.21.1`.
 
