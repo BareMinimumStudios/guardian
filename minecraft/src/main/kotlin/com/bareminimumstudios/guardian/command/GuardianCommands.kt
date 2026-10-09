@@ -92,7 +92,16 @@ object GuardianCommands {
                 .suggests { context, builder -> suggestFilters(context.source, builder, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
         root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 2) }
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, or recovery [operation UUID]. Both are read-only.")); 0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, recovery [operation UUID], or cancel. These commands are read-only.")); 0 }
+            .then(Commands.literal("cancel").executes { context ->
+                val runtime=runtimeProvider()
+                val previewCancelled=runtime?.itemRollbackPreview()?.cancel() ?: false
+                val recoveryCancelled=runtime?.itemRecovery()?.cancel() ?: false
+                context.source.sendSystemMessage(Component.literal(if(previewCancelled || recoveryCancelled)
+                    "Guardian: item check cancelled. No items changed or recovery claims cleared. Started reads may still finish."
+                    else "Guardian: no item preview or recovery check is in progress."))
+                if(previewCancelled || recoveryCancelled) 1 else 0
+            })
             .then(Commands.literal("preview")
                 .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:1h r:10. Preview only; no items change.")); 0 }
                 .then(Commands.argument("filters",StringArgumentType.greedyString()).suggests { context,builder -> suggestFilters(context.source,builder,true,true) }

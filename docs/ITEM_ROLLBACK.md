@@ -415,3 +415,11 @@ The verified comparison is the decision point. Started acknowledgment may still 
 Fifty-seven new tests cover immutable images, codec budgets/corruption, database acknowledgment and reconciliation control. Storage cases exercise SQLite and the optional DuckDB backend, including full player armor/offhand receipts and restart. SQLite failure injection verifies rollback of phase, decision and owner release together. Driver tests use real SQLite workers with synthetic live/saved ports, including late decisions and failed replies; these do not establish real-client physical exclusion.
 
 Next: require complete receipts and protection in production admission, coordinate quiescence and worker/disk-service shutdown, connect confirmed reconciliation to held-owner lifecycle handling, validate the actual-file adapter on both loaders and complete connected-client acceptance. Item rollback apply remains disabled.
+
+## Cancel a read-only check
+
+```text
+/guardian rollback-items cancel
+```
+
+Requires `guardian.rollback` or operator level 2. An authorized operator can cancel the active preview or recovery observation, including one started by another operator. The requester receives a cancellation message. Later callbacks from that check cannot publish a result or clear a newer check. The command does not stop an internal protected operation, interrupt a started disk read, change items, acknowledge recovery or release persistent claims. If no check is active, it reports that directly. Item apply remains disabled; no apply confirmation command is exposed.

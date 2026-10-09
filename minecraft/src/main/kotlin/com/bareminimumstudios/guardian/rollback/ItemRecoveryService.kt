@@ -92,6 +92,13 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
             session.check!!.accept(owner,snapshot);session.ready=true
         } }
     }
+    /** Cancels reporting only; started reads and persistent ownership are untouched. */
+    fun cancel(): Boolean {
+        val session=active ?: return false
+        refuse(session,"Check cancelled by an operator.")
+        return true
+    }
+
     fun stop() { val session=active;active=null;session?.barrier?.cancel();session?.watch?.close();players.close();recent=emptyList() }
     private fun fence(session: Session,after: () -> Unit) {
         session.barrier=pipeline.writeBarrier()

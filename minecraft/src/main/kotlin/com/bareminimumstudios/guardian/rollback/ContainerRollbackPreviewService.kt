@@ -111,6 +111,13 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         session.watch?.close();active=null
     }
 
+    /** Cancels reporting only; started reads and persistent ownership are untouched. */
+    fun cancel(): Boolean {
+        val session=active ?: return false
+        refuse(session,"Check cancelled by an operator.")
+        return true
+    }
+
     fun stop() { val session=active;active=null;session?.barrier?.cancel();session?.watch?.close() }
 
     private fun inside(owner: ItemSlotOwner.BlockContainer,query: ContainerLookupQuery): Boolean {

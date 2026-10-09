@@ -1,3 +1,7 @@
+# Read-only operator cancellation
+
+Date: 2026-10-09. Alpha.54 adds `/guardian rollback-items cancel`. Two isolated server fixtures, one per loader, confirmed successful cancellation of a journal listing, saved-slot observation and inventory preview before their asynchronous callbacks completed. Idle cancellation returned zero, cancelled checks remained inactive after callbacks, and a subsequent journal listing succeeded. SQLite integrity passed with no rollback journals created. These are console operator checks; player permission providers, chat presentation and connected-client acceptance remain pending. See [machine-readable evidence](validation/operator-cancellation-alpha54.json). Clean, repeated configuration-cache and WorldEdit builds passed; the existing 522 tests passed. Item apply remains disabled.
+
 # Additional player persistence acceptance
 
 Date: 2026-10-09. Runtime remains alpha.53. Ten isolated processes passed 189 fixture checks on Fabric and NeoForge using a synthetic 41-slot player inventory and real compressed player files. Failed payload writes and process termination retained protection; explicit reconciliation released claims only after all affected owners were actually saved. Independent NBT checks verified the current and uncommitted temporary images. See [scope and remaining client gates](PLAYER_PERSISTENCE_ACCEPTANCE.md) and [validation data](validation/player-persistence-alpha53.json). Item apply remains disabled.
