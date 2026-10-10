@@ -1,3 +1,7 @@
+# World mutation callers and direct stack audit
+
+Date: 2026-10-09. Alpha.60 guards whole world replacement, removal and destruction callers before their side effects during retention. Both loaders passed 2,224 combined checks, including eight-container component and placement regression coverage, no-drop refusals, off-thread refusal, and normal behavior after release. The direct stack-count bypass was reproduced and restored in isolated fixtures; item apply remains disabled. See [behavior and limits](ITEM_ROLLBACK.md#world-mutation-callers-and-raw-stack-audit) and [evidence](validation/world-mutation-alpha60.json). All 522 tests and required builds passed. These synthetic fixtures do not certify arbitrary mod callers or replace connected-client acceptance.
+
 # Live components and block placement callers
 
 Date: 2026-10-09. Alpha.59 protects live loaded container component replacement and refuses vanilla block-item callers before world changes, source consumption or food fallback during retention. Isolated Fabric and NeoForge servers passed 800 checks, including unchanged sources and destinations on refusal and normal placement consuming one item after release. All 522 existing tests, clean build, configuration-cache reuse and the WorldEdit build passed. See [behavior and limits](ITEM_ROLLBACK.md#components-and-block-item-callers-during-retention) and [evidence](validation/components-placement-alpha59.json). Item apply remains disabled; these null-player synthetic fixtures do not replace connected-client or arbitrary mod acceptance.

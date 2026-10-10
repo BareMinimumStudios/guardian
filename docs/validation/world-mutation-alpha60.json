@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.60+1.21.1",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 1112,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation",
+        "refused_setBlock_both_overloads",
+        "refused_removeBlock",
+        "refused_destroyBlock_with_and_without_drops",
+        "unchanged_state_full_nbt_entities_and_snapshot_count",
+        "off_thread_refusal_before_world_access",
+        "normal_world_methods_and_drops_resume",
+        "raw_setCount_bypass_confirmed_and_restored",
+        "alpha59_component_and_placement_regression"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 1112,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation",
+        "refused_setBlock_both_overloads",
+        "refused_removeBlock",
+        "refused_destroyBlock_with_and_without_drops",
+        "unchanged_state_full_nbt_entities_and_snapshot_count",
+        "off_thread_refusal_before_world_access",
+        "normal_world_methods_and_drops_resume",
+        "raw_setCount_bypass_confirmed_and_restored",
+        "alpha59_component_and_placement_regression"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "fixture_checks": 2224,
+  "existing_tests": 522,
+  "item_apply_enabled": false,
+  "original_servers_modified": false,
+  "limitations": [
+    "Explicit retention leases and unused workers are synthetic, with no persistent journal requests or claims. Test teardown is not production reconciliation.",
+    "World methods are refused globally on the bound server during retention because callbacks can touch owners beyond the target position. This is not a region-only lock.",
+    "ItemStack.setCount was deliberately shown to mutate a live container stack during retention. Item apply remains disabled.",
+    "Direct chunk mutation, block entity replacement/removal, higher-level composite callers, mod overrides and arbitrary off-thread writes remain outside this caller contract.",
+    "No player or connected client is present. NeoForge snapshot-list counts remained unchanged; snapshot capture was not enabled in the fixture."
+  ]
+}

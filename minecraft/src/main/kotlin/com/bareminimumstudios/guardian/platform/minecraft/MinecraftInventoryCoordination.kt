@@ -256,7 +256,10 @@ object MinecraftInventoryCoordination {
     }
 
     /** Refuse the whole placement caller before callbacks, world changes or stack consumption. */
-    @JvmStatic fun allowsBlockItemPlacement(level: Level): Boolean {
+    @JvmStatic fun allowsBlockItemPlacement(level: Level): Boolean = allowsWorldBlockMutation(level)
+
+    /** World callbacks may affect inventory owners beyond the changed position. */
+    @JvmStatic fun allowsWorldBlockMutation(level: Level): Boolean {
         val current = binding ?: return true
         if (level !is ServerLevel || level.server !== current.server) return true
         if (!current.server.isSameThread) return false
