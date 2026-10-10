@@ -9,6 +9,8 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Added
 
+- Define a fixed alpha release scope for logging, inspection, block rollback and read-only item checks. Defer item apply explicitly and separate actual permissions/client acceptance from future mutation-exclusion research.
+
 - Document synthetic-player persistence acceptance on both loaders, including complete 41-slot images, started compressed-file failures, explicit recovery after all affected owners are saved, and protected refusal after process termination. Connected-client acceptance remains pending.
 - Document started chunk-write acceptance on both loaders, including protected cancellation, shutdown waiting, fresh-process recovery and safe refusal after process termination before region-header commit.
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.

@@ -1,5 +1,7 @@
 # Step 4: container and player item audit
 
+For current release acceptance, use the bounded matrix in [release scope](RELEASE_SCOPE.md#connected-client-matrix). The detailed cases below are reference procedures and historical milestones; they do not add release features or gates.
+
 This alpha shares Fabric/NeoForge item capture and vanilla crafting correlation: immutable item capture, action correlation, persistence, and lookup for accepted clicks and close-time cursor returns in block-backed menus, plus player inventory moves, standalone drops, offhand swaps, and accepted creative slot changes. It remains a testing checkpoint until player-driven acceptance is complete.
 
 ## What is recorded

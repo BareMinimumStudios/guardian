@@ -1,3 +1,7 @@
+# Current release acceptance
+
+The [fixed release scope](RELEASE_SCOPE.md) defines the remaining gates. Item apply is excluded from this release. The sections below are historical evidence, not an expanding release checklist. [Scope assessment](validation/release-scope-alpha61.json) checks the read-only command surface and exact-class binding boundary; executable code is unchanged from alpha.61, and its existing build/runtime evidence was not re-executed for this documentation change.
+
 # Whole item durability callers
 
 Date: 2026-10-09. Alpha.61 guards shared and NeoForge-specific durability callers before damage components, tool consumption or break callbacks. Both loaders passed 2,912 combined fixture checks, including previous container/component/placement/world cases, off-thread refusal and ordinary damage/break behavior after release. All 522 tests, clean build, configuration-cache reuse and the separate WorldEdit build passed. See [behavior and limits](ITEM_ROLLBACK.md#whole-durability-callers) and [evidence](validation/durability-alpha61.json). Raw mutation and larger mod caller gaps remain; item apply stays disabled. No real player or connected client was used.

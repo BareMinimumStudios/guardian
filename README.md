@@ -28,9 +28,13 @@ Guardian continues the ExProtect prototype. This checkpoint builds for Fabric an
 - Keeps audit history across server restarts with bundled SQLite.
 - Shows block history through commands or an inspector tool.
 - Restores blocks with bounded work per server tick.
-- Previews eligible container transfers without changing items; item rollback apply is still in development.
+- Previews eligible container transfers without changing items; item rollback apply is unavailable in this release.
 - Logs WorldEdit operations through a separate optional adapter.
 - Runs on the server; players do not need Guardian installed.
+
+## Release scope
+
+This alpha includes existing logging, inspection, block rollback and read-only item checks. Item rollback apply is unavailable, including for vanilla inventories. The remaining release gates are actual permissions acceptance, connected-client acceptance and final artifact sign-off; additional item-mutation guards are not open-ended release requirements. See the [fixed scope and checklist](docs/RELEASE_SCOPE.md).
 
 ## Installation
 

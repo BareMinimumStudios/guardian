@@ -1,6 +1,8 @@
 # Item rollback preview
 
-Checkpoint: `0.4.0-alpha.34+1.21.1`.
+Current assessment: `0.4.0-alpha.61+1.21.1`.
+
+Item apply is excluded from the current release. The [release scope](RELEASE_SCOPE.md) is the authoritative checklist; the sections below retain historical implementation notes, not an expanding list of release requirements.
 
 This milestone waits for accepted audit writes and checks which recorded item transfers could be reversed. It does not change items. There is no item rollback apply command yet.
 
