@@ -14,6 +14,12 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.56+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Require operator level 3 for read-only item rollback commands when no explicit permission grant is available, matching the existing block rollback and NeoForge `guardian.rollback` default. Permission providers can still grant or deny the node explicitly.
+
 ## [0.4.0-alpha.55+1.21.1] - 2026-10-09
 
 ### Fixed

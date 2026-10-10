@@ -1,3 +1,7 @@
+# Item command permissions
+
+Date: 2026-10-09. Alpha.56 makes the item command fallback consistently operator level 3, matching the `guardian.rollback` node. Two isolated loader fixtures passed 558 permission and command-route checks, including both aliases and simulated explicit provider decisions. Actual LuckPerms and connected-player acceptance remain pending. See [scope and behavior change](ITEM_ROLLBACK.md#rollback-permission-defaults) and [machine-readable evidence](validation/item-permissions-alpha56.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Item apply remains disabled.
+
 # Player observation eligibility
 
 Date: 2026-10-09. Alpha.55 aligns read-only player observations with protected binding preflight, including the result slot, alive/connected/transition state and exact inventory identities. Isolated fixtures on both loaders verified refusal and rechecking without changing requested persistent slots. See [scope and limits](ITEM_ROLLBACK.md#consistent-live-player-eligibility) and [machine-readable evidence](validation/player-observation-alpha55.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Complete inventory exclusion and connected-client acceptance remain pending; item apply stays disabled.

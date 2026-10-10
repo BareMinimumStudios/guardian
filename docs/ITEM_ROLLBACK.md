@@ -11,7 +11,7 @@ This milestone waits for accepted audit writes and checks which recorded item tr
 /guardian rollback-items preview t:1h u:Cherry r:5 x:100 y:64 z:100
 ```
 
-Use `guardian.rollback` permission, or vanilla operator level 2. Time is required. `user:` and `time:` are aliases for `u:` and `t:`. Coordinates must be supplied together; otherwise the center is your current position. The current dimension is used. Fabric WorldEdit adapter users can use `r:#worldedit` for an existing cuboid selection. The default radius and maximum radius come from rollback settings. Result paging and ordering parameters are not accepted for a preview.
+Use `guardian.rollback` permission, or vanilla operator level 3. Time is required. `user:` and `time:` are aliases for `u:` and `t:`. Coordinates must be supplied together; otherwise the center is your current position. The current dimension is used. Fabric WorldEdit adapter users can use `r:#worldedit` for an existing cuboid selection. The default radius and maximum radius come from rollback settings. Result paging and ordering parameters are not accepted for a preview.
 
 Both physical block endpoints must be inside the selected region. A player endpoint must be online with the ordinary inventory screen, an empty cursor and an empty crafting grid. Offline inventories are not read from player files.
 
@@ -34,7 +34,7 @@ The preview checks at most 50 transactions, or the configured rollback record li
 /guardian rollback-items recovery <operation UUID>
 ```
 
-The same `guardian.rollback` permission or operator level 2 is required. Listing shows at most ten unfinished headers; click one to suggest its command. Their UUIDs are available for completion after listing. A specific check loads one bounded journal, observes participating slots one owner per tick, waits for the accepted audit prefix again and confirms the journal did not change. It times out after ten seconds. Unloaded chunks stay unloaded and sealed loot stays sealed.
+The same `guardian.rollback` permission or operator level 3 is required. Listing shows at most ten unfinished headers; click one to suggest its command. Their UUIDs are available for completion after listing. A specific check loads one bounded journal, observes participating slots one owner per tick, waits for the accepted audit prefix again and confirms the journal did not change. It times out after ten seconds. Unloaded chunks stay unloaded and sealed loot stays sealed.
 
 | Observation | Meaning |
 | --- | --- |
@@ -422,10 +422,16 @@ Next: require complete receipts and protection in production admission, coordina
 /guardian rollback-items cancel
 ```
 
-Requires `guardian.rollback` or operator level 2. An authorized operator can cancel the active preview or recovery observation, including one started by another operator. The requester receives a cancellation message. Later callbacks from that check cannot publish a result or clear a newer check. The command does not stop an internal protected operation, interrupt a started disk read, change items, acknowledge recovery or release persistent claims. If no check is active, it reports that directly. Item apply remains disabled; no apply confirmation command is exposed.
+Requires `guardian.rollback` or operator level 3. An authorized operator can cancel the active preview or recovery observation, including one started by another operator. The requester receives a cancellation message. Later callbacks from that check cannot publish a result or clear a newer check. The command does not stop an internal protected operation, interrupt a started disk read, change items, acknowledge recovery or release persistent claims. If no check is active, it reports that directly. Item apply remains disabled; no apply confirmation command is exposed.
 
 ## Consistent live player eligibility
 
 Alpha.55 uses the same player preflight for read-only observations and protected bindings. The player must be alive, connected, outside a dimension transition, and using the exact vanilla inventory menu with an empty cursor, crafting grid and result slot. Persistent inventory identity and its 41-slot layout must also match. These conditions are checked when sampling and again when verifying the observation. An ineligible owner is unavailable, so a matching recorded slot alone cannot qualify the transaction. Refusal does not close menus or return temporary items.
 
 Isolated Fabric and NeoForge fixtures verified result-slot and cursor refusal, dead/transition flags, a different active menu and offline ownership. Already sampled observations failed their current-state checks while those states were active; a fresh idle observation succeeded afterward without changing requested persistent slots. These were synthetic players, not connected-client or full lifecycle tests. [Validation evidence](validation/player-observation-alpha55.json).
+
+## Rollback permission defaults
+
+Alpha.56 consistently uses `guardian.rollback` with operator level 3 as its fallback for item preview, recovery and cancellation. Earlier item commands used level 2 while NeoForge's registered node and block rollback defaulted to level 3. An operator at level 2 now needs an explicit grant of the node or level 3 to use these commands. Explicit provider decisions still govern access; an explicit denial can refuse an operator and a grant can admit a nonoperator.
+
+Isolated command-tree fixtures on both loaders passed 558 checks using real command source stacks. Levels 0–2 were refused before reaching the runtime; levels 3–4 reached read-only handlers. Both `/guardian` and `/co` aliases were checked, including preview, live/saved recovery and cancellation. A simulated provider verified the exact node and level, explicit grants, explicit denials and permission changes after registration. Item apply and confirmation commands remained absent. NeoForge's API-disabled fallback was checked separately. Actual permission-handler integrations and connected-player behavior remain pending. [Validation evidence](validation/item-permissions-alpha56.json).

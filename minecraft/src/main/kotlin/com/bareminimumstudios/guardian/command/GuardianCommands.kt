@@ -91,7 +91,7 @@ object GuardianCommands {
             .then(Commands.argument("filters", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
-        root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 2) }
+        root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, recovery [operation UUID], or cancel. These commands are read-only.")); 0 }
             .then(Commands.literal("cancel").executes { context ->
                 val runtime=runtimeProvider()
