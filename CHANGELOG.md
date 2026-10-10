@@ -18,6 +18,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.62+1.21.1] - 2026-10-10
+
+### Fixed
+
+- Stop cached filter, player-name and recovery suggestions when permission is removed.
+- Recheck lookup and inspector permissions before deferred history results or storage errors are sent. Permission-provider errors fail closed on these paths.
+- Stop further block rollback mutations after permission loss. Finish started journal work, release untouched newly claimed rows and preserve older pending recovery records. Ignore obsolete planning callbacks after shutdown.
+
+### Changed
+
+- Complete server-side permission acceptance on both loaders with real LuckPerms providers and provider-free operator fallback. Connected-client acceptance remains pending; item rollback apply remains unavailable.
+
 ## [0.4.0-alpha.61+1.21.1] - 2026-10-09
 
 ### Fixed

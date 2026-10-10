@@ -42,7 +42,7 @@ For Fabric 1.21.1, use the Guardian jar from `build/libs` with Fabric API, Fabri
 
 For WorldEdit support on Fabric, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
 
-LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent. NeoForge uses its built-in permissions API, which also allows a compatible permission handler. The current permissions fixture passed with LuckPerms 5.4.140 on Fabric and 5.4.150 on NeoForge; NeoForge 5.4.140 reproduced the [upstream capability initialization problem](https://github.com/LuckPerms/LuckPerms/issues/4259). Full client acceptance remains pending.
+LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent. NeoForge uses its built-in permissions API, which also allows a compatible permission handler. The current permissions fixture passed with LuckPerms 5.4.140 on Fabric and 5.4.150 on NeoForge; NeoForge 5.4.140 reproduced the [upstream capability initialization problem](https://github.com/LuckPerms/LuckPerms/issues/4259). Server-side revocation and provider-free fallback checks passed in alpha.62. Full client acceptance remains pending.
 
 ## Commands
 

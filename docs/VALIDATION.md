@@ -1,3 +1,9 @@
+# Alpha.62 permissions acceptance
+
+Date: 2026-10-10. Both loaders passed 1,150 server-side permission checks: 691 with real LuckPerms providers and 459 without an external provider. Actual operator entries, cached username/time suggestions, inspector revocation, deferred lookup success/failure output, read-only item cancellation and seven persistent block rollback boundaries were exercised. The cached-suggestion defect was reproduced before the fix. Block rollback now stops further mutations after revocation while preserving its journal contract.
+
+The clean build, repeated build with configuration-cache reuse and WorldEdit adapter build passed. All 522 existing tests passed (unchanged test tasks restored from Gradle's cache). Standard loader jars still contain SQLite only. R2 is complete for server-side acceptance; the separate connected-client matrix remains R3. These fixtures use synthetic players and observe queued packets, so they do not certify network login, claims or what a client sees. [Evidence and limits](validation/permissions-alpha62.json).
+
 # Actual permissions-provider progress
 
 Date: 2026-10-10. Actual LuckPerms providers passed 199 Fabric checks (5.4.140) and 200 NeoForge checks (5.4.150) using synthetic players. NeoForge 5.4.140 reproduced an upstream capability-initialization failure; the replacement provider passed using its own login listener. Network login and client behavior are not certified. No Guardian executable code changed; no builds or baseline tests were rerun. The [fixed permissions gate remains open](RELEASE_SCOPE.md#permissions-progress-2026-10-10). See [evidence and limits](validation/real-provider-alpha61.json).

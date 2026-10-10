@@ -70,26 +70,28 @@ object GuardianCommands {
                 val pos = net.minecraft.commands.arguments.coordinates.BlockPosArgument.getBlockPos(context, "position")
                 val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension(context.source), BlockPosition(pos.x, pos.y, pos.z))
                 history.lookupContainers(query, { transactions ->
+                    if (!authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
                     com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
-                }, { context.source.sendFailure(Component.literal("Guardian container lookup failed; see server log.")) })
+                }, { if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) context.source.sendFailure(Component.literal("Guardian container lookup failed; see server log.")) })
                 1
             }))
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
-            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).suggests { context, builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(context.source.server.playerList.players.map { it.gameProfile.name }, builder) }.executes { context ->
+            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).suggests { context, builder -> if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) net.minecraft.commands.SharedSuggestionProvider.suggest(context.source.server.playerList.players.map { it.gameProfile.name }, builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }.executes { context ->
                 val history = runtimeProvider()?.history()
                 if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
                 val name = StringArgumentType.getString(context, "name")
                 val uuid = runCatching { java.util.UUID.fromString(name) }.getOrNull()
                 val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(actorUuid = uuid, actorName = if (uuid == null) name else null)
                 history.lookupContainers(query, { transactions ->
+                    if (!authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
                     com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
-                }, { context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
+                }, { if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
                 1
             })))
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian transactions u:<player> [t:1h] [l:20], or /guardian transactions <x> <y> <z>")); 0 }
             .then(Commands.argument("filters", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, true) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
         root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, recovery [operation UUID], or cancel. These commands are read-only.")); 0 }
@@ -104,17 +106,17 @@ object GuardianCommands {
             })
             .then(Commands.literal("preview")
                 .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items preview t:1h r:10. Preview only; no items change.")); 0 }
-                .then(Commands.argument("filters",StringArgumentType.greedyString()).suggests { context,builder -> suggestFilters(context.source,builder,true,true) }
+                .then(Commands.argument("filters",StringArgumentType.greedyString()).suggests { context,builder -> suggestFilters(context.source,builder,permissions,true,true,ROLLBACK_PERMISSION,3) }
                     .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
             .then(Commands.literal("recovery")
                 .executes { context -> executeRecovery(context.source,null,runtimeProvider()) }
                 .then(Commands.literal("saved")
                     .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block/player slots."));0 }
                     .then(Commands.argument("operation",StringArgumentType.word())
-                        .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) }
+                        .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
                         .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
                 .then(Commands.argument("operation",StringArgumentType.word())
-                    .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) }
+                    .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
         dispatcher.register(root)
     }
@@ -134,7 +136,7 @@ object GuardianCommands {
         }
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions) }
                 .executes { context ->
                     executeLookup(
                         source = context.source,
@@ -145,13 +147,17 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, items: Boolean = false, preview: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+        if (!authorized(source, permissions, permission, fallback)) return com.mojang.brigadier.suggestion.Suggestions.empty()
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
         val players=source.server.playerList.players.map { it.gameProfile.name }
         val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items)
         return net.minecraft.commands.SharedSuggestionProvider.suggest(choices, builder.createOffset(start))
     }
+
+    private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
+        runCatching { permissions.has(source, permission, fallback) }.getOrDefault(false)
 
     private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
@@ -172,10 +178,11 @@ object GuardianCommands {
         )
         val navigationRaw = if (filter.radius != null && filter.explicitPosition == null) "$raw x:${query.position!!.x} y:${query.position!!.y} z:${query.position!!.z}" else raw
         history.lookupContainers(query, { rows ->
+            if (!authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
             com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
             source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst,
                 { page -> HistoryPageCommands.command("transactions", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("transactions", navigationRaw, 1, !filter.oldestFirst)))
-        }, { source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
+        }, { if (authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
         return 1
     }
 
@@ -237,7 +244,7 @@ object GuardianCommands {
         }
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3) }
                 .executes { context ->
                     executeRollback(
                         source = context.source,
@@ -336,11 +343,12 @@ object GuardianCommands {
         history.lookup(
             query,
             onSuccess = { rows ->
+                if (!authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) return@lookup
                 BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
                 source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == requestedLimit, filter.oldestFirst,
                     { page -> HistoryPageCommands.command("lookup", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("lookup", navigationRaw, 1, !filter.oldestFirst)))
             },
-            onFailure = { source.sendFailure(Component.literal("Guardian lookup failed; see the server log.")) }
+            onFailure = { if (authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) source.sendFailure(Component.literal("Guardian lookup failed; see the server log.")) }
         )
         return 1
     }

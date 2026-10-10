@@ -45,7 +45,7 @@ object BlockInspector {
         inspectInteraction(player, level, pos, rightClick)
         return true
     }
-    private fun authorized(player: ServerPlayer) = permissions?.has(player.createCommandSourceStack(), "guardian.inspect", 2) == true
+    private fun authorized(player: ServerPlayer) = runCatching { permissions?.has(player.createCommandSourceStack(), "guardian.inspect", 2) == true }.getOrDefault(false)
 
     fun inspectInteraction(player: Player, world: Level, pos: BlockPos, rightClick: Boolean = false): InteractionResult {
         if (world.isClientSide || player !is ServerPlayer || !isEnabled(player)) return InteractionResult.PASS
@@ -74,12 +74,12 @@ object BlockInspector {
                 ContainerHistoryFormatter.lines(rows, focus = owner).forEach(player::sendSystemMessage)
                 player.sendSystemMessage(footer(rows.size == limit))
             }
-        }, { player.sendSystemMessage(Component.literal("Guardian container lookup failed; see server log.")) })
+        }, { if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) player.sendSystemMessage(Component.literal("Guardian container lookup failed; see server log.")) })
         else history.lookup(BlockLookupQuery(owner.dimension, owner.position, limit = limit,
             offset = (page - 1) * limit, oldestFirst = selection.oldestFirst), { rows ->
             if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) {
                 BlockHistoryFormatter.lines(rows).forEach(player::sendSystemMessage); player.sendSystemMessage(footer(rows.size == limit))
             }
-        }, { player.sendSystemMessage(Component.literal("Guardian block lookup failed; see server log.")) })
+        }, { if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) player.sendSystemMessage(Component.literal("Guardian block lookup failed; see server log.")) })
     }
 }

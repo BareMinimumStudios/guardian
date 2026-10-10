@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-10",
+  "version": "0.4.0-alpha.62+1.21.1",
+  "release_gate_R2": "complete for server-side permissions acceptance; connected-client acceptance remains R3",
+  "checks_total": 1150,
+  "real_provider_checks": {
+    "fabric": 345,
+    "neoforge": 346
+  },
+  "provider_free_fallback_checks": {
+    "fabric": 229,
+    "neoforge": 230
+  },
+  "providers": {
+    "fabric": "LuckPerms 5.4.140 with Fabric Permissions API 0.3.1",
+    "neoforge": "LuckPerms 5.4.150 with NeoForge 21.1.256 PermissionAPI"
+  },
+  "permission_decisions_simulated": false,
+  "synthetic_players": true,
+  "connected_clients": 0,
+  "bytecode_transformed_by_fixture": false,
+  "original_servers_modified": false,
+  "sqlite_integrity": "ok",
+  "item_rollback_journals_created": 0,
+  "tests": {
+    "count": 522,
+    "failures": 0,
+    "errors": 0,
+    "unchanged_test_tasks_used_gradle_cache": true
+  },
+  "builds": {
+    "clean_build": "passed, 17 seconds",
+    "repeated_build": "passed, configuration cache reused, 189 ms",
+    "worldedit_adapter": "passed, configuration cache reused, 183 ms"
+  },
+  "cases": [
+    "actual installed permission services for both aliases and six command nodes",
+    "real provider unset, grant, explicit deny with actual level-four operator entry, regrant and grant removal",
+    "cached command parse: time and online-name filter suggestions stop after revocation, including legacy player argument",
+    "recovery UUID suggestions stop after actual provider revocation",
+    "block/container lookup success and controlled storage failure callbacks emit no queued result/error packets after revocation",
+    "inspector permission loss disables access and queues one notice; revoked paging and deferred block/container callbacks emit no result/error packets",
+    "four read-only item observation types end after real provider revocation without item journals or result bursts",
+    "provider-free actual operator entries levels zero through four, then removal, via installed Fabric API fallback and NeoForge built-in handler",
+    "real SQLite block rollback: denied admission, revocation during planning, before claim, during claim, before apply, preservation of older PENDING row, authorized mutation/finalization, revocation after mutation before journal finalization"
+  ],
+  "limitations": [
+    "No network-connected player or client presentation was tested. Synthetic players used real permission attachments and unconnected packet listeners; outgoing packet queues were observed, not client rendering.",
+    "Fabric uses the installed LuckPerms initialization hook; NeoForge invokes the actual provider login listener. Full network login and unrelated pack login listeners remain in R3.",
+    "Controlled lookup storage failures use a private adapter; permission decisions are never mocked. Block rollback acceptance uses the actual SQLite backend and actual world states.",
+    "Read-only item checks cover permission cancellation before inventory/recovery results, not item apply or a new saved-state durability contract.",
+    "The Fabric baseline includes Fabric Permissions API nested in a required dependency. Provider-free acceptance verifies API fallback without LuckPerms, not a runnable pack without that API.",
+    "LuckPerms NeoForge 5.4.150 is listed for 1.21.4 but passed this 1.21.1 combination. NeoForge 5.4.140 reproduced the upstream capability failure; universal provider/pack compatibility is not certified."
+  ],
+  "artifacts": {
+    "guardian-0.4.0-alpha.62+1.21.1.jar": {
+      "bytes": 12884810,
+      "sha256": "6e04dd3ed56420636a207b7954185481f0ab0334c8f22c9e7cdf9541701a72f1"
+    },
+    "guardian-neoforge-0.4.0-alpha.62+1.21.1.jar": {
+      "bytes": 12866747,
+      "sha256": "183ba4da626de0c6ebdfaebe137cf8bc9ba989901b6c943a5814b7254ad8c3ca"
+    },
+    "guardian-worldedit-0.4.0-alpha.62+1.21.1.jar": {
+      "bytes": 13057,
+      "sha256": "39f55829dc001b6b1f2ea5ac7c8bc9ccb259be0257e282e2cd1548536a648eec"
+    }
+  }
+}

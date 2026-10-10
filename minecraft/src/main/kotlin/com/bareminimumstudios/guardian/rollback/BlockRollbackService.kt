@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.permission.PermissionService
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftBlockRestorer
@@ -29,19 +30,22 @@ import java.util.ArrayDeque
 class BlockRollbackService(
     private val server: MinecraftServer,
     private val history: BlockHistoryService,
-    private val config: GuardianConfig
+    private val config: GuardianConfig,
+    private val permissions: PermissionService
 ) {
     private val logger = LoggerFactory.getLogger("Guardian/Rollback")
     private var active: Session? = null
-    private var planning: Boolean = false
+    private var planning: Any? = null
 
     fun request(source: CommandSourceStack, query: BlockLookupQuery, description: String): Boolean {
-        if (active != null || planning) {
+        if (!authorized(source)) return false
+        if (active != null || planning != null) {
             source.sendFailure(Component.literal("Guardian already has a block rollback in progress."))
             return false
         }
 
-        planning = true
+        val token = Any()
+        planning = token
         val maxRecords = config.rollback.maxRecords.get()
         val bounded = query.copy(includeRolledBack = false, limit = (maxRecords + 1).coerceAtMost(10_000))
         source.sendSystemMessage(Component.literal("Guardian: planning block rollback…"))
@@ -49,7 +53,9 @@ class BlockRollbackService(
         history.lookup(
             bounded,
             onSuccess = { rows ->
-                planning = false
+                if (planning !== token) return@lookup
+                planning = null
+                if (!authorized(source)) return@lookup
                 if (rows.isEmpty()) {
                     source.sendSystemMessage(Component.literal("Guardian: no matching active block changes were found."))
                     return@lookup
@@ -73,7 +79,9 @@ class BlockRollbackService(
                 source.sendSystemMessage(Component.literal("Guardian: rollback queued for ${rows.size} block change(s)."))
             },
             onFailure = {
-                planning = false
+                if (planning !== token) return@lookup
+                planning = null
+                if (!authorized(source)) return@lookup
                 source.sendFailure(Component.literal("Guardian block rollback lookup failed; see the server log."))
             }
         )
@@ -82,6 +90,9 @@ class BlockRollbackService(
 
     fun tick() {
         val session = active ?: return
+        if (!authorized(session.source)) session.revoked = true
+        if (session.revoked && session.phase == Phase.READY) { active = null; return }
+        if (session.revoked && session.phase == Phase.APPLY) { releaseCurrentBatchAndAbort(session); return }
         when (session.phase) {
             Phase.READY -> beginNextBatch(session)
             Phase.APPLY -> applyClaimedBatch(session)
@@ -91,7 +102,7 @@ class BlockRollbackService(
     }
 
     fun stop() {
-        planning = false
+        planning = null
         active = null
     }
 
@@ -111,10 +122,15 @@ class BlockRollbackService(
         history.setRollbackState(
             rowIds = rows.map(StoredBlockChange::rowId),
             state = BlockRollbackState.PENDING,
-            onSuccess = { session.phase = Phase.APPLY },
+            onSuccess = {
+                if (active === session) {
+                    if (!authorized(session.source)) session.revoked = true
+                    session.phase = Phase.APPLY
+                }
+            },
             onFailure = {
-                session.source.sendFailure(Component.literal("Guardian could not journal the rollback batch; no blocks from that batch were changed."))
-                active = null
+                reportFailure(session, Component.literal("Guardian could not journal the rollback batch; no blocks from that batch were changed."))
+                if (active === session) active = null
             }
         )
     }
@@ -122,7 +138,7 @@ class BlockRollbackService(
     private fun applyClaimedBatch(session: Session) {
         val world = server.getLevel(session.worldKey)
         if (world == null) {
-            session.source.sendFailure(Component.literal("Guardian rollback world is no longer available."))
+            reportFailure(session, Component.literal("Guardian rollback world is no longer available."))
             releaseCurrentBatchAndAbort(session)
             return
         }
@@ -131,6 +147,11 @@ class BlockRollbackService(
         val release = ArrayList<Long>()
 
         for (row in session.currentBatch) {
+            if (!authorized(session.source)) session.revoked = true
+            if (session.revoked) {
+                if (row.rollbackState == BlockRollbackState.ACTIVE) release += row.rowId
+                continue
+            }
             val snapshot = row.snapshot
             val pos = snapshot.position
             if (pos in session.blockedPositions) {
@@ -216,7 +237,7 @@ class BlockRollbackService(
                 BlockRollbackState.ACTIVE,
                 onSuccess = { completeBatch(session) },
                 onFailure = {
-                    session.source.sendFailure(
+                    reportFailure(session,
                         Component.literal("Guardian restored the safe rows, but could not release some pending journal rows. They can be reconciled on a later rollback.")
                     )
                     completeBatch(session)
@@ -235,7 +256,7 @@ class BlockRollbackService(
             onSuccess = { releaseSkipped() },
             onFailure = {
                 // Keep them PENDING. On the next rollback attempt, live==before will reconcile them without reapplying.
-                session.source.sendFailure(
+                reportFailure(session,
                     Component.literal("Guardian changed a rollback batch but could not finalize its journal rows. They remain pending for crash-safe reconciliation.")
                 )
                 releaseSkipped()
@@ -244,13 +265,16 @@ class BlockRollbackService(
     }
 
     private fun completeBatch(session: Session) {
+        if (active !== session) return
         repeat(session.currentBatch.size) { session.pendingRows.removeFirst() }
         session.currentBatch = emptyList()
+        if (!authorized(session.source)) session.revoked = true
+        if (session.revoked) { active = null; return }
         session.phase = if (session.pendingRows.isEmpty()) Phase.FINISHED else Phase.READY
     }
 
     private fun releaseCurrentBatchAndAbort(session: Session) {
-        val ids = session.currentBatch.map(StoredBlockChange::rowId)
+        val ids = session.currentBatch.filter { it.rollbackState == BlockRollbackState.ACTIVE }.map(StoredBlockChange::rowId)
         if (ids.isEmpty()) {
             active = null
             return
@@ -259,12 +283,14 @@ class BlockRollbackService(
         history.setRollbackState(
             ids,
             BlockRollbackState.ACTIVE,
-            onSuccess = { active = null },
-            onFailure = { active = null }
+            onSuccess = { if (active === session) active = null },
+            onFailure = { if (active === session) active = null }
         )
     }
 
     private fun finish(session: Session) {
+        if (active !== session) return
+        if (session.revoked || !authorized(session.source)) { active = null; return }
         session.source.sendSystemMessage(
             Component.literal(
                 "Guardian rollback complete: ${session.applied} applied, ${session.recoveredPending} recovered, " +
@@ -275,6 +301,13 @@ class BlockRollbackService(
         active = null
     }
 
+    private fun authorized(source: CommandSourceStack): Boolean =
+        runCatching { permissions.has(source, "guardian.rollback", 3) }.getOrDefault(false)
+
+    private fun reportFailure(session: Session, message: Component) {
+        if (active === session && !session.revoked && authorized(session.source)) session.source.sendFailure(message)
+    }
+
     private data class Session(
         val source: CommandSourceStack,
         val worldKey: ResourceKey<Level>,
@@ -283,6 +316,7 @@ class BlockRollbackService(
         val total: Int,
         var currentBatch: List<StoredBlockChange> = emptyList(),
         var phase: Phase = Phase.READY,
+        var revoked: Boolean = false,
         var applied: Int = 0,
         var recoveredPending: Int = 0,
         var skippedMismatch: Int = 0,
