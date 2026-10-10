@@ -17,12 +17,14 @@ import net.minecraft.world.item.ItemStack;
 public abstract class ItemDurabilityMixin {
     @WrapMethod(method = "hurtAndBreak(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V")
     private void guardian$beforeEquippedDamage(int amount, LivingEntity entity, EquipmentSlot slot, Operation<Void> original) {
+        if (!MinecraftInventoryCoordination.allowsAutomation(entity.level())) return;
         if (entity instanceof ServerPlayer player) MinecraftInventoryCoordination.beforeEquipmentMutation(player);
         original.call(amount, entity, slot);
     }
 
     @WrapMethod(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Ljava/util/function/Consumer;)V")
     private void guardian$beforePlayerDamage(int amount, ServerLevel level, ServerPlayer player, Consumer<Item> onBreak, Operation<Void> original) {
+        if (!MinecraftInventoryCoordination.allowsAutomation(level)) return;
         if (player != null) MinecraftInventoryCoordination.beforeEquipmentMutation(player);
         original.call(amount, level, player, onBreak);
     }

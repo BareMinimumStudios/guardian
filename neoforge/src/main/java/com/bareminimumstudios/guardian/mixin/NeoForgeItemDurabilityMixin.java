@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 public abstract class NeoForgeItemDurabilityMixin {
     @WrapMethod(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V")
     private void guardian$beforeEntityDamage(int amount, ServerLevel level, LivingEntity entity, Consumer<Item> onBreak, Operation<Void> original) {
+        if (!MinecraftInventoryCoordination.allowsAutomation(level)) return;
         if (entity instanceof ServerPlayer player) MinecraftInventoryCoordination.beforeEquipmentMutation(player);
         original.call(amount, level, entity, onBreak);
     }

@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.61+1.21.1",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 1368,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation",
+        "durability_partial_break_and_negative_damage_refused",
+        "equipped_armor_stand_caller_refused",
+        "off_thread_damage_refused",
+        "ordinary_partial_damage_and_break_callback_resume",
+        "raw_count_bypass_still_confirmed",
+        "alpha59_and_alpha60_regression"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "real_players": 0,
+      "durability_entity_fixture": "armor_stand",
+      "durability_callback_fixture": "counting_consumer"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 1544,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation",
+        "durability_partial_break_and_negative_damage_refused",
+        "equipped_armor_stand_caller_refused",
+        "off_thread_damage_refused",
+        "ordinary_partial_damage_and_break_callback_resume",
+        "raw_count_bypass_still_confirmed",
+        "alpha59_and_alpha60_regression"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "real_players": 0,
+      "durability_entity_fixture": "armor_stand",
+      "durability_callback_fixture": "counting_consumer"
+    }
+  ],
+  "fixture_checks": 2912,
+  "existing_tests": 522,
+  "item_apply_enabled": false,
+  "original_servers_modified": false,
+  "limitations": [
+    "Synthetic retention leases and unused workers, no persistent rollback journal requests or claims. Teardown does not establish production reconciliation.",
+    "Null-player durability callers and an armor stand exercise method contracts; no real player or connected client is present.",
+    "Raw ItemStack setters and component maps, earlier effects in larger attack/use/mod callers, direct chunk writes and custom mutation contracts remain uncertified.",
+    "NeoForge stock item damage paths are exercised; custom Item.damageItem implementations and arbitrary mod hooks are not certified.",
+    "This uses the existing unbounded automation policy, which also refuses callers while ordinary reservations exist. The fixture tests retained states and resumed behavior after release."
+  ]
+}

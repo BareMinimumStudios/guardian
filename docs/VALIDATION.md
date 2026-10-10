@@ -1,3 +1,7 @@
+# Whole item durability callers
+
+Date: 2026-10-09. Alpha.61 guards shared and NeoForge-specific durability callers before damage components, tool consumption or break callbacks. Both loaders passed 2,912 combined fixture checks, including previous container/component/placement/world cases, off-thread refusal and ordinary damage/break behavior after release. All 522 tests, clean build, configuration-cache reuse and the separate WorldEdit build passed. See [behavior and limits](ITEM_ROLLBACK.md#whole-durability-callers) and [evidence](validation/durability-alpha61.json). Raw mutation and larger mod caller gaps remain; item apply stays disabled. No real player or connected client was used.
+
 # World mutation callers and direct stack audit
 
 Date: 2026-10-09. Alpha.60 guards whole world replacement, removal and destruction callers before their side effects during retention. Both loaders passed 2,224 combined checks, including eight-container component and placement regression coverage, no-drop refusals, off-thread refusal, and normal behavior after release. The direct stack-count bypass was reproduced and restored in isolated fixtures; item apply remains disabled. See [behavior and limits](ITEM_ROLLBACK.md#world-mutation-callers-and-raw-stack-audit) and [evidence](validation/world-mutation-alpha60.json). All 522 tests and required builds passed. These synthetic fixtures do not certify arbitrary mod callers or replace connected-client acceptance.
