@@ -65,8 +65,8 @@ class GuardianRuntime(
         bulk = selectedBulk
         history = selectedHistory
         rollback = BlockRollbackService(server, selectedHistory, config)
-        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline) { itemRecovery?.isBusy()==true }
-        itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline) { itemPreview?.isBusy()==true }
+        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline,permissions) { itemRecovery?.isBusy()==true }
+        itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline,permissions) { itemPreview?.isBusy()==true }
         inventoryCoordination = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.install(server)
         itemOperations = (selectedStorage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.let { journal ->
             com.bareminimumstudios.guardian.platform.minecraft.MinecraftItemOperations(server, checkNotNull(inventoryCoordination), journal) {

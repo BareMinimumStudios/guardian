@@ -111,10 +111,10 @@ object GuardianCommands {
                 .then(Commands.literal("saved")
                     .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block/player slots."));0 }
                     .then(Commands.argument("operation",StringArgumentType.word())
-                        .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
+                        .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) }
                         .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
                 .then(Commands.argument("operation",StringArgumentType.word())
-                    .suggests { _,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions() ?: emptyList(),builder) }
+                    .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
         dispatcher.register(root)
     }

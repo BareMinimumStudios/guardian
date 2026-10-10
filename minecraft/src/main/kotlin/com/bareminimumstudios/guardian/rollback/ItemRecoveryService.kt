@@ -11,27 +11,28 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /** Operator view only. It never replays items, changes phases or releases persistent claims. */
-class ItemRecoveryService(private val server: MinecraftServer,private val history: BlockHistoryService,private val pipeline: BufferedLogPipeline,private val otherBusy: () -> Boolean) {
+class ItemRecoveryService(private val server: MinecraftServer,private val history: BlockHistoryService,private val pipeline: BufferedLogPipeline,private val permissions: com.bareminimumstudios.guardian.permission.PermissionService,private val otherBusy: () -> Boolean) {
     private val players=com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerReader()
     private var active: Session?=null
     private var recent: List<String> = emptyList()
     fun isBusy()=active!=null
-    fun suggestions()=recent
+    fun suggestions(source: CommandSourceStack)=if(permitted(source)) recent else emptyList()
     fun request(source: CommandSourceStack,id: UUID?=null,saved: Boolean=false): Boolean {
         require(!saved || id!=null)
+        if(!permitted(source)) { source.sendFailure(Component.literal("Guardian: item check requires guardian.rollback permission or operator level 3."));return false }
         if(active!=null || otherBusy()) { source.sendFailure(Component.literal("Guardian already has an item check in progress."));return false }
         val session=Session(source,id,saved);active=session
         source.sendSystemMessage(Component.literal("Guardian: checking item recovery journal; no items will be changed..."))
         fence(session) {
             if(id==null) history.recoveryHeaders({ headers ->
-                if(active !== session) return@recoveryHeaders
+                if(!authorize(session)) return@recoveryHeaders
                 recent=headers.map { it.operationId.toString() }
                 source.sendSystemMessage(Component.literal("Guardian unfinished item journals: ${headers.size} shown (maximum 10)."))
                 headers.forEach { source.sendSystemMessage(Component.literal("${it.operationId} | ${it.phase}").withStyle { style -> style.withClickEvent(net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,"/guardian rollback-items recovery ${it.operationId}")) }) }
                 source.sendSystemMessage(Component.literal("Use /guardian rollback-items recovery <operation UUID>. Read-only; no claims cleared."));active=null
             }, { refuse(session,"Journal listing failed or persistent storage is unavailable.") })
             else history.recoveryRecord(id,{ record ->
-                if(active !== session) return@recoveryRecord
+                if(!authorize(session)) return@recoveryRecord
                 if(record==null) { refuse(session,"Journal entry not found.");return@recoveryRecord }
                 val check=runCatching { ItemRecoveryCheck(record) }.getOrElse { refuse(session,"Journal plan is unsupported or inconsistent.");return@recoveryRecord }
                 session.watch=runCatching { pipeline.observeOwners(check.owners) }.getOrElse { refuse(session,"Owner observation is unavailable.");return@recoveryRecord }
@@ -42,6 +43,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
     }
     fun tick() {
         val session=active ?: return
+        if(!authorize(session)) return
         if(System.nanoTime()-session.started>TimeUnit.SECONDS.toNanos(10)) { refuse(session,"Recovery observation timed out.");return }
         if(!session.ready) return
         val owner=session.owners.pollFirst()
@@ -54,7 +56,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
         }
         session.ready=false
         fence(session) { history.recoveryRecord(session.id!!,{ fresh ->
-            if(active !== session) return@recoveryRecord
+            if(!authorize(session)) return@recoveryRecord
             val check=session.check!!
             if(fresh==null || fresh.phase!=check.record.phase || fresh.createdAt!=check.record.createdAt || fresh.entries.map { it.transactionId }!=check.record.entries.map { it.transactionId } || fresh.entries.zip(check.record.entries).any { (a,b) -> a.changes!=b.changes }) { refuse(session,"Journal changed during observation; try again.");return@recoveryRecord }
             val changed=session.bindings.filterValues { !it.isCurrent() }.keys + (session.watch?.changedOwners() ?: emptySet())
@@ -73,7 +75,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
         val pos=net.minecraft.world.level.ChunkPos(owner.position.x shr 4,owner.position.z shr 4)
         try {
             com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedChunkReader.read(world.chunkSource.chunkMap,pos).whenComplete { tag,error -> server.execute {
-                if(active !== session) return@execute
+                if(!authorize(session)) return@execute
                 val snapshot=if(error!=null || tag==null || tag.isEmpty) null else runCatching {
                     com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedContainerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),world.registryAccess())
                 }.getOrNull()
@@ -85,7 +87,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
         session.ready=false
         val folder=server.getWorldPath(net.minecraft.world.level.storage.LevelResource.PLAYER_DATA_DIR)
         players.read(folder,owner.playerId).whenComplete { tag,error -> server.execute {
-            if(active !== session) return@execute
+            if(!authorize(session)) return@execute
             val snapshot=if(error!=null || tag==null || tag.isEmpty) null else runCatching {
                 com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),server.registryAccess())
             }.getOrNull()
@@ -103,9 +105,19 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
     private fun fence(session: Session,after: () -> Unit) {
         session.barrier=pipeline.writeBarrier()
         session.barrier!!.result.whenComplete { _,error -> server.execute {
-            if(active !== session) return@execute
+            if(!authorize(session)) return@execute
             if(error!=null) refuse(session,"Accepted audit writes could not be confirmed.") else after()
         } }
+    }
+    private fun permitted(source: CommandSourceStack): Boolean {
+        check(server.isSameThread)
+        return runCatching { permissions.has(source,"guardian.rollback",3) }.getOrDefault(false)
+    }
+    private fun authorize(session: Session): Boolean {
+        if(active !== session) return false
+        if(permitted(session.source)) return true
+        refuse(session,"Permission is no longer available; check cancelled.")
+        return false
     }
     private fun refuse(session: Session,message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item recovery: $message No items changed or claims cleared.")) }
     private fun label(value: ItemRecoveryObservation)=when(value) {

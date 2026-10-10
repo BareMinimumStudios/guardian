@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.57+1.21.1",
+  "kind": "asynchronous_item_permission_revocation",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 50,
+      "cases": [
+        "denied_admission",
+        "completion_denial",
+        "callback_revocation",
+        "provider_failure_at_tick",
+        "new_check_after_revocation"
+      ],
+      "synthetic_player": false,
+      "explicit_provider_simulated": true,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 50,
+      "cases": [
+        "denied_admission",
+        "completion_denial",
+        "callback_revocation",
+        "provider_failure_at_tick",
+        "new_check_after_revocation"
+      ],
+      "synthetic_player": false,
+      "explicit_provider_simulated": true,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "fixture_checks": 100,
+  "existing_tests": 522,
+  "original_servers_modified": false,
+  "item_apply_enabled": false,
+  "limitations": [
+    "Private services use actual audit pipeline and SQLite-backed history, real console source stacks and a simulated permission provider.",
+    "Requests are cancelled before inventory/saved-owner sampling; no started player or chunk read is injected in this fixture.",
+    "Recovery checks use an unknown journal UUID and listing contains no persisted headers. Cached UUID completion is populated privately to test access refusal.",
+    "No actual LuckPerms integration, connected-client behavior or protected journal admission is tested."
+  ]
+}

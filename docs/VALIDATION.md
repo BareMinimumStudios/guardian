@@ -1,3 +1,7 @@
+# Asynchronous item permission revocation
+
+Date: 2026-10-09. Alpha.57 rechecks permission during read-only item checks and recovery-ID completion. Both loaders passed 100 live fixture checks for denial, revocation, provider failure, callback suppression and fresh-session admission using a simulated provider. See [scope and limits](ITEM_ROLLBACK.md#permission-changes-during-a-check) and [machine-readable evidence](validation/item-revocation-alpha57.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Inventory exclusion, real permission providers and connected-client acceptance remain pending. Item apply stays disabled.
+
 # Item command permissions
 
 Date: 2026-10-09. Alpha.56 makes the item command fallback consistently operator level 3, matching the `guardian.rollback` node. Two isolated loader fixtures passed 558 permission and command-route checks, including both aliases and simulated explicit provider decisions. Actual LuckPerms and connected-player acceptance remain pending. See [scope and behavior change](ITEM_ROLLBACK.md#rollback-permission-defaults) and [machine-readable evidence](validation/item-permissions-alpha56.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Item apply remains disabled.

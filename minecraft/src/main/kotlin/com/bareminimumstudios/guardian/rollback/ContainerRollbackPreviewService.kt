@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.util.ArrayDeque
 
 /** One inventory read per tick, bounded preview only. No slot setters or journal writes. */
-class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: com.bareminimumstudios.guardian.logging.BufferedLogPipeline,private val otherBusy: () -> Boolean = { false }) {
+class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: com.bareminimumstudios.guardian.logging.BufferedLogPipeline,private val permissions: com.bareminimumstudios.guardian.permission.PermissionService,private val otherBusy: () -> Boolean = { false }) {
     private val logger = LoggerFactory.getLogger("Guardian/ItemRollbackPreview")
     private var active: Session? = null
 
@@ -23,13 +23,14 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
 
     fun request(source: CommandSourceStack, query: ContainerLookupQuery, maxRecords: Int = 50): Boolean {
         require(maxRecords in 1..50)
+        if(!permitted(source)) { source.sendFailure(Component.literal("Guardian: item check requires guardian.rollback permission or operator level 3."));return false }
         if (active != null || otherBusy()) { source.sendFailure(Component.literal("Guardian already has an item rollback preview in progress.")); return false }
         val session = Session(source,query)
         active = session
         source.sendSystemMessage(Component.literal("Guardian: checking item rollback candidates; no items will be changed..."))
         session.barrier=pipeline.writeBarrier()
         session.barrier!!.result.whenComplete { _, error -> server.execute {
-            if(active !== session) return@execute
+            if(!authorize(session)) return@execute
             if(error != null) refuse(session,"Accepted audit writes could not be confirmed; see storage status.")
             else lookup(session,maxRecords)
         } }
@@ -39,7 +40,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
     private fun lookup(session: Session,maxRecords: Int) {
         val query=session.query
         history.lookupContainers(query.copy(limit=maxRecords+1,offset=0,oldestFirst=false), { rows ->
-            if (active !== session) return@lookupContainers
+            if (!authorize(session)) return@lookupContainers
             if (rows.size > maxRecords) { refuse(session,"More than $maxRecords transactions match. Narrow t:, r:, or u:."); return@lookupContainers }
             val owners=rows.flatMap { it.changes.map { change -> change.address.owner } }.distinct()
             if (owners.size > 32 || rows.sumOf { it.changes.size } > 2048) { refuse(session,"Too many inventories or changed slots match. Narrow the filters."); return@lookupContainers }
@@ -47,7 +48,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             session.wanted=rows.flatMap { it.changes }.map { it.address }.toSet()
             session.owners.addAll(owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory })
             history.guardContainers(rows,{ guard ->
-                if(active !== session) return@guardContainers
+                if(!authorize(session)) return@guardContainers
                 if(guard == null) { refuse(session,"This backend cannot verify persistent item rollback history.");return@guardContainers }
                 session.guard=guard
                 val watched=owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory }
@@ -59,6 +60,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
 
     fun tick() {
         val session=active ?: return
+        if(!authorize(session)) return
         if (!session.ready) {
             if(System.nanoTime()-session.startedAt > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) refuse(session,"Timed out waiting for audit writes or history checks.")
             return
@@ -88,10 +90,10 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             session.finalStarted=true;session.ready=false
             session.barrier=pipeline.writeBarrier()
             session.barrier!!.result.whenComplete { _,error -> server.execute {
-                if(active !== session) return@execute
+                if(!authorize(session)) return@execute
                 if(error!=null) { refuse(session,"Final audit writes could not be confirmed.");return@execute }
                 history.guardContainers(session.rows,{ guard ->
-                    if(active !== session) return@guardContainers
+                    if(!authorize(session)) return@guardContainers
                     if(guard==null) { refuse(session,"Final history safety check is unavailable.");return@guardContainers }
                     session.guard=guard
                     finish(session)
@@ -101,6 +103,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
     }
 
     private fun finish(session: Session) {
+        if(!authorize(session)) return
         session.watch?.changedOwners()?.let { session.unavailable.addAll(it) }
         session.bindings.filterValues { !it.isCurrent() }.keys.forEach { session.unavailable.add(it) }
         val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard))
@@ -127,6 +130,16 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val center=query.position ?: return false
         val radius=query.radius ?: 0
         return kotlin.math.abs(owner.position.x.toLong()-center.x) <= radius && kotlin.math.abs(owner.position.y.toLong()-center.y) <= radius && kotlin.math.abs(owner.position.z.toLong()-center.z) <= radius
+    }
+    private fun permitted(source: CommandSourceStack): Boolean {
+        check(server.isSameThread)
+        return runCatching { permissions.has(source,"guardian.rollback",3) }.getOrDefault(false)
+    }
+    private fun authorize(session: Session): Boolean {
+        if(active !== session) return false
+        if(permitted(session.source)) return true
+        refuse(session,"Permission is no longer available; check cancelled.")
+        return false
     }
     private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
     private fun label(reason: ContainerPreviewReason) = when(reason) {
