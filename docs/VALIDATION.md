@@ -1,6 +1,6 @@
 # Actual permissions-provider progress
 
-Date: 2026-10-10. The real LuckPerms Fabric provider passed 199 synthetic-source command/service checks. NeoForge remains incomplete because the synthetic player lacks its login-initialized provider capability. No Guardian executable code changed; no builds or baseline tests were rerun. The [fixed permissions gate remains open](RELEASE_SCOPE.md#permissions-progress-2026-10-10). See [evidence and limits](validation/real-provider-alpha61.json).
+Date: 2026-10-10. Actual LuckPerms providers passed 199 Fabric checks (5.4.140) and 200 NeoForge checks (5.4.150) using synthetic players. NeoForge 5.4.140 reproduced an upstream capability-initialization failure; the replacement provider passed using its own login listener. Network login and client behavior are not certified. No Guardian executable code changed; no builds or baseline tests were rerun. The [fixed permissions gate remains open](RELEASE_SCOPE.md#permissions-progress-2026-10-10). See [evidence and limits](validation/real-provider-alpha61.json).
 
 # Current release acceptance
 
