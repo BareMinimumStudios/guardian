@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.58+1.21.1",
+  "kind": "live_block_nbt_load_retention",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 152,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 152,
+      "cases": [
+        "active_retention",
+        "revoked_retention",
+        "detached_initialization",
+        "same_position_detached",
+        "worker_drained_but_unreconciled",
+        "release",
+        "ordinary_reservation"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "fixture_checks": 304,
+  "existing_tests": 522,
+  "original_servers_modified": false,
+  "item_apply_enabled": false,
+  "limitations": [
+    "Uses synthetic explicit journal-retention leases and unused journal workers; no persistent rollback journal or claim is created.",
+    "Fixture release is authorized only because no journal request or mutation was submitted. This does not establish production reconciliation.",
+    "Full block-entity NBT was compared on eight exact vanilla types; custom inventories, off-thread writes and raw references are not certified.",
+    "Direct component application and block-placement caller contracts remain pending. No connected client is present."
+  ]
+}

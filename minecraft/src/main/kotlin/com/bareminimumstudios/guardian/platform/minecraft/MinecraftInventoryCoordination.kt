@@ -255,6 +255,17 @@ object MinecraftInventoryCoordination {
         }
     }
 
+    /** Refuse live NBT replacement during retention; detached chunk initialization still loads. */
+    @JvmStatic fun allowsLiveBlockDataLoad(block: BlockEntity): Boolean {
+        if (block !is BaseContainerBlockEntity) return true
+        val current = structuralBinding(block.level) ?: return true
+        if (!current.owners.hasJournalRetention()) return true
+        val level = block.level as ServerLevel
+        val pos = block.blockPos
+        if (block.isRemoved || level.chunkSource.getChunkNow(pos.x shr 4,pos.z shr 4) == null) return true
+        return level.getBlockEntity(pos) !== block
+    }
+
     @JvmStatic fun beforeBlockInventoryMutation(block: BlockEntity) {
         if (block !is BaseContainerBlockEntity) return
         val current = structuralBinding(block.level) ?: return

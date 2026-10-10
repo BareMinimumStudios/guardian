@@ -1,3 +1,7 @@
+# Live block inventory NBT load guard
+
+Date: 2026-10-09. Alpha.58 guards live loaded inventory NBT replacement during retained journal work while preserving detached initialization. Both loaders passed 304 fixture checks across eight supported container types. See [behavior and limits](ITEM_ROLLBACK.md#live-block-nbt-replacement-during-retention) and [machine-readable evidence](validation/block-data-load-alpha58.json). Mixin targets were checked in both loader dependency sources and exercised live. Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Complete inventory exclusion and connected-client acceptance remain pending; item apply stays disabled.
+
 # Asynchronous item permission revocation
 
 Date: 2026-10-09. Alpha.57 rechecks permission during read-only item checks and recovery-ID completion. Both loaders passed 100 live fixture checks for denial, revocation, provider failure, callback suppression and fresh-session admission using a simulated provider. See [scope and limits](ITEM_ROLLBACK.md#permission-changes-during-a-check) and [machine-readable evidence](validation/item-revocation-alpha57.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Inventory exclusion, real permission providers and connected-client acceptance remain pending. Item apply stays disabled.

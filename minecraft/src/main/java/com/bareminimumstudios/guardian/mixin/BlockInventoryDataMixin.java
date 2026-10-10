@@ -9,7 +9,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockEntity.class)
 public abstract class BlockInventoryDataMixin {
-    @Inject(method = {"loadWithComponents", "loadCustomOnly", "applyComponents", "applyComponentsFromItemStack"}, at = @At("HEAD"))
+    @Inject(method = {"loadWithComponents", "loadCustomOnly"}, at = @At("HEAD"), cancellable = true)
+    private void guardian$beforeDataLoad(CallbackInfo callback) {
+        BlockEntity block = (BlockEntity) (Object) this;
+        if (!MinecraftInventoryCoordination.allowsLiveBlockDataLoad(block)) {
+            callback.cancel();
+            return;
+        }
+        MinecraftInventoryCoordination.beforeBlockInventoryMutation(block);
+    }
+
+    @Inject(method = {"applyComponents", "applyComponentsFromItemStack"}, at = @At("HEAD"))
     private void guardian$beforeDataWrite(CallbackInfo callback) {
         MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
     }
