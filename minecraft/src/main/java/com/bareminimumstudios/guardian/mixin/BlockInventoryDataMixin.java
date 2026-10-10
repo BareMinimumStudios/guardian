@@ -19,8 +19,13 @@ public abstract class BlockInventoryDataMixin {
         MinecraftInventoryCoordination.beforeBlockInventoryMutation(block);
     }
 
-    @Inject(method = {"applyComponents", "applyComponentsFromItemStack"}, at = @At("HEAD"))
+    @Inject(method = {"applyComponents", "applyComponentsFromItemStack"}, at = @At("HEAD"), cancellable = true)
     private void guardian$beforeDataWrite(CallbackInfo callback) {
-        MinecraftInventoryCoordination.beforeBlockInventoryMutation((BlockEntity) (Object) this);
+        BlockEntity block = (BlockEntity) (Object) this;
+        if (!MinecraftInventoryCoordination.allowsLiveBlockDataLoad(block)) {
+            callback.cancel();
+            return;
+        }
+        MinecraftInventoryCoordination.beforeBlockInventoryMutation(block);
     }
 }

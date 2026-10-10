@@ -255,6 +255,14 @@ object MinecraftInventoryCoordination {
         }
     }
 
+    /** Refuse the whole placement caller before callbacks, world changes or stack consumption. */
+    @JvmStatic fun allowsBlockItemPlacement(level: Level): Boolean {
+        val current = binding ?: return true
+        if (level !is ServerLevel || level.server !== current.server) return true
+        if (!current.server.isSameThread) return false
+        return current.owners.isRunning() && !current.owners.hasJournalRetention()
+    }
+
     /** Refuse live NBT replacement during retention; detached chunk initialization still loads. */
     @JvmStatic fun allowsLiveBlockDataLoad(block: BlockEntity): Boolean {
         if (block !is BaseContainerBlockEntity) return true

@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.59+1.21.1",
+  "kind": "live_components_and_block_item_caller_retention",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 400,
+      "cases": [
+        "active_and_revoked_component_retention",
+        "detached_component_initialization",
+        "drained_but_unreconciled_retention",
+        "refused_use_and_placement_source_and_destination_unchanged",
+        "ordinary_placement_consumes_one",
+        "ordinary_component_load_resumes"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "food_component_on_placement_stack": true
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 400,
+      "cases": [
+        "active_and_revoked_component_retention",
+        "detached_component_initialization",
+        "drained_but_unreconciled_retention",
+        "refused_use_and_placement_source_and_destination_unchanged",
+        "ordinary_placement_consumes_one",
+        "ordinary_component_load_resumes"
+      ],
+      "containers": 8,
+      "synthetic_player": false,
+      "synthetic_retention": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "food_component_on_placement_stack": true
+    }
+  ],
+  "fixture_checks": 800,
+  "existing_tests": 522,
+  "original_servers_modified": false,
+  "item_apply_enabled": false,
+  "limitations": [
+    "Synthetic explicit retention leases use unused journal workers without persistent claims or journal requests. Fixture release is not production reconciliation evidence.",
+    "Eight exact vanilla container types and vanilla BlockItem callers are exercised; arbitrary mod callers, overrides, raw references and off-thread mutation are not certified.",
+    "No real player or connected client is present. The placement context uses a null player. Item apply remains disabled."
+  ]
+}

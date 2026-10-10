@@ -1,3 +1,7 @@
+# Live components and block placement callers
+
+Date: 2026-10-09. Alpha.59 protects live loaded container component replacement and refuses vanilla block-item callers before world changes, source consumption or food fallback during retention. Isolated Fabric and NeoForge servers passed 800 checks, including unchanged sources and destinations on refusal and normal placement consuming one item after release. All 522 existing tests, clean build, configuration-cache reuse and the WorldEdit build passed. See [behavior and limits](ITEM_ROLLBACK.md#components-and-block-item-callers-during-retention) and [evidence](validation/components-placement-alpha59.json). Item apply remains disabled; these null-player synthetic fixtures do not replace connected-client or arbitrary mod acceptance.
+
 # Live block inventory NBT load guard
 
 Date: 2026-10-09. Alpha.58 guards live loaded inventory NBT replacement during retained journal work while preserving detached initialization. Both loaders passed 304 fixture checks across eight supported container types. See [behavior and limits](ITEM_ROLLBACK.md#live-block-nbt-replacement-during-retention) and [machine-readable evidence](validation/block-data-load-alpha58.json). Mixin targets were checked in both loader dependency sources and exercised live. Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Complete inventory exclusion and connected-client acceptance remain pending; item apply stays disabled.
