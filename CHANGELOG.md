@@ -7,9 +7,14 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Changed
+
+- Include the existing BML license in the Fabric core jar and the separate GPL license in the optional WorldEdit adapter jar.
+- Prepare the alpha.62 test package and artifact review. Correct the documented schema version, direct block rollback behavior and completed server-side permissions gate. Connected-client acceptance and final sign-off remain pending.
+
 ### Added
 
-- Record actual LuckPerms Fabric and NeoForge grant/deny/revocation command checks, including the tested NeoForge 5.4.150 replacement for the older provider capability failure. Permissions and connected-client acceptance remain open.
+- Record actual LuckPerms Fabric and NeoForge grant/deny/revocation command checks, including the tested NeoForge 5.4.150 replacement for the older provider capability failure. Server-side permissions acceptance subsequently passed in alpha.62; connected-client acceptance remains open.
 
 - Define a fixed alpha release scope for logging, inspection, block rollback and read-only item checks. Defer item apply explicitly and separate actual permissions/client acceptance from future mutation-exclusion research.
 

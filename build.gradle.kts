@@ -110,7 +110,7 @@ publishing {
 // Bundle the platform-neutral core directly into the Fabric artifact.
 evaluationDependsOn(":common")
 val commonOutput = project(":common").extensions.getByType<SourceSetContainer>().named("main").map { it.output }
-tasks.jar { from(commonOutput) }
+tasks.jar { from(commonOutput); from(file("LICENSE")) }
 tasks.named<Jar>("sourcesJar") { from(project(":common").file("src/main/kotlin")) }
 
 

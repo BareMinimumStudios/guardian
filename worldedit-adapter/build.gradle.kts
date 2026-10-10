@@ -82,3 +82,5 @@ publishing {
         }
     }
 }
+
+tasks.jar { from(file("LICENSE")) }

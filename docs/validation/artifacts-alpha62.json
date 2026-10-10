@@ -1,0 +1,47 @@
+{
+  "version": "0.4.0-alpha.62+1.21.1",
+  "reviewDate": "2026-10-10",
+  "executableChanges": false,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.62+1.21.1.jar",
+      "bytes": 12886550,
+      "sha256": "9962756ae13c6f910a15842b835dae9792067663253fbca91ae63c58103edd7a",
+      "previousValidatedSha256": "6e04dd3ed56420636a207b7954185481f0ab0334c8f22c9e7cdf9541701a72f1",
+      "nestedJars": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.62+1.21.1.jar",
+      "bytes": 12866747,
+      "sha256": "183ba4da626de0c6ebdfaebe137cf8bc9ba989901b6c943a5814b7254ad8c3ca",
+      "previousValidatedSha256": "183ba4da626de0c6ebdfaebe137cf8bc9ba989901b6c943a5814b7254ad8c3ca",
+      "nestedJars": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.62+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "dbf6e2fc68c2b85230a6ff97590eb5ca5a61feb6cee3105e99ca666964dbbc5b",
+      "previousValidatedSha256": "39f55829dc001b6b1f2ea5ac7c8bc9ccb259be0257e282e2cd1548536a648eec",
+      "nestedJars": []
+    }
+  ],
+  "releaseApproved": false,
+  "connectedClientAcceptance": "pending",
+  "builds": {
+    "clean": "successful, 21s",
+    "build": "successful, 4s",
+    "repeatedBuild": "successful, 176ms, configuration cache reused",
+    "worldEdit": "successful, 2s",
+    "tests": 522,
+    "failures": 0,
+    "errors": 0,
+    "testExecution": "existing test outputs restored from cache in clean build"
+  }
+}

@@ -34,7 +34,7 @@ Guardian continues the ExProtect prototype. This checkpoint builds for Fabric an
 
 ## Release scope
 
-This alpha includes existing logging, inspection, block rollback and read-only item checks. Item rollback apply is unavailable, including for vanilla inventories. The remaining release gates are actual permissions acceptance, connected-client acceptance and final artifact sign-off; additional item-mutation guards are not open-ended release requirements. See the [fixed scope and checklist](docs/RELEASE_SCOPE.md).
+This alpha includes existing logging, inspection, block rollback and read-only item checks. Item rollback apply is unavailable, including for vanilla inventories. Server-side permissions acceptance is complete. The remaining release gates are connected-client acceptance and final artifact sign-off; additional item-mutation guards are not open-ended release requirements. See the [fixed scope and checklist](docs/RELEASE_SCOPE.md).
 
 ## Installation
 
@@ -53,7 +53,7 @@ LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanill
 | `/guardian transactions u:<player> t:1h l:20 p:1` | Filter and page through item history. |
 | `/guardian transactions player <name-or-uuid>` | Compatibility form for recent player item history. |
 | `/guardian inspect` | Toggle inspection: left-click for block history, right-click a container for item history. |
-| `/guardian rollback` | Preview or apply a block rollback. |
+| `/guardian rollback` | Apply a bounded block rollback with the supplied filters. |
 | `/guardian rollback-items preview t:1h r:5` | Check item rollback candidates without changing items. |
 | `/guardian rollback-items recovery [operation UUID]` | List unfinished item journals or check their observed state. |
 | `/guardian rollback-items recovery saved <operation UUID>` | Compare supported block and player slots with saved data. |
@@ -67,7 +67,7 @@ Fzzy Config manages Guardian's settings under the `guardian` namespace. New inst
 
 Set `logging.automatedContainerTransfers` to true to enable block-to-block hopper history. It defaults to false in this testing checkpoint. The general, logging, and container-transaction master switches also apply. Use block-position lookup for hopper records.
 
-The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 8. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open schema 8. Schema 7 adds item rollback recovery tracking; schema 8 indexes logical inventory owners to check filtered-out history. The first schema-8 startup scans existing item payloads to build that index. Item rollback apply remains disabled.
+The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 10. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open a newer schema than they support. Schema 7 adds item rollback recovery tracking; schema 8 indexes logical inventory owners to check filtered-out history. The first schema-8 startup scans existing item payloads to build that index. Schemas 9 and 10 add internal recovery protection and persisted rollback images. Item rollback apply remains disabled.
 
 ## Project structure
 

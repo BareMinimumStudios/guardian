@@ -20,7 +20,7 @@ Guardian embeds `org.xerial:sqlite-jdbc` so SQLite storage works out of the box.
 
 ## DuckDB JDBC
 
-Guardian embeds `org.duckdb:duckdb_jdbc`. DuckDB is distributed under the MIT License.
+Only the optional `-PbundleDuckDb=true` build embeds `org.duckdb:duckdb_jdbc`; standard release jars do not contain it. DuckDB is distributed under the MIT License.
 
 ## WorldEdit / Guardian WorldEdit Adapter
 
