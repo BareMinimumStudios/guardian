@@ -423,3 +423,9 @@ Next: require complete receipts and protection in production admission, coordina
 ```
 
 Requires `guardian.rollback` or operator level 2. An authorized operator can cancel the active preview or recovery observation, including one started by another operator. The requester receives a cancellation message. Later callbacks from that check cannot publish a result or clear a newer check. The command does not stop an internal protected operation, interrupt a started disk read, change items, acknowledge recovery or release persistent claims. If no check is active, it reports that directly. Item apply remains disabled; no apply confirmation command is exposed.
+
+## Consistent live player eligibility
+
+Alpha.55 uses the same player preflight for read-only observations and protected bindings. The player must be alive, connected, outside a dimension transition, and using the exact vanilla inventory menu with an empty cursor, crafting grid and result slot. Persistent inventory identity and its 41-slot layout must also match. These conditions are checked when sampling and again when verifying the observation. An ineligible owner is unavailable, so a matching recorded slot alone cannot qualify the transaction. Refusal does not close menus or return temporary items.
+
+Isolated Fabric and NeoForge fixtures verified result-slot and cursor refusal, dead/transition flags, a different active menu and offline ownership. Already sampled observations failed their current-state checks while those states were active; a fresh idle observation succeeded afterward without changing requested persistent slots. These were synthetic players, not connected-client or full lifecycle tests. [Validation evidence](validation/player-observation-alpha55.json).

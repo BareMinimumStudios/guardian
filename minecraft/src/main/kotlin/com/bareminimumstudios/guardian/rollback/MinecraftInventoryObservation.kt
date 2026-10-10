@@ -33,7 +33,11 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                 is ItemSlotOwner.PlayerInventory -> {
                     val player=server.playerList.getPlayer(owner.playerId) ?: return null
                     val menu=player.inventoryMenu;val inventory=player.inventory;val level=player.level()
-                    fun current()=server.playerList.getPlayer(owner.playerId) === player && player.level() === level && player.inventory === inventory && player.containerMenu === menu && menu.carried.isEmpty && (1..4).all { menu.slots[it].item.isEmpty }
+                    fun current()=server.playerList.getPlayer(owner.playerId) === player && player.level() === level &&
+                        player.server === server && !player.isRemoved && player.inventory === inventory &&
+                        inventory.javaClass == net.minecraft.world.entity.player.Inventory::class.java &&
+                        inventory.player === player && inventory.containerSize == 41 &&
+                        player.inventoryMenu === menu && MinecraftPlayerInventoryEligibility.isIdle(player)
                     if(!current()) return null
                     val slots=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
                     val items=MinecraftItemSnapshotter.CaptureBatch(player.registryAccess());var bytes=0L

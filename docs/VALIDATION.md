@@ -1,3 +1,7 @@
+# Player observation eligibility
+
+Date: 2026-10-09. Alpha.55 aligns read-only player observations with protected binding preflight, including the result slot, alive/connected/transition state and exact inventory identities. Isolated fixtures on both loaders verified refusal and rechecking without changing requested persistent slots. See [scope and limits](ITEM_ROLLBACK.md#consistent-live-player-eligibility) and [machine-readable evidence](validation/player-observation-alpha55.json). Clean, repeated configuration-cache and WorldEdit builds passed; all existing 522 tests passed. Complete inventory exclusion and connected-client acceptance remain pending; item apply stays disabled.
+
 # Read-only operator cancellation
 
 Date: 2026-10-09. Alpha.54 adds `/guardian rollback-items cancel`. Two isolated server fixtures, one per loader, confirmed successful cancellation of a journal listing, saved-slot observation and inventory preview before their asynchronous callbacks completed. Idle cancellation returned zero, cancelled checks remained inactive after callbacks, and a subsequent journal listing succeeded. SQLite integrity passed with no rollback journals created. These are console operator checks; player permission providers, chat presentation and connected-client acceptance remain pending. See [machine-readable evidence](validation/operator-cancellation-alpha54.json). Clean, repeated configuration-cache and WorldEdit builds passed; the existing 522 tests passed. Item apply remains disabled.

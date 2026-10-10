@@ -14,6 +14,12 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.55+1.21.1] - 2026-10-09
+
+### Fixed
+
+- Use the protected-operation player eligibility checks for read-only item observations. Crafting results, dead or transitioning players and unsupported persistent inventory identities cannot qualify for a preview or live recovery observation.
+
 ## [0.4.0-alpha.54+1.21.1] - 2026-10-09
 
 ### Added

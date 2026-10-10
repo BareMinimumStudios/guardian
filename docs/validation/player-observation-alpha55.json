@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-09",
+  "version": "0.4.0-alpha.55+1.21.1",
+  "kind": "live_player_observation_eligibility",
+  "runs": [
+    {
+      "loader": "Fabric",
+      "checks": 20,
+      "cases": [
+        "idle",
+        "crafting_result",
+        "cursor",
+        "dead",
+        "dimension_transition",
+        "different_menu",
+        "restored_idle",
+        "offline"
+      ],
+      "synthetic_player": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 21,
+      "cases": [
+        "idle",
+        "crafting_result",
+        "cursor",
+        "dead",
+        "dimension_transition",
+        "different_menu",
+        "restored_idle",
+        "offline"
+      ],
+      "synthetic_player": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "fixture_checks": 41,
+  "existing_tests": 522,
+  "original_servers_modified": false,
+  "item_apply_enabled": false,
+  "limitations": [
+    "Synthetic UUID-registered player only; no client or world-player ticking.",
+    "Health and dimension-transition flags were changed by the fixture; this is not a full death or dimension-travel lifecycle acceptance.",
+    "Requested persistent slot contents and the crafting result object were checked; this does not establish inventory exclusion or disk completion.",
+    "Custom inventory subclasses and permission-provider integrations were not exercised."
+  ]
+}
