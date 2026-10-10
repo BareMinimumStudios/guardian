@@ -1,3 +1,7 @@
+# Actual permissions-provider progress
+
+Date: 2026-10-10. The real LuckPerms Fabric provider passed 199 synthetic-source command/service checks. NeoForge remains incomplete because the synthetic player lacks its login-initialized provider capability. No Guardian executable code changed; no builds or baseline tests were rerun. The [fixed permissions gate remains open](RELEASE_SCOPE.md#permissions-progress-2026-10-10). See [evidence and limits](validation/real-provider-alpha61.json).
+
 # Current release acceptance
 
 The [fixed release scope](RELEASE_SCOPE.md) defines the remaining gates. Item apply is excluded from this release. The sections below are historical evidence, not an expanding release checklist. [Scope assessment](validation/release-scope-alpha61.json) checks the read-only command surface and exact-class binding boundary; executable code is unchanged from alpha.61, and its existing build/runtime evidence was not re-executed for this documentation change.

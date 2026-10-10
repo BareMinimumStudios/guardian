@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-10",
+  "version": "0.4.0-alpha.61+1.21.1",
+  "executable_code_changed": false,
+  "provider": "LuckPerms 5.4.140",
+  "fabric_checks": 199,
+  "fabric_command_nodes": [
+    "lookup",
+    "inspect",
+    "rollback",
+    "status",
+    "transactions",
+    "rollback-items"
+  ],
+  "aliases": [
+    "guardian",
+    "co"
+  ],
+  "phases": [
+    "unset_nonoperator_denied",
+    "explicit_grant_nonoperator_allowed",
+    "explicit_deny_source_level4_denied",
+    "regrant_allowed",
+    "grant_removed_nonoperator_denied"
+  ],
+  "permissions_service": "actual installed FabricPermissionsPermissionService",
+  "permission_provider_simulated": false,
+  "player_synthetic": true,
+  "login_attachment_initialized_manually": true,
+  "connected_clients": 0,
+  "neoforge_status": "incomplete: synthetic player UserCapability not initialized",
+  "release_gate_R2": "partial, still open",
+  "original_servers_modified": false,
+  "guardian_sqlite_integrity": "ok",
+  "guardian_item_journals_created": 0,
+  "limitations": [
+    "Checks actual provider and command/service decisions using a synthetic source and disposable user data. No permission decision is mocked.",
+    "Fabric login attachment was initialized through the installed LuckPerms hook after loading a real provider user. This does not certify the network login lifecycle.",
+    "The source level 4 test is a synthetic command-source fallback override, not an actual connected operator.",
+    "Allowed command gates are checked; full authorized handlers, inspector pages, async output/suggestions, actual-provider lifecycle and no-provider fallback remain acceptance work.",
+    "NeoForge run stopped on an uninitialized synthetic-player capability before grant assertions. This is not evidence of a Guardian production defect."
+  ],
+  "jar_sha256": {
+    "LuckPerms-Fabric-5.4.140.jar": "3e17d490f87761c174478f68860367610a473ff5c2a9a9daad608773bf0e81bc",
+    "LuckPerms-NeoForge-5.4.140.jar": "6b8097a7e1a27d870d3d472d00079fa958271db16b9433369dce6c7f62530b19"
+  }
+}

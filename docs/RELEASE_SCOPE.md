@@ -37,7 +37,7 @@ Decision: do not enable item apply in this release. Stop treating additional gen
 | Gate | Status | Completion evidence |
 | --- | --- | --- |
 | R1: automated baseline | Complete for alpha.61 | 522 tests, required clean/repeated-cache/WorldEdit builds, both-loader runtime evidence and source/package checks. The 2,912 combined fixture checks include synthetic cases and confirmed unsupported bypasses; they are not 2,912 client tests. See [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
-| R2: real permissions acceptance | Pending | On both loaders, verify actual provider grant, deny and revocation for lookup, inspect, block rollback and read-only item commands; verify vanilla fallback without the provider. Unauthorized output, suggestions and inspection must stop after revocation. Record provider versions and results. |
+| R2: real permissions acceptance | Partial; still pending | On both loaders, verify actual provider grant, deny and revocation for lookup, inspect, block rollback and read-only item commands; verify vanilla fallback without the provider. Unauthorized output, suggestions and inspection must stop after revocation. Record provider versions and results. |
 | R3: connected-client acceptance | Pending | Run the bounded matrix below on both loaders. Record server/client versions and actual pack/claim mods. The user cannot join yet; this gate waits for that opportunity. Synthetic players and idle-server startup do not close it. |
 | R4: release artifact review | Prepared; final sign-off pending | Confirm the chosen version, dated changelog, loader jars, server dependencies, SQLite-only standard packaging, licenses and these limitations. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
 
@@ -55,3 +55,11 @@ Use a backed-up isolated world. This is acceptance of the existing release scope
 6. **Read-only item checks:** preview/recovery/saved/cancel with valid permission, unsupported/busy endpoints and permission revocation. Verify clear refusal/skipping and no changed items, consumed source history or cleared unresolved claims. Confirm no item apply command exists.
 
 Record pass/fail per row and loader, link any reproducible defects, and close R3 when all six rows pass. There is no fixed number of development passes promised while the external acceptance is pending.
+
+## Permissions progress, 2026-10-10
+
+The actual LuckPerms 5.4.140 Fabric provider passed 199 command/service checks for grant, explicit deny, regrant and grant removal across Guardian's two command aliases. The player was synthetic; its real LuckPerms attachment was initialized manually because no network login occurred. Permission decisions used the installed provider, not a simulated PermissionService.
+
+NeoForge loaded the provider but its synthetic player lacked the login-initialized LuckPerms capability, so its grant assertions remain incomplete. This does not establish a production defect. The provider fixtures changed no Guardian executable code and left the user's servers untouched. Actual login, inspector/async output and suggestions, full handler behavior and provider-free acceptance remain within R2/R3. R2 remains open; no release gate or feature was added. [Evidence and limitations](validation/real-provider-alpha61.json).
+
+Provider artifacts came from the published [Fabric 1.21.1 release](https://modrinth.com/plugin/luckperms/version/v5.4.140-fabric) and [NeoForge 1.21.1 release](https://modrinth.com/plugin/luckperms/version/v5.4.140-neoforge). They are private test dependencies and are not bundled with Guardian.

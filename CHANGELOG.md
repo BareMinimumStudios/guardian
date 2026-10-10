@@ -9,6 +9,8 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Added
 
+- Record actual LuckPerms Fabric grant/deny/revocation command checks and the incomplete NeoForge synthetic-login fixture. Permissions and connected-client acceptance remain open.
+
 - Define a fixed alpha release scope for logging, inspection, block rollback and read-only item checks. Defer item apply explicitly and separate actual permissions/client acceptance from future mutation-exclusion research.
 
 - Document synthetic-player persistence acceptance on both loaders, including complete 41-slot images, started compressed-file failures, explicit recovery after all affected owners are saved, and protected refusal after process termination. Connected-client acceptance remains pending.
