@@ -16,93 +16,188 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 ## What is Guardian?
 
-Guardian records block changes so server staff can see what happened and roll back unwanted edits. It stores history in SQLite and provides commands for lookup, inspection, and rollback.
+Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-Guardian continues the ExProtect prototype. This checkpoint builds for Fabric and NeoForge with shared Mojang-mapped Minecraft code. Item transactions record accepted clicks and close-time cursor returns in supported block-backed menus, plus player inventory-screen moves, standalone drops, offhand swaps, and accepted creative slot changes. Vanilla 2×2 and 3×3 crafting captures ingredient grids, recipe-book placement, result takes and close-time returns. Recipe previews are excluded from stored item counts; unknown or extended crafting menus are skipped. Block-to-block hopper capture is available through an opt-in setting. See [Step 4 testing](docs/STEP_4_TESTING.md) for coverage and remaining acceptance checks.
+**Current version: 0.4.0-alpha.62+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
-## At a glance
+## Install or update
 
-- Records player block placement and breaking.
-- Records correlated item changes from supported block-container clicks, menu closes, player inventory moves, drops, offhand swaps, creative slot changes, and vanilla crafting.
-- Can record hopper transfers between supported block containers, including double chests.
-- Keeps audit history across server restarts with bundled SQLite.
-- Shows block history through commands or an inspector tool.
-- Restores blocks with bounded work per server tick.
-- Previews eligible container transfers without changing items; item rollback apply is unavailable in this release.
-- Logs WorldEdit operations through a separate optional adapter.
-- Runs on the server; players do not need Guardian installed.
+Use Java 21 and install the jar matching your **server** loader. Each core jar is about 12 MiB and includes SQLite; no separate database mod or common-module jar is needed.
 
-## Release scope
+| Server | Guardian jar | Required server dependencies |
+| --- | --- | --- |
+| Fabric 1.21.1 | `guardian-<version>.jar` | Fabric Loader 0.19.5 or newer, Fabric API 0.116.17+1.21.1, Fabric Language Kotlin 1.14.1+kotlin.2.4.20, Fzzy Config 0.7.6+1.21 |
+| NeoForge 1.21.1 | `guardian-neoforge-<version>.jar` | NeoForge 21.1.256 or newer, Kotlin for Forge 5.12 or newer, Fzzy Config 0.7.6 for NeoForge 1.21.1 |
 
-This alpha includes existing logging, inspection, block rollback and read-only item checks. Item rollback apply is unavailable, including for vanilla inventories. Server-side permissions acceptance is complete. The remaining release gates are connected-client acceptance and final artifact sign-off; additional item-mutation guards are not open-ended release requirements. See the [fixed scope and checklist](docs/RELEASE_SCOPE.md).
+1. Stop the server. Back up its world, configuration and Guardian database.
+2. Put the matching Guardian jar and dependencies in the server's `mods` folder. Remove the old Guardian jar when updating; leave only one Guardian core installed.
+3. Start the server and check its log for dependency or storage errors.
+4. As an authorized staff member, run `/guardian status`. Check that storage is available before relying on new history.
 
-## Installation
+For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the separate `guardian-worldedit-<version>.jar`. Do not install the Fabric adapter on NeoForge. See the [adapter guide](worldedit-adapter/README.md).
 
-For Fabric 1.21.1, use the Guardian jar from `build/libs` with Fabric API, Fabric Language Kotlin, and Fzzy Config. For NeoForge 1.21.1, use the jar from `neoforge/build/libs` with Kotlin for Forge and Fzzy Config. Install the jar for your server loader. SQLite and the shared core are bundled; Fzzy Config stays an external dependency. Standard core jars are about 12 MiB. DuckDB is an optional build-time integration; see [database packaging](docs/DISTRIBUTION_SIZE.md).
+### Data and backups
 
-For WorldEdit support on Fabric, also install WorldEdit 7.3.8 and the Guardian WorldEdit adapter from `worldedit-adapter/build/libs`. The adapter has its own GPL license; the core uses BML.
+The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-LuckPerms and Fabric Permissions API are optional. Guardian falls back to vanilla operator levels when the permissions API is absent. NeoForge uses its built-in permissions API, which also allows a compatible permission handler. The current permissions fixture passed with LuckPerms 5.4.140 on Fabric and 5.4.150 on NeoForge; NeoForge 5.4.140 reproduced the [upstream capability initialization problem](https://github.com/LuckPerms/LuckPerms/issues/4259). Server-side revocation and provider-free fallback checks passed in alpha.62. Full client acceptance remains pending.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 10**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
-## Commands
+## First investigation
 
-| Command | Purpose |
-| --- | --- |
-| `/guardian lookup` | Search block history with player, time, action, and region filters. |
-| `/guardian transactions <x> <y> <z>` | Show recent container transactions at a block position. |
-| `/guardian transactions u:<player> t:1h l:20 p:1` | Filter and page through item history. |
-| `/guardian transactions player <name-or-uuid>` | Compatibility form for recent player item history. |
-| `/guardian inspect` | Toggle inspection: left-click for block history, right-click a container for item history. |
-| `/guardian rollback` | Apply a bounded block rollback with the supplied filters. |
-| `/guardian rollback-items preview t:1h r:5` | Check item rollback candidates without changing items. |
-| `/guardian rollback-items recovery [operation UUID]` | List unfinished item journals or check their observed state. |
-| `/guardian rollback-items recovery saved <operation UUID>` | Compare supported block and player slots with saved data. |
-| `/guardian status` | Show storage, queue, and capture status. |
+After installing Guardian, place and break a block in a small test area, then run:
 
-`/co` remains an alias. `l`, `i`, and `rb` are the short subcommands. See [the block testing guide](docs/STEP_2C_TESTING.md) for filter examples and rollback checks.
-
-## Configuration and stored data
-
-Fzzy Config manages Guardian's settings under the `guardian` namespace. New installations store databases in the server's `guardian` directory. Permission nodes start with `guardian.`.
-
-Set `logging.automatedContainerTransfers` to true to enable block-to-block hopper history. It defaults to false in this testing checkpoint. The general, logging, and container-transaction master switches also apply. Use block-position lookup for hopper records.
-
-The rename does not automatically move old ExProtect settings or databases. Back up old data before moving it, and update permission grants to the new names. Opening an existing database upgrades it to schema 10. Crafting transactions use a new versioned slot encoding; existing item and block history remains readable. Existing block history, the persisted format marker, and block payload encoding are preserved. Back up the database before upgrading; older builds cannot open a newer schema than they support. Schema 7 adds item rollback recovery tracking; schema 8 indexes logical inventory owners to check filtered-out history. The first schema-8 startup scans existing item payloads to build that index. Schemas 9 and 10 add internal recovery protection and persisted rollback images. Item rollback apply remains disabled.
-
-## Project structure
-
-| Module | Role |
-| --- | --- |
-| `common` | Loader-independent snapshots, storage, queues, filters, and rollback decisions. |
-| `minecraft` source directory | Shared Mojang-mapped Minecraft adapters, configuration, commands, and mixins. |
-| Root Fabric module | Fabric lifecycle, event, and permission hooks. |
-| `neoforge` | NeoForge lifecycle, event, and permission hooks. |
-| `worldedit-adapter` | Optional Fabric GPL integration with WorldEdit 7.3.8. |
-
-The shared classes are packaged inside each loader runtime jar. You do not need to install a separate `common` jar.
-
-## Building
-
-```bash
-./gradlew clean build --no-daemon --warning-mode all
-./gradlew build --no-daemon --warning-mode all
-./gradlew :worldedit-adapter:build --no-daemon --warning-mode all
+```text
+/guardian lookup u:YourName t:10m r:5
 ```
 
-Use `gradlew.bat` on Windows. The wrapper uses Gradle 9.8.0. Fabric uses Loom 1.17.21; NeoForge uses ModDevGradle. Both compile against official Mojang mappings. See [development notes](DEVELOPMENT.md) for validation and the staged migration.
+This searches recorded block history in a cuboid extending five blocks from your current position. Guardian can only show events captured while logging was enabled; installing it does not reconstruct older changes.
 
-## Publishing
+To inspect a particular block or container:
 
-The [release workflow](.github/workflows/publish.yml) uses [Kira-NT/mc-publish](https://github.com/Kira-NT/mc-publish), following Remnant's publishing approach. Releases use the matching dated section from [CHANGELOG.md](CHANGELOG.md).
+```text
+/guardian inspect
+```
 
-GitHub uses `GITHUB_TOKEN`. Marketplace uploads require repository variables `MODRINTH_PROJECT_ID` and `CURSEFORGE_PROJECT_ID`, and secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN`. Choose a single destination when retrying a failed upload.
+- **Left-click** a block for its block history.
+- **Right-click** a supported container for its item history.
+- Run `/guardian inspect` again to turn inspection off before normal building or container use.
+
+Inspection requires permission on every click and page. Protected-claim inspection and client prediction still need acceptance with your actual pack. With inspection off, ordinary interactions remain subject to claim protection.
+
+## Search block history
+
+```text
+/guardian lookup u:YourName t:1h r:10
+/guardian lookup t:30m a:break r:5
+/guardian lookup t:1d x:100 y:64 z:-20 r:3 l:20 p:1
+```
+
+Block lookup searches the dimension in which the command runs. Without a radius or position it can search the whole current dimension. Supply all three `x:`, `y:` and `z:` coordinates together. Tab completion offers online player names and common filter values; recorded offline names can be typed manually.
+
+| Filter | Meaning | Example |
+| --- | --- | --- |
+| `u:` or `user:` | Recorded player name | `u:YourName` |
+| `t:` or `time:` | How far back to search | `t:30m`, `t:2h`, `t:1d12h` |
+| `r:` or `radius:` | Cuboid radius around you or explicit coordinates | `r:10` |
+| `x: y: z:` | Explicit block coordinates | `x:100 y:64 z:-20` |
+| `a:` or `action:` | Block action; lookup and block rollback only | `a:place`, `a:break`, `a:change`, `a:place,break` |
+| `l:` or `limit:` | Results per history page | `l:20` |
+| `p:` or `page:` | History page, starting at 1 | `p:2` |
+| `o:` or `order:` | History sort order | `o:oldest`, `o:newest` |
+
+Time units are `s` seconds, `m` minutes, `h` hours, `d` days and `w` weeks. Values must be positive. Configured result/radius limits still apply. With the Fabric WorldEdit adapter, `r:#worldedit` or `r:#we` uses your current cuboid selection instead of a numeric radius; it cannot be combined with explicit coordinates.
+
+### Pages and ordering
+
+Use the clickable **Previous**, **Next** and **Oldest/Newest first** controls in history results. To type the next page, repeat the same search with `p:2`, then `p:3` and so on. A Next control can lead to an empty page when the preceding page was exactly full.
+
+Inspector pages show at most five transactions. Keyboard alternatives are:
+
+```text
+/guardian inspect page 2
+/guardian inspect order oldest
+```
+
+## Search item transactions
+
+```text
+/guardian transactions u:YourName t:1h l:20 p:1
+/guardian transactions t:30m x:100 y:64 z:-20
+/guardian transactions 100 64 -20
+```
+
+User-filtered item history without a region spans recorded dimensions. Adding a position, radius or selection restricts it to the current dimension. Item history accepts the history filters above except `a:`. The older `/guardian transactions player <name-or-uuid>` form remains available for compatibility.
+
+Green entries describe items added to an inventory; red entries describe removals. Records preserve item counts and persistent Data Components, including modded item identities where supported. Opening a container without changing items does not create a transaction.
+
+Hopper history is **off by default**. Enable `logging.automatedContainerTransfers` to record supported block-to-block transfers. Automated records show the observed source and destination coordinates together. A transfer **into a hopper** does not mean the item also reached the barrel below it. Failed pushes into a full destination should produce no transfer record.
+
+## Roll back blocks
+
+**Block rollback changes the world directly; there is no separate block-preview command or general redo command.** Back up the world, check the corresponding lookup and use a small, explicit region first.
+
+```text
+/guardian lookup u:YourName t:10m r:3
+/guardian rollback u:YourName t:10m r:3
+```
+
+Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by player and block action. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
+
+**Item rollback apply is unavailable**, including for vanilla inventories. Block rollback is not a replacement for restoring a container's item transaction history.
+
+### Read-only item checks
+
+```text
+/guardian rollback-items preview u:YourName t:1h r:5
+/guardian rollback-items recovery
+/guardian rollback-items recovery <operation UUID>
+/guardian rollback-items recovery saved <operation UUID>
+/guardian rollback-items cancel
+```
+
+Preview checks a bounded set of candidate transfers against observed inventories. Recovery lists unfinished internal journals or compares their observed state; `saved` compares supported saved data. These commands **do not restore items**. An eligible preview does not establish that applying it would be safe. Busy, unsupported, missing, unloaded or sealed-loot inventories are skipped or refused. Cancel stops the running observation; it does not clear unresolved recovery claims or undo items.
+
+## Permissions
+
+| Node | Access | Vanilla operator fallback level |
+| --- | --- | --- |
+| `guardian.lookup` | Block and item history | 2 |
+| `guardian.inspect` | Inspector clicks and pages | 2 |
+| `guardian.status` | Storage/capture status | 2 |
+| `guardian.rollback` | Block rollback and read-only item checks | 3 |
+| `guardian.config.edit` | Fzzy Config editing | 3 |
+| `guardian.config.admin` | Fzzy Config administrative access | 4 |
+
+Fabric can use Fabric Permissions API and LuckPerms; NeoForge uses its built-in permission handler. When no provider supplies permissions, the normal operator fallback applies. To grant an installed LuckPerms user a node, for example:
+
+```text
+/lp user YourName permission set guardian.inspect true
+```
+
+Grant lookup separately if that staff member also needs search commands. Guardian rechecks permissions before deferred history output and further block rollback work. Fabric LuckPerms 5.4.140 and NeoForge LuckPerms 5.4.150 passed server-side checks in the tested 1.21.1 setup; this does not certify every provider/version combination.
+
+`/co` is an alias for `/guardian`. The short subcommands are `l` for lookup, `i` for inspect and `rb` for block rollback.
+
+## Configuration
+
+Edit the generated server configuration. Restart after changing any setting marked as requiring a restart; a stopped-server edit followed by startup is the simplest way to apply changes consistently.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `general.enabled` | `true` | Enable Guardian's runtime |
+| `logging.enabled` | `true` | Master capture switch; history remains available when capture is off |
+| `logging.playerBlockChanges` | `true` | Player block capture |
+| `logging.containerTransactions` | `true` | Supported item transaction capture |
+| `logging.automatedContainerTransfers` | `false` | Supported block-hopper capture |
+| `storage.backend` | `SQLITE` | Database backend; use SQLite with standard jars |
+| `storage.sqliteFile` | `guardian.sqlite` | Database filename inside the server's Guardian directory |
+| `lookup.defaultResults` / `lookup.maxResults` | `10` / `500` | History page defaults and limits |
+| `lookup.maxRadius` | `100` | Maximum lookup radius |
+| `rollback.defaultRadius` / `rollback.maxRadius` | `10` / `100` | Block rollback region limits |
+| `rollback.maxRecords` / `rollback.blocksPerTick` | `5000` / `100` | Maximum rollback size and work per tick |
+
+Item history has a hard maximum of 500 results per page even if the configured lookup limit is higher. Performance settings control the bounded writer queue, batch size and flush interval. Increasing them does not certify production capacity; monitor `/guardian status` and server logs for queue failures or skipped captures.
+
+## Supported behavior and limits
+
+Guardian captures player block placement/breaking, accepted supported block interactions, ordinary player inventory moves, supported block-backed menu changes, cursor returns, standalone drops, offhand swaps, accepted creative slot changes and exact vanilla 2×2/3×3 crafting paths. Optional hopper and Fabric WorldEdit capture are available as described above.
+
+Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. General fluid/entity history, economy/faction storage and full CoreProtect parity are outside this release.
+
+## Troubleshooting
+
+- **No history:** verify `/guardian status`, logging switches, player name, time window and dimension. Make a fresh supported change after installation and query it. Changing databases starts separate history.
+- **No item transactions:** move an item, rather than just opening a menu. Test a vanilla barrel first. Enable hopper capture explicitly for automated movement.
+- **Command or completion missing:** check the permission node/operator level. Inspector access and lookup access are separate grants.
+- **Rollback skipped rows:** read its summary; verify the chunks are already loaded and the live blocks still match the recorded chain. Retain backups rather than forcing restoration.
+- **Missing dependency or driver:** install the correct server dependencies and the matching loader jar. Standard builds include SQLite only; selecting DuckDB requires a maintainer's explicit DuckDB-enabled build.
+
+For a reproducible issue, include the Guardian/loader/Java versions, exact command or action, coordinates/dimension, expected and actual result, relevant server log and pack/claim mods. Do not share credentials or private player data in a public issue.
+
+## Development and release status
+
+See [development](DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md), [storage format](docs/STORAGE_SCHEMA.md), [validation](docs/VALIDATION.md) and the [fixed release checklist](docs/RELEASE_SCOPE.md). The changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## License
 
-The core uses the [Bare Minimum License (BML) v1.0](LICENSE). The optional WorldEdit adapter uses [GPL-3.0-or-later](worldedit-adapter/LICENSE). Third-party notices are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-Filter arguments offer tab completion for online players, time units and common values. Both `u:`/`user:` and `t:`/`time:` work. Block lookup searches the current dimension; item lookup by user spans recorded dimensions unless a position/radius is supplied. Results are paged: keep the same filters and add `p:2`, `p:3`, etc. Items added to a container appear in green, removals in red; automated transfers name the hopper. Opening a container without moving items does not create an item transaction. Accepted door, gate, trapdoor, lever and button state changes appear in block history.
-
-History results include clickable **Previous**, **Next**, and **Oldest/Newest first** controls. You can also type `o:oldest` or `order:newest`. Inspector pages contain at most five transactions; `/guardian inspect page 2` and `/guardian inspect order oldest` provide keyboard alternatives. Hopper records display the observed source and destination coordinates together. A pull into a hopper does not establish delivery to the inventory below it.
-
-Inspection intercepts scheduled server packets before normal block interaction callbacks and requires `guardian.inspect` on every click/page. It acknowledges canceled actions, restores predicted block/item state, stays within block reach, and avoids loading chunks. Ordinary interactions with inspection off continue through claim protection. Retest protected-container inspection with your actual client/modpack after installing this checkpoint.
+The core uses the [Bare Minimum License v1.0](LICENSE). The optional Fabric WorldEdit adapter uses [GPL-3.0-or-later](worldedit-adapter/LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md).

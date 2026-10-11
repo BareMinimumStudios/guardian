@@ -113,9 +113,5 @@ val commonOutput = project(":common").extensions.getByType<SourceSetContainer>()
 tasks.jar { from(commonOutput); from(file("LICENSE")) }
 tasks.named<Jar>("sourcesJar") { from(project(":common").file("src/main/kotlin")) }
 
-
-
-
-
 sourceSets.main { java.srcDir("minecraft/src/main/java") }
 kotlin.sourceSets.main { kotlin.srcDir("minecraft/src/main/kotlin") }

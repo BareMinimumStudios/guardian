@@ -7,7 +7,13 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Removed
+
+- Archive superseded milestone notes and historical fixture reports outside the repository. Retain current architecture, storage, release scope and validation contracts.
+
 ### Changed
+
+- Rewrite the README for server installation, permissions, inspection, history filters, bounded block rollback, configuration and troubleshooting. Consolidate development guidance and remove redundant build-file whitespace. Gameplay and read-only item rollback limits are unchanged.
 
 - Include the existing BML license in the Fabric core jar and the separate GPL license in the optional WorldEdit adapter jar.
 - Prepare the alpha.62 test package and artifact review. Correct the documented schema version, direct block rollback behavior and completed server-side permissions gate. Connected-client acceptance and final sign-off remain pending.

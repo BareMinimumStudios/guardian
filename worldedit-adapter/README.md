@@ -8,6 +8,6 @@ The adapter captures immutable block snapshots around WorldEdit mutations and su
 ./gradlew :worldedit-adapter:build --no-daemon --warning-mode all
 ```
 
-Use the runtime jar from `worldedit-adapter/build/libs`. See [the testing guide](../docs/STEP_3_WORLD_EDIT_TESTING.md) for edit, undo, selection, and pressure checks.
+Use the runtime jar from `worldedit-adapter/build/libs`. Use `r:#worldedit` or `r:#we` with Guardian lookup/block rollback to select your current cuboid. Confirm history after a small edit and WorldEdit undo in an isolated world. See the [release acceptance checklist](../docs/RELEASE_SCOPE.md).
 
 This module is licensed under [GPL-3.0-or-later](LICENSE). It is distributed separately from the BML core and does not bundle WorldEdit.

@@ -43,5 +43,21 @@
     "failures": 0,
     "errors": 0,
     "testExecution": "existing test outputs restored from cache in clean build"
+  },
+  "sourceCleanup": {
+    "date": "2026-10-11",
+    "archivedFilesRemoved": 75,
+    "gameplaySourceChanged": false,
+    "artifactHashesUnchanged": true,
+    "cleanBuild": "passed, 18s",
+    "build": "passed, 8s",
+    "repeatedBuild": "passed, 4s, configuration cache reused",
+    "worldEditBuild": "passed, 8s",
+    "tests": 522,
+    "failures": 0,
+    "errors": 0,
+    "testExecution": "restored from Gradle cache",
+    "connectedClientAcceptance": "pending",
+    "releaseApproved": false
   }
 }

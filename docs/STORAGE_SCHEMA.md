@@ -1,61 +1,17 @@
-# Guardian native storage schema v1
+# Guardian storage schema
 
-The Fabric-native schema remains at version 1 in Step 2C. No table migration is required because the original `rolled_back SMALLINT` column can safely represent the expanded rollback journal states.
+Current schema: **10**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
 
-## Metadata
+The `ex_` table prefix preserves the native ExProtect format lineage. It is not a CoreProtect `co_` schema or an automatic importer.
 
-- `ex_schema_migrations` — applied schema migrations
-- `ex_meta` — storage format, clean shutdown marker, schema and codec metadata
-- `ex_sequences` — portable ID allocation shared by SQLite and DuckDB
+- Metadata/migration/sequence tables track format, clean shutdown and portable identities.
+- Mapping tables store dimensions, resources, block-state properties and actors.
+- Block history stores event identity, time, actor, position, before/after state and payload, action/cause and rollback state.
+- Container history stores correlated immutable slot changes with item counts and persistent component payloads. Logical owner indexes support checking history omitted by filters.
+- Item recovery tables retain operation records, entries, owner/transaction claims, unresolved protection and complete saved images/reconciliation decisions. These do not expose item apply.
 
-## Mapping tables
+Block rollback state values are `0 ACTIVE`, `1 ROLLED_BACK`, `2 PENDING`. Pending rows retain interrupted reconciliation work; queries excluding rolled-back rows still retain pending rows. Newly claimed untouched active rows can be released after permission revocation, while older pending recovery state is preserved.
 
-- `ex_world_map` — namespaced dimension IDs
-- `ex_resource_map` — namespaced block/resource IDs
-- `ex_blockdata_map` — canonical encoded block-state property maps
-- `ex_actor_map` — players, entities and system actors
+Schema 7 introduced item journals/claims, 8 added owner history indexing, 9 added durable unresolved protection and 10 added complete owner images and reconciliation acknowledgement. Existing block payloads and older supported item encodings remain readable. Do not manually delete recovery tables/claims to bypass refusal.
 
-## `ex_block`
-
-Each block row stores:
-
-- stable `rowid`
-- unique `event_uuid`
-- millisecond timestamp
-- actor reference
-- dimension reference
-- x/y/z
-- before block resource/state/payload
-- after block resource/state/payload
-- stable cause code
-- stable action code
-- rollback journal state
-
-Rollback state values:
-
-```text
-0 ACTIVE       normal history row, eligible for rollback
-1 ROLLED_BACK  rollback completed/finalized
-2 PENDING      rollback batch was claimed; reconcile live state before retrying
-```
-
-Queries with `includeRolledBack=false` exclude state 1 but intentionally retain state 2 so interrupted batches can be reconciled.
-
-## Indexes
-
-v1 indexes:
-
-- timestamp
-- dimension + position + timestamp
-- actor + timestamp
-- action + timestamp
-
-Step 2C radius queries currently use bounded x/y/z ranges (a cuboid radius). Additional chunk/spatial indexing should be driven by profiling rather than guessed prematurely.
-
-## Identity and retry behavior
-
-`rowid` is monotonic allocation identity and may contain gaps. `event_uuid` is the durable event identity; its unique constraint and conflict-ignore insert make writer retry idempotent.
-
-## Compatibility strategy
-
-This is intentionally not a byte-for-byte CoreProtect schema clone. A later importer can translate compatible `co_*` history into Guardian-native rows without requiring new Fabric records to inherit Bukkit serialization.
+Stop the server before a simple database-file backup. Default SQLite location is `guardian/guardian.sqlite` under the server directory. Backend selection does not migrate history to another database.

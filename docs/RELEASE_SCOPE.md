@@ -39,7 +39,7 @@ Decision: do not enable item apply in this release. Stop treating additional gen
 | R1: automated baseline | Complete for alpha.62 | 522 tests, required clean/repeated-cache/WorldEdit builds, both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
 | R2: real permissions acceptance | Complete for server-side checks | Real LuckPerms grant, deny and revocation on both loaders, queued lookup/inspector output, username/time/UUID suggestions, read-only item checks, persistent block rollback boundaries and provider-free actual operator entries passed 1,150 checks. Synthetic players and packet queues do not certify client presentation or network login; those remain R3. See [evidence and limits](validation/permissions-alpha62.json). |
 | R3: connected-client acceptance | Pending | Run the bounded matrix below on both loaders. Record server/client versions and actual pack/claim mods. The user cannot join yet; this gate waits for that opportunity. Synthetic players and idle-server startup do not close it. |
-| R4: release artifact review | Prepared; final sign-off pending | Alpha.62 artifact checks passed; see [artifact review](RELEASE_ARTIFACT_REVIEW.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
+| R4: release artifact review | Prepared; final sign-off pending | Alpha.62 artifact checks passed; see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
 
 There are two unfinished release gates: R3 connected-client acceptance and final R4 sign-off. Item apply is deferred and does not add a release gate. A defect found during acceptance is fixed within its existing gate; it does not create a new feature requirement. Production load capacity is not certified by the controlled hopper fixtures and must not be advertised as such.
 
@@ -55,21 +55,3 @@ Use a backed-up isolated world. This is acceptance of the existing release scope
 6. **Read-only item checks:** preview/recovery/saved/cancel with valid permission, unsupported/busy endpoints and permission revocation. Verify clear refusal/skipping and no changed items, consumed source history or cleared unresolved claims. Confirm no item apply command exists.
 
 Record pass/fail per row and loader, link any reproducible defects, and close R3 when all six rows pass. There is no fixed number of development passes promised while the external acceptance is pending.
-
-## Permissions progress, 2026-10-10
-
-This records the earlier alpha.61 checkpoint. Alpha.62 completion below supersedes its pending R2 status.
-
-The actual LuckPerms 5.4.140 Fabric provider passed 199 command/service checks for grant, explicit deny, regrant and grant removal across Guardian's two command aliases. The player was synthetic; its real LuckPerms attachment was initialized manually because no network login occurred. Permission decisions used the installed provider, not a simulated PermissionService.
-
-NeoForge passed 200 command/service checks with LuckPerms 5.4.150 after its actual login listener initialized the synthetic player's attachment. The older 5.4.140 provider reproduced an uninitialized-capability failure even after explicit initialization; this matches the [upstream compatibility report](https://github.com/LuckPerms/LuckPerms/issues/4259). The replacement release is listed for 1.21.4, so these results document the tested 1.21.1 combination rather than universal compatibility.
-
-The provider fixtures changed no Guardian executable code and left the user's servers untouched. Actual network login, inspector/async output and suggestions, full handler behavior and provider-free acceptance remain within R2/R3. R2 remains open; no release gate or feature was added. [Evidence and limitations](validation/real-provider-alpha61.json).
-
-Provider artifacts came from the published [Fabric 1.21.1 release](https://modrinth.com/plugin/luckperms/version/v5.4.140-fabric) and [NeoForge 5.4.150 release](https://modrinth.com/plugin/luckperms/version/v5.4.150-neoforge). They are private test dependencies and are not bundled with Guardian.
-
-## Alpha.62 permissions completion, 2026-10-10
-
-R2's server-side checks are complete. Fabric passed 345 real-provider checks and 229 fallback checks; NeoForge passed 346 and 230 respectively. Permission removal now stops cached argument suggestions, deferred lookup/inspector results and further block rollback mutations. Started block journal writes settle; untouched new claims return to active and older pending recovery rows are retained.
-
-This advances the existing release checklist without adding features. R3 still covers actual connected-client behavior, network login and pack/claim interaction. The user cannot join yet; synthetic evidence does not close R3. R4 remains the final artifact/version/license sign-off. [Detailed evidence](validation/permissions-alpha62.json).
