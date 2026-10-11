@@ -1,6 +1,6 @@
 # Release validation
 
-Alpha.62 is the current executable checkpoint. The release cleanup changes documentation and build-file formatting only; it does not add features or alter gameplay. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.63 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
@@ -15,6 +15,12 @@ Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifact
 Archived and removed 75 superseded documents and historical reports. The README now provides end-user installation, commands, permissions, backup and troubleshooting instructions. Four current reference guides and three machine-readable evidence reports remain. Active recovery infrastructure, registered mixins and meaningful tests were retained. Only build-file whitespace changed; jar SHA-256 hashes are unchanged.
 
 Clean build (18s), build (8s), repeat with configuration-cache reuse (4s) and WorldEdit build (8s) passed with Java 21 and Gradle 9.8.0. All 522 cached test results passed with no failures/errors.
+
+## GitHub CI correction, 2026-10-11
+
+The [failed run](https://github.com/BareMinimumStudios/guardian/actions/runs/38115735874) failed at the multi-host drain assertion, not compilation or missing dependencies. Independent completion observers allowed the shared drain to finish before the retention observer reported completion. The aggregate now waits for that exact observer.
+
+The alpha.63 full clean build ran without build-cache reuse: 546 tests passed, including 25 schedules of the reported regression. Required repeat/configuration-cache and WorldEdit builds passed. [Evidence and artifact hashes](validation/ci-alpha63.json). Remote CI remains unverified until this local commit is pushed; no push or publish was performed. Alpha.62 provider runtime evidence remains historical evidence for unchanged permission paths.
 
 ## Pending acceptance
 

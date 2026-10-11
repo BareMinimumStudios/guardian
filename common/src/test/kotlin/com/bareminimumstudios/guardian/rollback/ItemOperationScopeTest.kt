@@ -84,7 +84,8 @@ class ItemOperationScopeTest {
             assertFailsWith<IllegalStateException>{scope.start(record(),coordination,{error("Late bind")})}
         } finally {release.countDown();scope.close();finish(scope)}
     }
-    @Test fun sharedDrainWaitsForEveryStoppedHost() {
+    // Exercise independent completion-observer ordering across repeated worker schedules.
+    @org.junit.jupiter.api.RepeatedTest(25) fun sharedDrainWaitsForEveryStoppedHost() {
         block=true;val scope=scope()
         val a=record();val b=record()
         val first=assertNotNull(scope.start(a,coordination,{Port(a)}))

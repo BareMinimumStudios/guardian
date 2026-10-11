@@ -6,6 +6,9 @@ import java.util.concurrent.CompletableFuture
 class ItemJournalRetention internal constructor(private val drained: CompletableFuture<Void>) {
     private val thread = Thread.currentThread()
     internal val barrier = CompletableFuture<Void>()
+    /** Same observer used by isDrained; shared shutdown must wait for this result too. */
+    internal val journalDrain: java.util.concurrent.CompletionStage<Void>
+        get() { checkThread(); return drained.minimalCompletionStage() }
     val isDrained: Boolean get() {
         checkThread()
         return drained.isDone && !drained.isCompletedExceptionally && !drained.isCancelled

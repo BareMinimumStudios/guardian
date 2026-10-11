@@ -81,6 +81,7 @@ class ItemOperationHost private constructor(
         check(worker.isStopped && (recoveryWorker == null || recoveryWorker!!.isStopped))
         return java.util.concurrent.CompletableFuture.allOf(
             worker.drained.toCompletableFuture(),
+            retention.journalDrain.toCompletableFuture(),
             recoveryWorker?.drained?.toCompletableFuture() ?: java.util.concurrent.CompletableFuture.completedFuture(null)
         ).minimalCompletionStage()
     }

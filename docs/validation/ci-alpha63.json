@@ -1,0 +1,42 @@
+{
+  "version": "0.4.0-alpha.63+1.21.1",
+  "date": "2026-10-11",
+  "failedRun": "https://github.com/BareMinimumStudios/guardian/actions/runs/38115735874",
+  "failedTest": "ItemOperationScopeTest.sharedDrainWaitsForEveryStoppedHost, line 97",
+  "cause": "Independent projections of the worker completion could complete the scope drain before the retained observer used by host.isJournalDrained.",
+  "fix": "Host aggregate drain also awaits the exact retained observer; no polling or timeout weakening.",
+  "tests": 546,
+  "failures": 0,
+  "errors": 0,
+  "regressionRepetitions": 25,
+  "testExecution": "clean build with --no-build-cache; tests executed fresh",
+  "builds": [
+    "clean build passed",
+    "build passed",
+    "repeated build passed with configuration cache reused",
+    "worldedit-adapter build passed"
+  ],
+  "remoteRerun": "pending push; no remote changes authorized",
+  "clientAcceptance": "pending",
+  "itemApply": "unavailable",
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.63+1.21.1.jar",
+      "bytes": 12886710,
+      "sha256": "f472f01c90591362352f7c155c14684052c984958fd57d0b352020dd8660fb4f"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.63+1.21.1.jar",
+      "bytes": 12866901,
+      "sha256": "f9fd6bc704ea73a140b6f9cddff3cbdb822e4761842a23ff6d52a5e266d8ec91"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.63+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "71e350bd5fe351e6aafc79fcad20cc8a76ee7f71b538a401eb39cf2a9d03b7e6"
+    }
+  ]
+}
