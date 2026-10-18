@@ -4,8 +4,8 @@ Alpha.66 is the current executable checkpoint. Alpha.62 cleanup changed document
 
 ## Completed checks
 
-- 522 automated tests pass with no failures or errors. Required clean build, repeated build with configuration-cache reuse and separate WorldEdit build passed. The license packaging correction reran those builds; test outputs were restored from Gradle cache.
-- 1,150 server-side permission checks passed across actual LuckPerms and provider-free operator fallback on both loaders, including revocation, deferred output, cached suggestions and persistent block rollback boundaries. Synthetic players do not certify network login or client presentation.
+- The alpha.66 executable baseline passed 589 automated tests with no failures/errors, a clean build, a repeated build with configuration-cache reuse and the separate WorldEdit build. The following acceptance pass changed documentation only; executable builds were not rerun.
+- 2,068 current server-side permission checks passed across actual LuckPerms and provider-free operator fallback on both loaders, including the new activity nodes and block-preview revocation boundaries. The prior 1,150 checks remain historical evidence for the earlier permission paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -28,7 +28,7 @@ The owner authorized public chat and login/logout logging. Alpha.64 adds schema 
 
 551 automated tests passed, including SQLite/DuckDB/memory filtering and idempotence, restart persistence, old-schema migration preservation and activity paging. Required clean/repeated-cache/WorldEdit builds passed. Both isolated loader servers resolved the new chat mixin and recorded exactly the expected public chat, login and logout fixture records; private-message types and disabled switches produced no records. SQLite integrity and restart persistence passed. [Evidence and hashes](validation/activity-alpha64.json).
 
-The broadcast test calls the actual Minecraft broadcast method. The synthetic session fixture calls shared capture directly and does not certify a network login/logout. New activity permissions under installed providers, connected-client chat display and actual pack cancellation behavior remain acceptance work; prior permission fixtures do not certify the new nodes.
+The broadcast test calls the actual Minecraft broadcast method. The synthetic session fixture calls shared capture directly and does not certify a network login/logout. Activity permissions under installed providers were pending at this checkpoint and subsequently passed in the alpha.66 acceptance section below. Connected-client chat display and actual pack cancellation behavior remain pending.
 
 ## Extended history search, 2026-10-17
 
@@ -36,7 +36,7 @@ The owner authorized multi-user searches, user exclusions, exact resource includ
 
 561 automated tests passed, including aliases/malformed input, comma/negation completion, modded IDs, UUID resolution, unknown actors, exclusion precedence, pagination, restart and historical migration over the 128-record batch boundary. Clean, repeated configuration-cache and optional WorldEdit builds passed. Two isolated servers passed nine command cases each against a synthetic persisted audit prefix, including history paging, exclusions and rollback refusal, then restart. No rollback claims were created; SQLite integrity passed. Runtime core hashes match final artifacts. [Evidence and checksums](validation/filters-alpha65.json).
 
-These server tests do not certify actual client completion presentation, all modpack integrations or capture of arbitrary modded events. Existing activity permission/provider and connected-client acceptance limits remain.
+These server tests do not certify actual client completion presentation, all modpack integrations or capture of arbitrary modded events. Activity permission/provider checks subsequently passed in the alpha.66 acceptance section below; connected-client acceptance remains pending.
 
 ## Block rollback preview, 2026-10-18
 
@@ -44,7 +44,15 @@ Alpha.66 adds `/guardian rollback preview` and `/guardian rb preview` using the 
 
 589 automated tests passed, including four preview-plan tests and 25 repetitions of the shutdown regression. The clean, repeated configuration-cache and optional WorldEdit builds passed. A reproduced shutdown race was fixed by requiring drained operation hosts to finish their terminal classification before backend closure.
 
-Both isolated loaders passed nine cases each with a synthetic audit prefix through the actual writer. World readback confirmed preview left stone unchanged and a separate apply restored air. All five preview journal flags stayed unchanged; after apply, exactly one record was rolled back. Unloaded targets, unsupported targets, blocked chains, extended-filter refusal and restart were checked. SQLite integrity passed, and tested core hashes match final artifacts. [Evidence and checksums](validation/block-preview-alpha66.json). The pushed alpha.65 GitHub build also passed. Real connected-client and permission-provider acceptance remain pending; these fixtures do not certify arbitrary modpack behavior.
+Both isolated loaders passed nine cases each with a synthetic audit prefix through the actual writer. World readback confirmed preview left stone unchanged and a separate apply restored air. All five preview journal flags stayed unchanged; after apply, exactly one record was rolled back. Unloaded targets, unsupported targets, blocked chains, extended-filter refusal and restart were checked. SQLite integrity passed, and tested core hashes match final artifacts. [Evidence and checksums](validation/block-preview-alpha66.json). The pushed alpha.65 GitHub build also passed. Permission-provider acceptance subsequently passed in the section below. Real connected-client acceptance remains pending; these fixtures do not certify arbitrary modpack behavior.
+
+## Activity and preview permission acceptance, 2026-10-18
+
+The unchanged alpha.66 jars passed 2,068 checks on four isolated servers: LuckPerms Fabric/NeoForge and provider-free operator fallback on each loader. Chat and session grants are independent of each other and ordinary lookup. Unset permission, explicit denial for an actual operator, grant removal and cached time/user suggestions were checked. Sixteen individual activity query cases per loader covered both aliases, success and controlled failure, with and without permission revocation before deferred output.
+
+Block preview was cancelled during planning, before its first tick and between ticks after 100 of 101 rows. Revoked success/failure callbacks emitted no results; authorized completion/failure still emitted results. All 101 actual stone blocks and all 101 ACTIVE journal rows remained unchanged on each provider server. Operator entries at levels zero through four confirmed level-three access for chat, sessions and block preview, then access removal. Real permission decisions were not mocked. [Evidence and artifact hashes](validation/acceptance-alpha66.json).
+
+The pushed executable [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/39099179448) passed. No executable files or jar hashes changed in this acceptance pass. R2 is complete for server-side activity/preview permissions; actual network login, client presentation and pack acceptance remain R3. Private agents and test servers are excluded from the source repository.
 
 ## Pending acceptance
 

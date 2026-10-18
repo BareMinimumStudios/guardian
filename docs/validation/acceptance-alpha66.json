@@ -1,0 +1,162 @@
+{
+  "date": "2026-10-18",
+  "version": "0.4.0-alpha.66+1.21.1",
+  "executableCommit": "ec27727e4d8c70b90109264ad6788c8642b1d0cb",
+  "scope": "Server-side acceptance for activity permissions and block preview; no executable changes",
+  "checksTotal": 2068,
+  "actualProviders": [
+    {
+      "loader": "Fabric",
+      "checks": 707,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 708,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 326,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 327,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "providers": {
+    "fabric": "LuckPerms 5.4.140 with Fabric Permissions API 0.3.1",
+    "neoforge": "LuckPerms 5.4.150 with NeoForge 21.1.256 PermissionAPI"
+  },
+  "activityCases": {
+    "commands": [
+      "guardian chat",
+      "co chat",
+      "guardian sessions",
+      "co sessions"
+    ],
+    "callbackCasesPerLoader": 16,
+    "successAndControlledFailure": true,
+    "deferredOutputSuppressedAfterRevocation": true,
+    "separateChatSessionLookupGrants": true,
+    "cachedTimeUserSuggestionsStopAfterRevocation": true
+  },
+  "previewCases": {
+    "perLoader": 6,
+    "boundaries": [
+      "lookup planning",
+      "before first preview tick",
+      "between ticks (100 of 101 rows observed)",
+      "authorized completion",
+      "lookup failure with revoked permission",
+      "authorized lookup failure"
+    ],
+    "unchangedStoneBlocksPerLoader": 101,
+    "unchangedActiveJournalRowsPerLoader": 101,
+    "forcedChunkLoadsByPreview": false,
+    "applySessionCreated": false
+  },
+  "permissionDecisionsSimulated": false,
+  "syntheticPlayers": true,
+  "connectedClients": 0,
+  "bytecodeTransformed": false,
+  "suppliedServersModified": false,
+  "itemRollbackJournalsCreated": 0,
+  "schema": 12,
+  "priorBuildBaseline": {
+    "tests": 589,
+    "failures": 0,
+    "errors": 0,
+    "cleanCacheWorldEdit": "passed in executable checkpoint; unchanged code not rebuilt during this acceptance pass"
+  },
+  "github": {
+    "id": 39099179448,
+    "head_sha": "ec27727e4d8c70b90109264ad6788c8642b1d0cb",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/BareMinimumStudios/guardian/actions/runs/39099179448"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 12950030,
+      "sha256": "ee76ba1d13ac3db2d13ee88052d93f50239bad80a29580a381d246accc7d61e2"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 12928668,
+      "sha256": "ce9a9ecfac03565b2ac0f8c749bcbbf2464bb82e2512e0144993476e70929ab3"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "907435b9dee36dde9a77a10c9d3103b189e1bd38534bb3a5f33f64c74090dfe2"
+    }
+  ],
+  "limitations": [
+    "No actual network client or rendered client UI; R3 stays pending",
+    "Fabric fixture invokes installed LuckPerms player attachment initialization; NeoForge invokes the actual provider login listener",
+    "Controlled history failures use a private storage adapter; permission decisions use actual installed providers",
+    "LuckPerms NeoForge 5.4.150 is listed for 1.21.4; only this 1.21.1 combination is tested",
+    "Fabric provider-free tests retain the permissions API bundled by a baseline dependency; this checks fallback without LuckPerms, not API absence"
+  ]
+}

@@ -20,6 +20,8 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Added
 
+- Record alpha.66 server-side acceptance for separate chat/session permissions and read-only block preview with actual LuckPerms and operator fallback on both loaders. Connected-client acceptance remains pending; executable jars are unchanged.
+
 - Record actual LuckPerms Fabric and NeoForge grant/deny/revocation command checks, including the tested NeoForge 5.4.150 replacement for the older provider capability failure. Server-side permissions acceptance subsequently passed in alpha.62; connected-client acceptance remains open.
 
 - Define a fixed alpha release scope for logging, inspection, block rollback and read-only item checks. Defer item apply explicitly and separate actual permissions/client acceptance from future mutation-exclusion research.
@@ -805,7 +807,7 @@ This first Step 4 slice captures accepted clicks in supported block-container me
 
 ### Added
 
-- A lightweight 256×256 Guardian shield and rollback icon.
+- A lightweight 256Ã—256 Guardian shield and rollback icon.
 - Release publishing through mc-publish with separate destination selection.
 - Development notes for the Fabric baseline and planned NeoForge migration.
 
