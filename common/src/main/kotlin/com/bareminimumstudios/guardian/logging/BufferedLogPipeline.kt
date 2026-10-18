@@ -68,6 +68,7 @@ class BufferedLogPipeline(
             ownerWatches.forEach { if(logical in it.owners) it.changed.add(logical) }
         }
         when(entry) {
+            is PlayerActivity -> Unit
             is ContainerAuditEntry -> entry.transaction.changes.forEach { touch(it.address.owner) }
             is BlockChangeSnapshot -> touch(ItemSlotOwner.BlockContainer(entry.dimension,entry.position))
         }

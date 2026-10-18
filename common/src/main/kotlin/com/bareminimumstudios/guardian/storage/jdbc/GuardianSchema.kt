@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 10
+    const val CURRENT_VERSION = 11
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -106,6 +106,11 @@ internal object GuardianSchema {
         )),
         SchemaMigration(10, "Complete owner images and durable reconciliation decisions", listOf(
             "CREATE TABLE ex_item_rollback_images (operation_uuid VARCHAR PRIMARY KEY, payload BLOB NOT NULL, acknowledged SMALLINT NOT NULL DEFAULT 0)"
+        )),
+        SchemaMigration(11, "Public chat and player login/logout audit", listOf(
+            "CREATE TABLE ex_player_activity (event_uuid VARCHAR PRIMARY KEY, time BIGINT NOT NULL, player_uuid VARCHAR NOT NULL, player_name VARCHAR NOT NULL, kind VARCHAR NOT NULL, text VARCHAR)",
+            "CREATE INDEX ex_activity_kind_time_idx ON ex_player_activity(kind, time)",
+            "CREATE INDEX ex_activity_player_time_idx ON ex_player_activity(player_uuid, time)"
         ))
     )
 }

@@ -43,7 +43,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, inspect/i, rollback/rb, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, inspect/i, rollback/rb, rollback-items preview, or status."))
                 1
             }
 
@@ -63,6 +63,14 @@ object GuardianCommands {
             statusNode(permissions, runtimeProvider)
         )
 
+        listOf("chat", "sessions").forEach { name ->
+            val permission = "guardian.$name"
+            root.then(Commands.literal(name).requires { permissions.has(it, permission, 3) }
+                .executes { context -> executeActivity(context.source, "", name, runtimeProvider(), configProvider()) }
+                .then(Commands.argument("filters", StringArgumentType.greedyString())
+                    .suggests { context, builder -> suggestFilters(context.source, builder, permissions, activity = true, permission = permission, fallback = 3) }
+                    .executes { context -> executeActivity(context.source, StringArgumentType.getString(context, "filters"), name, runtimeProvider(), configProvider()) }))
+        }
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
             .then(Commands.argument("position", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos()).executes { context ->
                 val history = runtimeProvider()?.history()
@@ -147,17 +155,42 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
         if (!authorized(source, permissions, permission, fallback)) return com.mojang.brigadier.suggestion.Suggestions.empty()
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
         val players=source.server.playerList.players.map { it.gameProfile.name }
         val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items)
-        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices, builder.createOffset(start))
+        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order") }, builder.createOffset(start))
     }
 
     private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
         runCatching { permissions.has(source, permission, fallback) }.getOrDefault(false)
+
+    private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
+        val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
+        val allowed = setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order")
+        if (raw.split(Regex("\\s+")).any { it.isNotBlank() && it.substringBefore(':').lowercase() !in allowed }) {
+            source.sendFailure(Component.literal("Guardian $name accepts user, time, limit, page and order filters only.")); return 0
+        }
+        val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian $name: ${it.message}")); return 0 }
+        val limit = filter.limit ?: config.lookup.defaultResults.get()
+        if (limit > minOf(500, config.lookup.maxResults.get())) { source.sendFailure(Component.literal("Guardian activity page limit exceeded.")); return 0 }
+        val kinds = if (name == "chat") setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT) else setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
+        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, playerName = filter.actorName,
+            afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) }, limit = limit, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst)
+        history.lookupActivity(query, { rows ->
+            if (!authorized(source, runtime.permissions, "guardian.$name", 3)) return@lookupActivity
+            source.sendSystemMessage(Component.literal("Guardian $name history: ${rows.size} records (page ${filter.page ?: 1})."))
+            rows.forEach { row ->
+                val details = when (row.kind) { com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN -> "logged in"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT -> "logged out"; else -> "said: ${row.text}" }
+                val plain = "${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)} ${row.actor.lastKnownName} $details".filter { !it.isISOControl() }.replace('§', '?')
+                source.sendSystemMessage(Component.literal(plain))
+            }
+            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst, { page -> HistoryPageCommands.command(name, raw, page, filter.oldestFirst) }, HistoryPageCommands.command(name, raw, 1, !filter.oldestFirst)))
+        }, { if (authorized(source, runtime.permissions, "guardian.$name", 3)) source.sendFailure(Component.literal("Guardian $name lookup failed; see server log.")) })
+        return 1
+    }
 
     private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }

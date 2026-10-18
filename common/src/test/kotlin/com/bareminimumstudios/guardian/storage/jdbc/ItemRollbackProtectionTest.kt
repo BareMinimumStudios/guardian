@@ -139,6 +139,7 @@ class ItemRollbackProtectionTest {
         lateinit var record: ItemRollbackRecord
         factory(path).use { db ->db.open();record=prepare(db);db.transitionItemRollback(record.operationId,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING);db.transitionItemRollback(record.operationId,ItemRollbackPhase.APPLYING,ItemRollbackPhase.COMPLETED)}
         DriverManager.getConnection(url+path).use { c -> c.createStatement().use {
+            it.executeUpdate("DROP TABLE ex_player_activity")
             it.executeUpdate("DROP TABLE ex_item_rollback_images")
             it.executeUpdate("DROP TABLE ex_item_rollback_protection")
             it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 9")

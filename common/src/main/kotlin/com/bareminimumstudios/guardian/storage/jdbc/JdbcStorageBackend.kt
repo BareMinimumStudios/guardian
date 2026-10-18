@@ -106,7 +106,7 @@ abstract class JdbcStorageBackend(
     override fun append(entries: List<LogEntry>): Unit = lock.withLock {
         if (entries.isEmpty()) return@withLock
         val conn = requireConnection()
-        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry }) {
+        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry || it is com.bareminimumstudios.guardian.domain.PlayerActivity }) {
             "Unsupported audit entry"
         }
 
@@ -118,6 +118,7 @@ abstract class JdbcStorageBackend(
                     when (it) {
                         is BlockChangeSnapshot -> { bindBlockChange(conn, insertStatement, it, checkNotNull(reservedRowIds).nextLong()); insertStatement.addBatch() }
                         is ContainerAuditEntry -> insertContainer(conn, it.transaction)
+                        is com.bareminimumstudios.guardian.domain.PlayerActivity -> insertActivity(conn, it)
                     }
                 }
                 insertStatement.executeBatch()
@@ -129,6 +130,34 @@ abstract class JdbcStorageBackend(
             throw t
         } finally {
             conn.autoCommit = true
+        }
+    }
+
+    private fun insertActivity(conn: Connection, entry: com.bareminimumstudios.guardian.domain.PlayerActivity) {
+        conn.prepareStatement("INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING").use {
+            it.setString(1, entry.eventId.toString()); it.setLong(2, entry.timestampEpochMillis)
+            it.setString(3, entry.actor.uuid.toString()); it.setString(4, entry.actor.lastKnownName)
+            it.setString(5, entry.kind.name); it.setString(6, entry.text); it.executeUpdate()
+        }
+    }
+
+    override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.withLock {
+        val params = mutableListOf<Any>()
+        val where = mutableListOf("kind IN (${query.kinds.joinToString(",") { "?" }})")
+        query.kinds.forEach { params.add(it.name) }
+        query.playerUuid?.let { where.add("player_uuid = ?"); params.add(it.toString()) }
+        query.playerName?.let { where.add("LOWER(player_name) = LOWER(?)"); params.add(it) }
+        query.afterEpochMillis?.let { where.add("time >= ?"); params.add(it) }
+        val direction = if (query.oldestFirst) "ASC" else "DESC"
+        requireConnection().prepareStatement("SELECT event_uuid,time,player_uuid,player_name,kind,text FROM ex_player_activity WHERE ${where.joinToString(" AND ")} ORDER BY time $direction, event_uuid $direction LIMIT ? OFFSET ?").use { statement ->
+            params.add(query.limit); params.add(query.offset)
+            params.forEachIndexed { index, value -> statement.setObject(index + 1, value) }
+            statement.executeQuery().use { rows -> buildList {
+                while (rows.next()) add(com.bareminimumstudios.guardian.domain.PlayerActivity(
+                    java.util.UUID.fromString(rows.getString(1)), rows.getLong(2),
+                    ActorIdentity.Player(java.util.UUID.fromString(rows.getString(3)), rows.getString(4)),
+                    com.bareminimumstudios.guardian.domain.PlayerActivityKind.valueOf(rows.getString(5)), rows.getString(6)))
+            } }
         }
     }
 

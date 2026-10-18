@@ -69,6 +69,10 @@ class BlockHistoryService(
         }
     }
 
+    fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.PlayerActivity>) -> Unit, onFailure: (Throwable) -> Unit) {
+        recoveryWork({ storage.lookupActivity(query) }, onSuccess, onFailure)
+    }
+
     fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
     }

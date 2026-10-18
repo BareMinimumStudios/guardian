@@ -15,5 +15,7 @@ interface QueryableStorageBackend : StorageBackend {
     /** Null means this backend cannot establish persistent rollback history safety. */
     fun guardContainerHistory(rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>): com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard? = null
 
+    fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = throw UnsupportedOperationException("Player activity history unavailable")
+
     fun health(): StorageHealth
 }

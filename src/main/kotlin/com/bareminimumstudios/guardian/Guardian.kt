@@ -54,6 +54,13 @@ object Guardian : ModInitializer {
             }
         )
 
+        com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.install({ runtime?.pipeline() }, { config })
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(handler.player, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN)
+        }
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
+            com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(handler.player, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
+        }
         PlayerBlockBreakHook.register()
         FabricBlockInspectorHooks.install()
         BlockInspector.install(
@@ -89,7 +96,8 @@ object Guardian : ModInitializer {
             }
         }
 
-        ServerLifecycleEvents.SERVER_STOPPING.register { _ ->
+        ServerLifecycleEvents.SERVER_STOPPING.register { server ->
+            server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
             BlockInspector.clear()
             val clean = runtime?.stop() ?: true
             runtime = null

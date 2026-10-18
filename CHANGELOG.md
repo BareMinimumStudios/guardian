@@ -29,6 +29,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.64+1.21.1] - 2026-10-17
+
+### Added
+
+- Record ordinary public chat at the shared broadcast boundary, excluding private/command chat types and fully filtered messages. Chat capture is opt-in through `activity.chat`.
+- Record login/logout events with UUID, recorded name and timestamp on Fabric and NeoForge, including orderly server shutdown. `activity.sessions` controls session capture independently.
+- Add `/guardian chat` and `/guardian sessions` with user/time filters, paging, ordering and separate level-three permissions. Recheck access before deferred results and errors.
+- Migrate existing supported databases to schema 11 with idempotent activity persistence and bounded queries. Retain existing block/item history and recovery protection.
+
+### Changed
+
+- Document activity privacy/settings and the remaining connected-client acceptance boundary. Item restoration remains unavailable; command logging is not included.
+
 ## [0.4.0-alpha.63+1.21.1] - 2026-10-11
 
 ### Fixed

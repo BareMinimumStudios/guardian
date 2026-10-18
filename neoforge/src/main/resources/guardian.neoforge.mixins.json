@@ -47,7 +47,8 @@
     "BlockInventoryDataMixin",
     "HopperInventoryMutationMixin",
     "ChunkMapSaveInvoker",
-    "PlayerListSaveInvoker"
+    "PlayerListSaveInvoker",
+    "PlayerChatAuditMixin"
   ],
   "injectors": {
     "defaultRequire": 1

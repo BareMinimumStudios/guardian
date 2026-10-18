@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(6)
+@Version(7)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -42,6 +42,13 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
 
         /** Opt-in block-to-block hopper capture while broader load/gameplay acceptance is pending. */
         var automatedContainerTransfers = ValidatedBoolean(false)
+    }
+
+    var activity = Activity()
+    class Activity : ConfigSection() {
+        /** Public chat only; off until the server owner opts in. */
+        var chat = ValidatedBoolean(false)
+        var sessions = ValidatedBoolean(true)
     }
 
     var storage = Storage()

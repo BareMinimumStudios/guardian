@@ -16,6 +16,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     private val lock = ReentrantReadWriteLock()
     private val entries = mutableListOf<MemoryBlockRow>()
     private val containers = mutableListOf<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>()
+    private val activity = mutableListOf<com.bareminimumstudios.guardian.domain.PlayerActivity>()
     private var nextRowId = 1L
     @Volatile private var open = false
 
@@ -28,6 +29,9 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     override fun append(entries: List<LogEntry>) {
         check(open) { "Storage backend is not open" }
         lock.write {
+            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.PlayerActivity>().forEach { row ->
+                if (activity.none { it.eventId == row.eventId }) activity.add(row)
+            }
             entries.filterIsInstance<com.bareminimumstudios.guardian.domain.ContainerAuditEntry>().forEach { entry ->
                 if (containers.none { it.transactionId == entry.transaction.transactionId }) containers += entry.transaction
             }
@@ -37,6 +41,14 @@ class InMemoryStorageBackend : QueryableStorageBackend {
                 }
             }
         }
+    }
+
+    override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.read {
+        activity.filter { it.kind in query.kinds && (query.playerUuid == null || it.actor.uuid == query.playerUuid) &&
+            (query.playerName == null || it.actor.lastKnownName.equals(query.playerName, ignoreCase = true)) &&
+            (query.afterEpochMillis == null || it.timestampEpochMillis >= query.afterEpochMillis) }
+            .sortedWith(compareBy<com.bareminimumstudios.guardian.domain.PlayerActivity> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() })
+            .drop(query.offset).take(query.limit)
     }
 
     override fun lookupBlocks(query: BlockLookupQuery): List<StoredBlockChange> = lock.read {

@@ -1,6 +1,6 @@
 # Release validation
 
-Alpha.63 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.64 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
@@ -21,6 +21,14 @@ Clean build (18s), build (8s), repeat with configuration-cache reuse (4s) and Wo
 The [failed run](https://github.com/BareMinimumStudios/guardian/actions/runs/38115735874) failed at the multi-host drain assertion, not compilation or missing dependencies. Independent completion observers allowed the shared drain to finish before the retention observer reported completion. The aggregate now waits for that exact observer.
 
 The alpha.63 full clean build ran without build-cache reuse: 546 tests passed, including 25 schedules of the reported regression. Required repeat/configuration-cache and WorldEdit builds passed. [Evidence and artifact hashes](validation/ci-alpha63.json). Remote CI remains unverified until this local commit is pushed; no push or publish was performed. Alpha.62 provider runtime evidence remains historical evidence for unchanged permission paths.
+
+## Activity logging, 2026-10-17
+
+The owner authorized public chat and login/logout logging. Alpha.64 adds schema 11, immutable activity records, opt-in public chat, separately configurable session capture and separately permissioned paged searches. Commands and private-message types are excluded. Existing item apply exclusions remain.
+
+551 automated tests passed, including SQLite/DuckDB/memory filtering and idempotence, restart persistence, old-schema migration preservation and activity paging. Required clean/repeated-cache/WorldEdit builds passed. Both isolated loader servers resolved the new chat mixin and recorded exactly the expected public chat, login and logout fixture records; private-message types and disabled switches produced no records. SQLite integrity and restart persistence passed. [Evidence and hashes](validation/activity-alpha64.json).
+
+The broadcast test calls the actual Minecraft broadcast method. The synthetic session fixture calls shared capture directly and does not certify a network login/logout. New activity permissions under installed providers, connected-client chat display and actual pack cancellation behavior remain acceptance work; prior permission fixtures do not certify the new nodes.
 
 ## Pending acceptance
 

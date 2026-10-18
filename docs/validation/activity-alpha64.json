@@ -1,0 +1,94 @@
+{
+  "version": "0.4.0-alpha.64+1.21.1",
+  "date": "2026-10-17",
+  "schema": 11,
+  "automatedTests": 551,
+  "failures": 0,
+  "errors": 0,
+  "builds": "clean build, repeated configuration-cache build and WorldEdit adapter passed",
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=6",
+      "rows": [
+        [
+          "CHAT",
+          "ACTIVITY88 public coal \u2603"
+        ],
+        [
+          "LOGIN",
+          null
+        ],
+        [
+          "LOGOUT",
+          null
+        ]
+      ],
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformed": false,
+      "connectedClients": 0,
+      "sessionFixture": "calls shared capture; actual network join/logout acceptance pending"
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=7",
+      "rows": [
+        [
+          "CHAT",
+          "ACTIVITY88 public coal \u2603"
+        ],
+        [
+          "LOGIN",
+          null
+        ],
+        [
+          "LOGOUT",
+          null
+        ]
+      ],
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformed": false,
+      "connectedClients": 0,
+      "sessionFixture": "calls shared capture; actual network join/logout acceptance pending"
+    }
+  ],
+  "privacy": {
+    "chatDefault": false,
+    "sessionsDefault": true,
+    "commandLogging": false,
+    "privateChatTypes": false,
+    "ipsStored": false,
+    "chatPermission": "guardian.chat",
+    "sessionPermission": "guardian.sessions",
+    "operatorFallback": 3
+  },
+  "limitations": [
+    "Synthetic session fixture invokes shared capture; actual network join/logout events not certified",
+    "Real-client chat presentation, pack cancellation behavior and new permissions with installed providers remain acceptance work",
+    "No session replay or duration calculation",
+    "Abrupt crash may omit logout",
+    "Item restoration remains unavailable"
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.64+1.21.1.jar",
+      "bytes": 12911801,
+      "sha256": "fa6822e4ed7a36736ff0ac7cbd5ef491dbfb7756164a89eebfe34ee119cc4d8d"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.64+1.21.1.jar",
+      "bytes": 12891334,
+      "sha256": "f8259bd1bc79dc4875bda187d75300a4497ea3dba5da843cdf5c2e4faf76d402"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.64+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "4eb551bc599b6c80d0854ecd904b966468a1431d195d303b88ba580d18c18afa"
+    }
+  ]
+}

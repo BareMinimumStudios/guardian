@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.63+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.64+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 10**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 11**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -112,6 +112,27 @@ Green entries describe items added to an inventory; red entries describe removal
 
 Hopper history is **off by default**. Enable `logging.automatedContainerTransfers` to record supported block-to-block transfers. Automated records show the observed source and destination coordinates together. A transfer **into a hopper** does not mean the item also reached the barrel below it. Failed pushes into a full destination should produce no transfer record.
 
+## Chat and login/logout history
+
+Guardian can record **ordinary public chat** and **login/logout events**, including player UUID, the name recorded at the time and an event timestamp. These are event records, not a session replay or a calculated play-time report.
+
+- `activity.chat` defaults to **false**. Enable it explicitly in the server configuration if you want public chat stored.
+- `activity.sessions` defaults to **true**. Disable it to stop recording login/logout events.
+- `general.enabled` and `logging.enabled` also govern this capture. Disabling capture does not delete previously stored history.
+
+```text
+/guardian chat u:Poke097 t:1d l:20 p:1
+/guardian sessions u:Poke097 t:1w l:20 p:1
+```
+
+Replace the example name with the player you want to investigate. These searches accept `u:`/`user:`, `t:`/`time:`, `l:`/`limit:`, `p:`/`page:` and `o:`/`order:`. Leave the user filter out to search all recorded players. Results span the server and have clickable paging/order controls. They do not accept radius, coordinates or block-action filters.
+
+Chat searches require **`guardian.chat`** and session searches require **`guardian.sessions`**, each with vanilla operator level **3** fallback. Ordinary `guardian.lookup` permission does not grant either. Restrict access and communicate your server's logging policy to players.
+
+The chat record contains plain decorated public text at the broadcast boundary, capped at 4,096 characters. Commands, `/msg`/private-message chat types, system messages and fully filtered messages are excluded. This does not promise capture of arbitrary custom chat channels from other mods. Login/logout capture starts after Guardian is running; it cannot reconstruct earlier sessions. Orderly shutdown records currently connected players leaving before storage closes. A crash may leave a login with no logout.
+
+Startup upgrades supported databases to schema 11 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
+
 ## Roll back blocks
 
 **Block rollback changes the world directly; there is no separate block-preview command or general redo command.** Back up the world, check the corresponding lookup and use a small, explicit region first.
@@ -143,6 +164,8 @@ Preview checks a bounded set of candidate transfers against observed inventories
 | --- | --- | --- |
 | `guardian.lookup` | Block and item history | 2 |
 | `guardian.inspect` | Inspector clicks and pages | 2 |
+| `guardian.chat` | Public chat history | 3 |
+| `guardian.sessions` | Login/logout history | 3 |
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
 | `guardian.config.edit` | Fzzy Config editing | 3 |
@@ -169,6 +192,8 @@ Edit the generated server configuration. Restart after changing any setting mark
 | `logging.playerBlockChanges` | `true` | Player block capture |
 | `logging.containerTransactions` | `true` | Supported item transaction capture |
 | `logging.automatedContainerTransfers` | `false` | Supported block-hopper capture |
+| `activity.chat` | `false` | Opt in to public chat capture |
+| `activity.sessions` | `true` | Login/logout event capture |
 | `storage.backend` | `SQLITE` | Database backend; use SQLite with standard jars |
 | `storage.sqliteFile` | `guardian.sqlite` | Database filename inside the server's Guardian directory |
 | `lookup.defaultResults` / `lookup.maxResults` | `10` / `500` | History page defaults and limits |
@@ -182,7 +207,7 @@ Item history has a hard maximum of 500 results per page even if the configured l
 
 Guardian captures player block placement/breaking, accepted supported block interactions, ordinary player inventory moves, supported block-backed menu changes, cursor returns, standalone drops, offhand swaps, accepted creative slot changes and exact vanilla 2×2/3×3 crafting paths. Optional hopper and Fabric WorldEdit capture are available as described above.
 
-Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. General fluid/entity history, economy/faction storage and full CoreProtect parity are outside this release.
+Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. General fluid/entity history, command/private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
 
 ## Troubleshooting
 
