@@ -1,6 +1,6 @@
 # Guardian storage schema
 
-Current schema: **11**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+Current schema: **12**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
 
 The `ex_` table prefix preserves the native ExProtect format lineage. It is not a CoreProtect `co_` schema or an automatic importer.
 
@@ -17,3 +17,5 @@ Schema 7 introduced item journals/claims, 8 added owner history indexing, 9 adde
 Stop the server before a simple database-file backup. Default SQLite location is `guardian/guardian.sqlite` under the server directory. Backend selection does not migrate history to another database.
 
 Schema 11 adds `ex_player_activity`: unique event UUID, timestamp, player UUID, immutable event-time name, CHAT/LOGIN/LOGOUT kind and nullable plain chat text. Kind/time and UUID/time indexes support bounded lookups. Retries ignore an existing event UUID; activity writes share the audit batch transaction. These records do not participate in block/item rollback.
+
+Schema 12 adds derived `ex_container_item` rows keyed by transaction UUID and resource ID, with a resource/transaction index. It indexes all recorded nonempty before/after stack identities, not display names or component contents. A keyset backfill closes each read cursor before batch writes and preserves existing payload bytes. Resource conditions use EXISTS/NOT EXISTS before limit/offset, avoiding duplicate transaction rows.

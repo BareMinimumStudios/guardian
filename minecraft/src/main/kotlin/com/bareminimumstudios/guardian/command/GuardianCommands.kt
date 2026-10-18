@@ -155,17 +155,23 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false, extended: Boolean = true): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
         if (!authorized(source, permissions, permission, fallback)) return com.mojang.brigadier.suggestion.Suggestions.empty()
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
         val players=source.server.playerList.players.map { it.gameProfile.name }
-        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items)
+        val resourceKey = current.substringBefore(':').lowercase()
+        val resources = if (!extended || activity || resourceKey !in setOf("i", "include", "e", "exclude")) emptyList() else
+            (if (items) net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() }
+        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items, resources, extended)
         return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order") }, builder.createOffset(start))
     }
 
     private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
         runCatching { permissions.has(source, permission, fallback) }.getOrDefault(false)
+
+    private fun resolvedSearch(source: CommandSourceStack, filter: BlockCommandFilter) =
+        filter.search.resolve(source.server.playerList.players.associate { it.gameProfile.name to it.uuid })
 
     private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
@@ -177,7 +183,7 @@ object GuardianCommands {
         val limit = filter.limit ?: config.lookup.defaultResults.get()
         if (limit > minOf(500, config.lookup.maxResults.get())) { source.sendFailure(Component.literal("Guardian activity page limit exceeded.")); return 0 }
         val kinds = if (name == "chat") setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT) else setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
-        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, playerName = filter.actorName,
+        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, search = resolvedSearch(source, filter),
             afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) }, limit = limit, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst)
         history.lookupActivity(query, { rows ->
             if (!authorized(source, runtime.permissions, "guardian.$name", 3)) return@lookupActivity
@@ -201,11 +207,10 @@ object GuardianCommands {
         if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
             source.sendFailure(Component.literal("Guardian transaction limit/radius exceeds the configured maximum (limit at most 500).")); return 0
         }
-        val profile = filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name, ignoreCase = true) }?.gameProfile }
         val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(
             dimension = if (filter.explicitPosition != null || filter.radius != null || scope.bounds != null) scope.dimension else null,
             position = filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) },
-            actorUuid = profile?.id, actorName = filter.actorName?.takeIf { profile == null }, limit = limit,
+            search = resolvedSearch(source, filter), limit = limit,
             afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) },
             radius = filter.radius, bounds = scope.bounds, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst
         )
@@ -277,7 +282,7 @@ object GuardianCommands {
         }
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3, extended = false) }
                 .executes { context ->
                     executeRollback(
                         source = context.source,
@@ -364,8 +369,7 @@ object GuardianCommands {
             position = position,
             bounds = scope.bounds,
             radius = radius,
-            actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
-            actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
+            search = resolvedSearch(source, filter),
             actions = filter.actions,
             afterEpochMillis = filter.lookbackMillis?.let { (now - it).coerceAtLeast(0L) },
             limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit, oldestFirst = filter.oldestFirst
@@ -401,6 +405,9 @@ object GuardianCommands {
         val filter = BlockCommandFilterParser.parse(raw).getOrElse {
             source.sendFailure(Component.literal("Guardian rollback: ${it.message}"))
             return 0
+        }
+        if (filter.search.extended) {
+            source.sendFailure(Component.literal("Extended user and resource filters are history-only. Block rollback still accepts one included user.")); return 0
         }
         val lookbackMillis = filter.lookbackMillis ?: run {
             source.sendFailure(Component.literal("Guardian rollback requires a t:<time> filter for safety."))

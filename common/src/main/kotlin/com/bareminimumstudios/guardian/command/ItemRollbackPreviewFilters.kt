@@ -5,6 +5,7 @@ object ItemRollbackPreviewFilters {
     private val keys=setOf("u","user","t","time","r","radius","x","y","z")
     fun parse(raw: String): Result<BlockCommandFilter> = runCatching {
         val parsed=BlockCommandFilterParser.parse(raw).getOrThrow()
+        require(!parsed.search.extended) { "Item preview accepts one included player only; extended history filters are not supported." }
         require(parsed.lookbackMillis != null) { "Item rollback preview requires t:<time>." }
         require(raw.trim().split(Regex("\\s+")).all { it.substringBefore(':').lowercase() in keys }) {
             "Item rollback preview accepts only u:, t:, r: and complete x:/y:/z: coordinates."
@@ -12,5 +13,5 @@ object ItemRollbackPreviewFilters {
         parsed
     }
     fun suggestions(token: String, players: Collection<String>): List<String> =
-        FilterSuggestions.values(token,players,true).filter { it.substringBefore(':').lowercase() in keys }
+        FilterSuggestions.values(token,players,true, extended = false).filter { it.substringBefore(':').lowercase() in keys }
 }

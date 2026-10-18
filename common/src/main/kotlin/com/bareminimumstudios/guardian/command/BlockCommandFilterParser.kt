@@ -9,6 +9,10 @@ object BlockCommandFilterParser {
         if (trimmed.isEmpty()) return@runCatching BlockCommandFilter()
 
         var actorName: String? = null
+        var usersSeen = false
+        var search = com.bareminimumstudios.guardian.storage.query.HistorySearchFilter()
+        var includeSeen = false
+        var excludeSeen = false
         var lookbackMillis: Long? = null
         var radius: Int? = null
         var useWorldEditSelection = false
@@ -27,9 +31,22 @@ object BlockCommandFilterParser {
             val value = token.substring(separator + 1)
             when (key) {
                 "u", "user" -> {
-                    require(actorName == null) { "Player filter was specified more than once." }
-                    require(PLAYER_NAME.matches(value)) { "Invalid player name '$value'." }
-                    actorName = value
+                    require(!usersSeen) { "Player filter was specified more than once." }; usersSeen = true
+                    val names = value.split(',')
+                    require(names.size in 1..32 && names.all { PLAYER_NAME.matches(it.removePrefix("!")) }) { "Use up to 32 player names separated by commas; prefix exclusions with !." }
+                    require(names.map { it.lowercase() }.distinct().size == names.size) { "Duplicate player in user filter." }
+                    val included = names.filterNot { it.startsWith('!') }.map { com.bareminimumstudios.guardian.storage.query.HistoryPlayer(it) }
+                    val excluded = names.filter { it.startsWith('!') }.map { com.bareminimumstudios.guardian.storage.query.HistoryPlayer(it.drop(1)) }
+                    search = search.copy(players = included, excludedPlayers = excluded)
+                    actorName = included.singleOrNull()?.name
+                }
+                "i", "include" -> {
+                    require(!includeSeen) { "Include filter was specified more than once." }; includeSeen = true
+                    search = search.copy(included = parseResources(value))
+                }
+                "e", "exclude" -> {
+                    require(!excludeSeen) { "Exclude filter was specified more than once." }; excludeSeen = true
+                    search = search.copy(excluded = parseResources(value))
                 }
                 "t", "time" -> {
                     require(lookbackMillis == null) { "Time filter was specified more than once." }
@@ -81,8 +98,16 @@ object BlockCommandFilterParser {
             useWorldEditSelection = useWorldEditSelection,
             explicitPosition = if (coordinateCount == 3) BlockPosition(x!!, y!!, z!!) else null,
             actions = actions,
-            limit = limit, page = page, oldestFirst = order == "oldest"
+            limit = limit, page = page, oldestFirst = order == "oldest", search = search
         )
+    }
+
+    private fun parseResources(value: String): Set<com.bareminimumstudios.guardian.domain.ResourceId> {
+        val parts = value.split(',')
+        require(parts.size in 1..64 && parts.none { it.isEmpty() }) { "Use 1 to 64 block/item IDs separated by commas." }
+        val resources = parts.map { com.bareminimumstudios.guardian.domain.ResourceId.parse(it) }
+        require(resources.distinct().size == resources.size) { "Duplicate resource in filter." }
+        return resources.toSet()
     }
 
     private fun parseCoordinate(name: String, raw: String, existing: Int?): Int {

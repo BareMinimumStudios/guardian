@@ -1,6 +1,6 @@
 # Release validation
 
-Alpha.64 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.65 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
@@ -29,6 +29,14 @@ The owner authorized public chat and login/logout logging. Alpha.64 adds schema 
 551 automated tests passed, including SQLite/DuckDB/memory filtering and idempotence, restart persistence, old-schema migration preservation and activity paging. Required clean/repeated-cache/WorldEdit builds passed. Both isolated loader servers resolved the new chat mixin and recorded exactly the expected public chat, login and logout fixture records; private-message types and disabled switches produced no records. SQLite integrity and restart persistence passed. [Evidence and hashes](validation/activity-alpha64.json).
 
 The broadcast test calls the actual Minecraft broadcast method. The synthetic session fixture calls shared capture directly and does not certify a network login/logout. New activity permissions under installed providers, connected-client chat display and actual pack cancellation behavior remain acceptance work; prior permission fixtures do not certify the new nodes.
+
+## Extended history search, 2026-10-17
+
+The owner authorized multi-user searches, user exclusions, exact resource include/exclude lists and matching completion. Alpha.65 applies these filters before paging in SQLite, optional DuckDB and memory. Schema 12 backfills a derived item-ID index while preserving source payload bytes. Exclusions hide whole events/transactions; block records match before or after identity. Rollback and item preview explicitly refuse extended filters.
+
+561 automated tests passed, including aliases/malformed input, comma/negation completion, modded IDs, UUID resolution, unknown actors, exclusion precedence, pagination, restart and historical migration over the 128-record batch boundary. Clean, repeated configuration-cache and optional WorldEdit builds passed. Two isolated servers passed nine command cases each against a synthetic persisted audit prefix, including history paging, exclusions and rollback refusal, then restart. No rollback claims were created; SQLite integrity passed. Runtime core hashes match final artifacts. [Evidence and checksums](validation/filters-alpha65.json).
+
+These server tests do not certify actual client completion presentation, all modpack integrations or capture of arbitrary modded events. Existing activity permission/provider and connected-client acceptance limits remain.
 
 ## Pending acceptance
 

@@ -12,5 +12,6 @@ data class BlockCommandFilter(
     val actions: Set<ActionType> = emptySet(),
     val limit: Int? = null,
     val page: Int? = null,
-    val oldestFirst: Boolean = false
+    val oldestFirst: Boolean = false,
+    val search: com.bareminimumstudios.guardian.storage.query.HistorySearchFilter = com.bareminimumstudios.guardian.storage.query.HistorySearchFilter()
 )

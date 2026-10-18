@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.64+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.65+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 11**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 12**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -76,7 +76,9 @@ Block lookup searches the dimension in which the command runs. Without a radius 
 
 | Filter | Meaning | Example |
 | --- | --- | --- |
-| `u:` or `user:` | Recorded player name | `u:YourName` |
+| `u:` or `user:` | Player names; comma lists and `!` exclusions | `u:Alex,Bob`, `u:!Alex` |
+| `i:` or `include:` | Include matching block/item IDs in history | `i:stone,example:slate` |
+| `e:` or `exclude:` | Exclude matching block/item IDs from history | `e:minecraft:diamond` |
 | `t:` or `time:` | How far back to search | `t:30m`, `t:2h`, `t:1d12h` |
 | `r:` or `radius:` | Cuboid radius around you or explicit coordinates | `r:10` |
 | `x: y: z:` | Explicit block coordinates | `x:100 y:64 z:-20` |
@@ -86,6 +88,25 @@ Block lookup searches the dimension in which the command runs. Without a radius 
 | `o:` or `order:` | History sort order | `o:oldest`, `o:newest` |
 
 Time units are `s` seconds, `m` minutes, `h` hours, `d` days and `w` weeks. Values must be positive. Configured result/radius limits still apply. With the Fabric WorldEdit adapter, `r:#worldedit` or `r:#we` uses your current cuboid selection instead of a numeric radius; it cannot be combined with explicit coordinates.
+
+### Multiple players and block/item filters
+
+```text
+/guardian lookup u:Poke097,cherry_cordial t:1d i:stone,example:slate
+/guardian transactions u:!Poke097 t:1d i:coal e:diamond
+/guardian chat u:Poke097,cherry_cordial t:1d
+/guardian sessions u:!Poke097 t:1w
+```
+
+`u:Alex,Bob` matches either player. `u:!Alex` searches everyone except Alex; use `u:Alex,Bob,!Bob` to combine a list with an exclusion. Exclusions win. The user list accepts up to 32 names; names are case-insensitive. Online players resolve to UUIDs, including records under an older name; offline names match the names stored in history.
+
+Block/item include and exclude lists accept up to 64 exact IDs each. An omitted namespace means `minecraft:`. Modded IDs such as `example:slate` work even if the mod is no longer installed; tab completion offers currently registered IDs. Wildcards, tags, and display names are not supported.
+
+A block record matches either its recorded **before or after** block ID. An item transaction matches any recorded nonempty before/after item stack. Including several IDs means any of them can match. Excluding an ID hides the **whole event or transaction**, even if another included item also occurs in it; Guardian does not manufacture a partial transaction for display.
+
+These filters run before result limits and pagination. Player lists work across block/item/chat/session history; resource filters work only for block/item history. Block rollback and read-only item previews still accept one included user and **refuse these extended history filters**.
+
+On first schema-12 startup, Guardian builds an item-ID index from existing transaction payloads in batches. The original history and payload bytes are preserved. A large existing database may take longer to open for this one-time migration; back it up first.
 
 ### Pages and ordering
 
@@ -106,7 +127,7 @@ Inspector pages show at most five transactions. Keyboard alternatives are:
 /guardian transactions 100 64 -20
 ```
 
-User-filtered item history without a region spans recorded dimensions. Adding a position, radius or selection restricts it to the current dimension. Item history accepts the history filters above except `a:`. The older `/guardian transactions player <name-or-uuid>` form remains available for compatibility.
+User-filtered item history without a region spans recorded dimensions. Adding a position, radius or selection restricts it to the current dimension. Item history accepts the history filters above except `a:`, including block/item ID include and exclude lists. The older `/guardian transactions player <name-or-uuid>` form remains available for compatibility.
 
 Green entries describe items added to an inventory; red entries describe removals. Records preserve item counts and persistent Data Components, including modded item identities where supported. Opening a container without changing items does not create a transaction.
 
@@ -125,13 +146,13 @@ Guardian can record **ordinary public chat** and **login/logout events**, includ
 /guardian sessions u:Poke097 t:1w l:20 p:1
 ```
 
-Replace the example name with the player you want to investigate. These searches accept `u:`/`user:`, `t:`/`time:`, `l:`/`limit:`, `p:`/`page:` and `o:`/`order:`. Leave the user filter out to search all recorded players. Results span the server and have clickable paging/order controls. They do not accept radius, coordinates or block-action filters.
+Replace the example name with the player you want to investigate. These searches accept `u:`/`user:`, `t:`/`time:`, `l:`/`limit:`, `p:`/`page:` and `o:`/`order:`. Leave the user filter out to search all recorded players. Results span the server and have clickable paging/order controls. User lists and `!` exclusions work here too. These commands do not accept resource, radius, coordinate or block-action filters.
 
 Chat searches require **`guardian.chat`** and session searches require **`guardian.sessions`**, each with vanilla operator level **3** fallback. Ordinary `guardian.lookup` permission does not grant either. Restrict access and communicate your server's logging policy to players.
 
 The chat record contains plain decorated public text at the broadcast boundary, capped at 4,096 characters. Commands, `/msg`/private-message chat types, system messages and fully filtered messages are excluded. This does not promise capture of arbitrary custom chat channels from other mods. Login/logout capture starts after Guardian is running; it cannot reconstruct earlier sessions. Orderly shutdown records currently connected players leaving before storage closes. A crash may leave a login with no logout.
 
-Startup upgrades supported databases to schema 11 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
+Startup upgrades supported databases to schema 12 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
 
 ## Roll back blocks
 
@@ -142,7 +163,7 @@ Startup upgrades supported databases to schema 11 without replacing existing blo
 /guardian rollback u:YourName t:10m r:3
 ```
 
-Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by player and block action. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
+Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by one included player and block action. Multi-user lists, player exclusions and resource filters are refused by rollback in this release. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
 
 **Item rollback apply is unavailable**, including for vanilla inventories. Block rollback is not a replacement for restoring a container's item transaction history.
 

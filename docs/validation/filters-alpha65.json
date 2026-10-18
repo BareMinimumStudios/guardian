@@ -1,0 +1,247 @@
+{
+  "version": "0.4.0-alpha.65+1.21.1",
+  "date": "2026-10-17",
+  "schema": 12,
+  "tests": 561,
+  "failures": 0,
+  "errors": 0,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=10",
+      "cases": [
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:1",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian item history (1 transaction):",
+            "[23:45:14] [Server thread/INFO]: 7s ago: FilterBob added 1 slate (example) to container @ 0, 299, 0",
+            "[23:45:14] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714282868600"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:2",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian item history (1 transaction):",
+            "[23:45:14] [Server thread/INFO]: 7s ago: FilterAlex added 1 coal to container @ 0, 299, 0",
+            "[23:45:14] [Server thread/INFO]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714380082400"
+          ]
+        },
+        {
+          "command": "guardian transactions u:!FilterBob i:coal e:diamond",
+          "expected": "Guardian item history (2 transactions)",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian item history (2 transactions):",
+            "[23:45:14] [Server thread/INFO]: 7s ago: Hopper moved 1 coal [ \u2192 0,299,0]",
+            "[23:45:14] [Server thread/INFO]: 7s ago: FilterAlex added 1 coal to container @ 0, 299, 0",
+            "[23:45:14] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714473363400"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:3",
+          "expected": "Guardian: no item transactions found.",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian: no item transactions found.",
+            "[23:45:14] [Server thread/INFO]: [Previous]  Page 3    [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714522290400"
+          ]
+        },
+        {
+          "command": "guardian lookup u:FilterAlex,FilterBob i:example:slate",
+          "expected": "Guardian block history",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian: searching block history...",
+            "[23:45:14] [Server thread/INFO]: Guardian block history (1 result):",
+            "[23:45:14] [Server thread/INFO]: #1 7s ago: FilterAlex changed example:slate -> minecraft:air @ 0,299,0",
+            "[23:45:14] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714638061300"
+          ]
+        },
+        {
+          "command": "guardian chat u:FilterAlex,FilterBob,!FilterBob t:1h",
+          "expected": "Guardian chat history: 1 records",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian chat history: 1 records (page 1).",
+            "[23:45:14] [Server thread/INFO]: 2026-10-18T04:45:07.125Z FilterAlex said: filter fixture",
+            "[23:45:14] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714725559300"
+          ]
+        },
+        {
+          "command": "guardian rollback u:FilterAlex,FilterBob t:1h",
+          "expected": "Extended user and resource filters are history-only",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Extended user and resource filters are history-only. Block rollback still accepts one included user.",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714770512500"
+          ]
+        },
+        {
+          "command": "guardian rollback-items preview u:!FilterBob t:1h",
+          "expected": "Item preview accepts one included player only",
+          "output": [
+            "[23:45:14] [Server thread/INFO]: Guardian item rollback preview: Item preview accepts one included player only; extended history filters are not supported.",
+            "[23:45:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298714774014200"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:example:slate",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:27] [Server thread/INFO]: Guardian item history (1 transaction):",
+            "[23:45:27] [Server thread/INFO]: 20s ago: FilterBob added 1 slate (example) to container @ 0, 299, 0",
+            "[23:45:27] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[23:45:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792298727190713300"
+          ]
+        }
+      ],
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "noRollbackClaims": true,
+      "connectedClients": 0,
+      "auditPrefix": "synthetic snapshots submitted through actual writer; no capture certification"
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=10",
+      "cases": [
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:1",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian item history (1 transaction):",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: 7s ago: FilterBob added 1 slate (example) to container @ 0, 299, 0",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298745720130500"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:2",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian item history (1 transaction):",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: 7s ago: FilterAlex added 1 coal to container @ 0, 299, 0",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298745803467100"
+          ]
+        },
+        {
+          "command": "guardian transactions u:!FilterBob i:coal e:diamond",
+          "expected": "Guardian item history (2 transactions)",
+          "output": [
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian item history (2 transactions):",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: 7s ago: Hopper moved 1 coal [ ? 0,299,0]",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: 7s ago: FilterAlex added 1 coal to container @ 0, 299, 0",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298745911274000"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:coal,example:slate e:diamond l:1 p:3",
+          "expected": "Guardian: no item transactions found.",
+          "output": [
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no item transactions found.",
+            "[23:45:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 3    [Newest first]",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298745958023500"
+          ]
+        },
+        {
+          "command": "guardian lookup u:FilterAlex,FilterBob i:example:slate",
+          "expected": "Guardian block history",
+          "output": [
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (1 result):",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: #1 7s ago: FilterAlex changed example:slate -> minecraft:air @ 0,299,0",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298746073428100"
+          ]
+        },
+        {
+          "command": "guardian chat u:FilterAlex,FilterBob,!FilterBob t:1h",
+          "expected": "Guardian chat history: 1 records",
+          "output": [
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian chat history: 1 records (page 1).",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-18T04:45:38.663Z FilterAlex said: filter fixture",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298746160670000"
+          ]
+        },
+        {
+          "command": "guardian rollback u:FilterAlex,FilterBob t:1h",
+          "expected": "Extended user and resource filters are history-only",
+          "output": [
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: Extended user and resource filters are history-only. Block rollback still accepts one included user.",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298746265507800"
+          ]
+        },
+        {
+          "command": "guardian rollback-items preview u:!FilterBob t:1h",
+          "expected": "Item preview accepts one included player only",
+          "output": [
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian item rollback preview: Item preview accepts one included player only; extended history filters are not supported.",
+            "[23:45:46] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298746358997900"
+          ]
+        },
+        {
+          "command": "guardian transactions u:FilterAlex,FilterBob i:example:slate",
+          "expected": "Guardian item history (1 transaction)",
+          "output": [
+            "[23:45:59] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[23:45:59] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=12",
+            "[23:45:59] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian item history (1 transaction):",
+            "[23:45:59] [Server thread/INFO] [minecraft/MinecraftServer]: 20s ago: FilterBob added 1 slate (example) to container @ 0, 299, 0",
+            "[23:45:59] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[23:45:59] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792298759489961100"
+          ]
+        }
+      ],
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "noRollbackClaims": true,
+      "connectedClients": 0,
+      "auditPrefix": "synthetic snapshots submitted through actual writer; no capture certification"
+    }
+  ],
+  "builds": {
+    "clean": "passed, 45s",
+    "build": "passed, 3s",
+    "repeat": "passed, 134ms, configuration cache reused",
+    "worldEdit": "passed"
+  },
+  "semantics": {
+    "users": "OR included players; excluded players win; online UUIDs preferred, otherwise recorded names",
+    "resources": "OR included IDs; ANY excluded ID hides the whole record; before/after block/item IDs",
+    "pagination": "SQL predicates before LIMIT and OFFSET",
+    "migration": "keyset backfill of old item IDs; original payload bytes unchanged",
+    "rollback": "extended filters explicitly refused; existing single-user contract retained",
+    "permissions": "unchanged existing history permissions and deferred-result guards"
+  },
+  "limits": [
+    "Synthetic persisted audit prefix, no connected clients",
+    "Real-client completion presentation and pack compatibility still require acceptance",
+    "No new purge, rollback preview/redo, item application or command logging"
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.65+1.21.1.jar",
+      "bytes": 12939522,
+      "sha256": "20fb566d81e7d00c9758867ef8a425a4d3340fd4caa1fecfee395ba113b06e81"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.65+1.21.1.jar",
+      "bytes": 12918399,
+      "sha256": "681699c39e2cdaf47704c733677d535af3915cabd4a193599950c7967ceac769"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.65+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "2439645628d78ef1cf7aa2d41207e4783b9d58360838aae89424b684776294ea"
+    }
+  ]
+}

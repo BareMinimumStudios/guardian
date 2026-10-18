@@ -145,6 +145,9 @@ abstract class JdbcStorageBackend(
         val params = mutableListOf<Any>()
         val where = mutableListOf("kind IN (${query.kinds.joinToString(",") { "?" }})")
         query.kinds.forEach { params.add(it.name) }
+        val actors = HistorySearchSql.actors(query.search, "player_uuid", "player_name")
+        if (actors.clause.isNotEmpty()) where.add(actors.clause.removePrefix(" AND "))
+        params.addAll(actors.values)
         query.playerUuid?.let { where.add("player_uuid = ?"); params.add(it.toString()) }
         query.playerName?.let { where.add("LOWER(player_name) = LOWER(?)"); params.add(it) }
         query.afterEpochMillis?.let { where.add("time >= ?"); params.add(it) }
@@ -169,6 +172,7 @@ abstract class JdbcStorageBackend(
             it.setString(5, transaction.action.name); it.setBytes(6, bytes); it.executeUpdate()
         }
         if (inserted == 0) return
+        ContainerItemIndex.insert(conn, transaction.transactionId.toString(), transaction.changes)
         ContainerOwnerIndex.insert(conn,transaction.transactionId.toString(),transaction.timestampEpochMillis,transaction.changes.map { ContainerOwnerIndex.key(it.address.owner) }.toSet())
         conn.prepareStatement("INSERT INTO ex_container_location(transaction_uuid, wid, x, y, z) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING").use { statement ->
             transaction.containers.forEach { owner ->
@@ -183,6 +187,9 @@ abstract class JdbcStorageBackend(
     override fun lookupContainers(query: ContainerLookupQuery): List<ContainerTransactionSnapshot> = lock.withLock {
         val conn = requireConnection()
         val sql = StringBuilder("SELECT c.* FROM ex_container c JOIN ex_actor_map a ON a.id = c.actor WHERE 1=1")
+        val actors = HistorySearchSql.actors(query.search, "a.uuid", "a.name", "a.kind = 1")
+        val resources = HistorySearchSql.resources(query.search) { count -> "EXISTS (SELECT 1 FROM ex_container_item fi WHERE fi.transaction_uuid = c.transaction_uuid AND fi.resource IN (${List(count) { "?" }.joinToString(",")}))" }
+        sql.append(actors.clause).append(resources.clause)
         if (query.actorUuid != null) sql.append(" AND a.uuid = ?")
         if (query.actorName != null) sql.append(" AND LOWER(a.name) = LOWER(?)")
         if (query.dimension != null) {
@@ -194,6 +201,8 @@ abstract class JdbcStorageBackend(
         sql.append(if (query.oldestFirst) " ORDER BY c.time ASC, c.transaction_uuid ASC LIMIT ? OFFSET ?" else " ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ? OFFSET ?")
         conn.prepareStatement(sql.toString()).use { statement ->
             var index = 1
+            actors.values.forEach { statement.setString(index++, it) }
+            resources.values.forEach { statement.setString(index++, it) }
             query.actorUuid?.let { statement.setString(index++, it.toString()) }
             query.actorName?.let { statement.setString(index++, it) }
             query.dimension?.let { statement.setString(index++, it.toString()) }
@@ -289,6 +298,10 @@ abstract class JdbcStorageBackend(
             sql.append(" AND b.time <= ?")
             binders += { statement, index -> statement.setLong(index, before) }
         }
+        val actors = HistorySearchSql.actors(query.search, "a.uuid", "a.name", "a.kind = 1")
+        val resources = HistorySearchSql.resources(query.search) { count -> "EXISTS (SELECT 1 FROM ex_resource_map fr WHERE fr.id IN (b.before_type,b.after_type) AND fr.resource IN (${List(count) { "?" }.joinToString(",")}))" }
+        sql.append(actors.clause).append(resources.clause)
+        (actors.values + resources.values).forEach { value -> binders += { statement, index -> statement.setString(index,value) } }
         if (!query.includeRolledBack) sql.append(" AND b.rolled_back <> 1")
         if (query.actions.isNotEmpty()) {
             val actions = query.actions.sortedBy { it.storageCode }

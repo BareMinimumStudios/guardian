@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 11
+    const val CURRENT_VERSION = 12
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -111,6 +111,10 @@ internal object GuardianSchema {
             "CREATE TABLE ex_player_activity (event_uuid VARCHAR PRIMARY KEY, time BIGINT NOT NULL, player_uuid VARCHAR NOT NULL, player_name VARCHAR NOT NULL, kind VARCHAR NOT NULL, text VARCHAR)",
             "CREATE INDEX ex_activity_kind_time_idx ON ex_player_activity(kind, time)",
             "CREATE INDEX ex_activity_player_time_idx ON ex_player_activity(player_uuid, time)"
-        ))
+        )),
+        SchemaMigration(12, "Historical item resource filter index", listOf(
+            "CREATE TABLE ex_container_item (transaction_uuid VARCHAR NOT NULL, resource VARCHAR NOT NULL, PRIMARY KEY(transaction_uuid, resource))",
+            "CREATE INDEX ex_container_item_resource_idx ON ex_container_item(resource, transaction_uuid)"
+        ), ContainerItemIndex::backfill)
     )
 }

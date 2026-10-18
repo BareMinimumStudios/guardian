@@ -44,7 +44,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     }
 
     override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.read {
-        activity.filter { it.kind in query.kinds && (query.playerUuid == null || it.actor.uuid == query.playerUuid) &&
+        activity.filter { query.search.matchesActor(it.actor) && it.kind in query.kinds && (query.playerUuid == null || it.actor.uuid == query.playerUuid) &&
             (query.playerName == null || it.actor.lastKnownName.equals(query.playerName, ignoreCase = true)) &&
             (query.afterEpochMillis == null || it.timestampEpochMillis >= query.afterEpochMillis) }
             .sortedWith(compareBy<com.bareminimumstudios.guardian.domain.PlayerActivity> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() })
@@ -53,6 +53,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
 
     override fun lookupBlocks(query: BlockLookupQuery): List<StoredBlockChange> = lock.read {
         entries.asSequence()
+            .filter { query.search.matchesActor(it.snapshot.actor) && query.search.matchesResources(setOf(it.snapshot.before.blockId, it.snapshot.after.blockId)) }
             .filter { query.dimension == null || it.snapshot.dimension == query.dimension }
             .filter { row ->
                 val bounds = query.bounds

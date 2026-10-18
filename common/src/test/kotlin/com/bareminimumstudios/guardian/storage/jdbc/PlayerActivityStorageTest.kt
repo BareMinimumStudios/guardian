@@ -51,12 +51,12 @@ class PlayerActivityStorageTest {
         val file = Files.createTempDirectory("guardian-activity-upgrade").resolve("history.sqlite")
         SqliteStorageBackend(file).use { it.open() }
         DriverManager.getConnection("jdbc:sqlite:$file").use { c -> c.createStatement().use {
-            it.executeUpdate("DROP TABLE ex_player_activity")
-            it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version = 11")
+            it.executeUpdate("DROP TABLE ex_container_item");it.executeUpdate("DROP TABLE ex_player_activity")
+            it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 11")
             it.executeUpdate("UPDATE ex_meta SET meta_value = '10' WHERE meta_key = 'schema_version'")
             it.executeUpdate("INSERT INTO ex_meta(meta_key,meta_value) VALUES ('activity_upgrade_sentinel','retained')")
         } }
-        SqliteStorageBackend(file).use { it.open();assertEquals(11,it.health().schemaVersion);assertTrue(it.lookupActivity(query(PlayerActivityKind.CHAT)).isEmpty()) }
+        SqliteStorageBackend(file).use { it.open();assertEquals(GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertTrue(it.lookupActivity(query(PlayerActivityKind.CHAT)).isEmpty()) }
         DriverManager.getConnection("jdbc:sqlite:$file").use { c -> c.createStatement().use { s -> s.executeQuery("SELECT meta_value FROM ex_meta WHERE meta_key = 'activity_upgrade_sentinel'").use { r -> assertTrue(r.next());assertEquals("retained",r.getString(1)) } } }
     }
 }

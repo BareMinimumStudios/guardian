@@ -1,8 +1,12 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-17 against `0.4.0-alpha.64+1.21.1`.
+Assessed: 2026-10-17 against `0.4.0-alpha.65+1.21.1`.
 
 This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.
+
+## Authorized history-filter milestone
+
+The owner explicitly chose richer history search after the activity milestone: multi-user inclusion/exclusion, block/item resource inclusion/exclusion and matching tab completion. This is read-only search work. Rollback and item preview refuse the extended filters and retain their earlier single-user contract. Purge, rollback preview/redo and item application were not authorized in this pass.
 
 ## Authorized activity milestone
 
@@ -40,10 +44,10 @@ Decision: do not enable item apply in this release. Stop treating additional gen
 
 | Gate | Status | Completion evidence |
 | --- | --- | --- |
-| R1: automated baseline | Complete locally for alpha.64; remote rerun pending | 551 tests and both-loader activity fixtures; see [activity evidence](validation/activity-alpha64.json). Prior 546 fresh tests and required clean/repeated-cache/WorldEdit builds; see [CI correction](validation/ci-alpha63.json). Prior both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
+| R1: automated baseline | Complete locally for alpha.65; remote rerun pending | 561 tests and 18 isolated history command cases; see [filter evidence](validation/filters-alpha65.json). Prior 551 tests and both-loader activity fixtures; see [activity evidence](validation/activity-alpha64.json). Prior 546 fresh tests and required clean/repeated-cache/WorldEdit builds; see [CI correction](validation/ci-alpha63.json). Prior both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
 | R2: real permissions acceptance | Prior server-side checks complete; new activity nodes pending provider/client acceptance | Real LuckPerms grant, deny and revocation on both loaders, queued lookup/inspector output, username/time/UUID suggestions, read-only item checks, persistent block rollback boundaries and provider-free actual operator entries passed 1,150 checks. Synthetic players and packet queues do not certify client presentation or network login; those remain R3. See [evidence and limits](validation/permissions-alpha62.json). |
 | R3: connected-client acceptance | Pending | Run the bounded matrix below on both loaders. Record server/client versions and actual pack/claim mods. The user cannot join yet; this gate waits for that opportunity. Synthetic players and idle-server startup do not close it. |
-| R4: release artifact review | Prepared; final sign-off pending | Alpha.64 local artifact checks passed; see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
+| R4: release artifact review | Prepared; final sign-off pending | Alpha.65 local artifact checks passed; see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
 
 The authorized activity addition needs its new permission nodes accepted within R2; R3 connected-client acceptance and final R4 sign-off also remain pending. These are checks of the added feature, not new feature requirements. Item apply is deferred and does not add a release gate. A defect found during acceptance is fixed within its existing gate; it does not create a new feature requirement. Production load capacity is not certified by the controlled hopper fixtures and must not be advertised as such.
 

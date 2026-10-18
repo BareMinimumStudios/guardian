@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class PlayerActivityQuery(
     val kinds: Set<PlayerActivityKind>, val playerUuid: UUID? = null, val playerName: String? = null,
-    val afterEpochMillis: Long? = null, val limit: Int = 20, val offset: Int = 0, val oldestFirst: Boolean = false
+    val afterEpochMillis: Long? = null, val limit: Int = 20, val offset: Int = 0, val oldestFirst: Boolean = false, val search: HistorySearchFilter = HistorySearchFilter()
 ) {
-    init { require(kinds.isNotEmpty()); require(limit in 1..500); require(offset in 0..5_000_000) }
+    init { require(search.included.isEmpty() && search.excluded.isEmpty()) { "Activity searches do not accept resource filters" }; require(kinds.isNotEmpty()); require(limit in 1..500); require(offset in 0..5_000_000) }
 }
