@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.65+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.66+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -156,12 +156,28 @@ Startup upgrades supported databases to schema 12 without replacing existing blo
 
 ## Roll back blocks
 
-**Block rollback changes the world directly; there is no separate block-preview command or general redo command.** Back up the world, check the corresponding lookup and use a small, explicit region first.
+**Applying block rollback changes the world directly.** Back up the world, run a preview and use a small, explicit region first. General restore/redo is not available yet.
 
 ```text
 /guardian lookup u:YourName t:10m r:3
+/guardian rollback preview u:YourName t:10m r:3
 /guardian rollback u:YourName t:10m r:3
 ```
+
+### Preview before applying
+
+```text
+/guardian rollback preview t:1h r:5
+/guardian rb preview u:Poke097 t:30m r:3
+```
+
+Block preview is **read-only**: it does not place/remove blocks, claim history rows, change rollback flags or load missing chunks. It uses the same `guardian.rollback` permission and bounded record/tick limits as apply. Preview and apply cannot run simultaneously through Guardian's block rollback service.
+
+The summary distinguishes rows that would restore, rows already in their before state, state mismatches, unloaded chunks, blocked older chains, unsupported targets and read failures. Up to five example changes show coordinates and before/after IDs. Counts describe **history rows**, so several rows may refer to the same block.
+
+Guardian simulates the selected newest-first chain; it does not just count lookup results. This is a check of the recorded and observed state, not a promise that a future apply will succeed. Neighbor updates, mod behavior and later player/world changes can alter the outcome. Preview creates no reservation or confirmation token. Applying the same filters runs a fresh query and revalidates live state; your position, dimension and moving time window also matter.
+
+Both preview and apply still accept one included user. They refuse the extended multi-user/exclusion/resource history filters. Preview does not add item restoration or general redo.
 
 Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by one included player and block action. Multi-user lists, player exclusions and resource filters are refused by rollback in this release. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
 

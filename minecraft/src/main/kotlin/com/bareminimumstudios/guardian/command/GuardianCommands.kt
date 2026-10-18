@@ -280,6 +280,11 @@ object GuardianCommands {
             )
             0
         }
+        .then(Commands.literal("preview")
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback preview t:1h r:5. Read-only; no blocks change.")); 0 }
+            .then(Commands.argument("filters", StringArgumentType.greedyString())
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3, extended = false) }
+                .executes { context -> executeRollback(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider(), previewOnly = true) }))
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3, extended = false) }
@@ -394,7 +399,8 @@ object GuardianCommands {
         source: CommandSourceStack,
         raw: String,
         runtime: GuardianRuntime?,
-        config: GuardianConfig
+        config: GuardianConfig,
+        previewOnly: Boolean = false
     ): Int {
         val rollback = runtime?.rollback()
         if (rollback == null) {
@@ -445,7 +451,7 @@ object GuardianCommands {
         } else {
             "filter=[$raw], center=${center!!.x},${center.y},${center.z}, radius=$radius"
         }
-        return if (rollback.request(source, query, description)) 1 else 0
+        return if (if (previewOnly) rollback.preview(source, query, description) else rollback.request(source, query, description)) 1 else 0
     }
 
     private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?,saved: Boolean=false): Int {

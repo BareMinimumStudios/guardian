@@ -129,7 +129,7 @@ class ItemOperationScope(
                 }
                 ItemOperationScopeState.DRAINING -> {
                     hosts.forEach { it.advance() }
-                    if (hosts.all { it.isJournalDrained } && diskDrain?.isDone != false) {
+                    if (hosts.all { it.isJournalDrained && (it.state == ItemOperationState.COMPLETED || it.state == ItemOperationState.RECOVERY_REQUIRED) } && diskDrain?.isDone != false) {
                         try { diskDrain?.join() }
                         catch (error: RuntimeException) {
                             failure = error.cause ?: error

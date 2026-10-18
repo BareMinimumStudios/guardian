@@ -1,6 +1,6 @@
 # Release validation
 
-Alpha.65 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.66 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
@@ -37,6 +37,14 @@ The owner authorized multi-user searches, user exclusions, exact resource includ
 561 automated tests passed, including aliases/malformed input, comma/negation completion, modded IDs, UUID resolution, unknown actors, exclusion precedence, pagination, restart and historical migration over the 128-record batch boundary. Clean, repeated configuration-cache and optional WorldEdit builds passed. Two isolated servers passed nine command cases each against a synthetic persisted audit prefix, including history paging, exclusions and rollback refusal, then restart. No rollback claims were created; SQLite integrity passed. Runtime core hashes match final artifacts. [Evidence and checksums](validation/filters-alpha65.json).
 
 These server tests do not certify actual client completion presentation, all modpack integrations or capture of arbitrary modded events. Existing activity permission/provider and connected-client acceptance limits remain.
+
+## Block rollback preview, 2026-10-18
+
+Alpha.66 adds `/guardian rollback preview` and `/guardian rb preview` using the existing single-user rollback limits and permissions. Preview simulates each position's history, reports conflicts, unloaded chunks and unsupported targets, and shows up to five examples. It writes neither blocks nor journal claims and does not load chunks. Apply remains a separate command with fresh checks; preview is not a reservation or guarantee.
+
+589 automated tests passed, including four preview-plan tests and 25 repetitions of the shutdown regression. The clean, repeated configuration-cache and optional WorldEdit builds passed. A reproduced shutdown race was fixed by requiring drained operation hosts to finish their terminal classification before backend closure.
+
+Both isolated loaders passed nine cases each with a synthetic audit prefix through the actual writer. World readback confirmed preview left stone unchanged and a separate apply restored air. All five preview journal flags stayed unchanged; after apply, exactly one record was rolled back. Unloaded targets, unsupported targets, blocked chains, extended-filter refusal and restart were checked. SQLite integrity passed, and tested core hashes match final artifacts. [Evidence and checksums](validation/block-preview-alpha66.json). The pushed alpha.65 GitHub build also passed. Real connected-client and permission-provider acceptance remain pending; these fixtures do not certify arbitrary modpack behavior.
 
 ## Pending acceptance
 

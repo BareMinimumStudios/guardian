@@ -29,6 +29,21 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.66+1.21.1] - 2026-10-17
+
+### Added
+
+- Add `/guardian rollback preview` and `/guardian rb preview`: bounded read-only simulation of selected newest-first block history, with reason counts and example coordinates. No blocks, claims or rollback journal flags are changed.
+
+### Fixed
+
+- Wait for stopped item-operation hosts to classify their recovery state before standalone scope backend closure. A worker could drain between host polling and the closure check; the regression now runs across 25 schedules.
+- Pin the rollback world when the request starts and enforce newest-first planning with zero offset.
+
+### Changed
+
+- Document preview limits and separate apply behavior. Preview shares the existing rollback permission/limits and busy gate; item apply and general restore/redo remain unavailable.
+
 ## [0.4.0-alpha.65+1.21.1] - 2026-10-17
 
 ### Added

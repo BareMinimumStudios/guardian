@@ -162,7 +162,7 @@ class ItemOperationScopeTest {
         scope.close();scope.close();finish(scope);scope.close();scope.advance()
         assertEquals(1,calls.get());assertNotSame(main,closeThread);assertEquals(ItemOperationScopeState.CLOSED,scope.state)
     }
-    @Test fun startedReadMustDrainBeforeBackendClosure() {
+    @org.junit.jupiter.api.RepeatedTest(25) fun startedReadMustDrainBeforeBackendClosure() {
         block=true;val scope=scope();val record=record();val port=Port(record)
         val host=assertNotNull(scope.start(record,coordination,{port}));host.advance()
         try {

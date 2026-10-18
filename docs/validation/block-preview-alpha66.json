@@ -1,0 +1,281 @@
+{
+  "version": "0.4.0-alpha.66+1.21.1",
+  "date": "2026-10-18",
+  "schema": 12,
+  "tests": 589,
+  "failures": 0,
+  "errors": 0,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "cases": [
+        {
+          "command": "guardian rollback preview t:1h r:5 x:0 y:299 z:0",
+          "expected": "Guardian block rollback preview:",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change\u2026",
+            "[23:58:42] [Server thread/INFO]: Guardian block rollback preview: 1 would restore, 0 already before, 1 state mismatch, 0 unloaded, 1 blocked, 1 unsupported, 0 read failures.",
+            "[23:58:42] [Server thread/INFO]: 0, 299, 0: minecraft:stone \u2192 minecraft:dirt",
+            "[23:58:42] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299522321453800"
+          ]
+        },
+        {
+          "command": "guardian rb preview t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "1 unloaded",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change\u2026",
+            "[23:58:42] [Server thread/INFO]: Guardian block rollback preview: 0 would restore, 0 already before, 0 state mismatch, 1 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[23:58:42] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299522471535700"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "1 would restore",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change\u2026",
+            "[23:58:42] [Server thread/INFO]: Guardian block rollback preview: 1 would restore, 0 already before, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[23:58:42] [Server thread/INFO]: 0, 299, 0: minecraft:stone \u2192 minecraft:air",
+            "[23:58:42] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:FilterBob t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299522611849100"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:stone run say PREVIEW91_UNCHANGED",
+          "expected": "PREVIEW91_UNCHANGED",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] PREVIEW91_UNCHANGED",
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299522720813000"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterAlex,FilterBob t:1h r:5",
+          "expected": "Extended user and resource filters are history-only",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: Extended user and resource filters are history-only. Block rollback still accepts one included user.",
+            "[23:58:42] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299522813567200"
+          ]
+        },
+        {
+          "command": "guardian rollback u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "Guardian rollback complete: 1 applied",
+          "output": [
+            "[23:58:42] [Server thread/INFO]: Guardian: planning block rollback\u2026",
+            "[23:58:42] [Server thread/INFO]: Guardian: rollback queued for 1 block change(s).",
+            "[23:58:43] [Server thread/INFO]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:FilterBob t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:58:43] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299523059192500"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:air run say PREVIEW91_APPLIED",
+          "expected": "PREVIEW91_APPLIED",
+          "output": [
+            "[23:58:43] [Server thread/INFO]: [Not Secure] [Server] PREVIEW91_APPLIED",
+            "[23:58:43] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299523167779800"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "no matching active block changes",
+          "output": [
+            "[23:58:43] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change\u2026",
+            "[23:58:43] [Server thread/INFO]: Guardian: no matching active block changes were found.",
+            "[23:58:43] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299523171297500"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "no matching active block changes",
+          "output": [
+            "[23:58:56] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change\u2026",
+            "[23:58:56] [Server thread/INFO]: Guardian: no matching active block changes were found.",
+            "[23:58:56] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792299536143341500"
+          ]
+        }
+      ],
+      "previewJournalRowsUnchanged": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "applyRestoredKnownBlock": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "auditPrefix": "synthetic snapshots through actual writer; actual world stone/air readback"
+    },
+    {
+      "loader": "Neoforge",
+      "cases": [
+        {
+          "command": "guardian rollback preview t:1h r:5 x:0 y:299 z:0",
+          "expected": "Guardian block rollback preview:",
+          "output": [
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change\ufffd",
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 1 would restore, 0 already before, 1 state mismatch, 0 unloaded, 1 blocked, 1 unsupported, 0 read failures.",
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:stone ? minecraft:dirt",
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299555869460100"
+          ]
+        },
+        {
+          "command": "guardian rb preview t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "1 unloaded",
+          "output": [
+            "[23:59:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change\ufffd",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 0 would restore, 0 already before, 0 state mismatch, 1 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556021574900"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "1 would restore",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change\ufffd",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 1 would restore, 0 already before, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:stone ? minecraft:air",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:FilterBob t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556173473400"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:stone run say PREVIEW91_UNCHANGED",
+          "expected": "PREVIEW91_UNCHANGED",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] PREVIEW91_UNCHANGED",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556267838500"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterAlex,FilterBob t:1h r:5",
+          "expected": "Extended user and resource filters are history-only",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Extended user and resource filters are history-only. Block rollback still accepts one included user.",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556374443900"
+          ]
+        },
+        {
+          "command": "guardian rollback u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "Guardian rollback complete: 1 applied",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback\ufffd",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 1 block change(s).",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:FilterBob t:1h r:5 x:0 y:299 z:0], center=0,299,0, radius=5",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556622589200"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:air run say PREVIEW91_APPLIED",
+          "expected": "PREVIEW91_APPLIED",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] PREVIEW91_APPLIED",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556715616200"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "no matching active block changes",
+          "output": [
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change\ufffd",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching active block changes were found.",
+            "[23:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299556825547900"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:FilterBob t:1h r:5 x:0 y:299 z:0",
+          "expected": "no matching active block changes",
+          "output": [
+            "[23:59:29] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[23:59:29] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=12",
+            "[23:59:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change\ufffd",
+            "[23:59:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching active block changes were found.",
+            "[23:59:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792299569423497000"
+          ]
+        }
+      ],
+      "previewJournalRowsUnchanged": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "applyRestoredKnownBlock": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "auditPrefix": "synthetic snapshots through actual writer; actual world stone/air readback"
+    }
+  ],
+  "builds": {
+    "clean": "passed, 46s",
+    "build": "passed, 3s",
+    "repeat": "passed, 145ms, configuration cache reused",
+    "worldEdit": "passed, 1s"
+  },
+  "priorCheckpointCI": "https://github.com/BareMinimumStudios/guardian/actions/runs/39098506930",
+  "semantics": {
+    "preview": "Read-only simulation, per-position chain blocking, no journal claims or forced chunk loads; counts are history rows",
+    "apply": "Separate command rechecks live state; preview reserves nothing",
+    "shutdown": "Backend closure waits for drained hosts to reach COMPLETED or RECOVERY_REQUIRED; regression repeated 25 times"
+  },
+  "limits": [
+    "Synthetic audit snapshots through actual writer; actual world stone/air readback; no connected clients",
+    "Real-client and permission-provider acceptance remain pending",
+    "No restore/redo, purge or item application added"
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 12950030,
+      "sha256": "ee76ba1d13ac3db2d13ee88052d93f50239bad80a29580a381d246accc7d61e2"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 12928668,
+      "sha256": "ce9a9ecfac03565b2ac0f8c749bcbbf2464bb82e2512e0144993476e70929ab3"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.66+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "907435b9dee36dde9a77a10c9d3103b189e1bd38534bb3a5f33f64c74090dfe2"
+    }
+  ]
+}

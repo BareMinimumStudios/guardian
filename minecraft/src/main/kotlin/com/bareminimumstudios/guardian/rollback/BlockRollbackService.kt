@@ -36,19 +36,24 @@ class BlockRollbackService(
     private val logger = LoggerFactory.getLogger("Guardian/Rollback")
     private var active: Session? = null
     private var planning: Any? = null
+    private var previewSession: PreviewSession? = null
 
-    fun request(source: CommandSourceStack, query: BlockLookupQuery, description: String): Boolean {
+    fun request(source: CommandSourceStack, query: BlockLookupQuery, description: String): Boolean = requestInternal(source, query, description, false)
+    fun preview(source: CommandSourceStack, query: BlockLookupQuery, description: String): Boolean = requestInternal(source, query, description, true)
+
+    private fun requestInternal(source: CommandSourceStack, query: BlockLookupQuery, description: String, previewOnly: Boolean): Boolean {
         if (!authorized(source)) return false
-        if (active != null || planning != null) {
+        if (active != null || planning != null || previewSession != null) {
             source.sendFailure(Component.literal("Guardian already has a block rollback in progress."))
             return false
         }
 
+        val worldKey = source.level.dimension()
         val token = Any()
         planning = token
         val maxRecords = config.rollback.maxRecords.get()
-        val bounded = query.copy(includeRolledBack = false, limit = (maxRecords + 1).coerceAtMost(10_000))
-        source.sendSystemMessage(Component.literal("Guardian: planning block rollback…"))
+        val bounded = query.copy(includeRolledBack = false, limit = (maxRecords + 1).coerceAtMost(10_000), offset = 0, oldestFirst = false)
+        source.sendSystemMessage(Component.literal(if (previewOnly) "Guardian: checking block rollback preview; no blocks will change…" else "Guardian: planning block rollback…"))
 
         history.lookup(
             bounded,
@@ -69,9 +74,13 @@ class BlockRollbackService(
                     )
                     return@lookup
                 }
+                if (previewOnly) {
+                    previewSession = PreviewSession(source, worldKey, ArrayDeque(rows), description)
+                    return@lookup
+                }
                 active = Session(
                     source = source,
-                    worldKey = source.level.dimension(),
+                    worldKey = worldKey,
                     pendingRows = ArrayDeque(rows),
                     description = description,
                     total = rows.size
@@ -89,6 +98,7 @@ class BlockRollbackService(
     }
 
     fun tick() {
+        previewSession?.let { tickPreview(it); return }
         val session = active ?: return
         if (!authorized(session.source)) session.revoked = true
         if (session.revoked && session.phase == Phase.READY) { active = null; return }
@@ -102,9 +112,53 @@ class BlockRollbackService(
     }
 
     fun stop() {
+        previewSession = null
         planning = null
         active = null
     }
+
+    private fun tickPreview(session: PreviewSession) {
+        if (previewSession !== session) return
+        if (!authorized(session.source)) { previewSession = null; return }
+        val world = server.getLevel(session.worldKey)
+        if (world == null) {
+            session.source.sendFailure(Component.literal("Guardian preview world is unavailable. No blocks or journal rows changed."))
+            previewSession = null; return
+        }
+        repeat(minOf(config.rollback.blocksPerTick.get(), session.rows.size)) {
+            if (!authorized(session.source)) { previewSession = null; return }
+            val row = session.rows.removeFirst()
+            val pos = row.snapshot.position
+            var unavailable = BlockRollbackPreviewPlan.Outcome.UNLOADED
+            val live = if (!world.chunkSource.hasChunk(pos.x shr 4, pos.z shr 4)) null else try {
+                MinecraftBlockSnapshotter.snapshot(world, net.minecraft.core.BlockPos(pos.x, pos.y, pos.z))
+            } catch (error: Exception) {
+                unavailable = BlockRollbackPreviewPlan.Outcome.READ_FAILURE
+                logger.warn("Could not read block for rollback preview at {}", pos, error); null
+            }
+            val supported = live != null && runCatching {
+                com.bareminimumstudios.guardian.platform.minecraft.BlockStateSnapshotDecoder.decode(row.snapshot.before)
+                row.snapshot.before.blockEntityData?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftNbtPayloadCodec.decode(it) }
+            }.isSuccess
+            val result = session.plan.observe(row, live, unavailable, supported)
+            if (result == BlockRollbackPreviewPlan.Outcome.WOULD_RESTORE && session.examples.size < 5) {
+                session.examples.add("${pos.x}, ${pos.y}, ${pos.z}: ${row.snapshot.after.blockId} → ${row.snapshot.before.blockId}")
+            }
+        }
+        if (session.rows.isNotEmpty()) return
+        if (!authorized(session.source)) { previewSession = null; return }
+        fun count(outcome: BlockRollbackPreviewPlan.Outcome) = session.plan.counts[outcome] ?: 0
+        session.source.sendSystemMessage(Component.literal("Guardian block rollback preview: ${count(BlockRollbackPreviewPlan.Outcome.WOULD_RESTORE)} would restore, ${count(BlockRollbackPreviewPlan.Outcome.ALREADY_BEFORE)} already before, ${count(BlockRollbackPreviewPlan.Outcome.STATE_MISMATCH)} state mismatch, ${count(BlockRollbackPreviewPlan.Outcome.UNLOADED)} unloaded, ${count(BlockRollbackPreviewPlan.Outcome.BLOCKED_CHAIN)} blocked, ${count(BlockRollbackPreviewPlan.Outcome.UNSUPPORTED)} unsupported, ${count(BlockRollbackPreviewPlan.Outcome.READ_FAILURE)} read failures."))
+        session.examples.forEach { session.source.sendSystemMessage(Component.literal(it)) }
+        session.source.sendSystemMessage(Component.literal("Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. ${session.description}"))
+        previewSession = null
+    }
+
+    private data class PreviewSession(
+        val source: CommandSourceStack, val worldKey: ResourceKey<Level>,
+        val rows: ArrayDeque<StoredBlockChange>, val description: String,
+        val plan: BlockRollbackPreviewPlan = BlockRollbackPreviewPlan(), val examples: MutableList<String> = mutableListOf()
+    )
 
     private fun beginNextBatch(session: Session) {
         if (session.pendingRows.isEmpty()) {

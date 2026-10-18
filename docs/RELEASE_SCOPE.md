@@ -1,8 +1,12 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-17 against `0.4.0-alpha.65+1.21.1`.
+Assessed: 2026-10-17 against `0.4.0-alpha.66+1.21.1`.
 
 This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.
+
+## Authorized block-preview milestone
+
+After pushing the history-filter milestone, the owner asked to continue the recommended sequence. This pass adds bounded read-only block rollback preview with the same single-user apply filters. No claims or world changes occur during preview. Separate apply re-queries and revalidates; preview is not an exclusive snapshot, reservation or guarantee. General restore/redo, purge and item apply are outside this pass.
 
 ## Authorized history-filter milestone
 
@@ -44,10 +48,10 @@ Decision: do not enable item apply in this release. Stop treating additional gen
 
 | Gate | Status | Completion evidence |
 | --- | --- | --- |
-| R1: automated baseline | Complete locally for alpha.65; remote rerun pending | 561 tests and 18 isolated history command cases; see [filter evidence](validation/filters-alpha65.json). Prior 551 tests and both-loader activity fixtures; see [activity evidence](validation/activity-alpha64.json). Prior 546 fresh tests and required clean/repeated-cache/WorldEdit builds; see [CI correction](validation/ci-alpha63.json). Prior both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
+| R1: automated baseline | Complete locally for alpha.66; remote rerun pending (alpha.65 CI passed) | 589 tests and 18 preview/apply runtime cases; see [preview evidence](validation/block-preview-alpha66.json). Prior 561 tests and 18 isolated history command cases; see [filter evidence](validation/filters-alpha65.json). Prior 551 tests and both-loader activity fixtures; see [activity evidence](validation/activity-alpha64.json). Prior 546 fresh tests and required clean/repeated-cache/WorldEdit builds; see [CI correction](validation/ci-alpha63.json). Prior both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
 | R2: real permissions acceptance | Prior server-side checks complete; new activity nodes pending provider/client acceptance | Real LuckPerms grant, deny and revocation on both loaders, queued lookup/inspector output, username/time/UUID suggestions, read-only item checks, persistent block rollback boundaries and provider-free actual operator entries passed 1,150 checks. Synthetic players and packet queues do not certify client presentation or network login; those remain R3. See [evidence and limits](validation/permissions-alpha62.json). |
 | R3: connected-client acceptance | Pending | Run the bounded matrix below on both loaders. Record server/client versions and actual pack/claim mods. The user cannot join yet; this gate waits for that opportunity. Synthetic players and idle-server startup do not close it. |
-| R4: release artifact review | Prepared; final sign-off pending | Alpha.65 local artifact checks passed; see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
+| R4: release artifact review | Prepared; final sign-off pending | Alpha.66 local artifact checks passed; see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the ownerâ€™s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
 
 The authorized activity addition needs its new permission nodes accepted within R2; R3 connected-client acceptance and final R4 sign-off also remain pending. These are checks of the added feature, not new feature requirements. Item apply is deferred and does not add a release gate. A defect found during acceptance is fixed within its existing gate; it does not create a new feature requirement. Production load capacity is not certified by the controlled hopper fixtures and must not be advertised as such.
 
@@ -59,7 +63,7 @@ Use a backed-up isolated world. This is acceptance of the existing release scope
 2. **Inspection and claims:** left-click block history and right-click container item history, including a protected claim with inspector permission. Verify reach, both hands, predicted item/block state, no duplicated result pages, and ordinary claim denial with inspection off. Revoke inspection permission while enabled and confirm access stops.
 3. **Item audit:** add/remove/swap/shift-click items with distinctive persistent components; test cursor return, ordinary player actions and vanilla crafting. Verify no-op actions create no movement and unsupported menus are skipped rather than misreported.
 4. **Hopper audit:** enable capture, test a successful transfer and a full destination, then restart and query history. Failed pushes must produce no transfer record; a pull into a hopper must not imply delivery to the barrel below it.
-5. **Block rollback and persistence:** apply a small known block rollback with narrowly checked filters, verify the intended region and states, then restart and verify history. Do not use read-only item commands as item restoration.
+5. **Block rollback and persistence:** preview a small known block rollback, confirm no world/journal changes, then apply it separately with narrowly checked filters, verify the intended region and states, then restart and verify history. Do not use read-only item commands as item restoration.
 6. **Read-only item checks:** preview/recovery/saved/cancel with valid permission, unsupported/busy endpoints and permission revocation. Verify clear refusal/skipping and no changed items, consumed source history or cleared unresolved claims. Confirm no item apply command exists.
 
 Record pass/fail per row and loader, link any reproducible defects, and close R3 when all six rows pass. There is no fixed number of development passes promised while the external acceptance is pending.
