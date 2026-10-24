@@ -21,6 +21,7 @@ object BlockCommandFilterParser {
         var z: Int? = null
         var actions = emptySet<ActionType>()
         var causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause>? = null
+        var movementId: java.util.UUID? = null
         var limit: Int? = null
         var page: Int? = null
         var order: String? = null
@@ -65,6 +66,11 @@ object BlockCommandFilterParser {
                 "x" -> x = parseCoordinate("x", value, x)
                 "y" -> y = parseCoordinate("y", value, y)
                 "z" -> z = parseCoordinate("z", value, z)
+                "m", "movement" -> {
+                    require(movementId==null) { "Use one movement id" }
+                    movementId=java.util.UUID.fromString(value)
+                    require(movementId.toString().equals(value,true)) { "Use a complete movement UUID" }
+                }
                 "c", "cause" -> {
                     require(causes == null) { "Cause filter was specified more than once." }
                     causes=value.split(',').map { name ->
@@ -107,7 +113,7 @@ object BlockCommandFilterParser {
             useWorldEditSelection = useWorldEditSelection,
             explicitPosition = if (coordinateCount == 3) BlockPosition(x!!, y!!, z!!) else null,
             actions = actions,
-            limit = limit, page = page, oldestFirst = order == "oldest", search = search, causes = causes ?: emptySet()
+            limit = limit, page = page, oldestFirst = order == "oldest", search = search, causes = causes ?: emptySet(), movementId = movementId
         )
     }
 

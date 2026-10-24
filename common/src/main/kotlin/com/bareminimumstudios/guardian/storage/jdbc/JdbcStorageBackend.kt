@@ -3,6 +3,7 @@ package com.bareminimumstudios.guardian.storage.jdbc
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.BinaryPayload
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot
+import com.bareminimumstudios.guardian.domain.BlockMovementPhase
 import com.bareminimumstudios.guardian.domain.BlockPosition
 import com.bareminimumstudios.guardian.domain.BlockStateSnapshot
 import com.bareminimumstudios.guardian.domain.ChangeCause
@@ -327,7 +328,7 @@ abstract class JdbcStorageBackend(
             SELECT b.rowid, b.event_uuid, b.time, b.actor, b.wid, b.x, b.y, b.z,
                    b.before_type, b.before_data, b.before_meta,
                    b.after_type, b.after_data, b.after_meta,
-                   b.cause, b.action, b.rolled_back
+                   b.cause, b.action, b.rolled_back, b.movement_uuid, b.movement_phase
             FROM ex_block b
             JOIN ex_world_map w ON w.id = b.wid
             LEFT JOIN ex_actor_map a ON a.id = b.actor
@@ -336,6 +337,10 @@ abstract class JdbcStorageBackend(
         )
         val binders = mutableListOf<(PreparedStatement, Int) -> Unit>()
 
+        query.movementId?.let { id ->
+            sql.append(" AND b.movement_uuid = ?")
+            binders += { statement,index -> statement.setString(index,id.toString()) }
+        }
         query.dimension?.let { dimension ->
             sql.append(" AND w.world = ?")
             binders += { statement, index -> statement.setString(index, dimension.toString()) }
@@ -530,6 +535,7 @@ abstract class JdbcStorageBackend(
         setPayload(statement, 14, snapshot.after.blockEntityData)
         statement.setInt(15, snapshot.cause.storageCode)
         statement.setInt(16, snapshot.action.storageCode)
+        statement.setString(17,snapshot.movementId?.toString());statement.setString(18,snapshot.movementPhase?.name)
     }
 
     private fun readBlockChange(connection: Connection, result: ResultSet): StoredBlockChange {
@@ -559,7 +565,9 @@ abstract class JdbcStorageBackend(
                 after = after,
                 cause = cause,
                 action = action,
-                eventId = UUID.fromString(result.getString("event_uuid"))
+                eventId = UUID.fromString(result.getString("event_uuid")),
+                movementId=result.getString("movement_uuid")?.let(UUID::fromString),
+                movementPhase=result.getString("movement_phase")?.let(BlockMovementPhase::valueOf)
             ),
             rollbackState = BlockRollbackState.fromStorageCode(result.getInt("rolled_back"))
         )
@@ -632,8 +640,8 @@ abstract class JdbcStorageBackend(
                 rowid, event_uuid, time, actor, wid, x, y, z,
                 before_type, before_data, before_meta,
                 after_type, after_data, after_meta,
-                cause, action, rolled_back
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                cause, action, rolled_back, movement_uuid, movement_phase
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
             ON CONFLICT(event_uuid) DO NOTHING
         """.trimIndent()
 

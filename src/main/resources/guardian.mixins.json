@@ -71,7 +71,9 @@
     "CropGrowthHistoryMixin",
     "LeafDecayHistoryMixin",
     "SaplingGrowthHistoryMixin",
-    "BoneMealGrowthHistoryMixin"
+    "BoneMealGrowthHistoryMixin",
+    "PistonMovementHistoryMixin",
+    "FallingBlockMovementHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

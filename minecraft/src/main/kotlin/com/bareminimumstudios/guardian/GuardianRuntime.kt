@@ -81,6 +81,7 @@ class GuardianRuntime(
         itemOperations?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.attachOperations(server,it) }
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ pipeline }, { config })
+        com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ pipeline }, { config })
         GuardianIntegrationApi.attach(config, selectedBulk)
@@ -96,6 +97,7 @@ class GuardianRuntime(
         if (shutdownDrains != null) return finishShutdown()
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ null }, { null })
+        com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ null }, { null })
         purge?.stop()
@@ -145,6 +147,7 @@ class GuardianRuntime(
 
     /** Both loaders use the same tick order and item lifecycle. */
     fun tick() {
+        com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.tick()
         purge?.tick()
         rollback?.tick()
         itemPreview?.tick()

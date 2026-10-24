@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.77+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.78+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 21**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 22**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -82,6 +82,7 @@ Block lookup searches the dimension in which the command runs. Without a radius 
 | `t:` or `time:` | How far back to search | `t:30m`, `t:2h`, `t:1d12h` |
 | `r:` or `radius:` | Cuboid radius around you or explicit coordinates | `r:10` |
 | `x: y: z:` | Explicit block coordinates | `x:100 y:64 z:-20` |
+| `m:` or `movement:` | Exact movement UUID from a recorded result | `m:<full UUID>` |
 | `c:` or `cause:` | Block-history cause, with comma lists | `c:fire`, `c:explosion`, `c:fire,explosion`, `c:player` |
 | `a:` or `action:` | Block action; lookup and block rollback only | `a:place`, `a:break`, `a:change`, `a:place,break` |
 | `l:` or `limit:` | Results per history page | `l:20` |
@@ -133,6 +134,24 @@ User-filtered item history without a region spans recorded dimensions. Adding a 
 Green entries describe items added to an inventory; red entries describe removals. Records preserve item counts and persistent Data Components, including modded item identities where supported. Opening a container without changing items does not create a transaction.
 
 Hopper history is **off by default**. Enable `logging.automatedContainerTransfers` to record supported block-to-block transfers. Automated records show the observed source and destination coordinates together. A transfer **into a hopper** does not mean the item also reached the barrel below it. Failed pushes into a full destination should produce no transfer record.
+
+## Piston and falling-block history
+
+`environment.pistons` and `environment.fallingBlocks` are independent, **off-by-default** settings. Movement history uses unknown attribution; it does not blame the last player to place a piston, power source or falling block.
+
+```text
+/guardian lookup c:piston t:1h r:25
+/guardian lookup c:gravity i:minecraft:sand t:1h
+/guardian lookup m:00000000-0000-0000-0000-000000000000 l:64
+```
+
+The last example is a UUID placeholder: use the movement ID from an actual result. Hover a movement row for its full ID and phase; click it to prepare a matching `m:` search. Correlated rows are ordinary block history, so left-click inspection, block/resource filters and paging still work. Searches use the command's normal dimension scope.
+
+Piston capture observes the actual successful structure plan, waits for moving-piston placeholders to disappear, and verifies the affected blocks against the expected settled states. Supported pushes, sticky pulls, slime branches and destroyed targets share an operation ID. Empty strokes, blocked/over-limit moves and denied moves do not claim a transfer. Piston-base power/extension changes are not a separate event. The observer never forces animation completion or loads missing chunks. Interfering, overlapping, unloaded or unverified operations are skipped with a throttled incomplete-history warning. This conservative first checkpoint can skip waterlogged/state-changing moves and custom mod mechanics. At most 128 plans with 64 affected positions each wait up to 20 world ticks.
+
+Falling history distinguishes **began falling** at the source from **landed** at a successfully placed destination. Both use the falling entity's UUID as correlation. A failed landing that drops an item produces no landing row. Canceled/unregistered spawns are not reported as successful departures. Captured landing state is read after the normal landing callback; transformations that no longer match the falling block, such as concrete hydration, are skipped in this checkpoint. Entity teleportation and arbitrary custom falling mechanics are not certified. Entity UUID correlation is not a promise that both endpoints were captured: capture may have been disabled, rejected, purged or interrupted.
+
+All these causes are **read-only for recovery**; public rollback/restore refuses them. Confirmed block-history purge can remove old endpoints independently and retains its existing recovery protection. Correlation IDs group observed facts, not an atomic or guaranteed-complete movement. Queue pressure may leave partial history; check Guardian status and warnings. Schema 22 adds nullable correlation/phase columns without changing old payloads. Config version 16 adds the disabled settings. Back up before upgrading; older builds cannot read the newer schema.
 
 ## Growth and leaf decay history
 

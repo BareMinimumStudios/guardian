@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.77 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.78 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.77 passed 689 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.78 passed 696 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -181,6 +181,16 @@ Alpha.76 passed GitHub CI. The owner selected natural block growth/decay. Alpha.
 Both isolated dedicated servers passed actual crop ticks, accepted player bone meal, sapling stage/tree advancement, failed tree net no-op, actual leaf decay, persistent/disabled leaves, master/per-category disable, eight lookup/refusal/restart cases and SQLite integrity. NeoForge tests use the real CommonHooks item-use path and actual EntityPlaceEvent cancellation: denied single-block crop growth, denied multi-block tree growth and denied ignition all restore the world without audit rows; accepted staged ignition still records the player. This closes an alpha.76 fire-capture gap where useOn could be observed before final placement acceptance. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime jar; SQLite remains the only nested dependency. [Evidence/checksums](validation/growth-decay-alpha77.json).
 
 All owned servers stopped and supplied worlds/databases were untouched. These fixtures do not certify a rendered client or every claim mod, so R3 remains pending. Alpha.77 remote CI awaits the owner's push.
+
+## Piston and falling-block history, 2026-10-24
+
+Alpha.77 passed GitHub CI. The owner selected piston/falling history. Alpha.78 adds disabled piston/falling settings, verified settled piston endpoints and falling departure/landing phases with UUID correlation. Schema 22 preserves old snapshots with nullable movement metadata; config version 16 preserves settings. Exact movement searches, hover/click navigation and cause filters reuse block-history permission and paging. Public movement recovery is excluded; confirmed block-history purge can remove old endpoints independently.
+
+696 tests passed, including seven new cross-backend/storage/presentation tests for correlated endpoint round trips, filters before paging, metadata/placeholder validation, schema-21 upgrade/restart, partial purge, strict UUID parsing, phase wording and hover/click search. Legacy schema fixtures reconstruct the older block columns/indexes before replay so retained journals/history remain verifiable. Required clean/build/repeated-cache/WorldEdit checks passed through IDEA. MixinMCP source/bytecode targets and final mixin/capture inspections passed.
+
+Both isolated servers used real scheduled piston animations and falling physics. Normal pushes, sticky pulls, destroyed torch targets, slime branches and chunk-boundary moves settled to the independently asserted world states. Blocked obsidian, 13-block over-limit pushes and empty strokes produced no movement row. Correlated rows contained no moving-piston placeholder. Sand departure/landing shared an entity UUID; gravel breaking on a torch had no false landing. Actual NeoForge piston-pre and entity-spawn cancellation produced no movement record. Eight world/query/refusal/restart cases per loader and SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks. Final core hashes match all final runtime-tested jars; SQLite remains the only nested dependency. [Evidence/checksums](validation/movement-alpha78.json).
+
+All owned servers stopped and supplied worlds/databases were untouched. Correlation is observational, not atomic/guaranteed complete. Interference, unload, timeout or rejected queue rows can leave incomplete history; no animation or chunks are forced. Custom physics, waterlogged/state-changing plans, hydrated concrete and rendered-client behavior remain outside certification. Existing R3 stays pending; alpha.78 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

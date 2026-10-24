@@ -24,7 +24,8 @@ data class BlockLookupQuery @JvmOverloads constructor(
     val search: HistorySearchFilter = HistorySearchFilter(),
     /** Explicit journal selection takes precedence over includeRolledBack. Empty selects the legacy history scope. */
     val rollbackStates: Set<BlockRollbackState> = emptySet(),
-    val causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause> = emptySet()
+    val causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause> = emptySet(),
+    val movementId: UUID? = null
 ) {
     init {
         require(offset >= 0)

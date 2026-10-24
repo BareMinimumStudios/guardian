@@ -68,7 +68,7 @@ class EntityHistoryStorageTest {
             val file=Files.createTempDirectory("entity-upgrade").resolve("audit.db");fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(file)else SqliteStorageBackend(file)
             val chat=PlayerActivity(timestampEpochMillis=1,actor=alex,kind=PlayerActivityKind.CHAT,text="kept")
             db().use{it.open();it.append(listOf(chat))}
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { conn->conn.createStatement().use { s->s.executeUpdate("DROP TABLE ex_entity");s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=16");s.executeUpdate("UPDATE ex_meta SET meta_value='15' WHERE meta_key='schema_version'") } }
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { conn->conn.createStatement().use { s->s.executeUpdate("DROP TABLE ex_entity");s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=16");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='15' WHERE meta_key='schema_version'") } }
             val death=row(2).copy(beforeName="quote ' SQL -- ☃")
             db().use{it.open();assertEquals(GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(chat),it.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))));it.append(listOf(death))}
             db().use{it.open();assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()))}

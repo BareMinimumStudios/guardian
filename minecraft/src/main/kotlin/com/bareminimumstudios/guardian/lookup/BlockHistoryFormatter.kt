@@ -14,7 +14,11 @@ object BlockHistoryFormatter {
         if (rows.isEmpty()) return listOf(Component.literal("Guardian: no block history found."))
         return buildList {
             add(Component.literal("Guardian block history (${rows.size} result${if (rows.size == 1) "" else "s"}):"))
-            rows.forEach { row -> add(Component.literal(formatRow(row, nowEpochMillis))) }
+            rows.forEach { row ->
+                val line=Component.literal(formatRow(row,nowEpochMillis))
+                row.snapshot.movementId?.let { id -> line.withStyle { it.withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,Component.literal("Movement: $id\nPhase: ${row.snapshot.movementPhase}\nSearch this movement with m:$id"))).withClickEvent(net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,"/guardian lookup m:$id")) } }
+                add(line)
+            }
         }
     }
 
@@ -27,7 +31,10 @@ object BlockHistoryFormatter {
             ActorIdentity.Unknown -> "unknown"
         }
         val fireIds=setOf("minecraft:fire","minecraft:soul_fire")
-        val change = if(s.cause==ChangeCause.FIRE) when {
+        val change = if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
+        else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_LAND) "falling block landed: ${s.after.blockId}"
+        else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.PISTON) "piston changed ${s.before.blockId} -> ${s.after.blockId}"
+        else if(s.cause==ChangeCause.FIRE) when {
             s.before.blockId.toString() in fireIds && s.after.blockId.toString() !in fireIds -> "extinguished ${s.before.blockId}"
             s.after.blockId.toString() in fireIds && s.action==ActionType.BLOCK_PLACE -> "ignited ${s.after.blockId}"
             s.before.blockId==s.after.blockId && s.before.properties["lit"]!=s.after.properties["lit"] -> "${if(s.after.properties["lit"]=="true") "lit" else "extinguished"} ${s.after.blockId}"

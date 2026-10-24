@@ -31,15 +31,15 @@ class GrowthDecayStorageTest {
             val path=Files.createTempDirectory("growth-upgrade").resolve("audit.db");fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(path)else SqliteStorageBackend(path)
             val old=row(1,ChangeCause.PLAYER,player);val grown=row(2)
             db().use{it.open();it.append(listOf(old))}
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+path).use{c->c.createStatement().use{s->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=21");s.executeUpdate("UPDATE ex_meta SET meta_value='20' WHERE meta_key='schema_version'")}}
-            db().use{it.open();assertEquals(21,it.health().schemaVersion);assertEquals(listOf(old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot});it.append(listOf(grown))}
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+path).use{c->c.createStatement().use{s->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=21");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='20' WHERE meta_key='schema_version'")}}
+            db().use{it.open();assertEquals(22,it.health().schemaVersion);assertEquals(listOf(old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot});it.append(listOf(grown))}
             db().use{it.open();assertEquals(listOf(grown,old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot})}
         }
     }
     @Test fun causeCodesParserAndSuggestionsAreDistinct() {
         assertEquals(14,ChangeCause.GROWTH.storageCode);assertEquals(15,ChangeCause.DECAY.storageCode)
         assertEquals(setOf(ChangeCause.GROWTH,ChangeCause.DECAY),BlockCommandFilterParser.parse("c:growth,decay").getOrThrow().causes)
-        assertEquals(listOf("c:growth"),FilterSuggestions.values("c:g",emptyList()))
+        assertEquals(setOf("c:growth","c:gravity"),FilterSuggestions.values("c:g",emptyList()).toSet())
         assertTrue(FluidCommandFilters.parse("c:growth").isFailure);assertTrue(EntityCommandFilters.parse("c:decay").isFailure)
     }
 }

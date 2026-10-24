@@ -56,10 +56,10 @@ class TamingBreedingStorageTest {
                 s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_before");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_after")
                 s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN parent_uuid");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN partner_uuid")
                 GuardianSchema.migrations.single { it.version==16 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
-                s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=17");s.executeUpdate("UPDATE ex_meta SET meta_value='16' WHERE meta_key='schema_version'")
+                s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=17");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='16' WHERE meta_key='schema_version'")
             } }
             val born=event(EntityAuditKind.BREED).copy(timestampEpochMillis=2000)
-            db().use{it.open();assertEquals(21,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
+            db().use{it.open();assertEquals(22,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
             db().use{it.open();assertEquals(listOf(born,death),it.lookupEntities(EntityLookupQuery()))}
         }
     }

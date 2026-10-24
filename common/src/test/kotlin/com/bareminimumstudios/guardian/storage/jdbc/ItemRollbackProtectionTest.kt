@@ -143,7 +143,7 @@ class ItemRollbackProtectionTest {
             it.executeUpdate("DROP TABLE ex_item_rollback_images")
             it.executeUpdate("DROP TABLE ex_item_rollback_protection")
             it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DROP TABLE IF EXISTS ex_fluid");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 9")
-            it.executeUpdate("UPDATE ex_meta SET meta_value = '8' WHERE meta_key = 'schema_version'")
+            com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(it);it.executeUpdate("UPDATE ex_meta SET meta_value = '8' WHERE meta_key = 'schema_version'")
         } }
         factory(path).use { db ->
             db.open();assertEquals(GuardianSchema.CURRENT_VERSION,db.health().schemaVersion)

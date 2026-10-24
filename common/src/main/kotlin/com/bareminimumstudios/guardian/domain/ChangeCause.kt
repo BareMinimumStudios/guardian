@@ -9,6 +9,7 @@ enum class ChangeCause(val storageCode: Int) {
     PISTON(13),
     GROWTH(14),
     DECAY(15),
+    GRAVITY(16),
     ENTITY(20),
     WORLD_GENERATION(30),
     SYSTEM(40),

@@ -33,6 +33,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.78+1.21.1] - 2026-10-24
+
+### Added
+
+- Independent opt-in piston and falling-block history with persisted correlation IDs, exact `m:` searches and inspection links.
+- Bounded verification of settled piston endpoints; distinct falling departure and successful landing phases so failed drops do not imply delivery.
+
+### Changed
+
+- Schema 22 adds nullable movement ID/phase fields and an index while preserving old payloads. Config version 16 adds disabled piston/falling settings. Public movement recovery remains read-only; existing confirmed block purge applies.
+
 ## [0.4.0-alpha.77+1.21.1] - 2026-10-24
 
 ### Added

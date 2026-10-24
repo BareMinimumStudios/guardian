@@ -1,0 +1,676 @@
+{
+  "version": "0.4.0-alpha.78+1.21.1",
+  "date": "2026-10-24",
+  "schema": 22,
+  "configVersion": 16,
+  "tests": {
+    "common": {
+      "tests": 626,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 70,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2116,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=6",
+      "rows": [
+        [
+          16,
+          64,
+          306,
+          2,
+          "minecraft:sand",
+          "minecraft:air",
+          "a939e6b6-4e73-4db9-abd0-7e9902943800",
+          "FALL_START"
+        ],
+        [
+          16,
+          68,
+          306,
+          2,
+          "minecraft:gravel",
+          "minecraft:air",
+          "4aa5c0ec-53e5-46e5-8018-f280a33423aa",
+          "FALL_START"
+        ],
+        [
+          13,
+          5,
+          300,
+          2,
+          "minecraft:stone",
+          "minecraft:piston_head",
+          "58469cc9-570d-4517-9f18-e7b73e8c04c4",
+          "PISTON"
+        ],
+        [
+          13,
+          6,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:stone",
+          "58469cc9-570d-4517-9f18-e7b73e8c04c4",
+          "PISTON"
+        ],
+        [
+          13,
+          9,
+          300,
+          2,
+          "minecraft:torch",
+          "minecraft:piston_head",
+          "0f1aff02-50c5-4e2f-bbfe-9907ffcbdb26",
+          "PISTON"
+        ],
+        [
+          13,
+          13,
+          300,
+          2,
+          "minecraft:oak_planks",
+          "minecraft:piston_head",
+          "78bdf4de-caef-4ed0-aaad-42097a1c51b6",
+          "PISTON"
+        ],
+        [
+          13,
+          14,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:oak_planks",
+          "78bdf4de-caef-4ed0-aaad-42097a1c51b6",
+          "PISTON"
+        ],
+        [
+          13,
+          53,
+          300,
+          2,
+          "minecraft:slime_block",
+          "minecraft:piston_head",
+          "0174d856-629f-4759-a753-5dea214903ce",
+          "PISTON"
+        ],
+        [
+          13,
+          53,
+          300,
+          3,
+          "minecraft:stone",
+          "minecraft:air",
+          "0174d856-629f-4759-a753-5dea214903ce",
+          "PISTON"
+        ],
+        [
+          13,
+          54,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:slime_block",
+          "0174d856-629f-4759-a753-5dea214903ce",
+          "PISTON"
+        ],
+        [
+          13,
+          54,
+          300,
+          3,
+          "minecraft:air",
+          "minecraft:stone",
+          "0174d856-629f-4759-a753-5dea214903ce",
+          "PISTON"
+        ],
+        [
+          13,
+          79,
+          300,
+          2,
+          "minecraft:stone",
+          "minecraft:piston_head",
+          "1ff3b50b-6c05-40c0-9084-fac94abbe297",
+          "PISTON"
+        ],
+        [
+          13,
+          80,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:stone",
+          "1ff3b50b-6c05-40c0-9084-fac94abbe297",
+          "PISTON"
+        ],
+        [
+          16,
+          64,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:sand",
+          "a939e6b6-4e73-4db9-abd0-7e9902943800",
+          "FALL_LAND"
+        ],
+        [
+          13,
+          14,
+          300,
+          2,
+          "minecraft:oak_planks",
+          "minecraft:air",
+          "bd72e6f0-b366-4dda-ad60-af16ff74afae",
+          "PISTON"
+        ],
+        [
+          13,
+          13,
+          300,
+          2,
+          "minecraft:piston_head",
+          "minecraft:oak_planks",
+          "bd72e6f0-b366-4dda-ad60-af16ff74afae",
+          "PISTON"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "execute if block 6 300 2 minecraft:stone if block 13 300 2 minecraft:oak_planks if block 14 300 2 minecraft:air if block 54 300 2 minecraft:slime_block if block 54 300 3 minecraft:stone if block 80 300 2 minecraft:stone if block 64 300 2 minecraft:sand run say MOVEMENT_WORLD_OK",
+          "expected": "MOVEMENT_WORLD_OK",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] MOVEMENT_WORLD_OK",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614032990100"
+          ]
+        },
+        {
+          "command": "guardian lookup c:piston t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian: searching block history...",
+            "[17:56:54] [Server thread/INFO]: Guardian block history (10 results):",
+            "[17:56:54] [Server thread/INFO]: #16 1s ago: unknown piston changed minecraft:piston_head -> minecraft:oak_planks via piston @ 13,300,2",
+            "[17:56:54] [Server thread/INFO]: #15 1s ago: unknown piston changed minecraft:oak_planks -> minecraft:air via piston @ 14,300,2",
+            "[17:56:54] [Server thread/INFO]: #13 3s ago: unknown piston changed minecraft:air -> minecraft:stone via piston @ 80,300,2",
+            "[17:56:54] [Server thread/INFO]: #12 3s ago: unknown piston changed minecraft:stone -> minecraft:piston_head via piston @ 79,300,2",
+            "[17:56:54] [Server thread/INFO]: #11 3s ago: unknown piston changed minecraft:air -> minecraft:stone via piston @ 54,300,3",
+            "[17:56:54] [Server thread/INFO]: #10 3s ago: unknown piston changed minecraft:air -> minecraft:slime_block via piston @ 54,300,2",
+            "[17:56:54] [Server thread/INFO]: #9 3s ago: unknown piston changed minecraft:stone -> minecraft:air via piston @ 53,300,3",
+            "[17:56:54] [Server thread/INFO]: #8 3s ago: unknown piston changed minecraft:slime_block -> minecraft:piston_head via piston @ 53,300,2",
+            "[17:56:54] [Server thread/INFO]: #7 3s ago: unknown piston changed minecraft:air -> minecraft:oak_planks via piston @ 14,300,2",
+            "[17:56:54] [Server thread/INFO]: #6 3s ago: unknown piston changed minecraft:oak_planks -> minecraft:piston_head via piston @ 13,300,2",
+            "[17:56:54] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614143348100"
+          ]
+        },
+        {
+          "command": "guardian lookup c:gravity t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian: searching block history...",
+            "[17:56:54] [Server thread/INFO]: Guardian block history (3 results):",
+            "[17:56:54] [Server thread/INFO]: #14 2s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:56:54] [Server thread/INFO]: #2 3s ago: unknown began falling: minecraft:gravel via gravity @ 68,306,2",
+            "[17:56:54] [Server thread/INFO]: #1 3s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:56:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614231400100"
+          ]
+        },
+        {
+          "command": "co lookup m:a939e6b6-4e73-4db9-abd0-7e9902943800 l:20",
+          "expected": "Guardian block history (2 results)",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian: searching block history...",
+            "[17:56:54] [Server thread/INFO]: Guardian block history (2 results):",
+            "[17:56:54] [Server thread/INFO]: #14 2s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:56:54] [Server thread/INFO]: #1 3s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:56:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614331814600"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture c:piston t:1h r:5",
+          "expected": "movement history is read-only",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614431745200"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:GuardianFixture c:gravity t:1h r:5",
+          "expected": "movement history is read-only",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614531073100"
+          ]
+        },
+        {
+          "command": "guardian fluids m:a939e6b6-4e73-4db9-abd0-7e9902943800",
+          "expected": "Cause/movement filters apply to block history only",
+          "output": [
+            "[17:56:54] [Server thread/INFO]: Guardian fluids: Cause/movement filters apply to block history only",
+            "[17:56:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882614632218200"
+          ]
+        },
+        {
+          "command": "guardian lookup m:a939e6b6-4e73-4db9-abd0-7e9902943800",
+          "expected": "Guardian block history (2 results)",
+          "output": [
+            "[17:57:05] [Server thread/INFO]: Guardian: searching block history...",
+            "[17:57:05] [Server thread/INFO]: Guardian block history (2 results):",
+            "[17:57:05] [Server thread/INFO]: #14 13s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:57:05] [Server thread/INFO]: #1 14s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:57:05] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[17:57:05] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792882625154409800"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=7",
+      "rows": [
+        [
+          16,
+          64,
+          306,
+          2,
+          "minecraft:sand",
+          "minecraft:air",
+          "597ff646-b8b4-4256-9ab0-c0eb6e2e8ee4",
+          "FALL_START"
+        ],
+        [
+          16,
+          68,
+          306,
+          2,
+          "minecraft:gravel",
+          "minecraft:air",
+          "a581dd6b-cc2d-4f5b-9433-5fcab74508f8",
+          "FALL_START"
+        ],
+        [
+          13,
+          5,
+          300,
+          2,
+          "minecraft:stone",
+          "minecraft:piston_head",
+          "79ec682e-f51f-496b-8a2e-55dce59aa361",
+          "PISTON"
+        ],
+        [
+          13,
+          6,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:stone",
+          "79ec682e-f51f-496b-8a2e-55dce59aa361",
+          "PISTON"
+        ],
+        [
+          13,
+          9,
+          300,
+          2,
+          "minecraft:torch",
+          "minecraft:piston_head",
+          "dc506ab4-21f9-4d7e-b70a-b7dd35f73012",
+          "PISTON"
+        ],
+        [
+          13,
+          13,
+          300,
+          2,
+          "minecraft:oak_planks",
+          "minecraft:piston_head",
+          "f28ca66c-0f52-4fbd-bd5e-33b0fc552272",
+          "PISTON"
+        ],
+        [
+          13,
+          14,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:oak_planks",
+          "f28ca66c-0f52-4fbd-bd5e-33b0fc552272",
+          "PISTON"
+        ],
+        [
+          13,
+          53,
+          300,
+          2,
+          "minecraft:slime_block",
+          "minecraft:piston_head",
+          "df21475c-e46d-43ca-8b2d-1675c861c0c0",
+          "PISTON"
+        ],
+        [
+          13,
+          53,
+          300,
+          3,
+          "minecraft:stone",
+          "minecraft:air",
+          "df21475c-e46d-43ca-8b2d-1675c861c0c0",
+          "PISTON"
+        ],
+        [
+          13,
+          54,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:slime_block",
+          "df21475c-e46d-43ca-8b2d-1675c861c0c0",
+          "PISTON"
+        ],
+        [
+          13,
+          54,
+          300,
+          3,
+          "minecraft:air",
+          "minecraft:stone",
+          "df21475c-e46d-43ca-8b2d-1675c861c0c0",
+          "PISTON"
+        ],
+        [
+          13,
+          79,
+          300,
+          2,
+          "minecraft:stone",
+          "minecraft:piston_head",
+          "3fd08852-a066-4973-a47c-17d3ebef1559",
+          "PISTON"
+        ],
+        [
+          13,
+          80,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:stone",
+          "3fd08852-a066-4973-a47c-17d3ebef1559",
+          "PISTON"
+        ],
+        [
+          16,
+          64,
+          300,
+          2,
+          "minecraft:air",
+          "minecraft:sand",
+          "597ff646-b8b4-4256-9ab0-c0eb6e2e8ee4",
+          "FALL_LAND"
+        ],
+        [
+          13,
+          14,
+          300,
+          2,
+          "minecraft:oak_planks",
+          "minecraft:air",
+          "ab29d83b-9dc4-4c4c-8d9b-5180d648ed46",
+          "PISTON"
+        ],
+        [
+          13,
+          13,
+          300,
+          2,
+          "minecraft:piston_head",
+          "minecraft:oak_planks",
+          "ab29d83b-9dc4-4c4c-8d9b-5180d648ed46",
+          "PISTON"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "execute if block 6 300 2 minecraft:stone if block 13 300 2 minecraft:oak_planks if block 14 300 2 minecraft:air if block 54 300 2 minecraft:slime_block if block 54 300 3 minecraft:stone if block 80 300 2 minecraft:stone if block 64 300 2 minecraft:sand run say MOVEMENT_WORLD_OK",
+          "expected": "MOVEMENT_WORLD_OK",
+          "output": [
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] MOVEMENT_WORLD_OK",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882648806936500"
+          ]
+        },
+        {
+          "command": "guardian lookup c:piston t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (10 results):",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #16 1s ago: unknown piston changed minecraft:piston_head -> minecraft:oak_planks via piston @ 13,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #15 1s ago: unknown piston changed minecraft:oak_planks -> minecraft:air via piston @ 14,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #13 3s ago: unknown piston changed minecraft:air -> minecraft:stone via piston @ 80,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #12 3s ago: unknown piston changed minecraft:stone -> minecraft:piston_head via piston @ 79,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #11 3s ago: unknown piston changed minecraft:air -> minecraft:stone via piston @ 54,300,3",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #10 3s ago: unknown piston changed minecraft:air -> minecraft:slime_block via piston @ 54,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #9 3s ago: unknown piston changed minecraft:stone -> minecraft:air via piston @ 53,300,3",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #8 3s ago: unknown piston changed minecraft:slime_block -> minecraft:piston_head via piston @ 53,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #7 3s ago: unknown piston changed minecraft:air -> minecraft:oak_planks via piston @ 14,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #6 3s ago: unknown piston changed minecraft:oak_planks -> minecraft:piston_head via piston @ 13,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882648926847100"
+          ]
+        },
+        {
+          "command": "guardian lookup c:gravity t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (3 results):",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #14 2s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #2 3s ago: unknown began falling: minecraft:gravel via gravity @ 68,306,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]: #1 3s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:57:28] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882648961002700"
+          ]
+        },
+        {
+          "command": "co lookup m:597ff646-b8b4-4256-9ab0-c0eb6e2e8ee4 l:20",
+          "expected": "Guardian block history (2 results)",
+          "output": [
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (2 results):",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: #14 2s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: #1 3s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882649008142000"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture c:piston t:1h r:5",
+          "expected": "movement history is read-only",
+          "output": [
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882649113792400"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:GuardianFixture c:gravity t:1h r:5",
+          "expected": "movement history is read-only",
+          "output": [
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882649207286700"
+          ]
+        },
+        {
+          "command": "guardian fluids m:597ff646-b8b4-4256-9ab0-c0eb6e2e8ee4",
+          "expected": "Cause/movement filters apply to block history only",
+          "output": [
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluids: Cause/movement filters apply to block history only",
+            "[17:57:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882649314788800"
+          ]
+        },
+        {
+          "command": "guardian lookup m:597ff646-b8b4-4256-9ab0-c0eb6e2e8ee4",
+          "expected": "Guardian block history (2 results)",
+          "output": [
+            "[17:57:42] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[17:57:43] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=22",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (2 results):",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]: #14 16s ago: unknown falling block landed: minecraft:sand via gravity @ 64,300,2",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]: #1 17s ago: unknown began falling: minecraft:sand via gravity @ 64,306,2",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[17:57:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792882663069969500"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 617,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 618,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 440,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 441,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.78+1.21.1.jar",
+      "bytes": 13220129,
+      "sha256": "7a3c5223060c377fd05cd0c90dfc80222f6c830fca747620255585117c47949f"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.78+1.21.1.jar",
+      "bytes": 13197026,
+      "sha256": "8e0b50880ceca17ba9ee0a870d6ff216421025df708f6ce89d995ac8c859dff6"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.78+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "a1c5f0bb0b8df632e64818dd1f4b92f8f94455e32dd7f8a1b03622bb8d55e3af"
+    }
+  ],
+  "builds": {
+    "clean": "passed in 2m3s; Java21 Gradle9.8 via IDEA",
+    "build": "passed; configuration cache stored",
+    "repeat": "passed; configuration cache reused",
+    "worldedit": "passed; separate adapter build"
+  },
+  "previousCI": {
+    "sha": "4339d12ba7943c1907469cca7ff1bd2dc639d500",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40139133252"
+  },
+  "sourceChecks": "MixinMCP inspected both-loader piston resolver/move and falling source/tick paths, including actual resolve and Level.setBlock bytecode targets. New mixins/capture passed errors-only inspection.",
+  "runtimeChecks": [
+    "normal push settled before recording",
+    "sticky extension and pull use separate correlations",
+    "destroyed torch target is not called a transfer",
+    "slime side branch",
+    "blocked obsidian and 13-block over-limit move absent",
+    "empty stroke absent",
+    "x79/x80 chunk-boundary movement",
+    "moving-piston placeholders never persisted in correlated rows",
+    "sand departure and landing share entity UUID",
+    "gravel breaking on torch has departure but no landing",
+    "actual NeoForge piston-pre cancellation absent",
+    "actual NeoForge falling-entity spawn cancellation absent",
+    "independent console world-state assertions for endpoints",
+    "eight world/query/refusal/restart cases per loader",
+    "SQLite integrity"
+  ],
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "limits": [
+    "Synthetic fixture players and real server ticks do not certify rendered animation, clients or arbitrary claim packs.",
+    "Piston observer holds at most 128 plans, 64 positions each and 20 world ticks; no missing chunks are loaded and no animation is forced.",
+    "Overlapping, changing, unloaded or unmatched plans are dropped with a throttled incomplete-history warning.",
+    "Waterlogged or other state-changing moves can be conservatively skipped; custom block entities/physics and concrete hydration are not certified.",
+    "Falling entity UUID correlates observed facts, not guaranteed endpoints across every capture gap, restart or teleport.",
+    "Rows are not an atomic movement group; queue rejection and purge can leave partial groups.",
+    "Public movement rollback/restore remains unavailable."
+  ]
+}

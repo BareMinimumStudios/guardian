@@ -75,7 +75,9 @@
     "LeafDecayHistoryMixin",
     "SaplingGrowthHistoryMixin",
     "BoneMealGrowthHistoryMixin",
-    "NeoForgeEnvironmentalItemHistoryMixin"
+    "NeoForgeEnvironmentalItemHistoryMixin",
+    "PistonMovementHistoryMixin",
+    "FallingBlockMovementHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

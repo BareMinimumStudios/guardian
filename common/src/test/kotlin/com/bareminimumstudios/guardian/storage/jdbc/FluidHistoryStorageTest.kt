@@ -66,9 +66,9 @@ class FluidHistoryStorageTest {
                 listOf("ex_entity_time_idx","ex_entity_target_idx","ex_entity_location_idx","ex_entity_actor_idx").forEach { s.executeUpdate("DROP INDEX $it") }
                 s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_before");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_after")
                 GuardianSchema.migrations.single { it.version==16 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
-                s.executeUpdate("DROP TABLE ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=18");s.executeUpdate("UPDATE ex_meta SET meta_value='17' WHERE meta_key='schema_version'")
+                s.executeUpdate("DROP TABLE ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=18");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='17' WHERE meta_key='schema_version'")
             } }
-            val placed=row();db().use{it.open();assertEquals(21,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
+            val placed=row();db().use{it.open();assertEquals(22,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
             db().use{it.open();assertEquals(listOf(placed),it.lookupFluids(FluidLookupQuery()))}
         }
     }

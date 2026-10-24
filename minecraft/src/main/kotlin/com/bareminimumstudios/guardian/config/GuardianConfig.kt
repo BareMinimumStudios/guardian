@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(15)
+@Version(16)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -52,6 +52,8 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
         var explosions = ValidatedBoolean(false)
         var growth = ValidatedBoolean(false)
         var leafDecay = ValidatedBoolean(false)
+        var pistons = ValidatedBoolean(false)
+        var fallingBlocks = ValidatedBoolean(false)
     }
 
     var fluids = Fluids()

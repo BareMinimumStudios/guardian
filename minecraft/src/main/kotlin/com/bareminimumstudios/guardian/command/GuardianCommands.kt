@@ -329,7 +329,7 @@ object GuardianCommands {
     private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
         val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian transactions: ${it.message}")); return 0 }
-        if (filter.actions.isNotEmpty() || filter.causes.isNotEmpty()) { source.sendFailure(Component.literal("Item history does not accept block action or cause filters.")); return 0 }
+        if (filter.actions.isNotEmpty() || filter.causes.isNotEmpty() || filter.movementId!=null) { source.sendFailure(Component.literal("Item history does not accept block action, cause or movement filters.")); return 0 }
         val scope = resolveScope(source, filter) ?: return 0
         val limit = filter.limit ?: config.lookup.defaultResults.get()
         if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
@@ -505,7 +505,7 @@ object GuardianCommands {
             bounds = scope.bounds,
             radius = radius,
             search = resolvedSearch(source, filter),
-            actions = filter.actions, causes = filter.causes,
+            actions = filter.actions, causes = filter.causes, movementId = filter.movementId,
             afterEpochMillis = filter.lookbackMillis?.let { (now - it).coerceAtLeast(0L) },
             limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit, oldestFirst = filter.oldestFirst
         )
@@ -569,6 +569,9 @@ object GuardianCommands {
         if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH || it==com.bareminimumstudios.guardian.domain.ChangeCause.DECAY }) {
             source.sendFailure(Component.literal("Guardian growth/decay history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
+        if(filter.movementId!=null || filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.PISTON || it==com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY }) {
+            source.sendFailure(Component.literal("Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
+        }
         val query = BlockLookupQuery(
             dimension = scope.dimension,
             position = center,
@@ -577,7 +580,7 @@ object GuardianCommands {
             actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
             actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
-            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY),
+            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY,com.bareminimumstudios.guardian.domain.ChangeCause.PISTON,com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,
             limit = (config.rollback.maxRecords.get() + 1).coerceAtMost(10_000)
