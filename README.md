@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.79+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.80+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -335,9 +335,20 @@ The summary distinguishes rows that would restore, rows already in their before 
 
 Guardian simulates the selected newest-first chain; it does not just count lookup results. This is a check of the recorded and observed state, not a promise that a future apply will succeed. Neighbor updates, mod behavior and later player/world changes can alter the outcome. Preview creates no reservation or confirmation token. Applying the same filters runs a fresh query and revalidates live state; your position, dimension and moving time window also matter.
 
-Both preview and apply still accept one included user. They refuse the extended multi-user/exclusion/resource history filters. Block preview does not restore items. Block restore/redo has its own preview and permission below.
+Both preview and apply accept the same multi-user and block-type filters described below. Block preview does not restore items. Block restore/redo has its own preview and permission below.
 
-Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by one included player and block action. Multi-user lists, player exclusions and resource filters are refused by rollback in this release. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
+Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by block action, up to 32 comma-separated player names and exact block IDs. Use `u:Alice,Bob` to include either player, or `u:Alice,Bob,!Bob` to exclude Bob. An exclusion takes precedence; `u:!Bob` includes everyone except Bob, including unknown actors. Online names resolve to their current UUID; offline names match names recorded in history.
+
+`i:minecraft:stone,example:ore` includes a row if either recorded block state has a listed ID. `e:minecraft:dirt` excludes a row if either state has that ID, even if the other state matches an include. Each type filter accepts up to 64 IDs. These are block IDs, not item contents; `i:minecraft:air` can match many placement/break records. Wildcards are not supported. The same filters work with `/co`, restore and redo:
+
+```text
+/guardian rollback preview u:Alice,Bob t:1h r:5 i:minecraft:stone
+/guardian rollback u:Alice,Bob t:1h r:5 i:minecraft:stone
+/guardian restore preview u:Alice,Bob t:1h r:5 i:minecraft:stone
+/guardian restore u:Alice,Bob t:1h r:5 i:minecraft:stone
+```
+
+Filters select **history rows**, not a promise to restore every matching block. They can leave gaps between changes at the same position. Existing live-state checks still apply and a mismatch blocks the remaining selected chain at that position. Review skipped/blocked counts. Preview and apply run separate queries with their own moving time windows and do not reserve a fixed batch. Rollback remains newest first; restore remains oldest first, using the IDs in the original recorded before/after states. The record cap applies after filtering. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
 
 **Item rollback apply is unavailable**, including for vanilla inventories. Block rollback is not a replacement for restoring a container's item transaction history.
 
@@ -353,7 +364,7 @@ Restore reapplies the original changes that Guardian previously marked as rolled
 
 `redo` is an alias for `restore`; both also work under `/co`. Preview is read-only, and applying restore is a separate command. Back up the world and inspect the preview first. Restore uses `guardian.restore` (operator level 3 by default), separately from `guardian.rollback`.
 
-Restore replays only rolled-back or restore-pending rows, oldest first. The live block must match the recorded before state; Guardian then reproduces the recorded after state. Conflicts stop later selected changes at that position. Unloaded chunks are skipped; unsupported or unverifiable targets are refused. A block already matching its target can be reconciled without another write. The same record/tick/radius limits and shared busy lock apply to rollback and restore. Both use one included player and refuse extended history filters and paging/limit parameters.
+Restore replays only rolled-back or restore-pending rows, oldest first. The live block must match the recorded before state; Guardian then reproduces the recorded after state. Conflicts stop later selected changes at that position. Unloaded chunks are skipped; unsupported or unverifiable targets are refused. A block already matching its target can be reconciled without another write. The same record/tick/radius limits and shared busy lock apply to rollback and restore. Both accept multiple included/excluded users and included/excluded block IDs, and refuse paging/limit parameters. Their replay order is fixed by the operation.
 
 Successful restore returns the original history rows to active state without adding replacement audit records. A later rollback can reverse them again. Interrupted restore work has a distinct `restore pending` label and is excluded from ordinary rollback; retry restore with the original filters to reconcile matching live states. Unresolved conflicts stay pending. Preview reserves nothing, and database journal completion does not guarantee the matching chunk save survived an abrupt process or machine failure. Inspect uncertain outcomes before retrying; keep backups. Restore follows the existing block snapshot support, including recorded block-entity data; it is not item-transaction rollback and cannot reconstruct unrecorded changes.
 

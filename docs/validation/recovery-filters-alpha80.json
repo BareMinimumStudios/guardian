@@ -1,0 +1,766 @@
+{
+  "version": "0.4.0-alpha.80+1.21.1",
+  "date": "2026-10-24",
+  "schema": 22,
+  "configVersion": 16,
+  "tests": {
+    "common": {
+      "tests": 643,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 70,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2492,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "cases": [
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "Guardian block rollback preview: 2 would restore",
+          "output": [
+            "[18:30:30] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:30:31] [Server thread/INFO]: Guardian block rollback preview: 2 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:30:31] [Server thread/INFO]: 0, 299, 0: minecraft:dirt → minecraft:stone",
+            "[18:30:31] [Server thread/INFO]: 0, 299, 0: minecraft:stone → minecraft:air",
+            "[18:30:31] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631009545900"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_PREVIEW_UNCHANGED",
+          "expected": "RF_PREVIEW_UNCHANGED",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] RF_PREVIEW_UNCHANGED",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631100596900"
+          ]
+        },
+        {
+          "command": "co rollback u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "rollback complete: 2 applied",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:31] [Server thread/INFO]: Guardian: rollback queued for 2 block change(s).",
+            "[18:30:31] [Server thread/INFO]: Guardian rollback complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631390705100"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:air run say RF_ROLLBACK_CHAIN",
+          "expected": "RF_ROLLBACK_CHAIN",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] RF_ROLLBACK_CHAIN",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631478385600"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "Guardian block restore preview: 2 would restore",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:30:31] [Server thread/INFO]: Guardian block restore preview: 2 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:30:31] [Server thread/INFO]: 0, 299, 0: minecraft:air → minecraft:stone",
+            "[18:30:31] [Server thread/INFO]: 0, 299, 0: minecraft:stone → minecraft:dirt",
+            "[18:30:31] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631637074800"
+          ]
+        },
+        {
+          "command": "co redo u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "restore complete: 2 applied",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:31] [Server thread/INFO]: Guardian: restore queued for 2 block change(s).",
+            "[18:30:31] [Server thread/INFO]: Guardian restore complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631882854100"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_REDO_CHAIN",
+          "expected": "RF_REDO_CHAIN",
+          "output": [
+            "[18:30:31] [Server thread/INFO]: [Not Secure] [Server] RF_REDO_CHAIN",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884631975232100"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:1 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632084801800"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Carol,!Carol t:1h r:0 x:1 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632178818200"
+          ]
+        },
+        {
+          "command": "guardian rollback u:!Alice t:1h r:0 x:1 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: rollback queued for 1 block change(s).",
+            "[18:30:32] [Server thread/INFO]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:!Alice t:1h r:0 x:1 y:299 z:0], center=1,299,0, radius=0",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632427397000"
+          ]
+        },
+        {
+          "command": "guardian restore u:Carol t:1h r:0 x:1 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: restore queued for 1 block change(s).",
+            "[18:30:32] [Server thread/INFO]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Carol t:1h r:0 x:1 y:299 z:0], center=1,299,0, radius=0",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632678008300"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone e:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632785987400"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:dirt t:1h r:0 x:2 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[18:30:32] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884632879415900"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:30:32] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:32] [Server thread/INFO]: Guardian: rollback queued for 1 block change(s).",
+            "[18:30:33] [Server thread/INFO]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0], center=2,299,0, radius=0",
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884633127290900"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:30:33] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:33] [Server thread/INFO]: Guardian: restore queued for 1 block change(s).",
+            "[18:30:33] [Server thread/INFO]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0], center=2,299,0, radius=0",
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884633379377000"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "1 state mismatch",
+          "output": [
+            "[18:30:33] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:30:33] [Server thread/INFO]: Guardian block rollback preview: 1 would restore, 0 already at target, 1 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:30:33] [Server thread/INFO]: 3, 299, 0: minecraft:gold_block → minecraft:dirt",
+            "[18:30:33] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884633535483800"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:30:33] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:33] [Server thread/INFO]: Guardian: rollback queued for 2 block change(s).",
+            "[18:30:33] [Server thread/INFO]: Guardian rollback complete: 1 applied, 0 recovered, 1 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884633782890600"
+          ]
+        },
+        {
+          "command": "execute if block 3 299 0 minecraft:dirt run say RF_GAP_STOPPED",
+          "expected": "RF_GAP_STOPPED",
+          "output": [
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] RF_GAP_STOPPED",
+            "[18:30:33] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884633878038400"
+          ]
+        },
+        {
+          "command": "guardian restore u:Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:30:33] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:33] [Server thread/INFO]: Guardian: restore queued for 1 block change(s).",
+            "[18:30:34] [Server thread/INFO]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:30:34] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884634125909200"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0",
+          "expected": "1 unsupported",
+          "output": [
+            "[18:30:34] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:30:34] [Server thread/INFO]: Guardian block rollback preview: 0 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 1 unsupported, 0 read failures.",
+            "[18:30:34] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0], center=4,299,0, radius=0",
+            "[18:30:34] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884634281391000"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0",
+          "expected": "rollback complete: 0 applied",
+          "output": [
+            "[18:30:34] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:34] [Server thread/INFO]: Guardian: rollback queued for 1 block change(s).",
+            "[18:30:34] [Server thread/WARN]: Failed to restore block rollback row 8: Unknown block identifier in Guardian history: example:missing",
+            "[18:30:34] [Server thread/INFO]: Guardian rollback complete: 0 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 1 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0], center=4,299,0, radius=0",
+            "[18:30:34] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884634526446800"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "1 unloaded",
+          "output": [
+            "[18:30:34] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:30:34] [Server thread/INFO]: Guardian block rollback preview: 0 would restore, 0 already at target, 0 state mismatch, 1 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:30:34] [Server thread/INFO]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[18:30:34] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884634679201600"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "rollback complete: 0 applied",
+          "output": [
+            "[18:30:34] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:34] [Server thread/INFO]: Guardian: rollback queued for 1 block change(s).",
+            "[18:30:34] [Server thread/INFO]: Guardian rollback complete: 0 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 1 skipped (unloaded), 0 failed. filter=[u:Alice,Bob t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[18:30:34] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884634925144700"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone",
+          "expected": "requires a t:<time>",
+          "output": [
+            "[18:30:35] [Server thread/INFO]: Guardian rollback requires a t:<time> filter for safety.",
+            "[18:30:35] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884635035325600"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h l:1",
+          "expected": "does not accept l: or p:",
+          "output": [
+            "[18:30:35] [Server thread/INFO]: Guardian restore does not accept l: or p:. Narrow the restore with t:, r:, or u: instead.",
+            "[18:30:35] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884635127652600"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice, t:1h",
+          "expected": "Use up to 32 player names",
+          "output": [
+            "[18:30:35] [Server thread/INFO]: Guardian rollback: Use up to 32 player names separated by commas; prefix exclusions with !.",
+            "[18:30:35] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884635235160900"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h c:fire",
+          "expected": "history is read-only",
+          "output": [
+            "[18:30:35] [Server thread/INFO]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[18:30:35] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884635326992100"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "rollback complete: 2 applied",
+          "output": [
+            "[18:30:35] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:35] [Server thread/INFO]: Guardian: rollback queued for 2 block change(s).",
+            "[18:30:35] [Server thread/INFO]: Guardian rollback complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:35] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884635530144100"
+          ]
+        },
+        {
+          "command": "guardian redo u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "restore complete: 2 applied",
+          "output": [
+            "[18:30:50] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:50] [Server thread/INFO]: Guardian: restore queued for 2 block change(s).",
+            "[18:30:50] [Server thread/INFO]: Guardian restore complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:30:50] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884650571831200"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_RESTART_CHAIN",
+          "expected": "RF_RESTART_CHAIN",
+          "output": [
+            "[18:30:50] [Server thread/INFO]: [Not Secure] [Server] RF_RESTART_CHAIN",
+            "[18:30:50] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884650641588900"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "no matching restore block changes",
+          "output": [
+            "[18:30:50] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[18:30:50] [Server thread/INFO]: Guardian: no matching restore block changes were found.",
+            "[18:30:50] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792884650723417400"
+          ]
+        }
+      ],
+      "previewJournalUnchanged": true,
+      "multiUserChainAndFilteredGap": true,
+      "excludedUsersAndBlocks": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "fixture": "Synthetic audit prefix; actual world and SQLite readback. Not a killed-process/save-order test."
+    },
+    {
+      "loader": "Neoforge",
+      "cases": [
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "Guardian block rollback preview: 2 would restore",
+          "output": [
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 2 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:dirt → minecraft:stone",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:stone → minecraft:air",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884673481584700"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_PREVIEW_UNCHANGED",
+          "expected": "RF_PREVIEW_UNCHANGED",
+          "output": [
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] RF_PREVIEW_UNCHANGED",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884673608506900"
+          ]
+        },
+        {
+          "command": "co rollback u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "rollback complete: 2 applied",
+          "output": [
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 2 block change(s).",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884673856716400"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:air run say RF_ROLLBACK_CHAIN",
+          "expected": "RF_ROLLBACK_CHAIN",
+          "output": [
+            "[18:31:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] RF_ROLLBACK_CHAIN",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884673963436600"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "Guardian block restore preview: 2 would restore",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block restore preview: 2 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:air → minecraft:stone",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: 0, 299, 0: minecraft:stone → minecraft:dirt",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884674103599300"
+          ]
+        },
+        {
+          "command": "co redo u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "restore complete: 2 applied",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: restore queued for 2 block change(s).",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884674460088900"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_REDO_CHAIN",
+          "expected": "RF_REDO_CHAIN",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] RF_REDO_CHAIN",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884674552418700"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:1 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884674616438300"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Carol,!Carol t:1h r:0 x:1 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884674713351400"
+          ]
+        },
+        {
+          "command": "guardian rollback u:!Alice t:1h r:0 x:1 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:14] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 1 block change(s).",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:!Alice t:1h r:0 x:1 y:299 z:0], center=1,299,0, radius=0",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675001863500"
+          ]
+        },
+        {
+          "command": "guardian restore u:Carol t:1h r:0 x:1 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: restore queued for 1 block change(s).",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Carol t:1h r:0 x:1 y:299 z:0], center=1,299,0, radius=0",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675265333300"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone e:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675358718200"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:dirt t:1h r:0 x:2 y:299 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675452046100"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 1 block change(s).",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0], center=2,299,0, radius=0",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675715531100"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: restore queued for 1 block change(s).",
+            "[18:31:15] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:2 y:299 z:0], center=2,299,0, radius=0",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884675963562800"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "1 state mismatch",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 1 would restore, 0 already at target, 1 state mismatch, 0 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: 3, 299, 0: minecraft:gold_block → minecraft:dirt",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884676055451800"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "rollback complete: 1 applied",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 2 block change(s).",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 1 applied, 0 recovered, 1 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884676304402600"
+          ]
+        },
+        {
+          "command": "execute if block 3 299 0 minecraft:dirt run say RF_GAP_STOPPED",
+          "expected": "RF_GAP_STOPPED",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] RF_GAP_STOPPED",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884676414181800"
+          ]
+        },
+        {
+          "command": "guardian restore u:Bob t:1h r:0 x:3 y:299 z:0",
+          "expected": "restore complete: 1 applied",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: restore queued for 1 block change(s).",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore complete: 1 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Bob t:1h r:0 x:3 y:299 z:0], center=3,299,0, radius=0",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884676708790500"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0",
+          "expected": "1 unsupported",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 0 would restore, 0 already at target, 0 state mismatch, 0 unloaded, 0 blocked, 1 unsupported, 0 read failures.",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0], center=4,299,0, radius=0",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884676801955900"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0",
+          "expected": "rollback complete: 0 applied",
+          "output": [
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 1 block change(s).",
+            "[18:31:17] [Server thread/WARN] [Guardian/Rollback/]: Failed to restore block rollback row 8: Unknown block identifier in Guardian history: example:missing",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 0 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 1 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:4 y:299 z:0], center=4,299,0, radius=0",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677051108900"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:Alice,Bob i:stone t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "1 unloaded",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block rollback preview: 0 would restore, 0 already at target, 0 state mismatch, 1 unloaded, 0 blocked, 0 unsupported, 0 read failures.",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Preview only; no blocks or journal rows changed. Apply separately with the same filters; live state may change. filter=[u:Alice,Bob i:stone t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677205734400"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob t:1h r:0 x:1000000 y:299 z:0",
+          "expected": "rollback complete: 0 applied",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 1 block change(s).",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 0 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 1 skipped (unloaded), 0 failed. filter=[u:Alice,Bob t:1h r:0 x:1000000 y:299 z:0], center=1000000,299,0, radius=0",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677452158100"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone",
+          "expected": "requires a t:<time>",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback requires a t:<time> filter for safety.",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677563193900"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h l:1",
+          "expected": "does not accept l: or p:",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore does not accept l: or p:. Narrow the restore with t:, r:, or u: instead.",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677656402300"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice, t:1h",
+          "expected": "Use up to 32 player names",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback: Use up to 32 player names separated by commas; prefix exclusions with !.",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677762969000"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h c:fire",
+          "expected": "history is read-only",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884677857068600"
+          ]
+        },
+        {
+          "command": "guardian rollback u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "rollback complete: 2 applied",
+          "output": [
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:17] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: rollback queued for 2 block change(s).",
+            "[18:31:18] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian rollback complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:18] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884678149904400"
+          ]
+        },
+        {
+          "command": "guardian redo u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "restore complete: 2 applied",
+          "output": [
+            "[18:31:32] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[18:31:32] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=22",
+            "[18:31:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: restore queued for 2 block change(s).",
+            "[18:31:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian restore complete: 2 applied, 0 recovered, 0 skipped (newer state), 0 skipped (blocked chain), 0 skipped (unloaded), 0 failed. filter=[u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0], center=0,299,0, radius=0",
+            "[18:31:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884692930626000"
+          ]
+        },
+        {
+          "command": "execute if block 0 299 0 minecraft:dirt run say RF_RESTART_CHAIN",
+          "expected": "RF_RESTART_CHAIN",
+          "output": [
+            "[18:31:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] RF_RESTART_CHAIN",
+            "[18:31:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884693007081600"
+          ]
+        },
+        {
+          "command": "guardian restore u:Alice,Bob i:stone t:1h r:0 x:0 y:299 z:0",
+          "expected": "no matching restore block changes",
+          "output": [
+            "[18:31:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[18:31:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching restore block changes were found.",
+            "[18:31:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792884693063549600"
+          ]
+        }
+      ],
+      "previewJournalUnchanged": true,
+      "multiUserChainAndFilteredGap": true,
+      "excludedUsersAndBlocks": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "fixture": "Synthetic audit prefix; actual world and SQLite readback. Not a killed-process/save-order test."
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 839,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 840,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 406,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 407,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.80+1.21.1.jar",
+      "bytes": 13242549,
+      "sha256": "85ae2f9edc948f530d1a8ce7b1326e28b2539e48fa11852d23fb04e94eb9dcef"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.80+1.21.1.jar",
+      "bytes": 13219020,
+      "sha256": "92cae9caa63a0df44e1616e57ad72fb0e455e886f3a8f939f0a05d25ef938f09"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.80+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "dd1260d9b57a1e12210543a1dcbce805e88f0ee794c88331428a8304738e60a7"
+    }
+  ],
+  "builds": {
+    "clean": "passed in 2m41s through IDEA; all 36 tasks executed",
+    "build": "passed; configuration cache stored",
+    "repeat": "passed; configuration cache reused",
+    "worldedit": "passed separate adapter build"
+  },
+  "previousCI": {
+    "sha": "2c6d95a4b01a2dbec835edc630e1e6294fe0d4bc",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40142627169"
+  },
+  "sourceChecks": "Changed recovery command and completion helper passed IDEA errors-only inspection. No new Minecraft hooks, schema/config changes or journal lifecycle changes.",
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "coverage": [
+    "resolved multiple users and exclusions; online UUID versus offline recorded-name matching",
+    "original before/after block ID inclusion and exclusion before the cap",
+    "newest-first rollback and oldest-first restore/redo; fixed eligible journal states",
+    "read-only preview leaves actual world and journal unchanged",
+    "filtered gap stops at live-state mismatch rather than forcing an older row",
+    "excluded users/resources and unknown actors follow history-query semantics",
+    "unsupported identifiers and unloaded chunks refused; no forced chunks",
+    "t: requirement, paging/limit refusal, malformed names and environmental recovery refusal",
+    "both aliases; persistent redo after restart; SQLite integrity",
+    "actual LuckPerms and operator fallback; cached block/user exclusion suggestions and queued preview/apply revocation"
+  ],
+  "limits": [
+    "Filtered history can omit intervening changes. Existing state comparison can block remaining selected rows at that position.",
+    "Preview and apply are separate queries; time windows, location and live state may change.",
+    "Resource filters match original block before/after states, including air; they do not search container contents.",
+    "Recovery ordering and configured radius/record/tick limits remain fixed by the operation.",
+    "Item apply and environmental/entity/fluid recovery remain unavailable.",
+    "Synthetic players do not certify client presentation. Existing R3 and final release sign-off remain pending."
+  ]
+}

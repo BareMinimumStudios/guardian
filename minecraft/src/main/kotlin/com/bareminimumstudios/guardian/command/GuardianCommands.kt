@@ -223,7 +223,7 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false, extended: Boolean = true): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false, extended: Boolean = true, recovery: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
         if (!authorized(source, permissions, permission, fallback)) return com.mojang.brigadier.suggestion.Suggestions.empty()
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
@@ -231,7 +231,12 @@ object GuardianCommands {
         val resourceKey = current.substringBefore(':').lowercase()
         val resources = if (!extended || activity || resourceKey !in setOf("i", "include", "e", "exclude")) emptyList() else
             (if (items) net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() }
-        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else FilterSuggestions.values(current, players, items, resources, extended)
+        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else if(recovery) FilterSuggestions.recoveryValues(current,players,resources) else FilterSuggestions.values(current, players, items, resources, extended)
+        if(recovery) {
+            val target=builder.createOffset(start)
+            choices.forEach(target::suggest)
+            return target.buildFuture()
+        }
         return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order") }, builder.createOffset(start))
     }
 
@@ -419,18 +424,18 @@ object GuardianCommands {
         .requires { permissions.has(it, operation.permission, 3) }
         .executes { context ->
             context.source.sendSystemMessage(
-                Component.literal("Usage: /guardian ${operation.command} t:<time> [u:<player>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
+                Component.literal("Usage: /guardian ${operation.command} t:<time> [u:<player1,player2,!excluded>] [i:<block IDs>] [e:<block IDs>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
             )
             0
         }
         .then(Commands.literal("preview")
             .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian ${operation.command} preview t:1h r:5. Read-only; no blocks change.")); 0 }
             .then(Commands.argument("filters", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, extended = false) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, recovery = true) }
                 .executes { context -> executeRollback(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider(), previewOnly = true, operation = operation) }))
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, extended = false) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, recovery = true) }
                 .executes { context ->
                     executeRollback(
                         source = context.source,
@@ -557,9 +562,6 @@ object GuardianCommands {
             source.sendFailure(Component.literal("Guardian ${operation.command}: ${it.message}"))
             return 0
         }
-        if (filter.search.extended) {
-            source.sendFailure(Component.literal("Extended user and resource filters are history-only. Block ${operation.command} still accepts one included user.")); return 0
-        }
         val lookbackMillis = filter.lookbackMillis ?: run {
             source.sendFailure(Component.literal("Guardian ${operation.command} requires a t:<time> filter for safety."))
             return 0
@@ -591,8 +593,7 @@ object GuardianCommands {
             position = center,
             bounds = scope.bounds,
             radius = radius,
-            actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
-            actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
+            search = resolvedSearch(source, filter),
             actions = filter.actions,
             causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY,com.bareminimumstudios.guardian.domain.ChangeCause.PISTON,com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),

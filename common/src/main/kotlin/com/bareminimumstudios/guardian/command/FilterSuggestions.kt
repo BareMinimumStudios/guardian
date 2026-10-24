@@ -2,6 +2,13 @@ package com.bareminimumstudios.guardian.command
 
 /** Suggestions replace only the current key:value token, preserving earlier filters. */
 object FilterSuggestions {
+    /** Recovery owns its ordering and record cap; only block/user scope is completed here. */
+    fun recoveryValues(token: String, players: Collection<String>, resources: Collection<String>): List<String> =
+        values(token,players,resources=resources).filter {
+            it.substringBefore(':').lowercase() !in setOf("l","limit","p","page","o","order","m","movement") &&
+                (it.substringBefore(':').lowercase() !in setOf("c","cause") || it.substringAfter(':') in setOf("player","worldedit"))
+        }.take(100)
+
     fun values(token: String, players: Collection<String>, items: Boolean = false, resources: Collection<String> = emptyList(), extended: Boolean = true): List<String> {
         val key = token.substringBefore(':').lowercase()
         val prefix = token.substringBefore(':') + ":"

@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.79 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.80 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.79 passed 707 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.80 passed 713 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -201,6 +201,16 @@ Alpha.78 passed GitHub CI. The owner selected exact world and block/item purge f
 Both final loader jars passed 27 global/filtered-preview cases and 11 scoped-deletion/restart cases per loader on fresh isolated databases. Scoped block/item deletion retained activity and other categories; world-only entity/fluid deletion preserved the item floor; journals still protected block/item history. Late inserts, the shared 1,000-record cap, cancellation, child indexes and SQLite integrity passed. Actual LuckPerms and operator fallback passed 490 checks, including cached age/world/include/exclude suggestions, permission revocation, ticket invalidation and queued cancellation. Every final core hash matches all four final runtime/permission copies. Standard jars still nest only SQLite. [Evidence/checksums](validation/scoped-purge-alpha79.json).
 
 All owned servers stopped. Supplied databases/worlds were untouched. A self-contained private server wrapper enforces the private test-directory boundary; the older shared pressure harness is not used. No connected client was used; existing R3 and final release sign-off remain pending. Alpha.79 remote CI awaits the owner's push.
+
+## Block recovery filters, 2026-10-24
+
+Alpha.79 passed GitHub CI. The owner selected multiple-user and block-type filters for rollback and restore/redo. Alpha.80 forwards the existing resolved history search to the recovery query for preview and apply, and adds recovery-specific token-aware completion. Schema 22/config 16 and the claim/apply lifecycle are unchanged.
+
+713 tests passed, including six new tests across memory, SQLite and optional DuckDB for filtering before caps, original block-state matching, exclusion precedence, online UUID/offline name behavior, restore order, filtered gaps and completion. The required clean/build/cache-reuse/WorldEdit builds passed through IDEA. Changed command/completion files passed errors-only inspection.
+
+Both loaders passed 31 runtime cases each using synthetic immutable audit rows and independent actual-world/SQLite checks. Multiple-user rollback and redo replayed in the correct direction. Preview left world/journal unchanged; excluded users and resources were retained; a filtered gap stopped at mismatch; unsupported and unloaded targets were refused. Redo survived a clean restart, and SQLite integrity passed. Actual LuckPerms/operator fallback passed 2492 checks, including cached block/user exclusion completion and queued preview/apply permission revocation. Every final core hash matches all three runtime/permission copies; SQLite remains the only nested dependency. [Evidence/checksums](validation/recovery-filters-alpha80.json).
+
+All owned servers stopped and supplied databases/worlds were untouched. Fixtures do not certify connected-client rendering, arbitrary claim packs or abrupt-save durability. Filters select history rows and can leave gaps; state checks do not imply a complete selected chain. Preview reserves nothing. Existing R3/final sign-off remain pending; alpha.80 remote CI awaits the owner's push.
 
 ## Pending acceptance
 
