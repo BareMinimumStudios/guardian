@@ -79,6 +79,7 @@ class GuardianRuntime(
             }
         }
         itemOperations?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.attachOperations(server,it) }
+        com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ pipeline }, { config })
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
@@ -90,6 +91,7 @@ class GuardianRuntime(
 
     fun stop(): Boolean {
         if (shutdownDrains != null) return finishShutdown()
+        com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ null }, { null })
         purge?.stop()
         val itemDrain = itemOperations?.stopAndDrain()
         managedRetentions = itemOperations?.ownsAllRetentions() == true

@@ -42,9 +42,9 @@ class CommandActivityStorageTest {
             val file=Files.createTempDirectory("command-upgrade").resolve("audit.db");fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(file)else SqliteStorageBackend(file)
             val chat=PlayerActivity(timestampEpochMillis=1,actor=alex,kind=PlayerActivityKind.CHAT,text="kept")
             db().use{it.open();it.append(listOf(chat))}
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { c->c.createStatement().use { s->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=15");s.executeUpdate("UPDATE ex_meta SET meta_value='14' WHERE meta_key='schema_version'") } }
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { c->c.createStatement().use { s->s.executeUpdate("DROP TABLE ex_entity");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=15");s.executeUpdate("UPDATE ex_meta SET meta_value='14' WHERE meta_key='schema_version'") } }
             val command=command(2,text="/say quote ' SQL -- ☃")
-            db().use{it.open();assertEquals(15,it.health().schemaVersion);assertEquals(listOf(chat),it.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))));it.append(listOf(command))}
+            db().use{it.open();assertEquals(GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(chat),it.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))));it.append(listOf(command))}
             db().use{it.open();assertEquals(listOf(command),it.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.COMMAND))))}
         }
     }

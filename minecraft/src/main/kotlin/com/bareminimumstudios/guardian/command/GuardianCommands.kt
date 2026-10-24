@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
                 1
             }
 
@@ -68,6 +68,23 @@ object GuardianCommands {
             statusNode(permissions, runtimeProvider)
         )
 
+        root.then(Commands.literal("entities").requires { entityAuthorized(it,permissions) }
+            .executes { context -> executeEntities(context.source,"",runtimeProvider(),configProvider()) }
+            .then(Commands.argument("filters",StringArgumentType.greedyString())
+                .suggests { context,builder ->
+                    if (!entityAuthorized(context.source,permissions)) com.mojang.brigadier.suggestion.Suggestions.empty()
+                    else {
+                        val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
+                        val token=builder.input.substring(start)
+                        val choices=when(token.substringBefore(':').lowercase()) {
+                            "a","action" -> listOf("${token.substringBefore(':')}:death","${token.substringBefore(':')}:rename","${token.substringBefore(':')}:death,rename").filter { it.startsWith(token,true) }
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet().map { it.toString() }) +
+                                if (':' !in token) listOf("a:","id:").filter { it.startsWith(token,true) } else emptyList()
+                        }
+                        net.minecraft.commands.SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
+                    }
+                }
+                .executes { context -> executeEntities(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
         listOf("chat", "sessions", "commands").forEach { name ->
             val permission = "guardian.$name"
             root.then(Commands.literal(name).requires { activityAuthorized(it, permissions, name) }
@@ -199,6 +216,37 @@ object GuardianCommands {
     private fun activityAuthorized(source: CommandSourceStack, permissions: PermissionService, name: String): Boolean {
         if(name == "commands" && source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true)return false
         return authorized(activitySource(source,name),permissions,"guardian.$name",3)
+    }
+
+    private fun entityAuthorized(source: CommandSourceStack, permissions: PermissionService): Boolean {
+        if (source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true) return false
+        return authorized(source.player?.createCommandSourceStack() ?: source,permissions,"guardian.entities",2)
+    }
+
+    private fun executeEntities(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
+        val history=runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable."));return 0 }
+        if (!entityAuthorized(source,runtime.permissions)) return 0
+        val parsed=EntityCommandFilters.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian entities: ${it.message}"));return 0 }
+        val filter=parsed.common
+        val scope=resolveScope(source,filter) ?: return 0
+        val limit=filter.limit ?: config.lookup.defaultResults.get()
+        if (limit>minOf(500,config.lookup.maxResults.get()) || (filter.radius ?: 0)>config.lookup.maxRadius.get()) {
+            source.sendFailure(Component.literal("Guardian entity limit/radius exceeds the configured maximum."));return 0
+        }
+        val position=filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) }
+        val query=com.bareminimumstudios.guardian.storage.query.EntityLookupQuery(kinds=parsed.kinds,targetUuid=parsed.targetUuid,
+            dimension=if(position!=null || scope.bounds!=null) scope.dimension else null,position=position,radius=filter.radius,bounds=scope.bounds,
+            afterEpochMillis=filter.lookbackMillis?.let { (System.currentTimeMillis()-it).coerceAtLeast(0) },search=resolvedSearch(source,filter),
+            limit=limit,offset=((filter.page ?: 1)-1)*limit,oldestFirst=filter.oldestFirst)
+        val navigationRaw=if(filter.radius!=null && filter.explicitPosition==null) "$raw x:${position!!.x} y:${position.y} z:${position.z}" else raw
+        history.lookupEntities(query,{ rows ->
+            if (!entityAuthorized(source,runtime.permissions)) return@lookupEntities
+            source.sendSystemMessage(Component.literal("Guardian entity history: ${rows.size} records (page ${filter.page ?: 1})."))
+            rows.forEach { source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.EntityHistoryFormatter.line(it)) }
+            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
+                { page -> HistoryPageCommands.command("entities",navigationRaw,page,filter.oldestFirst) },HistoryPageCommands.command("entities",navigationRaw,1,!filter.oldestFirst)))
+        },{ if(entityAuthorized(source,runtime.permissions)) source.sendFailure(Component.literal("Guardian entity lookup failed; see server log.")) })
+        return 1
     }
 
     private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {

@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 15
+    const val CURRENT_VERSION = 16
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -118,6 +118,13 @@ internal object GuardianSchema {
         ), ContainerItemIndex::backfill),
         SchemaMigration(13, "Directional block restore journal state", emptyList()),
         SchemaMigration(14, "Purge history completeness watermark", emptyList()),
-        SchemaMigration(15, "Opt-in parsed player command activity", emptyList())
+        SchemaMigration(15, "Opt-in parsed player command activity", emptyList()),
+        SchemaMigration(16, "Entity deaths and plain custom-name changes", listOf(
+            "CREATE TABLE ex_entity (event_uuid VARCHAR PRIMARY KEY, time BIGINT NOT NULL, actor BIGINT, dimension VARCHAR NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, target_uuid VARCHAR NOT NULL, target_type VARCHAR NOT NULL, kind VARCHAR NOT NULL, before_name VARCHAR, after_name VARCHAR, damage_type VARCHAR)",
+            "CREATE INDEX ex_entity_time_idx ON ex_entity(time, event_uuid)",
+            "CREATE INDEX ex_entity_target_idx ON ex_entity(target_uuid, time)",
+            "CREATE INDEX ex_entity_location_idx ON ex_entity(dimension, x, y, z, time)",
+            "CREATE INDEX ex_entity_actor_idx ON ex_entity(actor, time)"
+        ))
     )
 }

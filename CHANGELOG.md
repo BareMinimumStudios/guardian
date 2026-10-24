@@ -33,6 +33,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.70+1.21.1] - 2026-10-24
+
+### Added
+
+- Separate opt-in entity death and custom-name capture on Fabric and NeoForge, with immutable identity, position, plain names and damage-source attribution. Standard name tags retain player attribution; tracked-entity checks avoid load-time rename records.
+- `/guardian entities` and `/co entities` with independent level-two `guardian.entities` permission, death/rename actions, actor/time/location/type/UUID filters, tab completion, hover details and paged results. Current permissions are checked again before deferred output.
+- Additive schema 16 entity storage and regression coverage for persistence, upgrades, filtering, presentation and event bounds. Entity history is read-only and remains outside existing purge categories.
+
+### Changed
+
+- Upgrade the server configuration to version 9 with `entities.deaths` and `entities.nameChanges` disabled by default. Document supported hooks, attribution limits and database growth considerations.
+
 ## [0.4.0-alpha.69+1.21.1] - 2026-10-24
 
 ### Added

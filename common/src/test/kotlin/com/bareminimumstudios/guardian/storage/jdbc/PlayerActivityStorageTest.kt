@@ -52,7 +52,7 @@ class PlayerActivityStorageTest {
         SqliteStorageBackend(file).use { it.open() }
         DriverManager.getConnection("jdbc:sqlite:$file").use { c -> c.createStatement().use {
             it.executeUpdate("DROP TABLE ex_container_item");it.executeUpdate("DROP TABLE ex_player_activity")
-            it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 11")
+            it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 11")
             it.executeUpdate("UPDATE ex_meta SET meta_value = '10' WHERE meta_key = 'schema_version'")
             it.executeUpdate("INSERT INTO ex_meta(meta_key,meta_value) VALUES ('activity_upgrade_sentinel','retained')")
         } }

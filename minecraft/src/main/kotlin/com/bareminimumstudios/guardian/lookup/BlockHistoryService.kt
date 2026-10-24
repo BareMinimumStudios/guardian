@@ -69,6 +69,10 @@ class BlockHistoryService(
         }
     }
 
+    fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.EntityAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
+        recoveryWork({ storage.lookupEntities(query) }, onSuccess, onFailure)
+    }
+
     fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.PlayerActivity>) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ storage.lookupActivity(query) }, onSuccess, onFailure)
     }

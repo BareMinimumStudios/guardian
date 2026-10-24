@@ -8,6 +8,8 @@ enum class ActionType(val storageCode: Int) {
     ITEM_CHANGE(20),
     ENTITY_SPAWN(30),
     ENTITY_REMOVE(31),
+    ENTITY_DEATH(32),
+    ENTITY_NAME_CHANGE(33),
     PLAYER_SESSION(40),
     CHAT(50),
     COMMAND(51);

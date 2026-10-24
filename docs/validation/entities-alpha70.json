@@ -1,0 +1,533 @@
+{
+  "version": "0.4.0-alpha.70+1.21.1",
+  "date": "2026-10-24",
+  "schema": 16,
+  "configVersion": 9,
+  "tests": {
+    "common": {
+      "tests": 580,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "providerChecks": 1872,
+  "capture": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=9",
+      "rows": [
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Loaded",
+          "Renamed",
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Renamed",
+          "Tagged",
+          null
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          "Tagged",
+          null,
+          "minecraft:player_attack"
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ],
+        [
+          "DEATH",
+          "minecraft:player",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ]
+      ],
+      "actors": [
+        [
+          "NAME_CHANGE",
+          null,
+          null,
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities t:1h l:2 p:1",
+          "expected": "Guardian entity history: 2 records (page 1).",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:player died; source: environment @ 112, 71, 169",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981018017200"
+          ]
+        },
+        {
+          "command": "co entities t:1h l:2 p:2",
+          "expected": "Guardian entity history: 2 records (page 2).",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 2 records (page 2).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981067800000"
+          ]
+        },
+        {
+          "command": "guardian entities t:1h l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3).",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 1 records (page 3).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: [Previous]  Page 3    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981159517000"
+          ]
+        },
+        {
+          "command": "guardian entities a:rename",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981269847300"
+          ]
+        },
+        {
+          "command": "guardian entities a:death",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:player died; source: environment @ 112, 71, 169",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981363076500"
+          ]
+        },
+        {
+          "command": "guardian entities u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981469829200"
+          ]
+        },
+        {
+          "command": "guardian entities i:minecraft:pig",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 4 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981561473700"
+          ]
+        },
+        {
+          "command": "guardian entities id:00000001-0000-0002-0000-000300000004",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[13:53:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981657004100"
+          ]
+        },
+        {
+          "command": "guardian entities a:place",
+          "expected": "Entity actions are death and rename",
+          "output": [
+            "[13:53:01] [Server thread/INFO]: Guardian entities: Entity actions are death and rename",
+            "[13:53:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867981765344300"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[13:53:14] [Server thread/INFO]: Guardian entity history: 5 records (page 1).",
+            "[13:53:14] [Server thread/INFO]: 15s ago: minecraft:player died; source: environment @ 112, 71, 169",
+            "[13:53:14] [Server thread/INFO]: 15s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:14] [Server thread/INFO]: 15s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:14] [Server thread/INFO]: 15s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:14] [Server thread/INFO]: 15s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:14] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[13:53:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792867994492016300"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeDeathCancellation": false
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=11",
+      "rows": [
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Loaded",
+          "Renamed",
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Renamed",
+          "Tagged",
+          null
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          "Tagged",
+          null,
+          "minecraft:player_attack"
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ],
+        [
+          "DEATH",
+          "minecraft:player",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ]
+      ],
+      "actors": [
+        [
+          "NAME_CHANGE",
+          null,
+          null,
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities t:1h l:2 p:1",
+          "expected": "Guardian entity history: 2 records (page 1).",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:player died; source: environment @ 102, 69, 171",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016136102200"
+          ]
+        },
+        {
+          "command": "co entities t:1h l:2 p:2",
+          "expected": "Guardian entity history: 2 records (page 2).",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 2).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016207806800"
+          ]
+        },
+        {
+          "command": "guardian entities t:1h l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3).",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 3).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 3    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016303141800"
+          ]
+        },
+        {
+          "command": "guardian entities a:rename",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016409186400"
+          ]
+        },
+        {
+          "command": "guardian entities a:death",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:player died; source: environment @ 102, 69, 171",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016517030800"
+          ]
+        },
+        {
+          "command": "guardian entities u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016612515400"
+          ]
+        },
+        {
+          "command": "guardian entities i:minecraft:pig",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 4 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016703378500"
+          ]
+        },
+        {
+          "command": "guardian entities id:00000001-0000-0002-0000-000300000004",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016813068900"
+          ]
+        },
+        {
+          "command": "guardian entities a:place",
+          "expected": "Entity actions are death and rename",
+          "output": [
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entities: Entity actions are death and rename",
+            "[13:53:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868016903573700"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[13:53:49] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[13:53:49] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=16",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 5 records (page 1).",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: minecraft:player died; source: environment @ 102, 69, 171",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[13:53:49] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[13:53:50] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792868029968881600"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeDeathCancellation": true
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 531,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "32_individual_activity_entity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 532,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "32_individual_activity_entity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 404,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 405,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "builds": {
+    "clean": "passed, 1m, 36 tasks; configuration cache reused",
+    "build": "passed, 2s, configuration cache stored",
+    "repeat": "passed, 198ms, configuration cache reused",
+    "worldedit": "passed, 1s",
+    "formatterTests": "passed, 5s, configuration cache reused"
+  },
+  "hooks": {
+    "sourceAndBytecode": "MixinMCP verified Fabric and NeoForge living dead flag write, accepted player last-death-location call, custom-name setter and name-tag invocation",
+    "changedMixinInspections": "all four files passed IDEA errors-only inspection",
+    "fixtureTransformsBytecode": false
+  },
+  "previousCI": {
+    "sha": "910c457785f2b196914f3fbbfbb1e71ca24d19c0",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40121567104"
+  },
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.70+1.21.1.jar",
+      "bytes": 13057959,
+      "sha256": "7bc2d63addbb085f8ea11ad02cd93f4b6345f42bb1bbb60aeb07e94930674ee5"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.70+1.21.1.jar",
+      "bytes": 13034241,
+      "sha256": "7c32c6f173a3dd096c365e201b6e6380a6e0a57f534e76c87fe542d7aa0efd2a"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.70+1.21.1.jar",
+      "bytes": 25381,
+      "sha256": "be9ed9c1fe9ccf4e442fa38f271dee70f642e4a2db0898ed073d4fb0258ffaf3"
+    }
+  ],
+  "limits": [
+    "Synthetic players with unconnected real packet listeners; no network/client presentation acceptance",
+    "Only standard living/player death methods and tracked custom-name setters are covered; custom bypasses are not certified",
+    "Plain names capped at 256 characters; formatting-only or beyond-prefix-only changes are not logged",
+    "Name tags supply player attribution; arbitrary name setters do not",
+    "Damage-source attribution is not last-attacker or command-author attribution",
+    "Entity history is read-only; no entity rollback, spawn/despawn, arbitrary properties or entity inventory capture",
+    "Entity history remains outside existing purge categories",
+    "No production mob-farm capacity claim; opt-in capture shares the bounded queue"
+  ],
+  "fixtureCorrections": [
+    "Wait for forced chunk entity-ticking status before synchronous summon/read",
+    "Recreate synthetic player command source after installing operator entry before name-tag item setup"
+  ],
+  "allOwnedServersStopped": true
+}

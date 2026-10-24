@@ -20,5 +20,7 @@ interface QueryableStorageBackend : StorageBackend {
     fun previewPurge(cutoff: Long, limit: Int = 1000): com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan = throw UnsupportedOperationException("Purge unavailable")
     fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean): com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult = throw UnsupportedOperationException("Purge unavailable")
 
+    fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery): List<com.bareminimumstudios.guardian.domain.EntityAuditEvent> = throw UnsupportedOperationException("Entity history unavailable")
+
     fun health(): StorageHealth
 }

@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.69 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.70 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.69 passed 624 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Command tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current command/activity permission acceptance passed 1,636 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.70 passed 635 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current entity/activity permission acceptance passed 1,872 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -91,6 +91,18 @@ Both dedicated isolated servers exercised actual Commands.performCommand with a 
 Real LuckPerms passed 449/450 checks on Fabric/NeoForge, including independent command grants, explicit denial to an actual operator, cached time/user suggestions and 24 individual activity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator entries passed 368/369 checks, including cached-source suggestion revocation after operator removal. No permission decisions were mocked.
 
 These are dispatcher/player-source tests, not actual network command packets, rendered client UI or universal pack cancellation acceptance. The first private fixture used broad reflection on a Fzzy field and linked an unused client widget signature; using its Supplier interface fixed the fixture. The first NeoForge cancellation fixture selected a wrong overload; an exact IEventBus signature fixed it. All final runs passed; no client dependency was added to Guardian. All private servers stopped, and supplied databases/worlds were untouched. Remote alpha.69 CI awaits the owner's push; alpha.68 CI already passed.
+
+## Entity history, 2026-10-24
+
+The owner selected entity deaths and changes after pushing alpha.69; that preceding commit passed GitHub CI. Alpha.70 adds independently opt-in living/player death and tracked plain custom-name capture, schema 16 and config version 9. `/guardian entities` and `/co entities` have separate level-two permission, actor/time/spatial/type/target filters, tab completion, hover identity and navigation. Entity history is read-only and outside existing purge categories.
+
+635 tests passed with no failures, errors or skipped tests. Eleven new tests cover three-backend event identity, duplicate suppression, actor/type/UUID/time/spatial filters before pagination, unknown/entity actors, immutable event bounds, parser validation, schema-15 upgrade, restart, existing purge separation and readable literal presentation. Simulated old-schema fixtures now drop the newer entity table before replaying its migration. Clean, configuration-cache reuse and separate WorldEdit builds passed through IDEA on Java 21/Gradle 9.8.0.
+
+MixinMCP source/bytecode checks verified both loader variants. All four new mixins passed IDEA inspections. Actual private dedicated servers persisted exactly five expected records each: a tracked setter rename, an attributed real name-tag rename, a player-attributed mob death, an environmental death and a server-player death. Initial loaded names, identical names, disabled capture/master switches and a repeated mob death created no extra records. An actual NeoForge LivingDeathEvent cancellation created no death row. Ten query/restart cases per loader checked aliases, pages, action/actor/type/UUID filters, invalid action rejection and restart persistence with SQLite integrity checks. A forced-chunk readiness wait and a fresh synthetic operator source fixed private fixture setup issues; no product bypass was added.
+
+Real LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 activity/entity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator levels zero through four passed 404/405 checks, including cached entity suggestions after operator removal. Permissions were not mocked. All runtime-tested core hashes match the delivered jars. [Evidence and checksums](validation/entities-alpha70.json).
+
+These fixtures use synthetic players and unconnected listeners, not connected-client acceptance or universal modpack certification. Entity-property tracking, entity rollback, entity purge and production mob-farm capacity are not claimed. All owned servers stopped; no supplied server world or database was used. Remote alpha.70 CI awaits the owner's push; alpha.69 CI passed.
 
 ## Pending acceptance
 

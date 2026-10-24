@@ -49,7 +49,11 @@
     "ChunkMapSaveInvoker",
     "PlayerListSaveInvoker",
     "PlayerChatAuditMixin",
-    "PlayerCommandAuditMixin"
+    "PlayerCommandAuditMixin",
+    "LivingEntityHistoryMixin",
+    "PlayerEntityHistoryMixin",
+    "EntityNameHistoryMixin",
+    "NameTagHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1
