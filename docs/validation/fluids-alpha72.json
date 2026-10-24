@@ -1,0 +1,548 @@
+{
+  "version": "0.4.0-alpha.72+1.21.1",
+  "date": "2026-10-24",
+  "schema": 18,
+  "configVersion": 11,
+  "tests": {
+    "common": {
+      "tests": 592,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 59,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "providerChecks": 2116,
+  "capture": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=24",
+      "rows": [
+        [
+          "PLACE",
+          2,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "REMOVE",
+          2,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "REMOVE",
+          8,
+          300,
+          2,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          8,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air",
+          "minecraft:lava"
+        ],
+        [
+          "PLACE",
+          14,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "REMOVE",
+          14,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "PLACE",
+          20,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian fluids a:place t:1h",
+          "expected": "Guardian fluid history: 4 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 4 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144131361900"
+          ]
+        },
+        {
+          "command": "co fluids a:remove t:1h",
+          "expected": "Guardian fluid history: 3 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 3 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144230219900"
+          ]
+        },
+        {
+          "command": "guardian fluids u:GuardianFixture",
+          "expected": "Guardian fluid history: 7 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 7 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144325158800"
+          ]
+        },
+        {
+          "command": "guardian fluids u:!GuardianFixture",
+          "expected": "Guardian fluid history: 0 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 0 records (page 1).",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144432765800"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:lava",
+          "expected": "Guardian fluid history: 2 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 2 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 2s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144524910500"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:water",
+          "expected": "Guardian fluid history: 5 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 5 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144619337200"
+          ]
+        },
+        {
+          "command": "guardian fluids x:14 y:300 z:2",
+          "expected": "Guardian fluid history: 2 records",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 2 records (page 1).",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:04] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144727057300"
+          ]
+        },
+        {
+          "command": "guardian fluids l:2 p:4",
+          "expected": "Guardian fluid history: 1 records (page 4)",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluid history: 1 records (page 4).",
+            "[14:29:04] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:04] [Server thread/INFO]: [Previous]  Page 4    [Newest first]",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144820145100"
+          ]
+        },
+        {
+          "command": "guardian fluids a:death",
+          "expected": "Fluid actions are place and remove",
+          "output": [
+            "[14:29:04] [Server thread/INFO]: Guardian fluids: Fluid actions are place and remove",
+            "[14:29:04] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870144928601200"
+          ]
+        },
+        {
+          "command": "guardian fluids l:20",
+          "expected": "Guardian fluid history: 7 records",
+          "output": [
+            "[14:29:19] [Server thread/INFO]: Guardian fluid history: 7 records (page 1).",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:19] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:19] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:29:19] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792870159424926400"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=25",
+      "rows": [
+        [
+          "PLACE",
+          2,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "REMOVE",
+          2,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          8,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air",
+          "minecraft:lava"
+        ],
+        [
+          "REMOVE",
+          8,
+          300,
+          2,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          14,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "REMOVE",
+          14,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "PLACE",
+          20,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian fluids a:place t:1h",
+          "expected": "Guardian fluid history: 4 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 4 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183398236800"
+          ]
+        },
+        {
+          "command": "co fluids a:remove t:1h",
+          "expected": "Guardian fluid history: 3 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 3 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183498301600"
+          ]
+        },
+        {
+          "command": "guardian fluids u:GuardianFixture",
+          "expected": "Guardian fluid history: 7 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 7 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183593767200"
+          ]
+        },
+        {
+          "command": "guardian fluids u:!GuardianFixture",
+          "expected": "Guardian fluid history: 0 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 0 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183685898700"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:lava",
+          "expected": "Guardian fluid history: 2 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 2 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183794986700"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:water",
+          "expected": "Guardian fluid history: 5 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 5 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183887313500"
+          ]
+        },
+        {
+          "command": "guardian fluids x:14 y:300 z:2",
+          "expected": "Guardian fluid history: 2 records",
+          "output": [
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 2 records (page 1).",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:43] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870183933865600"
+          ]
+        },
+        {
+          "command": "guardian fluids l:2 p:4",
+          "expected": "Guardian fluid history: 1 records (page 4)",
+          "output": [
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 1 records (page 4).",
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 4    [Newest first]",
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870184043969000"
+          ]
+        },
+        {
+          "command": "guardian fluids a:death",
+          "expected": "Fluid actions are place and remove",
+          "output": [
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluids: Fluid actions are place and remove",
+            "[14:29:44] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870184135943500"
+          ]
+        },
+        {
+          "command": "guardian fluids l:20",
+          "expected": "Guardian fluid history: 7 records",
+          "output": [
+            "[14:29:57] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[14:29:57] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=18",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 7 records (page 1).",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:29:57] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792870197667856000"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 617,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 618,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 440,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 441,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "builds": {
+    "clean": "passed, 1m 8s, 36 tasks; configuration cache reused",
+    "build": "passed, 3s, configuration cache stored",
+    "repeat": "passed, 165ms, configuration cache reused",
+    "worldedit": "passed, 2s"
+  },
+  "hooks": {
+    "sourceAndBytecode": "MixinMCP verified Fabric four-argument and NeoForge five-argument BucketItem.emptyContents, including recursion, and the shared BucketPickup.pickupBlock invocation",
+    "changedMixinInspections": "three loader-appropriate mixins, command and capture Kotlin files passed IDEA errors-only inspection",
+    "fixtureTransformsBytecode": false
+  },
+  "previousCI": {
+    "sha": "667c31f67d4944685f1d7a9ffee6acc7e281f243",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40124786108"
+  },
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.72+1.21.1.jar",
+      "bytes": 13109254,
+      "sha256": "37453129fe6835935801f56bae556b50365caf8f733ea6f2d56aff5d9fd42491"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.72+1.21.1.jar",
+      "bytes": 13085701,
+      "sha256": "e1fd36db7f3daf066ff84e5be7b1dffe5fa0fdca84605ed37b867b8f36a81e06"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.72+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "f9e2f1110dce6445bde9237b867094c6540f83f291ac9d141839f63102b78d7f"
+    }
+  ],
+  "limits": [
+    "Synthetic players and unconnected listeners, direct real bucket placement and actual BucketItem.use raycast pickup; no connected-client packet/prediction or claim-mod acceptance",
+    "Only standard player bucket liquid paths; custom buckets need compatibility testing",
+    "Natural spread, dispensers/pumps, cauldrons, powder snow, milk and custom tank/storage APIs are excluded",
+    "Only persistent after-fluid placement and observed nonempty-to-empty pickup are recorded; vaporization and fluid reactions without a persistent placed fluid are excluded",
+    "Fluid history remains read-only and outside block/item rollback and existing purge categories",
+    "No production throughput claim; opt-in capture shares the bounded queue"
+  ],
+  "fixtureNotes": [
+    "The schema-16 upgrade fixture now removes all later migration markers when simulating the earlier database; the new fluid table is dropped only in isolated tests",
+    "Before/after host block IDs preserve waterlogging context without claiming full block state or rollback support"
+  ],
+  "allOwnedServersStopped": true
+}

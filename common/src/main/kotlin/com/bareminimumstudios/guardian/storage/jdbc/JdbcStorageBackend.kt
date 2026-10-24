@@ -106,7 +106,7 @@ abstract class JdbcStorageBackend(
     override fun append(entries: List<LogEntry>): Unit = lock.withLock {
         if (entries.isEmpty()) return@withLock
         val conn = requireConnection()
-        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry || it is com.bareminimumstudios.guardian.domain.PlayerActivity || it is EntityAuditEvent }) {
+        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry || it is com.bareminimumstudios.guardian.domain.PlayerActivity || it is EntityAuditEvent || it is FluidAuditEvent }) {
             "Unsupported audit entry"
         }
 
@@ -119,6 +119,7 @@ abstract class JdbcStorageBackend(
                         is BlockChangeSnapshot -> { bindBlockChange(conn, insertStatement, it, checkNotNull(reservedRowIds).nextLong()); insertStatement.addBatch() }
                         is ContainerAuditEntry -> insertContainer(conn, it.transaction)
                         is EntityAuditEvent -> insertEntity(conn, it)
+                        is FluidAuditEvent -> insertFluid(conn, it)
                         is com.bareminimumstudios.guardian.domain.PlayerActivity -> insertActivity(conn, it)
                     }
                 }
@@ -170,6 +171,45 @@ abstract class JdbcStorageBackend(
                 while(rows.next()) {
                     val actorId = rows.getLong("actor").let { if(rows.wasNull()) null else it }
                     add(EntityAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId),ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),UUID.fromString(rows.getString("target_uuid")),ResourceId.parse(rows.getString("target_type")),EntityAuditKind.valueOf(rows.getString("kind")),rows.getString("before_name"),rows.getString("after_name"),rows.getString("damage_type")?.let(ResourceId::parse),rows.getString("parent_uuid")?.let(UUID::fromString),rows.getString("partner_uuid")?.let(UUID::fromString)))
+                }
+            } }
+        }
+    }
+
+    private fun insertFluid(conn: Connection, row: FluidAuditEvent) {
+        conn.prepareStatement("INSERT INTO ex_fluid(event_uuid,time,actor,dimension,x,y,z,kind,before_fluid,before_source,before_block,after_fluid,after_source,after_block) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
+            val values=listOf(row.eventId.toString(),row.timestampEpochMillis,actorCodec.idFor(conn,row.actor),row.dimension.toString(),row.position.x,row.position.y,row.position.z,row.kind.name,row.before.fluidId.toString(),if(row.before.source) 1 else 0,row.before.blockId.toString(),row.after.fluidId.toString(),if(row.after.source) 1 else 0,row.after.blockId.toString())
+            values.forEachIndexed { index,value -> statement.setObject(index+1,value) };statement.executeUpdate()
+        }
+    }
+
+    override fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery): List<FluidAuditEvent> = lock.withLock {
+        val conn = requireConnection()
+        val params = mutableListOf<Any>()
+        val where = mutableListOf("e.kind IN (${query.kinds.joinToString(",") { "?" }})")
+        query.kinds.forEach { params.add(it.name) }
+        val actors = HistorySearchSql.actors(query.search,"a.uuid","a.name","a.kind = 1")
+        if (actors.clause.isNotEmpty()) { where.add(actors.clause.removePrefix(" AND ")); params.addAll(actors.values) }
+        val resources = HistorySearchSql.resources(query.search) { count -> List(count) { "? IN (e.before_fluid,e.after_fluid)" }.joinToString(" OR ",prefix="(",postfix=")") }
+        if (resources.clause.isNotEmpty()) { where.add(resources.clause.removePrefix(" AND ")); params.addAll(resources.values) }
+        query.dimension?.let { where.add("e.dimension = ?"); params.add(it.toString()) }
+        query.afterEpochMillis?.let { where.add("e.time >= ?"); params.add(it) }
+        val center = query.position
+        val bounds = query.bounds
+        if (center != null || bounds != null) {
+            val radius = (query.radius ?: 0).toLong()
+            val coordinates = if (bounds != null) listOf(bounds.min.x,bounds.max.x,bounds.min.y,bounds.max.y,bounds.min.z,bounds.max.z).map(Int::toLong)
+                else listOf(center!!.x.toLong()-radius,center.x.toLong()+radius,center.y.toLong()-radius,center.y.toLong()+radius,center.z.toLong()-radius,center.z.toLong()+radius)
+            where.add("e.x BETWEEN ? AND ? AND e.y BETWEEN ? AND ? AND e.z BETWEEN ? AND ?"); params.addAll(coordinates)
+        }
+        val direction = if (query.oldestFirst) "ASC" else "DESC"
+        params.add(query.limit); params.add(query.offset)
+        conn.prepareStatement("SELECT e.* FROM ex_fluid e LEFT JOIN ex_actor_map a ON a.id=e.actor WHERE ${where.joinToString(" AND ")} ORDER BY e.time $direction,e.event_uuid $direction LIMIT ? OFFSET ?").use { statement ->
+            params.forEachIndexed { index,value -> statement.setObject(index+1,value) }
+            statement.executeQuery().use { rows -> buildList {
+                while(rows.next()) {
+                    val actorId = rows.getLong("actor").let { if(rows.wasNull()) null else it }
+                    add(FluidAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId) as ActorIdentity.Player,ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),FluidAuditKind.valueOf(rows.getString("kind")),FluidSnapshot(ResourceId.parse(rows.getString("before_fluid")),rows.getBoolean("before_source"),ResourceId.parse(rows.getString("before_block"))),FluidSnapshot(ResourceId.parse(rows.getString("after_fluid")),rows.getBoolean("after_source"),ResourceId.parse(rows.getString("after_block")))))
                 }
             } }
         }

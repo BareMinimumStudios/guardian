@@ -22,5 +22,7 @@ interface QueryableStorageBackend : StorageBackend {
 
     fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery): List<com.bareminimumstudios.guardian.domain.EntityAuditEvent> = throw UnsupportedOperationException("Entity history unavailable")
 
+    fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery): List<com.bareminimumstudios.guardian.domain.FluidAuditEvent> = throw UnsupportedOperationException("Fluid history unavailable")
+
     fun health(): StorageHealth
 }

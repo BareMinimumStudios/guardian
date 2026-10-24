@@ -69,6 +69,10 @@ class BlockHistoryService(
         }
     }
 
+    fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.FluidAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
+        recoveryWork({ storage.lookupFluids(query) }, onSuccess, onFailure)
+    }
+
     fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.EntityAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ storage.lookupEntities(query) }, onSuccess, onFailure)
     }

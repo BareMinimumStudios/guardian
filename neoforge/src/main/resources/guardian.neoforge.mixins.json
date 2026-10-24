@@ -56,7 +56,9 @@
     "NameTagHistoryMixin",
     "TameEntityHistoryMixin",
     "HorseTameHistoryMixin",
-    "BreedingHistoryMixin"
+    "BreedingHistoryMixin",
+    "NeoForgeBucketFluidPlacementMixin",
+    "BucketFluidPickupMixin"
   ],
   "injectors": {
     "defaultRequire": 1

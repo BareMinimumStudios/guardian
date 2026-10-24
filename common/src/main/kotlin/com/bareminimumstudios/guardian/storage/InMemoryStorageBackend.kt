@@ -19,6 +19,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     private val containers = mutableListOf<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>()
     private val activity = mutableListOf<com.bareminimumstudios.guardian.domain.PlayerActivity>()
     private val entities = mutableListOf<com.bareminimumstudios.guardian.domain.EntityAuditEvent>()
+    private val fluids = mutableListOf<com.bareminimumstudios.guardian.domain.FluidAuditEvent>()
     private var nextRowId = 1L
     @Volatile private var open = false
 
@@ -31,6 +32,9 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     override fun append(entries: List<LogEntry>) {
         check(open) { "Storage backend is not open" }
         lock.write {
+            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.FluidAuditEvent>().forEach { row ->
+                if (fluids.none { it.eventId == row.eventId }) fluids.add(row)
+            }
             entries.filterIsInstance<com.bareminimumstudios.guardian.domain.EntityAuditEvent>().forEach { row ->
                 if (entities.none { it.eventId == row.eventId }) entities.add(row)
             }
@@ -46,6 +50,10 @@ class InMemoryStorageBackend : QueryableStorageBackend {
                 }
             }
         }
+    }
+
+    override fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery) = lock.read {
+        fluids.filter(query::matches).sortedWith(compareBy<com.bareminimumstudios.guardian.domain.FluidAuditEvent> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if(query.oldestFirst) it else it.reversed() }).drop(query.offset).take(query.limit)
     }
 
     override fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery) = lock.read {

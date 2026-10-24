@@ -33,6 +33,14 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.72+1.21.1] - 2026-10-24
+
+### Added
+
+- Opt-in read-only player bucket fluid placement/removal history on Fabric and NeoForge, including supported waterlogging and actual adjacent fallback targets. Unchanged, failed, null-player and vaporized-water operations do not create persistent-change records in the tested paths.
+- `/guardian fluids` and `/co fluids`, separate level-two `guardian.fluids` access, action/player/time/location/fluid-resource filters, tab completion, hover details and pagination.
+- Schema 18 fluid records and configuration version 11 with `fluids.bucketChanges` disabled by default. Existing block/entity/item/activity history is preserved; fluid records remain outside rollback and purge.
+
 ## [0.4.0-alpha.71+1.21.1] - 2026-10-24
 
 ### Added

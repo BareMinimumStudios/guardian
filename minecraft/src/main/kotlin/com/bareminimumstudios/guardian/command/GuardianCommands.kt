@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
                 1
             }
 
@@ -85,6 +85,23 @@ object GuardianCommands {
                     }
                 }
                 .executes { context -> executeEntities(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
+        root.then(Commands.literal("fluids").requires { fluidAuthorized(it,permissions) }
+            .executes { context -> executeFluids(context.source,"",runtimeProvider(),configProvider()) }
+            .then(Commands.argument("filters",StringArgumentType.greedyString())
+                .suggests { context,builder ->
+                    if (!fluidAuthorized(context.source,permissions)) com.mojang.brigadier.suggestion.Suggestions.empty()
+                    else {
+                        val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
+                        val token=builder.input.substring(start)
+                        val choices=when(token.substringBefore(':').lowercase()) {
+                            "a","action" -> listOf("${token.substringBefore(':')}:place","${token.substringBefore(':')}:remove").filter { it.startsWith(token,true) }
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.FLUID.keySet().map { it.toString() }) +
+                                if (':' !in token) listOf("a:").filter { it.startsWith(token,true) } else emptyList()
+                        }
+                        net.minecraft.commands.SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
+                    }
+                }
+                .executes { context -> executeFluids(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
         listOf("chat", "sessions", "commands").forEach { name ->
             val permission = "guardian.$name"
             root.then(Commands.literal(name).requires { activityAuthorized(it, permissions, name) }
@@ -216,6 +233,37 @@ object GuardianCommands {
     private fun activityAuthorized(source: CommandSourceStack, permissions: PermissionService, name: String): Boolean {
         if(name == "commands" && source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true)return false
         return authorized(activitySource(source,name),permissions,"guardian.$name",3)
+    }
+
+    private fun fluidAuthorized(source: CommandSourceStack, permissions: PermissionService): Boolean {
+        if (source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true) return false
+        return authorized(source.player?.createCommandSourceStack() ?: source,permissions,"guardian.fluids",2)
+    }
+
+    private fun executeFluids(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
+        val history=runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable."));return 0 }
+        if (!fluidAuthorized(source,runtime.permissions)) return 0
+        val parsed=FluidCommandFilters.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian fluids: ${it.message}"));return 0 }
+        val filter=parsed.common
+        val scope=resolveScope(source,filter) ?: return 0
+        val limit=filter.limit ?: config.lookup.defaultResults.get()
+        if (limit>minOf(500,config.lookup.maxResults.get()) || (filter.radius ?: 0)>config.lookup.maxRadius.get()) {
+            source.sendFailure(Component.literal("Guardian fluid limit/radius exceeds the configured maximum."));return 0
+        }
+        val position=filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) }
+        val query=com.bareminimumstudios.guardian.storage.query.FluidLookupQuery(kinds=parsed.kinds,
+            dimension=if(position!=null || scope.bounds!=null) scope.dimension else null,position=position,radius=filter.radius,bounds=scope.bounds,
+            afterEpochMillis=filter.lookbackMillis?.let { (System.currentTimeMillis()-it).coerceAtLeast(0) },search=resolvedSearch(source,filter),
+            limit=limit,offset=((filter.page ?: 1)-1)*limit,oldestFirst=filter.oldestFirst)
+        val navigationRaw=if(filter.radius!=null && filter.explicitPosition==null) "$raw x:${position!!.x} y:${position.y} z:${position.z}" else raw
+        history.lookupFluids(query,{ rows ->
+            if (!fluidAuthorized(source,runtime.permissions)) return@lookupFluids
+            source.sendSystemMessage(Component.literal("Guardian fluid history: ${rows.size} records (page ${filter.page ?: 1})."))
+            rows.forEach { source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.FluidHistoryFormatter.line(it)) }
+            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
+                { page -> HistoryPageCommands.command("fluids",navigationRaw,page,filter.oldestFirst) },HistoryPageCommands.command("fluids",navigationRaw,1,!filter.oldestFirst)))
+        },{ if(fluidAuthorized(source,runtime.permissions)) source.sendFailure(Component.literal("Guardian fluid lookup failed; see server log.")) })
+        return 1
     }
 
     private fun entityAuthorized(source: CommandSourceStack, permissions: PermissionService): Boolean {

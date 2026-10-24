@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 17
+    const val CURRENT_VERSION = 18
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -129,6 +129,12 @@ internal object GuardianSchema {
         SchemaMigration(17, "Entity tame and offspring parent history", listOf(
             "ALTER TABLE ex_entity ADD COLUMN parent_uuid VARCHAR",
             "ALTER TABLE ex_entity ADD COLUMN partner_uuid VARCHAR"
+        )),
+        SchemaMigration(18, "Read-only player bucket fluid history", listOf(
+            "CREATE TABLE ex_fluid (event_uuid VARCHAR PRIMARY KEY,time BIGINT NOT NULL,actor BIGINT NOT NULL,dimension VARCHAR NOT NULL,x INTEGER NOT NULL,y INTEGER NOT NULL,z INTEGER NOT NULL,kind VARCHAR NOT NULL,before_fluid VARCHAR NOT NULL,before_source SMALLINT NOT NULL,before_block VARCHAR NOT NULL,after_fluid VARCHAR NOT NULL,after_source SMALLINT NOT NULL,after_block VARCHAR NOT NULL)",
+            "CREATE INDEX ex_fluid_time_idx ON ex_fluid(time,event_uuid)",
+            "CREATE INDEX ex_fluid_actor_idx ON ex_fluid(actor,time)",
+            "CREATE INDEX ex_fluid_location_idx ON ex_fluid(dimension,x,y,z,time)"
         ))
     )
 }

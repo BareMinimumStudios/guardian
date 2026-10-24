@@ -53,7 +53,9 @@
     "NameTagHistoryMixin",
     "TameEntityHistoryMixin",
     "HorseTameHistoryMixin",
-    "BreedingHistoryMixin"
+    "BreedingHistoryMixin",
+    "BucketFluidPlacementMixin",
+    "BucketFluidPickupMixin"
   ],
   "injectors": {
     "defaultRequire": 1

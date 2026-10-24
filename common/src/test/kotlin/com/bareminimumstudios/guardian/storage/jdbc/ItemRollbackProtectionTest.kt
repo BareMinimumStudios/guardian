@@ -142,7 +142,7 @@ class ItemRollbackProtectionTest {
             it.executeUpdate("DROP TABLE ex_container_item");it.executeUpdate("DROP TABLE ex_player_activity")
             it.executeUpdate("DROP TABLE ex_item_rollback_images")
             it.executeUpdate("DROP TABLE ex_item_rollback_protection")
-            it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 9")
+            it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DROP TABLE IF EXISTS ex_fluid");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 9")
             it.executeUpdate("UPDATE ex_meta SET meta_value = '8' WHERE meta_key = 'schema_version'")
         } }
         factory(path).use { db ->

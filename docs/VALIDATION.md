@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.71 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.72 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.71 passed 642 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current taming/breeding entity/activity permission acceptance passed 1,872 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.72 passed 651 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current fluid/entity/activity permission acceptance passed 2,116 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -115,6 +115,18 @@ MixinMCP checked tame/horse methods and both loader child-insertion bytecode. Th
 The unchanged real-provider acceptance fixture was rerun against alpha.71: LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 success/failure/revocation callbacks per loader. Provider-free actual operator levels passed 404/405 checks, including cached entity suggestions after removal. Both loaders also reran prior death/name capture and twenty query/restart cases, preserving exactly the five expected rows each, including name-tag attribution and actual NeoForge death cancellation. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/taming-breeding-alpha71.json).
 
 Fixtures use synthetic players with unconnected real listeners and direct standard game methods. The player temporarily joined the private level's player list so vanilla breeding-credit lookup could resolve it, then was removed. Natural breeding AI, connected-client feeding/riding/presentation, egg/pregnancy paths and arbitrary pack overrides remain outside this evidence. All owned servers stopped and supplied worlds/databases were untouched. Remote alpha.71 CI awaits the owner's push; alpha.70 CI passed.
+
+## Player bucket fluid history, 2026-10-24
+
+After alpha.71 was pushed, the owner selected fluid placement/removal history. Alpha.71 then passed GitHub CI. Alpha.72 adds `fluids.bucketChanges`, off by default, with independent level-two `guardian.fluids`, filtered `/guardian fluids` and `/co fluids`, fluid resource completion, pagination and hover context. Separate immutable records in schema 18 preserve fluid/source/host identities; config version 11 preserves existing settings. Fluid capture does not expand rollback or purge.
+
+651 automated tests passed with no failures, errors or skipped tests. Nine new tests cover three-backend event identity/duplicate handling/paging/separation, actor/resource/kind/time/spatial filters before pagination, waterlogged/mod-fluid identities, no-op/invalid payload rejection, action parsing, schema-17 upgrade/restart, existing purge separation and clear placement/collection wording. Old-schema simulations drop the new table and later markers before replaying migrations; a retained schema-18 marker initially exposed a fixture gap and was corrected. Clean build, repeated configuration-cache reuse and WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+
+MixinMCP verified the exact shared pickup invocation and loader-specific placement overloads, including adjacent recursion. All three appropriate mixins and the changed command/capture files passed IDEA inspections. Actual isolated Fabric/NeoForge servers persisted exactly seven bucket records each: water placement/collection, lava placement/collection, slab waterlogging/collection and one adjacent fallback at the actual destination. Successful unchanged placement, repeated empty pickup, blocked placement, disabled defaults/master switch, null-player placement and Nether water vaporization created no extra records. Twenty command/restart cases checked both aliases, action/actor/resource/coordinate filters, exclusions, paging, invalid-action rejection and restart persistence. SQLite integrity checks passed.
+
+Real LuckPerms passed 617/618 checks on Fabric/NeoForge, including independent fluid grants, explicit operator denial, cached fluid time/user/action/resource suggestions after revocation and forty activity/entity/fluid success/error callbacks per loader. Actual provider-free operator levels passed 440/441 checks, including cached fluid suggestions after operator removal. These 2,116 permission decisions were not mocked. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/fluids-alpha72.json).
+
+Fixtures use synthetic players with unconnected real listeners, direct placement methods and actual bucket-use raycasts for pickup. Connected-client packet flow, protection mods, prediction and custom fluid containers remain unverified. No natural fluid spread or automation is claimed. All owned servers stopped; supplied worlds/databases were untouched. Remote alpha.72 CI awaits the owner's push; alpha.71 CI passed.
 
 ## Pending acceptance
 

@@ -70,6 +70,7 @@ class BufferedLogPipeline(
         when(entry) {
             is PlayerActivity -> Unit
             is EntityAuditEvent -> Unit
+            is FluidAuditEvent -> Unit
             is ContainerAuditEntry -> entry.transaction.changes.forEach { touch(it.address.owner) }
             is BlockChangeSnapshot -> touch(ItemSlotOwner.BlockContainer(entry.dimension,entry.position))
         }

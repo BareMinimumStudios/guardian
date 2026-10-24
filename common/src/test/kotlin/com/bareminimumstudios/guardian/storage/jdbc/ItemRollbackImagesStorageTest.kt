@@ -139,7 +139,7 @@ class ItemRollbackImagesStorageTest {
         lateinit var images: ItemRollbackImages
         factory(path).use {db->db.open();val record=prepare(db);images=ItemRollbackImages(record,original());db.protectItemRollback(record);move(db,images)}
         DriverManager.getConnection(url+path).use {c->c.createStatement().use {
-            it.executeUpdate("DROP TABLE ex_container_item");it.executeUpdate("DROP TABLE ex_player_activity");it.executeUpdate("DROP TABLE ex_item_rollback_images");it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 10");it.executeUpdate("UPDATE ex_meta SET meta_value = '9' WHERE meta_key = 'schema_version'")
+            it.executeUpdate("DROP TABLE ex_container_item");it.executeUpdate("DROP TABLE ex_player_activity");it.executeUpdate("DROP TABLE ex_item_rollback_images");it.executeUpdate("DROP TABLE ex_entity");it.executeUpdate("DROP TABLE IF EXISTS ex_fluid");it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 10");it.executeUpdate("UPDATE ex_meta SET meta_value = '9' WHERE meta_key = 'schema_version'")
         }}
         factory(path).use {db->db.open();assertEquals(GuardianSchema.CURRENT_VERSION,db.health().schemaVersion);assertNull(db.itemRollbackImages(images.record.operationId));assertFalse(db.acknowledgeItemRollback(assertNotNull(db.itemRollback(images.record.operationId)),images,images.expected));held(db,images.record.operationId)}
     }

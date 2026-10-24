@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.71+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.72+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 17**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 18**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -205,6 +205,24 @@ Cancelled NeoForge baby-spawn events and refused child insertion produce no birt
 
 This is read-only history. It does not record every entity property, general spawn/despawn or entity inventory, and it cannot restore entities. Mods that replace these methods or bypass the setter need separate compatibility testing. Existing purge commands cover block, item and player-activity history; **entity history is retained and is not yet included in purge**. Capture changes apply to future events only.
 
+## Fluid bucket history
+
+Fluid capture is **off by default**. Enable `fluids.bucketChanges` in the server configuration, then restart. The separate `guardian.fluids` permission uses operator level **2** fallback.
+
+```text
+/guardian fluids u:YourName t:1h r:25
+/guardian fluids a:place i:minecraft:water t:1d
+/guardian fluids a:remove i:minecraft:lava t:1d
+```
+
+`/co fluids` also works. Use `a:place`, `a:remove` or `a:place,remove`, with the normal user/time/radius/coordinate/resource/limit/page/order filters and clickable navigation. `i:` and `e:` match recorded fluid registry IDs at either end of the change, not bucket items or host blocks. A spatial search uses your current dimension; without a spatial filter it covers recorded dimensions. Hover a result for the dimension, exact timestamp, source flags and before/after host block IDs.
+
+This records persistent changes through the standard player bucket placement and pickup paths, including supported waterlogging. It uses the actual changed target when a bucket falls back to an adjacent block. Accepted no-ops and water vaporizing in the Nether produce no placement record. Registered mod fluids can appear when they use these hooks; custom bucket implementations need compatibility testing.
+
+Natural spread, pumps, dispensers, cauldrons, powder snow, milk, fluid reactions without a persistent placed fluid and custom tank/storage APIs are not covered. Fish-bucket water can pass through these hooks; the released creature is not a fluid event. Claim cancellation before the hooked operation creates no observed change, but actual pack protection and client prediction remain part of connected-client acceptance.
+
+Fluid history is **read-only**. It has separate records and does not expand block rollback/restore or item rollback. Existing purge categories do not delete fluid history. Disabling capture leaves old fluid records available to authorized staff; enabling it does not reconstruct earlier changes.
+
 ## Roll back blocks
 
 **Applying block rollback changes the world directly.** Back up the world, run a preview and use a small, explicit region first. Use block restore/redo below to reapply previously rolled-back history.
@@ -292,6 +310,7 @@ Cancel discards a pending confirmation or requests cancellation of running work.
 | `guardian.sessions` | Login/logout history | 3 |
 | `guardian.commands` | Parsed player command history | 3 |
 | `guardian.entities` | Entity death, name, tame and birth history | 2 |
+| `guardian.fluids` | Player bucket fluid history | 2 |
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
 | `guardian.restore` | Block restore/redo and its preview | 3 |
@@ -320,6 +339,7 @@ Edit the generated server configuration. Restart after changing any setting mark
 | `logging.playerBlockChanges` | `true` | Player block capture |
 | `logging.containerTransactions` | `true` | Supported item transaction capture |
 | `logging.automatedContainerTransfers` | `false` | Supported block-hopper capture |
+| `fluids.bucketChanges` | `false` | Opt in to persistent player bucket changes |
 | `entities.deaths` | `false` | Opt in to living-entity and player death capture |
 | `entities.nameChanges` | `false` | Opt in to tracked custom-name changes |
 | `entities.taming` | `false` | Opt in to successful standard animal/horse taming |
@@ -342,7 +362,7 @@ Item history has a hard maximum of 500 results per page even if the configured l
 
 Guardian captures player block placement/breaking, accepted supported block interactions, ordinary player inventory moves, supported block-backed menu changes, cursor returns, standalone drops, offhand swaps, accepted creative slot changes and exact vanilla 2×2/3×3 crafting paths. Optional hopper and Fabric WorldEdit capture are available as described above.
 
-Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. Fluid history, arbitrary entity-property changes, entity rollback, private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
+Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. Fluid spread/automation, arbitrary entity-property changes, entity rollback, private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
 
 ## Troubleshooting
 
