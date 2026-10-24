@@ -33,6 +33,21 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.77+1.21.1] - 2026-10-24
+
+### Added
+
+- Independent opt-in standard crop/tree growth, supported player bone-meal changes and natural leaf decay, with `c:growth`/`c:decay` filters and clear age/decay summaries.
+- Net-change aggregation for tree and bone-meal operations so failed/no-op attempts do not create temporary growth history.
+
+### Fixed
+
+- Defer NeoForge environmental item history until final placement acceptance. Denied bone-meal and ignition changes restored by the loader no longer leave false records.
+
+### Changed
+
+- Schema 21 marks growth/decay cause-code compatibility without rewriting existing payloads. Config version 15 adds disabled `environment.growth`/`environment.leafDecay`. Public environmental recovery remains read-only.
+
 ## [0.4.0-alpha.76+1.21.1] - 2026-10-24
 
 ### Added

@@ -70,7 +70,7 @@ object BlockCommandFilterParser {
                     causes=value.split(',').map { name ->
                         val normalized=if(name.equals("worldedit",true)) "WORLD_EDIT" else name.uppercase().replace('-','_')
                         com.bareminimumstudios.guardian.domain.ChangeCause.entries.firstOrNull { it.name==normalized }
-                            ?: error("Unknown cause '$name'; use fire, explosion, player or worldedit.")
+                            ?: error("Unknown cause '$name'; use fire, explosion, growth, decay, player or worldedit.")
                     }.toSet()
                 }
                 "a", "action" -> {

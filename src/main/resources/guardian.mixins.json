@@ -67,7 +67,11 @@
     "ExplosionHistoryMixin",
     "FireTickHistoryMixin",
     "IgnitionHistoryMixin",
-    "EnvironmentMutationHistoryMixin"
+    "EnvironmentMutationHistoryMixin",
+    "CropGrowthHistoryMixin",
+    "LeafDecayHistoryMixin",
+    "SaplingGrowthHistoryMixin",
+    "BoneMealGrowthHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

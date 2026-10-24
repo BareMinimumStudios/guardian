@@ -70,7 +70,12 @@
     "ExplosionHistoryMixin",
     "FireTickHistoryMixin",
     "IgnitionHistoryMixin",
-    "EnvironmentMutationHistoryMixin"
+    "EnvironmentMutationHistoryMixin",
+    "CropGrowthHistoryMixin",
+    "LeafDecayHistoryMixin",
+    "SaplingGrowthHistoryMixin",
+    "BoneMealGrowthHistoryMixin",
+    "NeoForgeEnvironmentalItemHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

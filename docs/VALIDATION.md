@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.76 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.77 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.76 passed 683 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.77 passed 689 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -171,6 +171,16 @@ Alpha.75 passed GitHub CI. The owner selected fire/explosion history. Alpha.76 a
 Both isolated dedicated servers exercised real ignition items, a deterministic actual fire tick, owned TNT, unknown-source and creeper explosions, disabled mob griefing, blocked/repeated ignition and extinguishing. Invalid fire with no net change produced no row. Actual Nether portal creation was verified and excluded from burning. Eight lookup/refusal/restart cases per loader verified filtered history, default environmental rollback exclusion and explicit fire/explosion rollback/restore refusal. SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime-tested jar; standard jars bundle SQLite only. [Evidence/checksums](validation/fire-explosions-alpha76.json).
 
 All owned servers stopped; supplied worlds/databases were untouched. Synthetic fixtures do not certify rendered clients or arbitrary protection mods, so R3 remains pending. Alpha.76 remote CI awaits the owner's push.
+
+## Growth/decay and accepted environmental item use, 2026-10-24
+
+Alpha.76 passed GitHub CI. The owner selected natural block growth/decay. Alpha.77 adds disabled growth/leaf-decay settings, GROWTH/DECAY causes, standard crop/sapling/leaf hooks and supported player bone-meal capture. Schema 21 is a cause-code compatibility marker without payload changes; config version 15 preserves settings. Natural events remain unknown, while direct bone meal retains the player through nested tree calls. Whole-operation buffering records final net changes, excluding failed tree attempts and no-ops. Public recovery excludes these new causes; existing block-history purge applies.
+
+689 tests passed, including six new cross-backend/storage/presentation tests for cause/actor separation before paging, purge, schema-20 upgrade/restart, distinct storage codes/parser/suggestions, crop age summaries and leaf decay wording. Clean/build/repeated-cache/WorldEdit builds passed through IDEA. MixinMCP source/bytecode/inspection checks cover the new paths and shared capture.
+
+Both isolated dedicated servers passed actual crop ticks, accepted player bone meal, sapling stage/tree advancement, failed tree net no-op, actual leaf decay, persistent/disabled leaves, master/per-category disable, eight lookup/refusal/restart cases and SQLite integrity. NeoForge tests use the real CommonHooks item-use path and actual EntityPlaceEvent cancellation: denied single-block crop growth, denied multi-block tree growth and denied ignition all restore the world without audit rows; accepted staged ignition still records the player. This closes an alpha.76 fire-capture gap where useOn could be observed before final placement acceptance. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime jar; SQLite remains the only nested dependency. [Evidence/checksums](validation/growth-decay-alpha77.json).
+
+All owned servers stopped and supplied worlds/databases were untouched. These fixtures do not certify a rendered client or every claim mod, so R3 remains pending. Alpha.77 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

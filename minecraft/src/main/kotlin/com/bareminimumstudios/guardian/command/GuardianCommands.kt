@@ -566,6 +566,9 @@ object GuardianCommands {
         if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.FIRE || it==com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION }) {
             source.sendFailure(Component.literal("Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
+        if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH || it==com.bareminimumstudios.guardian.domain.ChangeCause.DECAY }) {
+            source.sendFailure(Component.literal("Guardian growth/decay history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
+        }
         val query = BlockLookupQuery(
             dimension = scope.dimension,
             position = center,
@@ -574,7 +577,7 @@ object GuardianCommands {
             actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
             actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
-            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION),
+            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,
             limit = (config.rollback.maxRecords.get() + 1).coerceAtMost(10_000)

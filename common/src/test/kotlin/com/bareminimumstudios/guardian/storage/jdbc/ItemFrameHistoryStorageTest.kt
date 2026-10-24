@@ -53,7 +53,7 @@ class ItemFrameHistoryStorageTest {
                 listOf("ex_fluid_time_idx","ex_fluid_actor_idx","ex_fluid_location_idx").forEach { s.executeUpdate("DROP INDEX $it") };s.executeUpdate("ALTER TABLE ex_fluid DROP COLUMN before_amount");s.executeUpdate("ALTER TABLE ex_fluid DROP COLUMN after_amount");GuardianSchema.migrations.single { it.version==18 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate);s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=19");s.executeUpdate("UPDATE ex_meta SET meta_value='18' WHERE meta_key='schema_version'")
             } }
             val frame=event().copy(timestampEpochMillis=2)
-            db().use{it.open();assertEquals(20,it.health().schemaVersion);assertEquals(listOf(prior),it.lookupEntities(EntityLookupQuery()));it.append(listOf(frame))}
+            db().use{it.open();assertEquals(21,it.health().schemaVersion);assertEquals(listOf(prior),it.lookupEntities(EntityLookupQuery()));it.append(listOf(frame))}
             db().use{it.open();assertEquals(listOf(frame,prior),it.lookupEntities(EntityLookupQuery()))}
         }
     }

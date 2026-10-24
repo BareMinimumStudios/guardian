@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 20
+    const val CURRENT_VERSION = 21
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -149,6 +149,7 @@ internal object GuardianSchema {
             "CREATE INDEX ex_fluid_time_idx ON ex_fluid(time,event_uuid)",
             "CREATE INDEX ex_fluid_actor_idx ON ex_fluid(actor,time)",
             "CREATE INDEX ex_fluid_location_idx ON ex_fluid(dimension,x,y,z,time)"
-        ))
+        )),
+        SchemaMigration(21, "Natural growth and leaf decay cause codes", emptyList())
     )
 }

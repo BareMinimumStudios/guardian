@@ -32,7 +32,13 @@ object BlockHistoryFormatter {
             s.after.blockId.toString() in fireIds && s.action==ActionType.BLOCK_PLACE -> "ignited ${s.after.blockId}"
             s.before.blockId==s.after.blockId && s.before.properties["lit"]!=s.after.properties["lit"] -> "${if(s.after.properties["lit"]=="true") "lit" else "extinguished"} ${s.after.blockId}"
             else -> "burned ${s.before.blockId} -> ${s.after.blockId}"
-        } else when (s.action) {
+        } else if(s.cause==ChangeCause.GROWTH) {
+            val property=listOf("age","stage").firstOrNull { s.before.properties[it]!=s.after.properties[it] }
+            if(s.before.blockId==s.after.blockId && property!=null) "grew ${s.after.blockId} ($property ${s.before.properties[property]} -> ${s.after.properties[property]})"
+            else "grew ${s.before.blockId} -> ${s.after.blockId}"
+        }
+        else if(s.cause==ChangeCause.DECAY) "decayed ${s.before.blockId}"
+        else when (s.action) {
             ActionType.BLOCK_PLACE -> "placed ${s.after.blockId}"
             ActionType.BLOCK_BREAK -> "broke ${s.before.blockId}"
             else -> when {

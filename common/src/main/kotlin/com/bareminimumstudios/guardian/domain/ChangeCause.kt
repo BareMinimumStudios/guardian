@@ -7,6 +7,8 @@ enum class ChangeCause(val storageCode: Int) {
     FIRE(11),
     FLUID(12),
     PISTON(13),
+    GROWTH(14),
+    DECAY(15),
     ENTITY(20),
     WORLD_GENERATION(30),
     SYSTEM(40),

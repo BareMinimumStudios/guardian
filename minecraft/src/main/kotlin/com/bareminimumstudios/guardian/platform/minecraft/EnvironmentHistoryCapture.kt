@@ -25,11 +25,13 @@ object EnvironmentHistoryCapture {
     class Pending internal constructor(val level:ServerLevel,internal val entries:LinkedHashMap<BlockPos,Entry>,internal val root:Boolean)
     private val scopes=ThreadLocal.withInitial{java.util.ArrayDeque<Scope>()}
     private val mutations=ThreadLocal.withInitial{java.util.ArrayDeque<Pending>()}
+    class ObservationBatch internal constructor(val level:ServerLevel,internal val entries:LinkedHashMap<BlockPos,Entry> = LinkedHashMap())
+    private val observationBatches=ThreadLocal.withInitial{java.util.ArrayDeque<ObservationBatch>()}
     private var lastWarning=0L
-    fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) { pipeline=writer;config=settings;scopes.remove();mutations.remove() }
+    fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) { pipeline=writer;config=settings;scopes.remove();mutations.remove();observationBatches.remove() }
     private fun enabled(cause:ChangeCause):Boolean {
         val c=config() ?: return false
-        return c.general.enabled.get() && c.logging.enabled.get() && when(cause) { ChangeCause.FIRE->c.environment.fire.get();ChangeCause.EXPLOSION->c.environment.explosions.get();else->false }
+        return c.general.enabled.get() && c.logging.enabled.get() && when(cause) { ChangeCause.FIRE->c.environment.fire.get();ChangeCause.EXPLOSION->c.environment.explosions.get();ChangeCause.GROWTH->c.environment.growth.get();ChangeCause.DECAY->c.environment.leafDecay.get();else->false }
     }
     private fun actor(entity:Entity?):ActorIdentity=when(entity) {
         is Player->MinecraftActorAdapter.player(entity)
@@ -39,6 +41,27 @@ object EnvironmentHistoryCapture {
     @JvmStatic fun enterFire(level:Level,player:Player?):Scope?=enter(level,ChangeCause.FIRE,actor(player))
     @JvmStatic fun enterIgnition(context:UseOnContext):Scope?=enterFire(context.level,context.player)
     @JvmStatic fun enterExplosion(level:Level,explosion:Explosion):Scope?=enter(level,ChangeCause.EXPLOSION,actor(explosion.indirectSourceEntity ?: explosion.directSourceEntity))
+    @JvmStatic fun enterGrowth(level:Level):Scope? {
+        val parent=scopes.get().peek()?.takeIf{it.level===level && it.cause==ChangeCause.GROWTH}
+        return enter(level,ChangeCause.GROWTH,parent?.actor ?: ActorIdentity.Unknown)
+    }
+    @JvmStatic fun enterDecay(level:Level):Scope?=enter(level,ChangeCause.DECAY,ActorIdentity.Unknown)
+    @JvmStatic fun enterBoneMeal(context:UseOnContext):Scope?=enter(context.level,ChangeCause.GROWTH,actor(context.player))
+    @JvmStatic fun beginObservation(level:Level):ObservationBatch? {
+        if(level !is ServerLevel || !level.server.isSameThread || !active())return null
+        return ObservationBatch(level).also{observationBatches.get().push(it)}
+    }
+    @JvmStatic fun finishObservation(batch:ObservationBatch?,accepted:Boolean) {
+        if(batch==null)return
+        check(observationBatches.get().poll()===batch)
+        val parent=observationBatches.get().peek()?.takeIf{it.level===batch.level}
+        if(observationBatches.get().isEmpty())observationBatches.remove()
+        if(accepted) { if(parent!=null)merge(parent.entries,batch.entries) else publish(batch.level,batch.entries) }
+    }
+    private fun active()=enabled(ChangeCause.FIRE)||enabled(ChangeCause.EXPLOSION)||enabled(ChangeCause.GROWTH)||enabled(ChangeCause.DECAY)
+    private fun merge(into:LinkedHashMap<BlockPos,Entry>,from:LinkedHashMap<BlockPos,Entry>) {
+        for((p,e) in from)if(p !in into) { if(into.size<4096)into[p]=e else warn(null) }
+    }
     private fun enter(level:Level,cause:ChangeCause,actor:ActorIdentity):Scope? {
         if(level !is ServerLevel || !level.server.isSameThread || !enabled(cause))return null
         return Scope(level,cause,actor).also{scopes.get().push(it)}
@@ -47,7 +70,7 @@ object EnvironmentHistoryCapture {
     private fun fire(id:ResourceId)=id.toString() in setOf("minecraft:fire","minecraft:soul_fire")
     fun ownsFire(before:BlockStateSnapshot,after:BlockStateSnapshot)=enabled(ChangeCause.FIRE) && (fire(before.blockId)||fire(after.blockId))
     @JvmStatic fun before(level:Level,p:BlockPos,requested:BlockState):Pending? {
-        if(level !is ServerLevel || !level.server.isSameThread || !enabled(ChangeCause.FIRE) && !enabled(ChangeCause.EXPLOSION))return null
+        if(level !is ServerLevel || !level.server.isSameThread || !active())return null
         if(level.isOutsideBuildHeight(p) || !level.hasChunk(p.x shr 4,p.z shr 4))return null
         val scope=scopes.get().peek()?.takeIf{it.level===level && enabled(it.cause)}
         if(scope==null && (!enabled(ChangeCause.FIRE) || requested.block !is BaseFireBlock && level.getBlockState(p).block !is BaseFireBlock))return null
@@ -65,9 +88,13 @@ object EnvironmentHistoryCapture {
         if(pending==null)return
         check(mutations.get().poll()===pending);if(mutations.get().isEmpty())mutations.remove()
         if(!pending.root || !accepted)return
-        for((p,entry) in pending.entries)runCatching {
+        val batch=observationBatches.get().peek()?.takeIf{it.level===pending.level}
+        if(batch!=null)merge(batch.entries,pending.entries) else publish(pending.level,pending.entries)
+    }
+    private fun publish(level:ServerLevel,entries:LinkedHashMap<BlockPos,Entry>) {
+        for((p,entry) in entries)runCatching {
             if(!enabled(entry.cause))return@runCatching
-            val after=MinecraftBlockSnapshotter.snapshot(pending.level,p);val before=entry.before
+            val after=MinecraftBlockSnapshotter.snapshot(level,p);val before=entry.before
             if(before==after)return@runCatching
             if(entry.cause==ChangeCause.FIRE) {
                 if(fire(before.blockId) && before.blockId==after.blockId)return@runCatching // Fire age/shape is not another incident.
@@ -78,10 +105,10 @@ object EnvironmentHistoryCapture {
             val airBefore=before.blockId.toString() in setOf("minecraft:air","minecraft:cave_air","minecraft:void_air")
             val airAfter=after.blockId.toString() in setOf("minecraft:air","minecraft:cave_air","minecraft:void_air")
             val action=if(airBefore)ActionType.BLOCK_PLACE else if(airAfter)ActionType.BLOCK_BREAK else ActionType.BLOCK_CHANGE
-            val row=BlockChangeSnapshot(System.currentTimeMillis(),entry.actor,ResourceId.parse(pending.level.dimension().location().toString()),BlockPosition(p.x,p.y,p.z),before,after,entry.cause,action)
+            val row=BlockChangeSnapshot(System.currentTimeMillis(),entry.actor,ResourceId.parse(level.dimension().location().toString()),BlockPosition(p.x,p.y,p.z),before,after,entry.cause,action)
             val writer=pipeline() ?: return@runCatching
             if(writer.submit(row)!=SubmissionResult.ACCEPTED)warn(null)
         }.onFailure(::warn)
     }
-    private fun warn(t:Throwable?) { val now=System.currentTimeMillis();if(now-lastWarning>=10000){lastWarning=now;LoggerFactory.getLogger("Guardian/Environment").warn("Fire/explosion audit capture failed, exceeded its bounded observation or queue limit; check Guardian status",t)} }
+    private fun warn(t:Throwable?) { val now=System.currentTimeMillis();if(now-lastWarning>=10000){lastWarning=now;LoggerFactory.getLogger("Guardian/Environment").warn("Environmental audit capture failed, exceeded its bounded observation or queue limit; check Guardian status",t)} }
 }

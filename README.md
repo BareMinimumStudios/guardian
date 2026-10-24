@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.76+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.77+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 20**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 21**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -133,6 +133,23 @@ User-filtered item history without a region spans recorded dimensions. Adding a 
 Green entries describe items added to an inventory; red entries describe removals. Records preserve item counts and persistent Data Components, including modded item identities where supported. Opening a container without changing items does not create a transaction.
 
 Hopper history is **off by default**. Enable `logging.automatedContainerTransfers` to record supported block-to-block transfers. Automated records show the observed source and destination coordinates together. A transfer **into a hopper** does not mean the item also reached the barrel below it. Failed pushes into a full destination should produce no transfer record.
+
+## Growth and leaf decay history
+
+`environment.growth` and `environment.leafDecay` are independent, **off-by-default** server settings. This checkpoint covers ordinary crop random ticks through the standard crop base class, sapling advancement/tree placement, supported player bone-meal use and natural leaf decay. It does not claim every plant, fungal spread or modded growth implementation. Passive cactus/sugar-cane/bamboo growth is outside the random-tick hooks in this checkpoint unless it follows a separately supported bone-meal path.
+
+```text
+/guardian lookup c:growth t:1h r:25
+/guardian lookup c:growth u:YourName t:1h
+/guardian lookup c:decay i:minecraft:oak_leaves t:1d
+/guardian lookup c:growth,decay l:20 p:2
+```
+
+Crop summaries show recorded age changes; sapling/tree changes and decayed leaves appear in ordinary block inspection. Natural ticks have unknown attribution. Direct supported bone-meal use records the player, including nested tree growth; it does not assign later natural growth to whoever planted or fertilized a block earlier. No planting-owner database is created.
+
+Whole tree and bone-meal calls are recorded as net before/after changes. Failed tree attempts, mature-crop no-ops and persistent leaves do not invent growth/decay. NeoForge environmental item history waits until the loader accepts its staged item use; denied bone-meal and ignition changes that are restored leave no event. Actual pack/claim and connected-client acceptance remains pending.
+
+Growth/decay history is **read-only for recovery**: public block rollback/restore excludes these causes and refuses explicit requests for them. Confirmed block-history purge includes these records with the existing safeguards. Capture settings affect future events only; disabling capture leaves old records searchable. Trees can create many records, so monitor queue/backpressure status. Back up before schema 21: the new marker protects the added cause codes from older builds; existing payloads are unchanged by that migration. Config version 15 adds the two disabled settings.
 
 ## Fire and explosion history
 

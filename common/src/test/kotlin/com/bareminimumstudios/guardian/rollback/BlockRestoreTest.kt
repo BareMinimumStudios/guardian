@@ -77,7 +77,7 @@ class BlockRestoreTest {
             val audit=snapshot(1);var id=0L
             db().use { it.open();it.append(listOf(audit));id=it.lookupBlocks(BlockLookupQuery()).single().rowId;it.setBlockRollbackState(listOf(id),BlockRollbackState.ROLLED_BACK) }
             DriverManager.getConnection((if(duck)"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c ->c.createStatement().use { s ->s.executeUpdate("DROP TABLE ex_entity");s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 13");s.executeUpdate("UPDATE ex_meta SET meta_value='12' WHERE meta_key='schema_version'") } }
-            db().use { it.open();assertEquals(20,it.health().schemaVersion);val stored=it.lookupBlocks(BlockLookupQuery(rollbackStates=BlockHistoryOperation.RESTORE.eligibleStates)).single();assertEquals(audit,stored.snapshot);assertEquals(id,stored.rowId);it.setBlockRollbackState(listOf(id),BlockRollbackState.RESTORE_PENDING) }
+            db().use { it.open();assertEquals(21,it.health().schemaVersion);val stored=it.lookupBlocks(BlockLookupQuery(rollbackStates=BlockHistoryOperation.RESTORE.eligibleStates)).single();assertEquals(audit,stored.snapshot);assertEquals(id,stored.rowId);it.setBlockRollbackState(listOf(id),BlockRollbackState.RESTORE_PENDING) }
             db().use { it.open();assertEquals(BlockRollbackState.RESTORE_PENDING,it.lookupBlocks(BlockLookupQuery()).single().rollbackState) }
         }
     }
