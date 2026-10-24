@@ -9,11 +9,13 @@ class ContainerHistoryGuard(
     newerOwners: Set<ItemSlotOwner> = emptySet(),
     changedBlocks: Set<ItemSlotOwner> = emptySet(),
     reservedOwners: Set<ItemSlotOwner> = emptySet(),
-    claimedTransactions: Set<UUID> = emptySet()
+    claimedTransactions: Set<UUID> = emptySet(),
+    incompleteTransactions: Set<UUID> = emptySet()
 ) {
     val newerOwners: Set<ItemSlotOwner> = Collections.unmodifiableSet(HashSet(newerOwners))
     val changedBlocks: Set<ItemSlotOwner> = Collections.unmodifiableSet(HashSet(changedBlocks))
     val reservedOwners: Set<ItemSlotOwner> = Collections.unmodifiableSet(HashSet(reservedOwners))
     val claimedTransactions: Set<UUID> = Collections.unmodifiableSet(HashSet(claimedTransactions))
-    val clear: Boolean get() = newerOwners.isEmpty() && changedBlocks.isEmpty() && reservedOwners.isEmpty() && claimedTransactions.isEmpty()
+    val incompleteTransactions: Set<UUID> = Collections.unmodifiableSet(HashSet(incompleteTransactions))
+    val clear: Boolean get() = newerOwners.isEmpty() && changedBlocks.isEmpty() && reservedOwners.isEmpty() && claimedTransactions.isEmpty() && incompleteTransactions.isEmpty()
 }

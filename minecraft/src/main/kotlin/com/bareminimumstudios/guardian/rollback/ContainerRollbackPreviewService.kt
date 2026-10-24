@@ -155,6 +155,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         ContainerPreviewReason.CHANGED_BLOCK -> "the container position has newer or equally timed block history"
         ContainerPreviewReason.RESERVED_OWNER -> "an inventory is reserved by an unfinished item rollback journal"
         ContainerPreviewReason.CLAIMED_SOURCE -> "the transaction is already claimed by an item rollback journal"
+        ContainerPreviewReason.INCOMPLETE_HISTORY -> "history before the purge cutoff is incomplete"
         ContainerPreviewReason.ELIGIBLE -> "eligible"
     }
     private class Session(val source: CommandSourceStack,val query: ContainerLookupQuery) {

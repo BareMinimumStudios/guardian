@@ -33,6 +33,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.68+1.21.1] - 2026-10-24
+
+### Added
+
+- Global old-history purge for block, item-transaction, chat and session records, with read-only preview, requester-bound 60-second confirmation, cancellation and a 1,000-record total limit per confirmed batch.
+- Separate `guardian.purge` permission with operator-level-four fallback, including NeoForge permission-node registration and current operator-state checks.
+- Schema 14 records a transactional history-completeness watermark. Read-only item checks and internal journal preparation refuse history before a purged cutoff.
+
+### Changed
+
+- Preserve pending block histories and internal item recovery data during purge. Keep indexes atomic with deletion, exclude inserts after preview and coordinate purge with existing rollback/restore/item checks. Updating alone removes no history.
+
 ## [0.4.0-alpha.67+1.21.1] - 2026-10-23
 
 ### Added

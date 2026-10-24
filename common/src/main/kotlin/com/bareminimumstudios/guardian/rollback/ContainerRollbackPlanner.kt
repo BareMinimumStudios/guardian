@@ -3,7 +3,7 @@ package com.bareminimumstudios.guardian.rollback
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 
-enum class ContainerPreviewReason { ELIGIBLE, UNSUPPORTED_ACTION, AMBIGUOUS_ORDER, UNSUPPORTED_OWNER, NONCONSERVING_ACTION, UNAVAILABLE_OWNER, OUTSIDE_SCOPE, STATE_MISMATCH, BLOCKED_CHAIN, NEWER_HISTORY, CHANGED_BLOCK, RESERVED_OWNER, CLAIMED_SOURCE }
+enum class ContainerPreviewReason { ELIGIBLE, UNSUPPORTED_ACTION, AMBIGUOUS_ORDER, UNSUPPORTED_OWNER, NONCONSERVING_ACTION, UNAVAILABLE_OWNER, OUTSIDE_SCOPE, STATE_MISMATCH, BLOCKED_CHAIN, NEWER_HISTORY, CHANGED_BLOCK, RESERVED_OWNER, CLAIMED_SOURCE, INCOMPLETE_HISTORY }
 data class ContainerPreviewEntry(val transactionId: UUID, val reason: ContainerPreviewReason, val changedSlots: Int)
 class ContainerRollbackPreview(entries: List<ContainerPreviewEntry>) {
     val entries: List<ContainerPreviewEntry> = java.util.Collections.unmodifiableList(ArrayList(entries))
@@ -50,6 +50,7 @@ object ContainerRollbackPlanner {
                 value.transactionId in ambiguous -> ContainerPreviewReason.AMBIGUOUS_ORDER
                 !supported(value) -> ContainerPreviewReason.UNSUPPORTED_OWNER
                 !conserving(value) -> ContainerPreviewReason.NONCONSERVING_ACTION
+                value.transactionId in historyGuard.incompleteTransactions -> ContainerPreviewReason.INCOMPLETE_HISTORY
                 value.transactionId in historyGuard.claimedTransactions -> ContainerPreviewReason.CLAIMED_SOURCE
                 owners.any { it in historyGuard.reservedOwners } -> ContainerPreviewReason.RESERVED_OWNER
                 owners.any { it in historyGuard.changedBlocks } -> ContainerPreviewReason.CHANGED_BLOCK

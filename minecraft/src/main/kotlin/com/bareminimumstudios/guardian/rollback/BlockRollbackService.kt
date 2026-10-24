@@ -33,6 +33,9 @@ class BlockRollbackService(
     private val permissions: PermissionService
 ) {
     private val logger = LoggerFactory.getLogger("Guardian/Rollback")
+    private var maintenanceBusy: () -> Boolean = { false }
+    fun installMaintenanceGate(gate: () -> Boolean) { check(!isBusy());maintenanceBusy=gate }
+    fun isBusy() = active!=null || planning!=null || previewSession!=null
     private var active: Session? = null
     private var planning: Any? = null
     private var previewSession: PreviewSession? = null
@@ -45,7 +48,7 @@ class BlockRollbackService(
 
     private fun requestInternal(source: CommandSourceStack, query: BlockLookupQuery, description: String, previewOnly: Boolean, operation: BlockHistoryOperation = BlockHistoryOperation.ROLLBACK): Boolean {
         if (!authorized(source, operation)) return false
-        if (active != null || planning != null || previewSession != null) {
+        if (isBusy() || maintenanceBusy()) {
             source.sendFailure(Component.literal("Guardian already has a block rollback/restore in progress."))
             return false
         }

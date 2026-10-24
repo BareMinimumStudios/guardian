@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, inspect/i, rollback/rb, restore/redo, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
                 1
             }
 
@@ -131,6 +131,21 @@ object GuardianCommands {
                 .then(Commands.argument("operation",StringArgumentType.word())
                     .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
+        root.then(Commands.literal("purge").requires { authorized(it.player?.createCommandSourceStack() ?: it,permissions,"guardian.purge",4) }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian purge preview t:30d | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation."));0 }
+            .then(Commands.literal("preview").then(Commands.argument("age",StringArgumentType.greedyString())
+                .suggests { context,builder -> if(authorized(context.source.player?.createCommandSourceStack() ?: context.source,permissions,"guardian.purge",4))net.minecraft.commands.SharedSuggestionProvider.suggest(listOf("t:1d","t:7d","t:30d","t:90d"),builder)else com.mojang.brigadier.suggestion.Suggestions.empty() }
+                .executes { context ->
+                    val source=context.source;val raw=StringArgumentType.getString(context,"age")
+                    if(!raw.matches(Regex("(?:t|time):[^\\s]+"))){source.sendFailure(Component.literal("Guardian purge accepts only one age filter, for example t:30d."));return@executes 0}
+                    val age=BlockCommandFilterParser.parse(raw).getOrNull()?.lookbackMillis
+                    val purge=runtimeProvider()?.purge()
+                    if(age==null||purge==null){source.sendFailure(Component.literal("Guardian purge age is invalid or its service is unavailable."));0}else if(purge.preview(source,age))1 else 0
+                }))
+            .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
+                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.purge()?.suggestions(context.source) ?: emptyList(),builder) }
+                .executes { context -> if(runtimeProvider()?.purge()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
+            .then(Commands.literal("cancel").executes { context -> if(runtimeProvider()?.purge()?.cancel(context.source)==true)1 else 0 }))
         dispatcher.register(root)
     }
 

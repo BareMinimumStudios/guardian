@@ -73,6 +73,9 @@ class BlockHistoryService(
         recoveryWork({ storage.lookupActivity(query) }, onSuccess, onFailure)
     }
 
+    fun previewPurge(cutoff: Long, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff) },onSuccess,onFailure)
+    fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.applyPurge(plan,permitted) },onSuccess,onFailure)
+
     fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
     }

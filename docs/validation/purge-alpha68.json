@@ -1,0 +1,464 @@
+{
+  "date": "2026-10-24",
+  "version": "0.4.0-alpha.68+1.21.1",
+  "schema": 14,
+  "tests": {
+    "tests": 611,
+    "failures": 0,
+    "errors": 0
+  },
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "cases": [
+        {
+          "command": "guardian purge",
+          "expected": "Usage: /guardian purge preview",
+          "output": [
+            "[02:38:01] [Server thread/INFO]: Usage: /guardian purge preview t:30d | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation.",
+            "[02:38:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827481675367500"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1h",
+          "expected": "requires retaining at least one day",
+          "output": [
+            "[02:38:01] [Server thread/INFO]: Guardian purge requires retaining at least one day: use t:1d or older.",
+            "[02:38:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827481780120000"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d r:5",
+          "expected": "accepts only one age filter",
+          "output": [
+            "[02:38:01] [Server thread/INFO]: Guardian purge accepts only one age filter, for example t:30d.",
+            "[02:38:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827481859591500"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:01] [Server thread/INFO]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:01] [Server thread/INFO]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:01.967Z UTC. Eligible: 1 block, 2 item, 1005 chat/session. Protected: 3. This batch: 1000/1000.",
+            "[02:38:01] [Server thread/INFO]: Permanent deletion requires /guardian purge confirm 63e94703-918a-4c62-a32e-1325d36baec5 within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827481989356100"
+          ]
+        },
+        {
+          "command": "co purge cancel",
+          "expected": "confirmation cancelled",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian purge confirmation cancelled; no history changed.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482061539400"
+          ]
+        },
+        {
+          "command": "guardian purge confirm 63e94703-918a-4c62-a32e-1325d36baec5",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482172085500"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:02.173Z UTC. Eligible: 1 block, 2 item, 1005 chat/session. Protected: 3. This batch: 1000/1000.",
+            "[02:38:02] [Server thread/INFO]: Permanent deletion requires /guardian purge confirm 798716d9-7f7d-4113-a98e-acf5b51a14a3 within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482181600900"
+          ]
+        },
+        {
+          "command": "co purge confirm 798716d9-7f7d-4113-a98e-acf5b51a14a3",
+          "expected": "Guardian purge complete: 1 block, 2 item, 997 chat/session deleted",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: purging the confirmed batch of at most 1000 old history records.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge complete: 1 block, 2 item, 997 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482341563500"
+          ]
+        },
+        {
+          "command": "guardian purge confirm 798716d9-7f7d-4113-a98e-acf5b51a14a3",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482419399800"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:02.514Z UTC. Eligible: 0 block, 0 item, 9 chat/session. Protected: 3. This batch: 9/1000.",
+            "[02:38:02] [Server thread/INFO]: Permanent deletion requires /guardian purge confirm febd2b29-dd15-4fe5-a62b-cac5fc53d1b3 within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482515252600"
+          ]
+        },
+        {
+          "command": "guardian purge confirm febd2b29-dd15-4fe5-a62b-cac5fc53d1b3",
+          "expected": "Guardian purge complete: 0 block, 0 item, 9 chat/session deleted",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: purging the confirmed batch of at most 9 old history records.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge complete: 0 block, 0 item, 9 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482624730700"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:02.809Z UTC. Eligible: 0 block, 0 item, 1 chat/session. Protected: 5. This batch: 1/1000.",
+            "[02:38:02] [Server thread/INFO]: Permanent deletion requires /guardian purge confirm 182e9531-17a2-413c-8855-1663bf77d560 within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482810949700"
+          ]
+        },
+        {
+          "command": "guardian purge confirm 182e9531-17a2-413c-8855-1663bf77d560",
+          "expected": "Guardian purge complete: 0 block, 0 item, 1 chat/session deleted",
+          "output": [
+            "[02:38:02] [Server thread/INFO]: Guardian: purging the confirmed batch of at most 1 old history records.",
+            "[02:38:02] [Server thread/INFO]: Guardian purge complete: 0 block, 0 item, 1 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827482922593200"
+          ]
+        },
+        {
+          "command": "guardian purge confirm 182e9531-17a2-413c-8855-1663bf77d560",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:15] [Server thread/INFO]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827495396464900"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "no eligible old history to purge",
+          "output": [
+            "[02:38:15] [Server thread/INFO]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:15] [Server thread/INFO]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:15.448Z UTC. Eligible: 0 block, 0 item, 0 chat/session. Protected: 5. This batch: 0/1000.",
+            "[02:38:15] [Server thread/INFO]: Guardian: no eligible old history to purge.",
+            "[02:38:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792827495491594600"
+          ]
+        }
+      ],
+      "initialRows": [
+        5,
+        3,
+        1006
+      ],
+      "finalRows": [
+        5,
+        2,
+        1
+      ],
+      "fixedBatch": true,
+      "lateInsertPreservedUntilNextConfirmation": true,
+      "recoveryJournalsPreserved": true,
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "isolatedDatabase": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "cases": [
+        {
+          "command": "guardian purge",
+          "expected": "Usage: /guardian purge preview",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Usage: /guardian purge preview t:30d | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512253045300"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1h",
+          "expected": "requires retaining at least one day",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge requires retaining at least one day: use t:1d or older.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512368271300"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d r:5",
+          "expected": "accepts only one age filter",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge accepts only one age filter, for example t:30d.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512453146700"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:32.561Z UTC. Eligible: 1 block, 2 item, 1005 chat/session. Protected: 3. This batch: 1000/1000.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Permanent deletion requires /guardian purge confirm b4102e33-ce20-414a-b3c8-105a4d0ba3bc within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512572260700"
+          ]
+        },
+        {
+          "command": "co purge cancel",
+          "expected": "confirmation cancelled",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge confirmation cancelled; no history changed.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512657896000"
+          ]
+        },
+        {
+          "command": "guardian purge confirm b4102e33-ce20-414a-b3c8-105a4d0ba3bc",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512658903800"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:32.659Z UTC. Eligible: 1 block, 2 item, 1005 chat/session. Protected: 3. This batch: 1000/1000.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Permanent deletion requires /guardian purge confirm e6556249-546a-4ef9-83ad-125acb8c7d35 within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512663364800"
+          ]
+        },
+        {
+          "command": "co purge confirm e6556249-546a-4ef9-83ad-125acb8c7d35",
+          "expected": "Guardian purge complete: 1 block, 2 item, 997 chat/session deleted",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: purging the confirmed batch of at most 1000 old history records.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge complete: 1 block, 2 item, 997 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512862888600"
+          ]
+        },
+        {
+          "command": "guardian purge confirm e6556249-546a-4ef9-83ad-125acb8c7d35",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:32] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827512949879200"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:33.061Z UTC. Eligible: 0 block, 0 item, 9 chat/session. Protected: 3. This batch: 9/1000.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Permanent deletion requires /guardian purge confirm 152bc3a4-964d-497e-a39d-39c08aca643f within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827513063824800"
+          ]
+        },
+        {
+          "command": "guardian purge confirm 152bc3a4-964d-497e-a39d-39c08aca643f",
+          "expected": "Guardian purge complete: 0 block, 0 item, 9 chat/session deleted",
+          "output": [
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: purging the confirmed batch of at most 9 old history records.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge complete: 0 block, 0 item, 9 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827513156078000"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "Guardian purge preview:",
+          "output": [
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:33.260Z UTC. Eligible: 0 block, 0 item, 1 chat/session. Protected: 5. This batch: 1/1000.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Permanent deletion requires /guardian purge confirm dd7ce5d5-1439-4d3f-9f34-709f48933e1e within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827513262140700"
+          ]
+        },
+        {
+          "command": "guardian purge confirm dd7ce5d5-1439-4d3f-9f34-709f48933e1e",
+          "expected": "Guardian purge complete: 0 block, 0 item, 1 chat/session deleted",
+          "output": [
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: purging the confirmed batch of at most 1 old history records.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge complete: 0 block, 0 item, 1 chat/session deleted; 0 selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.",
+            "[02:38:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827513356556600"
+          ]
+        },
+        {
+          "command": "guardian purge confirm dd7ce5d5-1439-4d3f-9f34-709f48933e1e",
+          "expected": "confirmation is invalid",
+          "output": [
+            "[02:38:46] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[02:38:47] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=14",
+            "[02:38:47] [Server thread/WARN] [Guardian/]: Guardian has 1 unfinished item rollback journals. Automatic item replay is disabled.",
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview.",
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827527073865700"
+          ]
+        },
+        {
+          "command": "guardian purge preview t:1d",
+          "expected": "no eligible old history to purge",
+          "output": [
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: counting old history for purge preview; nothing will be deleted.",
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian purge preview: global across all users/worlds; records strictly before 2026-10-23T07:38:47.174Z UTC. Eligible: 0 block, 0 item, 0 chat/session. Protected: 5. This batch: 0/1000.",
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no eligible old history to purge.",
+            "[02:38:47] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792827527208671100"
+          ]
+        }
+      ],
+      "initialRows": [
+        5,
+        3,
+        1006
+      ],
+      "finalRows": [
+        5,
+        2,
+        1
+      ],
+      "fixedBatch": true,
+      "lateInsertPreservedUntilNextConfirmation": true,
+      "recoveryJournalsPreserved": true,
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "isolatedDatabase": true,
+      "connectedClients": 0
+    }
+  ],
+  "realProvider": [
+    {
+      "loader": "Fabric",
+      "checks": 95,
+      "cases": [
+        "purge_actual_permissions_both_aliases",
+        "independent_level_four_node",
+        "cached_age_and_confirmation_suggestions",
+        "requester_ticket_revocation",
+        "queued_confirm_revocation_and_stop",
+        "mutual_rollback_gate",
+        "authorized_fixed_batch_delete"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 96,
+      "cases": [
+        "purge_actual_permissions_both_aliases",
+        "independent_level_four_node",
+        "cached_age_and_confirmation_suggestions",
+        "requester_ticket_revocation",
+        "queued_confirm_revocation_and_stop",
+        "mutual_rollback_gate",
+        "authorized_fixed_batch_delete"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 113,
+      "cases": [
+        "purge_actual_permissions_both_aliases",
+        "independent_level_four_node",
+        "cached_age_and_confirmation_suggestions",
+        "requester_ticket_revocation",
+        "queued_confirm_revocation_and_stop",
+        "mutual_rollback_gate",
+        "authorized_fixed_batch_delete"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 114,
+      "cases": [
+        "purge_actual_permissions_both_aliases",
+        "independent_level_four_node",
+        "cached_age_and_confirmation_suggestions",
+        "requester_ticket_revocation",
+        "queued_confirm_revocation_and_stop",
+        "mutual_rollback_gate",
+        "authorized_fixed_batch_delete"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "permissionChecksTotal": 418,
+  "scope": {
+    "global": true,
+    "categories": [
+      "block",
+      "item transactions",
+      "chat",
+      "login/logout"
+    ],
+    "maximumRecordsPerConfirmation": 1000,
+    "minimumRetentionDays": 1,
+    "confirmationSeconds": 60,
+    "fixedImmutableKeys": true,
+    "newInsertsExcluded": true,
+    "confirmationRequesterBound": true,
+    "automaticPurge": false,
+    "vacuum": false
+  },
+  "recoveryProtection": [
+    "PENDING/RESTORE_PENDING block rows and all history at their positions retained",
+    "Any retained item journal/entry/claim/owner/protection/image conservatively retains all block and container history",
+    "Item indexes deleted atomically with parent history",
+    "Monotonic history_purged_before watermark commits atomically; item guards and journal preparation refuse incomplete ranges"
+  ],
+  "builds": {
+    "clean": "passed, 1m 7s",
+    "build": "passed, 218ms, configuration cache reused",
+    "repeat": "passed, 221ms, configuration cache reused",
+    "worldedit": "passed, 203ms, configuration cache reused"
+  },
+  "suppliedDatabasesUsed": false,
+  "destructiveTests": "Fresh private server databases and temporary unit-test databases only",
+  "limitations": [
+    "No connected clients or pack/claim acceptance",
+    "A committed batch cannot be undone by cancellation",
+    "No immediate database-file shrink or secure erasure claim",
+    "Mappings, sequences and recovery journals are not purged",
+    "History before a purge cutoff can remain visible but cannot be treated as complete for item checks"
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.68+1.21.1.jar",
+      "bytes": 13007140,
+      "sha256": "00cc6673579825b50b8f4bfd046705f506d9e3f9cdbcf3f1244f1ce4f31c8727"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.68+1.21.1.jar",
+      "bytes": 12983839,
+      "sha256": "ccb84414f29bc223477bf8f06917a12028ea999c61167b73f670b3373bfadb2f"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.68+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "ce675e0635ce9eec69fe13720d25110f3089d81b3de9854fd7ac6b24c6c31d68"
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.67 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.68 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.67 passed 597 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. The final clean build reused unchanged common/test outputs from the successful full restore build; final NeoForge permission wiring was rebuilt and runtime-tested.
-- 2,068 current server-side permission checks passed across actual LuckPerms and provider-free operator fallback on both loaders, including the new activity nodes and block-preview revocation boundaries. The prior 1,150 checks remain historical evidence for the earlier permission paths. Synthetic players do not certify network login or client presentation.
+- Alpha.68 passed 611 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. The full purge suite includes SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current purge permission acceptance passed 418 actual-provider/operator checks on both loaders. Prior restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -69,6 +69,16 @@ Pending-state fixtures are synthetic; this does not certify atomic persistence b
 The owner pushed executable commit `e0f6a99`. Its [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580) passed. All three local jars still match the hashes from the completed restore/runtime milestone. Metadata confirms version, server-only loader/dependency declarations, SQLite-only standard packaging, separate adapter licensing and a 256×256 core icon. Core sizes are 12.36 MiB (Fabric) and 12.33 MiB (NeoForge); the separate Fabric WorldEdit adapter is about 0.02 MiB. ZIP integrity and nested-jar metadata passed. No executable or dependency changes were made, so the existing 597-test, 56-case restore and 2,420-check permission baseline was retained rather than rerun. [Artifact evidence](validation/artifacts-alpha67.json).
 
 A private test ZIP contains separate loader cores and the optional Fabric adapter, license notices, SHA-256 checksums, installation/upgrade instructions and a blank six-row client acceptance sheet. It contains no server worlds, databases, private agent sources or machine-specific configuration. Installation instructions call out schema 13, separate restore permission and original-event time filters. This is an acceptance package, not a published release. R3 client results and final owner sign-off remain pending.
+
+## Confirmed history purge, 2026-10-24
+
+The owner explicitly approved old block/item/chat/session purge with preview, confirmation, a 1,000-record cap and recovery protection, and restricted destructive tests to isolated databases. Alpha.68 implements a global, age-only fixed-key batch, a requester-bound single-use token with 60-second expiry, cancellation and a separate `guardian.purge` permission (operator level 4). It retains pending block positions and conservatively retains block/container history while any item journal/protection data exists. No journals, maps or sequences are deleted. Schema 14 stores a monotonic completeness cutoff when block/item history is removed; old retained/reinserted transactions cannot pass item-history safety checks as complete.
+
+611 tests passed, including fourteen new purge contracts covering strict cutoff, all categories, late inserts, pending chains, protection changes after preview, the 1,000-record cap, requester/expiry/single-use/immutability, cancellation during a batch and just before commit, index/journal retention, persistent completeness guards and schema-13 upgrade without history deletion. Clean, repeated-cache and optional WorldEdit builds passed. No mixins changed.
+
+Both isolated loader servers passed fifteen command/database cases each: preview/no-op, age/filter rejection, cancellation, exact 1,000-record confirmation, late insert exclusion, single-use confirmation, subsequent batches, journal protection, index integrity and restart persistence. Current final jar hashes match all runtime fixtures. Actual LuckPerms checks passed 95/96 cases on Fabric/NeoForge; operator fallback passed 113/114. These include independent grants, explicit operator denial, levels zero through four, cached suggestions, queued permission revocation and stop, rollback/purge mutual exclusion, busy-confirm ticket preservation and authorized deletion. [Evidence and artifact checksums](validation/purge-alpha68.json).
+
+All writes and purges used fresh private databases or temporary unit-test databases. Supplied server databases/worlds were untouched. The first private NeoForge fixture signalled before runtime installation; adding a main-thread status barrier corrected the fixture and both final runs passed. Connected-client acceptance remains pending, and cannot be replaced by these synthetic-player fixtures. Remote alpha.68 CI awaits the owner's push. A committed purge cannot be undone, and the operation makes no immediate file-shrink promise.
 
 ## Pending acceptance
 

@@ -363,6 +363,9 @@ abstract class JdbcStorageBackend(
         checkpoint(requireConnection())
     }
 
+    override fun previewPurge(cutoff: Long, limit: Int) = lock.withLock { JdbcAuditPurge(requireConnection()).preview(cutoff,limit) }
+    override fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean) = lock.withLock { JdbcAuditPurge(requireConnection()).apply(plan,permitted) }
+
     override fun guardContainerHistory(rows: List<ContainerTransactionSnapshot>) = lock.withLock { ContainerOwnerIndex.guard(requireConnection(),rows) }
 
     override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {

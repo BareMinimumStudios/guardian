@@ -39,6 +39,11 @@ internal object ContainerOwnerIndex {
 
     fun guard(connection: Connection, rows: List<ContainerTransactionSnapshot>): ContainerHistoryGuard {
         require(rows.size <= 50 && rows.sumOf { it.changes.size } <= 2048)
+
+        val floor=connection.prepareStatement("SELECT meta_value FROM ex_meta WHERE meta_key='history_purged_before'").use { q ->q.executeQuery().use { if(it.next())it.getString(1).toLong()else 0L } }
+        val incomplete=rows.filter { it.timestampEpochMillis<floor }.map { it.transactionId }.toSet()
+        if(incomplete.isNotEmpty())return ContainerHistoryGuard(incompleteTransactions=incomplete)
+
         if(rows.isEmpty()) return ContainerHistoryGuard()
         val selected=rows.map { it.transactionId.toString() }.toSet()
         require(selected.size==rows.size)

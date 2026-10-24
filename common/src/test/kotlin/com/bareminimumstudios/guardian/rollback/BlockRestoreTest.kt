@@ -76,8 +76,8 @@ class BlockRestoreTest {
             fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(path)else SqliteStorageBackend(path)
             val audit=snapshot(1);var id=0L
             db().use { it.open();it.append(listOf(audit));id=it.lookupBlocks(BlockLookupQuery()).single().rowId;it.setBlockRollbackState(listOf(id),BlockRollbackState.ROLLED_BACK) }
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c ->c.createStatement().use { s ->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version = 13");s.executeUpdate("UPDATE ex_meta SET meta_value='12' WHERE meta_key='schema_version'") } }
-            db().use { it.open();assertEquals(13,it.health().schemaVersion);val stored=it.lookupBlocks(BlockLookupQuery(rollbackStates=BlockHistoryOperation.RESTORE.eligibleStates)).single();assertEquals(audit,stored.snapshot);assertEquals(id,stored.rowId);it.setBlockRollbackState(listOf(id),BlockRollbackState.RESTORE_PENDING) }
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c ->c.createStatement().use { s ->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 13");s.executeUpdate("UPDATE ex_meta SET meta_value='12' WHERE meta_key='schema_version'") } }
+            db().use { it.open();assertEquals(14,it.health().schemaVersion);val stored=it.lookupBlocks(BlockLookupQuery(rollbackStates=BlockHistoryOperation.RESTORE.eligibleStates)).single();assertEquals(audit,stored.snapshot);assertEquals(id,stored.rowId);it.setBlockRollbackState(listOf(id),BlockRollbackState.RESTORE_PENDING) }
             db().use { it.open();assertEquals(BlockRollbackState.RESTORE_PENDING,it.lookupBlocks(BlockLookupQuery()).single().rollbackState) }
         }
     }
