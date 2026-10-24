@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(13)
+@Version(14)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -42,6 +42,14 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
 
         /** Opt-in block-to-block hopper capture while broader load/gameplay acceptance is pending. */
         var automatedContainerTransfers = ValidatedBoolean(false)
+    }
+
+    var environment = Environment()
+    class Environment : ConfigSection() {
+        /** Supported ignition, spread, burning and extinguishing. */
+        var fire = ValidatedBoolean(false)
+        /** Actual block changes during standard explosion finalization. */
+        var explosions = ValidatedBoolean(false)
     }
 
     var fluids = Fluids()

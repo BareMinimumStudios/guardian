@@ -33,6 +33,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.76+1.21.1] - 2026-10-24
+
+### Added
+
+- Independent opt-in fire and explosion block history, including supported ignition tools, burning/extinguishing, standard explosion mutations and reliable actor metadata.
+- `c:`/`cause:` block-history filters with suggestions, filtering before pagination and distinct ignition/burning/extinguishing wording.
+
+### Changed
+
+- Config version 14 adds default-off `environment.fire` and `environment.explosions`; schema 20 is unchanged. New rows reuse existing cause codes and block-history purge. Public rollback/restore excludes fire/explosion causes pending separate recovery validation.
+
 ## [0.4.0-alpha.75+1.21.1] - 2026-10-24
 
 ### Added

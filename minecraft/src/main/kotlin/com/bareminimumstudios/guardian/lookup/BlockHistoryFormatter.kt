@@ -26,7 +26,13 @@ object BlockHistoryFormatter {
             is ActorIdentity.System -> identity.source
             ActorIdentity.Unknown -> "unknown"
         }
-        val change = when (s.action) {
+        val fireIds=setOf("minecraft:fire","minecraft:soul_fire")
+        val change = if(s.cause==ChangeCause.FIRE) when {
+            s.before.blockId.toString() in fireIds && s.after.blockId.toString() !in fireIds -> "extinguished ${s.before.blockId}"
+            s.after.blockId.toString() in fireIds && s.action==ActionType.BLOCK_PLACE -> "ignited ${s.after.blockId}"
+            s.before.blockId==s.after.blockId && s.before.properties["lit"]!=s.after.properties["lit"] -> "${if(s.after.properties["lit"]=="true") "lit" else "extinguished"} ${s.after.blockId}"
+            else -> "burned ${s.before.blockId} -> ${s.after.blockId}"
+        } else when (s.action) {
             ActionType.BLOCK_PLACE -> "placed ${s.after.blockId}"
             ActionType.BLOCK_BREAK -> "broke ${s.before.blockId}"
             else -> when {

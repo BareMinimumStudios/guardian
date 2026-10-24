@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.75 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.76 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.75 passed 677 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.76 passed 683 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -161,6 +161,16 @@ Alpha.74 passed GitHub CI. The owner then selected natural flow/source attributi
 Both isolated dedicated servers passed actual flow/recession/formation paths, x15/x16 spread and attribution, competing/untracked roots, source replacement, expiry by advancing actual world time, chunk trace invalidation, blocked stone destinations, five queries/restart checks and SQLite integrity. Normal/glow frame work is unchanged. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and forty deferred activity/entity/fluid callbacks per loader. All final core hashes match runtime-tested jars; SQLite remains the only nested dependency. [Evidence and checksums](validation/fluid-flow-alpha75.json).
 
 All owned servers stopped and supplied worlds/databases were untouched. Synthetic players do not close connected-client R3. The unload target is inspected/loaded and its invalidation function is exercised directly; this is not a claim of a real network unload/reload acceptance pass. Alpha.75 remote CI awaits the owner's push.
+
+## Fire and explosion history, 2026-10-24
+
+Alpha.75 passed GitHub CI. The owner selected fire/explosion history. Alpha.76 adds independent default-off environmental settings, supported ignition/natural burning/extinguishing and actual standard explosion block mutations, using existing cause codes 11/10. Config version 14 preserves existing settings; schema 20 is unchanged. Block cause filters apply before pagination, reuse existing lookup/inspection permissions and reject non-block history commands. Fire rows distinguish ignition, burning and extinguishing. New environmental causes are excluded from public rollback/restore pending separate recovery validation; lookup and confirmed purge remain available.
+
+683 tests passed. Six new cross-backend/storage/presentation tests cover cause/actor separation, pre-pagination filtering, existing flags/purge, restart, parser/refusal/suggestions and readable fire/explosion summaries. Full clean/build/repeated-cache/WorldEdit builds passed through IDEA, and final mixin/capture/command inspections passed. Existing schema upgrades and the prior fluid/frame tests remain green.
+
+Both isolated dedicated servers exercised real ignition items, a deterministic actual fire tick, owned TNT, unknown-source and creeper explosions, disabled mob griefing, blocked/repeated ignition and extinguishing. Invalid fire with no net change produced no row. Actual Nether portal creation was verified and excluded from burning. Eight lookup/refusal/restart cases per loader verified filtered history, default environmental rollback exclusion and explicit fire/explosion rollback/restore refusal. SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime-tested jar; standard jars bundle SQLite only. [Evidence/checksums](validation/fire-explosions-alpha76.json).
+
+All owned servers stopped; supplied worlds/databases were untouched. Synthetic fixtures do not certify rendered clients or arbitrary protection mods, so R3 remains pending. Alpha.76 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

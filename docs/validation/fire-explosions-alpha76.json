@@ -1,0 +1,522 @@
+{
+  "version": "0.4.0-alpha.76+1.21.1",
+  "date": "2026-10-24",
+  "schema": 20,
+  "configVersion": 14,
+  "tests": {
+    "common": {
+      "tests": 617,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2116,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=22",
+      "rows": [
+        [
+          11,
+          6,
+          300,
+          2,
+          1,
+          1,
+          "GuardianFixture",
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          10,
+          300,
+          2,
+          1,
+          1,
+          "GuardianFixture",
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          6,
+          300,
+          2,
+          2,
+          null,
+          null,
+          "minecraft:fire",
+          "minecraft:air"
+        ],
+        [
+          11,
+          14,
+          300,
+          2,
+          1,
+          null,
+          null,
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          15,
+          300,
+          2,
+          3,
+          null,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:fire"
+        ],
+        [
+          10,
+          28,
+          300,
+          2,
+          2,
+          1,
+          "GuardianFixture",
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ],
+        [
+          10,
+          44,
+          300,
+          2,
+          2,
+          null,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ],
+        [
+          10,
+          60,
+          300,
+          2,
+          2,
+          2,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian lookup c:fire t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian: searching block history...",
+            "[16:52:27] [Server thread/INFO]: Guardian block history (5 results):",
+            "[16:52:27] [Server thread/INFO]: #5 2s ago: unknown burned minecraft:oak_planks -> minecraft:fire via fire @ 15,300,2",
+            "[16:52:27] [Server thread/INFO]: #4 2s ago: unknown ignited minecraft:fire via fire @ 14,300,2",
+            "[16:52:27] [Server thread/INFO]: #3 2s ago: unknown extinguished minecraft:fire via fire @ 6,300,2",
+            "[16:52:27] [Server thread/INFO]: #2 2s ago: GuardianFixture ignited minecraft:fire via fire @ 10,300,2",
+            "[16:52:27] [Server thread/INFO]: #1 2s ago: GuardianFixture ignited minecraft:fire via fire @ 6,300,2",
+            "[16:52:27] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747344927300"
+          ]
+        },
+        {
+          "command": "co lookup c:explosion u:GuardianFixture t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian: searching block history...",
+            "[16:52:27] [Server thread/INFO]: Guardian block history (1 result):",
+            "[16:52:27] [Server thread/INFO]: #6 2s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:52:27] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747449276400"
+          ]
+        },
+        {
+          "command": "guardian lookup c:fire,explosion l:2 p:2",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian: searching block history...",
+            "[16:52:27] [Server thread/INFO]: Guardian block history (2 results):",
+            "[16:52:27] [Server thread/INFO]: #6 2s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:52:27] [Server thread/INFO]: #5 2s ago: unknown burned minecraft:oak_planks -> minecraft:fire via fire @ 15,300,2",
+            "[16:52:27] [Server thread/INFO]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747536922700"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture c:fire t:1h r:5",
+          "expected": "fire/explosion history is read-only",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747644227800"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture t:1h x:6 y:300 z:2 r:1",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian: checking block rollback preview; no blocks will change…",
+            "[16:52:27] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747739859600"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:GuardianFixture c:explosion t:1h r:5",
+          "expected": "fire/explosion history is read-only",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747846601200"
+          ]
+        },
+        {
+          "command": "guardian transactions c:fire",
+          "expected": "does not accept block action or cause filters",
+          "output": [
+            "[16:52:27] [Server thread/INFO]: Item history does not accept block action or cause filters.",
+            "[16:52:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878747892683800"
+          ]
+        },
+        {
+          "command": "guardian lookup c:explosion",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:52:40] [Server thread/INFO]: Guardian: searching block history...",
+            "[16:52:40] [Server thread/INFO]: Guardian block history (3 results):",
+            "[16:52:40] [Server thread/INFO]: #8 15s ago: minecraft:creeper broke minecraft:oak_planks via explosion @ 60,300,2",
+            "[16:52:40] [Server thread/INFO]: #7 15s ago: unknown broke minecraft:oak_planks via explosion @ 44,300,2",
+            "[16:52:40] [Server thread/INFO]: #6 15s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:52:40] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:52:40] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792878760336312300"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=23",
+      "rows": [
+        [
+          11,
+          6,
+          300,
+          2,
+          1,
+          1,
+          "GuardianFixture",
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          10,
+          300,
+          2,
+          1,
+          1,
+          "GuardianFixture",
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          6,
+          300,
+          2,
+          2,
+          null,
+          null,
+          "minecraft:fire",
+          "minecraft:air"
+        ],
+        [
+          11,
+          14,
+          300,
+          2,
+          1,
+          null,
+          null,
+          "minecraft:air",
+          "minecraft:fire"
+        ],
+        [
+          11,
+          15,
+          300,
+          2,
+          3,
+          null,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:fire"
+        ],
+        [
+          10,
+          28,
+          300,
+          2,
+          2,
+          1,
+          "GuardianFixture",
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ],
+        [
+          10,
+          44,
+          300,
+          2,
+          2,
+          null,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ],
+        [
+          10,
+          60,
+          300,
+          2,
+          2,
+          2,
+          null,
+          "minecraft:oak_planks",
+          "minecraft:air"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian lookup c:fire t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (5 results):",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #5 2s ago: unknown burned minecraft:oak_planks -> minecraft:fire via fire @ 15,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #4 2s ago: unknown ignited minecraft:fire via fire @ 14,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #3 2s ago: unknown extinguished minecraft:fire via fire @ 6,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #2 2s ago: GuardianFixture ignited minecraft:fire via fire @ 10,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #1 2s ago: GuardianFixture ignited minecraft:fire via fire @ 6,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782147423700"
+          ]
+        },
+        {
+          "command": "co lookup c:explosion u:GuardianFixture t:1h",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (1 result):",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #6 2s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782185001000"
+          ]
+        },
+        {
+          "command": "guardian lookup c:fire,explosion l:2 p:2",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (2 results):",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #6 2s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: #5 2s ago: unknown burned minecraft:oak_planks -> minecraft:fire via fire @ 15,300,2",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782289887200"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture c:fire t:1h r:5",
+          "expected": "fire/explosion history is read-only",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782381185000"
+          ]
+        },
+        {
+          "command": "guardian rollback preview u:GuardianFixture t:1h x:6 y:300 z:2 r:1",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: checking block rollback preview; no blocks will change…",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782453112900"
+          ]
+        },
+        {
+          "command": "guardian restore preview u:GuardianFixture c:explosion t:1h r:5",
+          "expected": "fire/explosion history is read-only",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes.",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782537226000"
+          ]
+        },
+        {
+          "command": "guardian transactions c:fire",
+          "expected": "does not accept block action or cause filters",
+          "output": [
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: Item history does not accept block action or cause filters.",
+            "[16:53:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878782586859600"
+          ]
+        },
+        {
+          "command": "guardian lookup c:explosion",
+          "expected": "Guardian block history",
+          "output": [
+            "[16:53:15] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[16:53:16] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=20",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (3 results):",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: #8 16s ago: minecraft:creeper broke minecraft:oak_planks via explosion @ 60,300,2",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: #7 16s ago: unknown broke minecraft:oak_planks via explosion @ 44,300,2",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: #6 16s ago: GuardianFixture broke minecraft:oak_planks via explosion @ 28,300,2",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:53:16] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792878796103499400"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 617,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 618,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 440,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 441,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.76+1.21.1.jar",
+      "bytes": 13183777,
+      "sha256": "eddb1069ed92dcd5472e8b59da674bc19ec028e0dc03d9902f76927ca67ad146"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.76+1.21.1.jar",
+      "bytes": 13159947,
+      "sha256": "3ca67b8ab4a31cfa36c912d6adf63d5d1b3749e18de2a090fa6590a7a3b7432c"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.76+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "a20ffa716914453112043e11a7c9038a320979f6c79e085dec760a86ff50d6ea"
+    }
+  ],
+  "builds": {
+    "clean": "passed in 14s, earlier full suite 2m11s with all tasks executed",
+    "build": "passed; configuration cache stored",
+    "repeat": "passed; configuration cache reused",
+    "worldedit": "passed; separate adapter build"
+  },
+  "previousCI": {
+    "sha": "59344113c169b084dfca255df20848ec56874145",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40134884107"
+  },
+  "sourceChecks": "MixinMCP checked both-loader Explosion.finalizeExplosion, fire ticks and ignition paths; Level mutation wrapper target inspected; all four new mixins, capture and commands passed errors-only IDE inspection.",
+  "runtimeChecks": [
+    "default-off settings",
+    "actual flint/steel and fire-charge ignition with known player",
+    "unchanged ignition has no duplicate row",
+    "unknown extinguishing",
+    "deterministic actual fire tick burns wood",
+    "owned standard TNT blast attributes owner",
+    "unknown-source blast stays unknown",
+    "creeper blast uses entity actor",
+    "mobGriefing=false leaves blocks unchanged",
+    "blocked ignition stays absent",
+    "transient invalid fire with no net change stays absent",
+    "actual Nether portal creation is excluded from burning",
+    "eight lookup/refusal/restart cases per loader",
+    "default public rollback excludes environmental causes",
+    "explicit rollback/restore requests refuse environmental writes",
+    "SQLite integrity"
+  ],
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "limits": [
+    "Synthetic players and actual game methods do not close connected-client/claim acceptance R3.",
+    "Only supported standard mutation paths are observed; custom mod bypasses need compatibility testing.",
+    "Later fire activity is unknown rather than persistent guessed ignition ownership.",
+    "Fire age/shape updates and portal creation are excluded.",
+    "This milestone is history only; public rollback/restore excludes fire/explosion causes. No entity/drop/inventory restoration is enabled.",
+    "Existing bounded queue and a per-nested-mutation observation cap of 4096 apply; rejected events warn and are not retried or a capacity guarantee."
+  ]
+}

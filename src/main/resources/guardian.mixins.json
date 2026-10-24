@@ -63,7 +63,11 @@
     "FlowingFluidHistoryMixin",
     "FluidFormationHistoryMixin",
     "FluidMutationHistoryMixin",
-    "FluidTraceUnloadMixin"
+    "FluidTraceUnloadMixin",
+    "ExplosionHistoryMixin",
+    "FireTickHistoryMixin",
+    "IgnitionHistoryMixin",
+    "EnvironmentMutationHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

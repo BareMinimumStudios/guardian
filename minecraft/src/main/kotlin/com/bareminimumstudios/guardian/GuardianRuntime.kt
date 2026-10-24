@@ -80,6 +80,7 @@ class GuardianRuntime(
         }
         itemOperations?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.attachOperations(server,it) }
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ pipeline }, { config })
+        com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ pipeline }, { config })
         GuardianIntegrationApi.attach(config, selectedBulk)
@@ -94,6 +95,7 @@ class GuardianRuntime(
     fun stop(): Boolean {
         if (shutdownDrains != null) return finishShutdown()
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ null }, { null })
+        com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ null }, { null })
         purge?.stop()

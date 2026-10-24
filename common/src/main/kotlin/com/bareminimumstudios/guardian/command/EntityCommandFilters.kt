@@ -29,7 +29,7 @@ data class EntityCommandFilters(val common: BlockCommandFilter, val kinds: Set<E
                     else -> common.add(token)
                 }
             }
-            EntityCommandFilters(BlockCommandFilterParser.parse(common.joinToString(" ")).getOrThrow(),kinds,target)
+            EntityCommandFilters(BlockCommandFilterParser.parse(common.joinToString(" ")).getOrThrow().also { require(it.causes.isEmpty()) { "Cause filters apply to block history only" } },kinds,target)
         }
     }
 }

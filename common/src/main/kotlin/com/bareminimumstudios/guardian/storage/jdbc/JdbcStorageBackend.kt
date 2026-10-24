@@ -388,6 +388,9 @@ abstract class JdbcStorageBackend(
         (actors.values + resources.values).forEach { value -> binders += { statement, index -> statement.setString(index,value) } }
         if (query.rollbackStates.isNotEmpty()) sql.append(" AND b.rolled_back IN (${query.rollbackStates.joinToString { it.storageCode.toString() }})")
         else if (!query.includeRolledBack) sql.append(" AND b.rolled_back IN (0, 2)")
+        if(query.causes.isNotEmpty()) {
+            sql.append(" AND b.cause IN (${query.causes.joinToString { it.storageCode.toString() }})")
+        }
         if (query.actions.isNotEmpty()) {
             val actions = query.actions.sortedBy { it.storageCode }
             sql.append(" AND b.action IN (")

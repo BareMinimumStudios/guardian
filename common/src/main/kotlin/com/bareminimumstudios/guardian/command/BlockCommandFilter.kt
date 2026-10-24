@@ -13,5 +13,6 @@ data class BlockCommandFilter(
     val limit: Int? = null,
     val page: Int? = null,
     val oldestFirst: Boolean = false,
-    val search: com.bareminimumstudios.guardian.storage.query.HistorySearchFilter = com.bareminimumstudios.guardian.storage.query.HistorySearchFilter()
+    val search: com.bareminimumstudios.guardian.storage.query.HistorySearchFilter = com.bareminimumstudios.guardian.storage.query.HistorySearchFilter(),
+    val causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause> = emptySet()
 )

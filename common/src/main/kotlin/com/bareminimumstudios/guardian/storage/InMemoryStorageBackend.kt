@@ -84,6 +84,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
             }
             .filter { if (query.rollbackStates.isNotEmpty()) it.rollbackState in query.rollbackStates else query.includeRolledBack || it.rollbackState in setOf(BlockRollbackState.ACTIVE, BlockRollbackState.PENDING) }
             .filter { query.actions.isEmpty() || it.snapshot.action in query.actions }
+            .filter { query.causes.isEmpty() || it.snapshot.cause in query.causes }
             .filter { query.afterEpochMillis == null || it.snapshot.timestampEpochMillis >= query.afterEpochMillis }
             .filter { query.beforeEpochMillis == null || it.snapshot.timestampEpochMillis <= query.beforeEpochMillis }
             .filter { row ->

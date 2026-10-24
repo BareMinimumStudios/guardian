@@ -23,7 +23,7 @@ data class FluidCommandFilters(val common: BlockCommandFilter, val kinds: Set<Fl
                     else -> common.add(token)
                 }
             }
-            FluidCommandFilters(BlockCommandFilterParser.parse(common.joinToString(" ")).getOrThrow(),kinds)
+            FluidCommandFilters(BlockCommandFilterParser.parse(common.joinToString(" ")).getOrThrow().also { require(it.causes.isEmpty()) { "Cause filters apply to block history only" } },kinds)
         }
     }
 }

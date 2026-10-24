@@ -220,6 +220,8 @@ object PlayerBlockCapture {
         enabledProvider() && !world.isClientSide && player != null
 
     private fun submit(snapshot: BlockChangeSnapshot) {
+        // Environmental capture owns these transitions when enabled, avoiding duplicate fire rows.
+        if(EnvironmentHistoryCapture.ownsFire(snapshot.before,snapshot.after)) return
         when (pipelineProvider()?.submit(snapshot) ?: SubmissionResult.NOT_RUNNING) {
             SubmissionResult.ACCEPTED -> submitted.incrementAndGet()
             SubmissionResult.BACKPRESSURE -> {

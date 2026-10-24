@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.75+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.76+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -82,6 +82,7 @@ Block lookup searches the dimension in which the command runs. Without a radius 
 | `t:` or `time:` | How far back to search | `t:30m`, `t:2h`, `t:1d12h` |
 | `r:` or `radius:` | Cuboid radius around you or explicit coordinates | `r:10` |
 | `x: y: z:` | Explicit block coordinates | `x:100 y:64 z:-20` |
+| `c:` or `cause:` | Block-history cause, with comma lists | `c:fire`, `c:explosion`, `c:fire,explosion`, `c:player` |
 | `a:` or `action:` | Block action; lookup and block rollback only | `a:place`, `a:break`, `a:change`, `a:place,break` |
 | `l:` or `limit:` | Results per history page | `l:20` |
 | `p:` or `page:` | History page, starting at 1 | `p:2` |
@@ -132,6 +133,24 @@ User-filtered item history without a region spans recorded dimensions. Adding a 
 Green entries describe items added to an inventory; red entries describe removals. Records preserve item counts and persistent Data Components, including modded item identities where supported. Opening a container without changing items does not create a transaction.
 
 Hopper history is **off by default**. Enable `logging.automatedContainerTransfers` to record supported block-to-block transfers. Automated records show the observed source and destination coordinates together. A transfer **into a hopper** does not mean the item also reached the barrel below it. Failed pushes into a full destination should produce no transfer record.
+
+## Fire and explosion history
+
+Two independent server settings, `environment.fire` and `environment.explosions`, are **off by default**. Enable the categories you need. Fire ticks and large explosions can create substantial history; existing queue limits apply, and rejected records produce a throttled warning. Neither setting changes fire ticks, mob-griefing rules or claim protection.
+
+```text
+/guardian lookup c:fire t:1h r:25
+/guardian lookup c:explosion u:YourName t:1d
+/guardian lookup c:fire,explosion i:minecraft:oak_planks t:1h
+```
+
+Fire capture records supported flint-and-steel/fire-charge ignition, scheduled spread/burning and actual transitions to or from fire/soul fire, including extinguishing. Routine fire age/shape updates, unchanged attempts and transient fire that immediately disappears without a net change are omitted. Direct ignition can identify the player; later spread/burning and untracked extinguishing show unknown rather than a guessed original owner. Lit campfire/candle changes through the supported ignition tools are included.
+
+Explosion capture observes actual block changes during standard explosion finalization, including supported TNT, creeper and other ordinary explosion paths. A known indirect player source is used, otherwise the known source entity or unknown. A nearby player is never treated as the cause. Explosions prevented before mutation, mob explosions with block griefing disabled and unchanged targets do not create destruction records. Custom mod implementations that bypass these methods need compatibility testing. TNT priming/removal before an explosion and entity/drop damage are not separate events in this category.
+
+These rows appear in ordinary block lookup and left-click inspection, retain their cause across restart and participate in confirmed block-history purge. **Fire/explosion recovery is read-only in this checkpoint:** public block rollback/restore excludes these causes, and explicitly requesting them returns an explanation. Recreating blocks alone could duplicate drops or reintroduce hazardous fire/TNT state. This feature does not restore entities, inventories or dropped items.
+
+`c:` filters apply to block history; item, entity, fluid and activity commands reject them. Capture settings affect future events only. Installing an update does not reconstruct earlier fires or explosions.
 
 ## Chat and login/logout history
 

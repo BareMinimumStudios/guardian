@@ -329,7 +329,7 @@ object GuardianCommands {
     private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
         val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian transactions: ${it.message}")); return 0 }
-        if (filter.actions.isNotEmpty()) { source.sendFailure(Component.literal("Item history does not accept block action filters.")); return 0 }
+        if (filter.actions.isNotEmpty() || filter.causes.isNotEmpty()) { source.sendFailure(Component.literal("Item history does not accept block action or cause filters.")); return 0 }
         val scope = resolveScope(source, filter) ?: return 0
         val limit = filter.limit ?: config.lookup.defaultResults.get()
         if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
@@ -505,7 +505,7 @@ object GuardianCommands {
             bounds = scope.bounds,
             radius = radius,
             search = resolvedSearch(source, filter),
-            actions = filter.actions,
+            actions = filter.actions, causes = filter.causes,
             afterEpochMillis = filter.lookbackMillis?.let { (now - it).coerceAtLeast(0L) },
             limit = requestedLimit, offset = ((filter.page ?: 1) - 1) * requestedLimit, oldestFirst = filter.oldestFirst
         )
@@ -563,6 +563,9 @@ object GuardianCommands {
         }
         val center = if (scope.bounds == null) (filter.explicitPosition ?: sourcePosition(source)) else null
         val now = System.currentTimeMillis()
+        if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.FIRE || it==com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION }) {
+            source.sendFailure(Component.literal("Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
+        }
         val query = BlockLookupQuery(
             dimension = scope.dimension,
             position = center,
@@ -571,6 +574,7 @@ object GuardianCommands {
             actorUuid = filter.actorName?.let { source.server.playerList.players.firstOrNull { player -> player.gameProfile.name.equals(it, ignoreCase = true) }?.uuid },
             actorName = filter.actorName?.takeIf { source.server.playerList.players.none { player -> player.gameProfile.name.equals(it, ignoreCase = true) } },
             actions = filter.actions,
+            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,
             limit = (config.rollback.maxRecords.get() + 1).coerceAtMost(10_000)

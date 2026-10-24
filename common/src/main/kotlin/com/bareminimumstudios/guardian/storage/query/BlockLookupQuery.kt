@@ -6,7 +6,7 @@ import com.bareminimumstudios.guardian.domain.BlockBounds
 import com.bareminimumstudios.guardian.domain.ResourceId
 import java.util.UUID
 
-data class BlockLookupQuery(
+data class BlockLookupQuery @JvmOverloads constructor(
     val dimension: ResourceId? = null,
     val position: BlockPosition? = null,
     /** Optional inclusive cuboid. Mutually exclusive with [position]/[radius]. */
@@ -23,7 +23,8 @@ data class BlockLookupQuery(
     val offset: Int = 0, val oldestFirst: Boolean = false,
     val search: HistorySearchFilter = HistorySearchFilter(),
     /** Explicit journal selection takes precedence over includeRolledBack. Empty selects the legacy history scope. */
-    val rollbackStates: Set<BlockRollbackState> = emptySet()
+    val rollbackStates: Set<BlockRollbackState> = emptySet(),
+    val causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause> = emptySet()
 ) {
     init {
         require(offset >= 0)

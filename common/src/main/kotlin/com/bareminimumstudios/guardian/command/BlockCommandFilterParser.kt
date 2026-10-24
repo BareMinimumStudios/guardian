@@ -20,6 +20,7 @@ object BlockCommandFilterParser {
         var y: Int? = null
         var z: Int? = null
         var actions = emptySet<ActionType>()
+        var causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause>? = null
         var limit: Int? = null
         var page: Int? = null
         var order: String? = null
@@ -64,6 +65,14 @@ object BlockCommandFilterParser {
                 "x" -> x = parseCoordinate("x", value, x)
                 "y" -> y = parseCoordinate("y", value, y)
                 "z" -> z = parseCoordinate("z", value, z)
+                "c", "cause" -> {
+                    require(causes == null) { "Cause filter was specified more than once." }
+                    causes=value.split(',').map { name ->
+                        val normalized=if(name.equals("worldedit",true)) "WORLD_EDIT" else name.uppercase().replace('-','_')
+                        com.bareminimumstudios.guardian.domain.ChangeCause.entries.firstOrNull { it.name==normalized }
+                            ?: error("Unknown cause '$name'; use fire, explosion, player or worldedit.")
+                    }.toSet()
+                }
                 "a", "action" -> {
                     require(actions.isEmpty()) { "Action filter was specified more than once." }
                     actions = parseActions(value)
@@ -98,7 +107,7 @@ object BlockCommandFilterParser {
             useWorldEditSelection = useWorldEditSelection,
             explicitPosition = if (coordinateCount == 3) BlockPosition(x!!, y!!, z!!) else null,
             actions = actions,
-            limit = limit, page = page, oldestFirst = order == "oldest", search = search
+            limit = limit, page = page, oldestFirst = order == "oldest", search = search, causes = causes ?: emptySet()
         )
     }
 

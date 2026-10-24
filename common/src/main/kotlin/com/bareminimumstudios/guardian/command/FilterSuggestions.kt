@@ -5,7 +5,7 @@ object FilterSuggestions {
     fun values(token: String, players: Collection<String>, items: Boolean = false, resources: Collection<String> = emptyList(), extended: Boolean = true): List<String> {
         val key = token.substringBefore(':').lowercase()
         val prefix = token.substringBefore(':') + ":"
-        if (':' !in token) return (listOf("u:", "user:", "t:", "time:", "r:", "radius:", "l:", "limit:", "p:", "page:", "o:", "order:", "x:", "y:", "z:") + (if (extended) listOf("i:", "include:", "e:", "exclude:") else emptyList()) + if (items) emptyList() else listOf("a:", "action:")).filter { it.startsWith(token, true) }
+        if (':' !in token) return (listOf("u:", "user:", "t:", "time:", "r:", "radius:", "l:", "limit:", "p:", "page:", "o:", "order:", "x:", "y:", "z:") + (if (extended) listOf("i:", "include:", "e:", "exclude:") else emptyList()) + if (items) emptyList() else listOf("a:", "action:", "c:", "cause:")).filter { it.startsWith(token, true) }
         val value = token.substringAfter(':')
         if (extended && key in setOf("u", "user", "i", "include", "e", "exclude")) {
             val head = if (',' in value) value.substringBeforeLast(',') + "," else ""
@@ -25,6 +25,7 @@ object FilterSuggestions {
             "l", "limit" -> listOf("10", "20", "50", "100", "500")
             "o", "order" -> listOf("newest", "oldest")
             "p", "page" -> listOf("1", "2", "3", "4", "5")
+            "c", "cause" -> if(items) emptyList() else listOf("fire","explosion","player","worldedit")
             "a", "action" -> if (items) emptyList() else listOf("place", "break", "change", "block")
             else -> emptyList()
         }
