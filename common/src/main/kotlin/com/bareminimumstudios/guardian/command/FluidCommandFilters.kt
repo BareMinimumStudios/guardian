@@ -11,11 +11,13 @@ data class FluidCommandFilters(val common: BlockCommandFilter, val kinds: Set<Fl
             raw.trim().split(Regex("\\s+")).filter(String::isNotEmpty).forEach { token ->
                 when(token.substringBefore(':').lowercase()) {
                     "a", "action" -> {
-                        require(!seenAction) { "Use one action filter with place or remove" }; seenAction=true
+                        require(!seenAction) { "Use one action filter with place, remove, flow or form" }; seenAction=true
                         kinds=token.substringAfter(':').split(',').map { when(it.lowercase()) {
                             "place" -> FluidAuditKind.PLACE
                             "remove" -> FluidAuditKind.REMOVE
-                            else -> error("Fluid actions are place and remove")
+                            "flow" -> FluidAuditKind.FLOW
+                            "form" -> FluidAuditKind.FORM
+                            else -> error("Fluid actions are place, remove, flow and form")
                         } }.toSet()
                     }
                     else -> common.add(token)

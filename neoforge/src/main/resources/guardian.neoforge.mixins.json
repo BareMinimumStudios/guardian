@@ -62,7 +62,11 @@
     "ItemFrameHistoryMixin",
     "FrameRemovalHistoryMixin",
     "FramePlacementHistoryMixin",
-    "ItemFrameDataAccessor"
+    "ItemFrameDataAccessor",
+    "FlowingFluidHistoryMixin",
+    "NeoForgeFluidFormationHistoryMixin",
+    "FluidMutationHistoryMixin",
+    "FluidTraceUnloadMixin"
   ],
   "injectors": {
     "defaultRequire": 1

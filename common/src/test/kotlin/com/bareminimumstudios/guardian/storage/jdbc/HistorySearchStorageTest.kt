@@ -61,7 +61,7 @@ class HistorySearchStorageTest {
                 s.executeUpdate("DROP TABLE ex_container_item");s.executeUpdate("DROP TABLE ex_entity");s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version >= 12")
                 s.executeUpdate("UPDATE ex_meta SET meta_value = '11' WHERE meta_key = 'schema_version'")
             } }
-            db().use { it.open();assertEquals(19,it.health().schemaVersion);assertEquals(listOf(old.transactionId),it.lookupContainers(ContainerLookupQuery(search=HistorySearchFilter(included=setOf(ResourceId.parse("example:slate"))))).map { it.transactionId }) }
+            db().use { it.open();assertEquals(20,it.health().schemaVersion);assertEquals(listOf(old.transactionId),it.lookupContainers(ContainerLookupQuery(search=HistorySearchFilter(included=setOf(ResourceId.parse("example:slate"))))).map { it.transactionId }) }
             DriverManager.getConnection(url).use { c ->c.createStatement().use { s ->s.executeQuery("SELECT changes FROM ex_container").use { r ->assertTrue(r.next());assertContentEquals(bytes,r.getBytes(1)) } } }
             db().use { it.open();assertEquals(listOf(old.transactionId),it.lookupContainers(ContainerLookupQuery(search=HistorySearchFilter(included=setOf(ResourceId.parse("example:slate"))))).map { it.transactionId }) }
         }

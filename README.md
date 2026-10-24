@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.74+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.75+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 19**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 20**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -235,11 +235,25 @@ Fluid capture is **off by default**. Enable `fluids.bucketChanges` in the server
 /guardian fluids a:remove i:minecraft:lava t:1d
 ```
 
-`/co fluids` also works. Use `a:place`, `a:remove` or `a:place,remove`, with the normal user/time/radius/coordinate/resource/limit/page/order filters and clickable navigation. `i:` and `e:` match recorded fluid registry IDs at either end of the change, not bucket items or host blocks. A spatial search uses your current dimension; without a spatial filter it covers recorded dimensions. Hover a result for the dimension, exact timestamp, source flags and before/after host block IDs.
+`/co fluids` also works. Use `a:place`, `a:remove` or `a:place,remove`, with the normal user/time/radius/coordinate/resource/limit/page/order filters and clickable navigation. `i:` and `e:` match recorded fluid registry IDs or host block IDs at either end of the change, not bucket items. A spatial search uses your current dimension; without a spatial filter it covers recorded dimensions. Hover a result for the dimension, exact timestamp, source flags and before/after host block IDs.
 
 This records persistent changes through the standard player bucket placement and pickup paths, including supported waterlogging. It uses the actual changed target when a bucket falls back to an adjacent block. Accepted no-ops and water vaporizing in the Nether produce no placement record. Registered mod fluids can appear when they use these hooks; custom bucket implementations need compatibility testing.
 
-Natural spread, pumps, dispensers, cauldrons, powder snow, milk, fluid reactions without a persistent placed fluid and custom tank/storage APIs are not covered. Fish-bucket water can pass through these hooks; the released creature is not a fluid event. Claim cancellation before the hooked operation creates no observed change, but actual pack protection and client prediction remain part of connected-client acceptance.
+Bucket capture alone does not cover natural spread or fluid reactions; enable the separate flow setting below for supported natural paths. Pumps, dispensers, cauldrons, powder snow, milk and custom tank/storage APIs are outside these bucket hooks. Fish-bucket water can pass through these hooks; the released creature is not a fluid event. Claim cancellation before the hooked operation creates no observed change, but actual pack protection and client prediction remain part of connected-client acceptance.
+
+### Natural flow and fluid-formed blocks
+
+`fluids.naturalFlow` is a separate **off-by-default** setting. Enable it to record supported scheduled fluid spread, level changes and recession, plus standard liquid interactions forming stone, cobblestone, obsidian and basalt. These can generate substantially more history than bucket capture. Existing queue limits and backpressure still apply; check `/guardian status`.
+
+```text
+/guardian fluids a:flow t:10m r:20
+/guardian fluids a:form t:1h
+/guardian fluids i:minecraft:obsidian t:1d
+```
+
+Hover for before/after fluid IDs, source flags, fluid amounts and host blocks. Bucket rows retain `a:place` and `a:remove`; flow is not described as another bucket placement. Old rows have unknown amounts because they were not previously stored.
+
+Source attribution is conservative and temporary: successful supported player bucket placements seed a bounded trace even if bucket-history capture is disabled. Traces expire after 1,200 world ticks (about one minute at 20 TPS), source/chunk changes, eviction or restart. Competing or untracked feeding fluids show `environment/unknown`; user filters cannot match those unknown records. Capture never loads missing chunks to recover attribution. It does not reconstruct earlier sources, and direct chunk edits or custom mod flow implementations need separate compatibility checks. This is not complete fluid simulation or player attribution for every flowing liquid. Flow/formation history participates in the existing confirmed purge.
 
 Fluid history is **read-only**. It has separate records and does not expand block rollback/restore or item rollback. Confirmed history purge includes old fluid records. Disabling capture leaves old fluid records available to authorized staff; enabling it does not reconstruct earlier changes.
 

@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.74 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.75 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.74 passed 670 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current expanded purge passed 442 actual-provider/operator checks on both loaders. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.75 passed 677 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -151,6 +151,16 @@ Alpha.73 passed GitHub CI. The owner then selected entity/fluid purge with exist
 Both isolated dedicated servers passed preview/cancel, confirmed mixed 1,000-record deletion, fixed late-insert exclusion, token replay refusal, recovery-protected second deletion, restart and SQLite integrity checks. Actual LuckPerms and operator fallback passed 442 purge permission checks, including independent level-four access, both aliases, cached suggestions, token revocation, queued authorization withdrawal, stop cancellation and maintenance exclusion. No supplied databases were opened for these tests. All owned servers stopped. Final jars match the runtime-tested hashes and bundle SQLite only. [Evidence and checksums](validation/entity-fluid-purge-alpha74.json).
 
 Connected-client presentation remains R3; these fixtures do not certify a rendered client. Alpha.74 remote CI awaits the owner's push.
+
+## Natural fluid flow history, 2026-10-24
+
+Alpha.74 passed GitHub CI. The owner then selected natural flow/source attribution. Alpha.75 adds separately opt-in `fluids.naturalFlow`, FLOW/FORM records, fluid amounts and block-resource filtering. Schema 20 transactionally preserves older rows with null historical amounts and permits unknown actor references; config version 13 adds the default-off setting. Source traces are bounded temporary runtime state, with conservative unknown attribution, source replacement/expiry and chunk-unload invalidation. There is no fluid restoration or restart backfill.
+
+677 tests passed, including seven new storage/presentation tests covering SQLite, optional DuckDB and memory, schema-19 upgrade/restart, old payload preservation, unknown actor filters, levels, formations, purge participation and clear wording. Older upgrade fixtures now reconstruct their actual old column/index layouts. Required clean/build/repeated-cache/WorldEdit builds passed through IDEA. MixinMCP source/bytecode checks and final mixin/capture inspections passed after sync.
+
+Both isolated dedicated servers passed actual flow/recession/formation paths, x15/x16 spread and attribution, competing/untracked roots, source replacement, expiry by advancing actual world time, chunk trace invalidation, blocked stone destinations, five queries/restart checks and SQLite integrity. Normal/glow frame work is unchanged. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and forty deferred activity/entity/fluid callbacks per loader. All final core hashes match runtime-tested jars; SQLite remains the only nested dependency. [Evidence and checksums](validation/fluid-flow-alpha75.json).
+
+All owned servers stopped and supplied worlds/databases were untouched. Synthetic players do not close connected-client R3. The unload target is inspected/loaded and its invalidation function is exercised directly; this is not a claim of a real network unload/reload acceptance pass. Alpha.75 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

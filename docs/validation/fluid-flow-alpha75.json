@@ -1,0 +1,703 @@
+{
+  "version": "0.4.0-alpha.75+1.21.1",
+  "date": "2026-10-24",
+  "schema": 20,
+  "configVersion": 13,
+  "tests": {
+    "common": {
+      "tests": 613,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 64,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2116,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=48",
+      "rows": [
+        [
+          "PLACE",
+          2,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "REMOVE",
+          2,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          8,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air",
+          "minecraft:lava"
+        ],
+        [
+          "REMOVE",
+          8,
+          300,
+          2,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          14,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "REMOVE",
+          14,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "PLACE",
+          20,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          17,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          16,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          45,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          55,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          56,
+          300,
+          11,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          56,
+          300,
+          9,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          67,
+          300,
+          9,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          67,
+          300,
+          11,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          77,
+          300,
+          10,
+          "minecraft:flowing_water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "FORM",
+          88,
+          300,
+          10,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:obsidian"
+        ],
+        [
+          "FLOW",
+          108,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          128,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian fluids a:flow t:1h",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:18] [Server thread/INFO]: Guardian fluid history: 10 records (page 1).",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 128, 300, 10",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 108, 300, 10",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:flowing_water -> minecraft:empty @ 77, 300, 10",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 11",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 9",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 9",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 11",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 55, 300, 10",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 45, 300, 10",
+            "[16:32:18] [Server thread/INFO]: 2s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 16, 300, 10",
+            "[16:32:18] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[16:32:18] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792877538840020100"
+          ]
+        },
+        {
+          "command": "co fluids a:form t:1h",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:18] [Server thread/INFO]: Guardian fluid history: 1 records (page 1).",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:32:18] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:32:18] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792877538941585400"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:obsidian",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:18] [Server thread/INFO]: Guardian fluid history: 1 records (page 1).",
+            "[16:32:18] [Server thread/INFO]: 2s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:32:18] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:32:19] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792877538989787300"
+          ]
+        },
+        {
+          "command": "guardian fluids a:death",
+          "expected": "Fluid actions are place, remove, flow and form",
+          "output": [
+            "[16:32:19] [Server thread/INFO]: Guardian fluids: Fluid actions are place, remove, flow and form",
+            "[16:32:19] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792877539079987000"
+          ]
+        },
+        {
+          "command": "guardian fluids l:500",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:30] [Server thread/INFO]: Guardian fluid history: 19 records (page 1).",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 128, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 108, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:flowing_water -> minecraft:empty @ 77, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 11",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 9",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 9",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 11",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 55, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 45, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 16, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 17, 300, 10",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[16:32:30] [Server thread/INFO]: 14s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[16:32:30] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[16:32:30] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792877550897838300"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=49",
+      "rows": [
+        [
+          "PLACE",
+          2,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "REMOVE",
+          2,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          8,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air",
+          "minecraft:lava"
+        ],
+        [
+          "REMOVE",
+          8,
+          300,
+          2,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:air"
+        ],
+        [
+          "PLACE",
+          14,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "REMOVE",
+          14,
+          300,
+          2,
+          "minecraft:water",
+          "minecraft:empty",
+          "minecraft:oak_slab",
+          "minecraft:oak_slab"
+        ],
+        [
+          "PLACE",
+          20,
+          300,
+          2,
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          17,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          16,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          45,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          56,
+          300,
+          9,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          56,
+          300,
+          11,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          55,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          67,
+          300,
+          11,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          67,
+          300,
+          9,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          77,
+          300,
+          10,
+          "minecraft:flowing_water",
+          "minecraft:empty",
+          "minecraft:water",
+          "minecraft:air"
+        ],
+        [
+          "FORM",
+          88,
+          300,
+          10,
+          "minecraft:lava",
+          "minecraft:empty",
+          "minecraft:lava",
+          "minecraft:obsidian"
+        ],
+        [
+          "FLOW",
+          108,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ],
+        [
+          "FLOW",
+          128,
+          300,
+          10,
+          "minecraft:empty",
+          "minecraft:flowing_water",
+          "minecraft:air",
+          "minecraft:water"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian fluids a:flow t:1h",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 10 records (page 1).",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 128, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 108, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:flowing_water -> minecraft:empty @ 77, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 9",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 11",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 55, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 11",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 9",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 45, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 16, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792877574107814900"
+          ]
+        },
+        {
+          "command": "co fluids a:form t:1h",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 1 records (page 1).",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792877574208100600"
+          ]
+        },
+        {
+          "command": "guardian fluids i:minecraft:obsidian",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 1 records (page 1).",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792877574302614700"
+          ]
+        },
+        {
+          "command": "guardian fluids a:death",
+          "expected": "Fluid actions are place, remove, flow and form",
+          "output": [
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluids: Fluid actions are place, remove, flow and form",
+            "[16:32:54] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792877574393473400"
+          ]
+        },
+        {
+          "command": "guardian fluids l:500",
+          "expected": "Guardian fluid history:",
+          "output": [
+            "[16:33:07] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[16:33:07] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=20",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian fluid history: 19 records (page 1).",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 128, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 108, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid formed minecraft:obsidian @ 88, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:flowing_water -> minecraft:empty @ 77, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 9",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 67, 300, 11",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 55, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 11",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 56, 300, 9",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: environment/unknown fluid changed minecraft:empty -> minecraft:flowing_water @ 45, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 16, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture fluid changed minecraft:empty -> minecraft:flowing_water @ 17, 300, 10",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 20, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:water with a bucket @ 14, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 14, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:lava with a bucket @ 8, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:lava with a bucket @ 8, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture collected minecraft:water with a bucket @ 2, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture placed minecraft:water with a bucket @ 2, 300, 2",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[16:33:07] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792877587677809200"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 617,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 618,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 440,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 441,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.75+1.21.1.jar",
+      "bytes": 13160596,
+      "sha256": "d67b88d5296fa1e009eeb2c4af83fc9f0c0959618d54fbf505f8b7ba1c56aff0"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.75+1.21.1.jar",
+      "bytes": 13137173,
+      "sha256": "669bb2c25cc0ecfb5c4ba3b03f3d9f925edf8be453198b32c738999b7ca44db1"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.75+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "f82c365b9e703d22b094a506cd0d244cae02ee64ddc6cdb7cd5a867ccb8b5095"
+    }
+  ],
+  "builds": {
+    "clean": "passed in 15s, 32 executed/4 from cache; earlier full suite passed in 1m46s",
+    "build": "passed in 3s; configuration cache stored",
+    "repeat": "passed in 152ms; configuration cache reused",
+    "worldedit": "passed in 2s"
+  },
+  "previousCI": {
+    "sha": "150fa26023c674b2d9c6aa0f2f9edd610e69c529",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40133291338"
+  },
+  "sourceChecks": "MixinMCP inspected FlowingFluid tick/spread, Level mutation and ServerLevel unload on both loader variants; NeoForge FluidInteractionRegistry replaces vanilla solidification. Five new mixins and shared capture passed IDE errors-only inspection after sync.",
+  "runtimeChecks": [
+    "existing seven bucket events unchanged",
+    "actual scheduled water spread across x15/x16 boundary with player attribution",
+    "untracked source uses unknown actor",
+    "competing source refuses guessed attribution",
+    "replaced root loses attribution",
+    "recession to air",
+    "standard obsidian formation on both loaders",
+    "full stone destination stays dry",
+    "advancing actual world time expires source attribution",
+    "chunk trace invalidation preserves gameplay and loses attribution",
+    "five query/restart cases per loader",
+    "SQLite integrity after restart"
+  ],
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "limits": [
+    "Tests call actual game methods with synthetic players; connected-client presentation and pack claim behavior remain R3.",
+    "Chunk cache invalidation is directly exercised; unload hook target/injection inspected and loaded, not an unload/reload network acceptance test.",
+    "Traces are temporary, at most 8192 positions per level and 1200 world ticks; they are not persisted or reconstructed.",
+    "Direct chunk edits and custom fluid implementations that bypass these hooks are outside this contract.",
+    "No fluid restoration or performance capacity certification is added."
+  ]
+}

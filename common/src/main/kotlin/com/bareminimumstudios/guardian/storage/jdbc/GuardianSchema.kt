@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 19
+    const val CURRENT_VERSION = 20
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -139,6 +139,16 @@ internal object GuardianSchema {
         SchemaMigration(19, "Immutable item-frame display history", listOf(
             "ALTER TABLE ex_entity ADD COLUMN frame_before BLOB",
             "ALTER TABLE ex_entity ADD COLUMN frame_after BLOB"
+        )),
+        SchemaMigration(20, "Natural fluid levels and optional source attribution", listOf(
+            "DROP INDEX ex_fluid_time_idx", "DROP INDEX ex_fluid_actor_idx", "DROP INDEX ex_fluid_location_idx",
+            "ALTER TABLE ex_fluid RENAME TO ex_fluid_v19",
+            "CREATE TABLE ex_fluid (event_uuid VARCHAR PRIMARY KEY,time BIGINT NOT NULL,actor BIGINT,dimension VARCHAR NOT NULL,x INTEGER NOT NULL,y INTEGER NOT NULL,z INTEGER NOT NULL,kind VARCHAR NOT NULL,before_fluid VARCHAR NOT NULL,before_source SMALLINT NOT NULL,before_block VARCHAR NOT NULL,after_fluid VARCHAR NOT NULL,after_source SMALLINT NOT NULL,after_block VARCHAR NOT NULL,before_amount INTEGER,after_amount INTEGER)",
+            "INSERT INTO ex_fluid(event_uuid,time,actor,dimension,x,y,z,kind,before_fluid,before_source,before_block,after_fluid,after_source,after_block) SELECT event_uuid,time,actor,dimension,x,y,z,kind,before_fluid,before_source,before_block,after_fluid,after_source,after_block FROM ex_fluid_v19",
+            "DROP TABLE ex_fluid_v19",
+            "CREATE INDEX ex_fluid_time_idx ON ex_fluid(time,event_uuid)",
+            "CREATE INDEX ex_fluid_actor_idx ON ex_fluid(actor,time)",
+            "CREATE INDEX ex_fluid_location_idx ON ex_fluid(dimension,x,y,z,time)"
         ))
     )
 }

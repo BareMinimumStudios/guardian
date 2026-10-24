@@ -14,6 +14,8 @@ enum class ActionType(val storageCode: Int) {
     ENTITY_BREED(35),
     FLUID_PLACE(36),
     FLUID_REMOVE(37),
+    FLUID_FLOW(38),
+    FLUID_FORM(39),
     PLAYER_SESSION(40),
     CHAT(50),
     COMMAND(51),

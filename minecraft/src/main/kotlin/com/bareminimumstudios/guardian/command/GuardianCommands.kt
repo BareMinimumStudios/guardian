@@ -94,7 +94,7 @@ object GuardianCommands {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
                         val token=builder.input.substring(start)
                         val choices=when(token.substringBefore(':').lowercase()) {
-                            "a","action" -> listOf("${token.substringBefore(':')}:place","${token.substringBefore(':')}:remove").filter { it.startsWith(token,true) }
+                            "a","action" -> listOf("${token.substringBefore(':')}:place","${token.substringBefore(':')}:remove","${token.substringBefore(':')}:flow","${token.substringBefore(':')}:form").filter { it.startsWith(token,true) }
                             else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.FLUID.keySet().map { it.toString() }) +
                                 if (':' !in token) listOf("a:").filter { it.startsWith(token,true) } else emptyList()
                         }

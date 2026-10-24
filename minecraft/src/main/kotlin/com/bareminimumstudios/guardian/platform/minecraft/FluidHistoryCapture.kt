@@ -17,15 +17,15 @@ object FluidHistoryCapture {
     private var config: () -> GuardianConfig? = { null }
     private var lastWarning=0L
     data class Pending(val level: ServerLevel,val position: BlockPos,val actor: ActorIdentity.Player,val before: FluidSnapshot)
-    fun install(writer: () -> BufferedLogPipeline?, settings: () -> GuardianConfig?) { pipeline=writer;config=settings }
+    fun install(writer: () -> BufferedLogPipeline?, settings: () -> GuardianConfig?) { pipeline=writer;config=settings;FluidFlowCapture.install(writer,settings) }
     private fun enabled(): Boolean {
         val settings=config() ?: return false
-        return settings.general.enabled.get() && settings.logging.enabled.get() && settings.fluids.bucketChanges.get()
+        return settings.general.enabled.get() && settings.logging.enabled.get() && (settings.fluids.bucketChanges.get() || settings.fluids.naturalFlow.get())
     }
-    private fun snapshot(level: ServerLevel, position: BlockPos): FluidSnapshot {
+    internal fun snapshot(level: ServerLevel, position: BlockPos): FluidSnapshot {
         val state=level.getBlockState(position);val fluid=state.fluidState
         return FluidSnapshot(ResourceId.parse(BuiltInRegistries.FLUID.getKey(fluid.type).toString()),fluid.isSource,
-            ResourceId.parse(BuiltInRegistries.BLOCK.getKey(state.block).toString()))
+            ResourceId.parse(BuiltInRegistries.BLOCK.getKey(state.block).toString()),fluid.amount)
     }
     @JvmStatic fun begin(player: Player?,level: Level,position: BlockPos): Pending? {
         if (!enabled() || player !is ServerPlayer || level !is ServerLevel) return null
@@ -37,6 +37,8 @@ object FluidHistoryCapture {
             val after=snapshot(pending.level,pending.position);val before=pending.before
             if (before.fluidId==after.fluidId && before.source==after.source) return
             if (removal && (before.empty || !after.empty) || !removal && after.empty) return
+            FluidFlowCapture.bucket(pending.level,pending.position,pending.actor,after)
+            if(config()?.fluids?.bucketChanges?.get()!=true) return
             val pos=pending.position
             val row=FluidAuditEvent(timestampEpochMillis=System.currentTimeMillis(),actor=pending.actor,
                 dimension=ResourceId.parse(pending.level.dimension().location().toString()),position=BlockPosition(pos.x,pos.y,pos.z),

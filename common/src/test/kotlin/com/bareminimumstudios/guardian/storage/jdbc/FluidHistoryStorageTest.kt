@@ -54,7 +54,7 @@ class FluidHistoryStorageTest {
     }
     @Test fun actionsAndCommonFiltersRemainDistinctFromEntityAndBlockActions() {
         assertEquals(setOf(FluidAuditKind.PLACE),FluidCommandFilters.parse("a:place u:Alex t:1h r:5").getOrThrow().kinds)
-        assertEquals(FluidAuditKind.entries.toSet(),FluidCommandFilters.parse("a:place,remove").getOrThrow().kinds)
+        assertEquals(FluidAuditKind.entries.toSet(),FluidCommandFilters.parse("a:place,remove,flow,form").getOrThrow().kinds)
         assertTrue(FluidCommandFilters.parse("a:death").isFailure);assertTrue(FluidCommandFilters.parse("a:place a:remove").isFailure)
     }
     @Test fun schema17UpgradePreservesEntityHistoryAndFluidsSurviveRestart() {
@@ -68,7 +68,7 @@ class FluidHistoryStorageTest {
                 GuardianSchema.migrations.single { it.version==16 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
                 s.executeUpdate("DROP TABLE ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=18");s.executeUpdate("UPDATE ex_meta SET meta_value='17' WHERE meta_key='schema_version'")
             } }
-            val placed=row();db().use{it.open();assertEquals(19,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
+            val placed=row();db().use{it.open();assertEquals(20,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
             db().use{it.open();assertEquals(listOf(placed),it.lookupFluids(FluidLookupQuery()))}
         }
     }

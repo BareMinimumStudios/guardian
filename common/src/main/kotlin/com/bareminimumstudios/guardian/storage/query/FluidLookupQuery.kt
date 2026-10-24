@@ -25,7 +25,7 @@ data class FluidLookupQuery(
     fun matches(row: FluidAuditEvent): Boolean = row.kind in kinds &&
         (dimension == null || row.dimension == dimension) &&
         (afterEpochMillis == null || row.timestampEpochMillis >= afterEpochMillis) &&
-        search.matchesActor(row.actor) && search.matchesResources(setOf(row.before.fluidId,row.after.fluidId)) &&
+        search.matchesActor(row.actor) && search.matchesResources(setOf(row.before.fluidId,row.after.fluidId,row.before.blockId,row.after.blockId)) &&
         (bounds == null || bounds.contains(row.position)) &&
         (position == null || abs(row.position.x.toLong()-position.x) <= (radius ?: 0) &&
             abs(row.position.y.toLong()-position.y) <= (radius ?: 0) && abs(row.position.z.toLong()-position.z) <= (radius ?: 0))

@@ -59,7 +59,11 @@
     "ItemFrameHistoryMixin",
     "FrameRemovalHistoryMixin",
     "FramePlacementHistoryMixin",
-    "ItemFrameDataAccessor"
+    "ItemFrameDataAccessor",
+    "FlowingFluidHistoryMixin",
+    "FluidFormationHistoryMixin",
+    "FluidMutationHistoryMixin",
+    "FluidTraceUnloadMixin"
   ],
   "injectors": {
     "defaultRequire": 1

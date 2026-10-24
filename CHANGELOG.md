@@ -33,6 +33,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.75+1.21.1] - 2026-10-24
+
+### Added
+
+- Opt-in natural fluid history for supported scheduled spread, level changes, recession and standard fluid-formed blocks on Fabric and NeoForge. Add `a:flow`/`a:form` filters and before/after fluid amounts.
+- Bounded temporary player-source traces with conservative unknown attribution, chunk-unload invalidation and no restart backfill.
+
+### Changed
+
+- Schema 20 preserves existing fluid history while allowing unknown actors and nullable recorded amounts. Config version 13 adds `fluids.naturalFlow`, disabled by default. Fluid restoration remains unavailable.
+
 ## [0.4.0-alpha.74+1.21.1] - 2026-10-24
 
 ### Added

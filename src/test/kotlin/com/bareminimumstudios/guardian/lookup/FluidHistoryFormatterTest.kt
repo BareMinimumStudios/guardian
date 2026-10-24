@@ -17,6 +17,16 @@ class FluidHistoryFormatterTest {
         assertTrue("minecraft:oak_slab" in line.style.hoverEvent!!.getValue(HoverEvent.Action.SHOW_TEXT)!!.string)
         assertFalse("rolled" in line.string)
     }
+    @Test fun naturalFlowDoesNotClaimABucketOrKnownPlayer() {
+        val natural=row.copy(actor=ActorIdentity.Unknown,kind=FluidAuditKind.FLOW)
+        val text=FluidHistoryFormatter.line(natural,2000).string
+        assertTrue("environment/unknown" in text);assertTrue("fluid changed" in text);assertFalse("bucket" in text)
+    }
+    @Test fun formationNamesSolidBlockAndShowsAmounts() {
+        val form=row.copy(kind=FluidAuditKind.FORM,before=water.copy(amount=8),after=empty.copy(blockId=ResourceId.parse("minecraft:obsidian"),amount=0))
+        val line=FluidHistoryFormatter.line(form,2000);assertTrue("formed minecraft:obsidian" in line.string)
+        assertTrue("amount=8" in line.style.hoverEvent!!.getValue(HoverEvent.Action.SHOW_TEXT)!!.string)
+    }
     @Test fun removalDescribesCollectionRatherThanPlacingAir() {
         val line=FluidHistoryFormatter.line(row.copy(kind=FluidAuditKind.REMOVE,before=water,after=empty),2000).string
         assertTrue("collected minecraft:water" in line);assertFalse("placed minecraft:empty" in line)
