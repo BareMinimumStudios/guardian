@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-23",
+  "version": "0.4.0-alpha.67+1.21.1",
+  "executableCommit": "e0f6a991f8c85e27ad896dc0df5dd3e381326b54",
+  "executableChanges": false,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.67+1.21.1.jar",
+      "bytes": 12955261,
+      "sha256": "c88b02b3ef351385bbdc8a29646c128c035e215d42e783c66c8be4c3078c5346",
+      "nestedJars": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ],
+      "serverOnly": true
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.67+1.21.1.jar",
+      "bytes": 12933792,
+      "sha256": "1cb51d49decd56465b7d0b1cc1d5aa538c8dc8f0dbab8417d6725df6f37a0db9",
+      "nestedJars": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ],
+      "serverOnly": true
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.67+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "f3621f3670179d55137bdea566f7534c794fb06cf1d4194b0f7d84ff0bc0bd1e",
+      "nestedJars": [],
+      "serverOnly": true
+    }
+  ],
+  "metadataLicensesNestedJarsAndIcon": "passed",
+  "priorTestBaseline": {
+    "automatedTests": 597,
+    "restoreCases": 56,
+    "permissionChecks": 2420,
+    "rerunDuringArtifactReview": false
+  },
+  "connectedClientAcceptance": "pending",
+  "releaseApproved": false,
+  "github": {
+    "id": 40058349580,
+    "head_sha": "e0f6a991f8c85e27ad896dc0df5dd3e381326b54",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580"
+  }
+}

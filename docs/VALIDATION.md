@@ -62,7 +62,13 @@ The owner explicitly selected block restore/redo. Alpha.67 adds `/guardian resto
 
 Final core jars passed 28 command/world/database checks per loader, including rollback/restore/rollback, both preview aliases, no preview mutation, repeated restore with no work, conflicts, unsupported targets, unloaded chunks, pending target reconciliation, unresolved pending preservation and restart replay without duplicate audit records. Actual LuckPerms and provider-free operator fixtures passed 2,420 checks, including preview revocation boundaries and seven apply stages: planning, before claim, during claim, before apply, preservation of older pending work, authorized apply, and permission loss after mutation before final journal completion. Tested hashes equal final artifacts. [Evidence and checksums](validation/restore-alpha67.json).
 
-Pending-state fixtures are synthetic; this does not certify atomic persistence between SQLite and Minecraft chunk saves or a new process-kill recovery guarantee. Connected-client/claim/pack acceptance, including the new restore command, remains R3. No item apply or purge was added. Remote CI for alpha.67 awaits the owner's push.
+Pending-state fixtures are synthetic; this does not certify atomic persistence between SQLite and Minecraft chunk saves or a new process-kill recovery guarantee. Connected-client/claim/pack acceptance, including the new restore command, remains R3. No item apply or purge was added. The owner pushed alpha.67; its [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580) passed.
+
+## Alpha.67 artifact review, 2026-10-23
+
+The owner pushed executable commit `e0f6a99`. Its [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580) passed. All three local jars still match the hashes from the completed restore/runtime milestone. Metadata confirms version, server-only loader/dependency declarations, SQLite-only standard packaging, separate adapter licensing and a 256×256 core icon. Core sizes are 12.36 MiB (Fabric) and 12.33 MiB (NeoForge); the separate Fabric WorldEdit adapter is about 0.02 MiB. ZIP integrity and nested-jar metadata passed. No executable or dependency changes were made, so the existing 597-test, 56-case restore and 2,420-check permission baseline was retained rather than rerun. [Artifact evidence](validation/artifacts-alpha67.json).
+
+A private test ZIP contains separate loader cores and the optional Fabric adapter, license notices, SHA-256 checksums, installation/upgrade instructions and a blank six-row client acceptance sheet. It contains no server worlds, databases, private agent sources or machine-specific configuration. Installation instructions call out schema 13, separate restore permission and original-event time filters. This is an acceptance package, not a published release. R3 client results and final owner sign-off remain pending.
 
 ## Pending acceptance
 

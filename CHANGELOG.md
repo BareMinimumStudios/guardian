@@ -20,6 +20,8 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Added
 
+- Review alpha.67 server artifact metadata and packaging, and prepare a checksummed client acceptance bundle with loader-specific installation notes. Connected-client acceptance and final release approval remain pending.
+
 - Record alpha.66 server-side acceptance for separate chat/session permissions and read-only block preview with actual LuckPerms and operator fallback on both loaders. Connected-client acceptance remains pending; executable jars are unchanged.
 
 - Record actual LuckPerms Fabric and NeoForge grant/deny/revocation command checks, including the tested NeoForge 5.4.150 replacement for the older provider capability failure. Server-side permissions acceptance subsequently passed in alpha.62; connected-client acceptance remains open.
