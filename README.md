@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.73+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.74+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -203,7 +203,7 @@ Breeding records the child after the standard animal breeding method successfull
 
 Cancelled NeoForge baby-spawn events and refused child insertion produce no birth record in the tested paths. A child that is removed later is a separate event, not a failed birth. Egg-laying, pregnancy, villager breeding and custom reproduction/taming methods that bypass these hooks are not covered. This feature does not change breeding or taming gameplay.
 
-This is read-only history. It does not record every entity property, general spawn/despawn or entity inventory, and it cannot restore entities. Mods that replace these methods or bypass the setter need separate compatibility testing. Existing purge commands cover block, item and player-activity history; **entity history is retained and is not yet included in purge**. Capture changes apply to future events only.
+This is read-only history. It does not record every entity property, general spawn/despawn or entity inventory, and it cannot restore entities. Mods that replace these methods or bypass the setter need separate compatibility testing. Confirmed history purge also includes old entity records. Capture changes apply to future events only.
 
 ### Item frames
 
@@ -223,7 +223,7 @@ To inspect a live frame, enable `/guardian inspect` and click the frame. Both `g
 
 Chunk unloads, dimension-transfer removals, repeated damage on a removed frame, unchanged interactions and tested fixed-frame refusals do not create destruction/change records. Damage attribution uses the supplied damage-source entity; a destructive removal without that context is recorded as `world`, not guessed from nearby players or the support block's history. Initial loaded frames and arbitrary direct item/rotation edits are not backfilled or universally captured. Failed placement and protection-mod cancellation before the relevant hook produce no accepted placement; actual pack protection and rendered client behavior still need connected-client acceptance.
 
-Frame history is read-only. It does not restore frames or transfer items, and it remains outside current purge categories. Existing frame history remains searchable when capture is disabled.
+Frame history is read-only. It does not restore frames or transfer items, and old frame records are included in confirmed history purge. Existing frame history remains searchable when capture is disabled.
 
 ## Fluid bucket history
 
@@ -241,7 +241,7 @@ This records persistent changes through the standard player bucket placement and
 
 Natural spread, pumps, dispensers, cauldrons, powder snow, milk, fluid reactions without a persistent placed fluid and custom tank/storage APIs are not covered. Fish-bucket water can pass through these hooks; the released creature is not a fluid event. Claim cancellation before the hooked operation creates no observed change, but actual pack protection and client prediction remain part of connected-client acceptance.
 
-Fluid history is **read-only**. It has separate records and does not expand block rollback/restore or item rollback. Existing purge categories do not delete fluid history. Disabling capture leaves old fluid records available to authorized staff; enabling it does not reconstruct earlier changes.
+Fluid history is **read-only**. It has separate records and does not expand block rollback/restore or item rollback. Confirmed history purge includes old fluid records. Disabling capture leaves old fluid records available to authorized staff; enabling it does not reconstruct earlier changes.
 
 ## Roll back blocks
 
@@ -312,11 +312,11 @@ Purge permanently removes old **history records**, across all users and worlds. 
 
 `/co purge` also works. Purge requires its own `guardian.purge` permission, with **operator level 4** as the fallback. It accepts only one age filter (`t:` or `time:`), retaining at least one day. User, world, radius, resource and page filters are not supported. The cutoff is fixed when preview starts; only records strictly older than that UTC timestamp qualify.
 
-Preview changes nothing. It shows eligible block, item-transaction and activity (chat/login/logout/command) counts, the protected count and a fixed batch of at most **1,000 records total**. One item transaction counts as one record, regardless of its slot count. Confirm with the complete token within 60 seconds using the same player or console authority. A new preview replaces the previous confirmation. Tokens are single-use and are not saved across restart. Records inserted after preview are outside that batch, even if they carry older timestamps. Run another preview and confirm to remove the next batch.
+Preview changes nothing. It shows eligible block, item-transaction, activity (chat/login/logout/command), entity/frame and fluid counts, the protected count and a fixed batch of at most **1,000 records total**. One item transaction counts as one record, regardless of its slot count. Confirm with the complete token within 60 seconds using the same player or console authority. A new preview replaces the previous confirmation. Tokens are single-use and are not saved across restart. Records inserted after preview are outside that batch, even if they carry older timestamps. Run another preview and confirm to remove the next batch.
 
-Pending block rollback/restore rows and the history at their positions are retained. If any internal item journal, claim, saved image or recovery-protection data remains, Guardian conservatively retains all block/item history; chat/session history can still be purged. Recovery journals are never deleted by purge. Do not edit their tables to bypass protection.
+Pending block rollback/restore rows and the history at their positions are retained. If any internal item journal, claim, saved image or recovery-protection data remains, Guardian conservatively retains all block/item history; activity, entity/frame and fluid history can still be purged because they do not participate in recovery. Recovery journals are never deleted by purge. Do not edit their tables to bypass protection.
 
-Purge rechecks protection before deleting and removes item-history indexes in the same transaction. A durable history-gap marker makes read-only item checks refuse selected history older than the purged cutoff with `incomplete history`, even when some older records remain protected. Lookups still show retained records. Purge shares a busy gate with block rollback/restore and item checks, and runs database work off the game thread. Logging continues; monitor storage/backpressure status as usual.
+Purge rechecks protection before deleting and removes item-history indexes in the same transaction. Deleting only activity, entity/frame or fluid history does not advance the item-history completeness marker. A confirmed block/item deletion writes a durable history-gap marker that makes read-only item checks refuse selected history older than the purged cutoff with `incomplete history`, even when some older records remain protected. Lookups still show retained records. Purge shares a busy gate with block rollback/restore and item checks, and runs database work off the game thread. Logging continues; monitor storage/backpressure status as usual.
 
 Cancel discards a pending confirmation or requests cancellation of running work. Permission loss also cancels pending work. **Cancellation cannot undo a batch that already committed.** Check the reported outcome and history before trying again. Purge does not run VACUUM, remove mapping tables, reset identities or promise an immediate reduction in database-file size; freed pages can be reused by later writes.
 

@@ -3,11 +3,11 @@ package com.bareminimumstudios.guardian.storage.purge
 import java.util.Collections
 import java.util.UUID
 
-enum class PurgeKind { BLOCK, CONTAINER, ACTIVITY }
+enum class PurgeKind { BLOCK, CONTAINER, ACTIVITY, ENTITY, FLUID }
 data class PurgeCandidate(val kind: PurgeKind, val key: String, val time: Long)
-data class PurgeCounts(val blocks: Long = 0, val containers: Long = 0, val activity: Long = 0) {
-    init { require(blocks >= 0 && containers >= 0 && activity >= 0) }
-    val total: Long get() = blocks + containers + activity
+data class PurgeCounts @JvmOverloads constructor(val blocks: Long = 0, val containers: Long = 0, val activity: Long = 0, val entities: Long = 0, val fluids: Long = 0) {
+    init { require(blocks >= 0 && containers >= 0 && activity >= 0 && entities >= 0 && fluids >= 0) }
+    val total: Long get() = blocks + containers + activity + entities + fluids
 }
 /** Fixed immutable keys; later inserts cannot enter the confirmed batch. */
 class AuditPurgePlan(val cutoff: Long, val eligible: PurgeCounts, val protected: PurgeCounts, candidates: List<PurgeCandidate>) {

@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.73 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.74 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.73 passed 662 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current frame/fluid/entity/activity permission acceptance passed 2,170 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.74 passed 670 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current expanded purge passed 442 actual-provider/operator checks on both loaders. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -141,6 +141,16 @@ Actual attack and interaction packet objects passed through the real server list
 LuckPerms passed 644/645 checks on Fabric/NeoForge, including independent entity access, ordinary cached suggestions and forty activity/entity/fluid callbacks per loader. Additional frame inspector checks confirmed either grant alone is insufficient, eight deferred frame success/error cases suppress output after partial/full revocation, and cached pages stop after revocation. Provider-free operator levels passed 440/441 checks. The total is 2,170 actual-provider/operator checks; permission decisions were not mocked. [Evidence and artifact checksums](validation/item-frames-alpha73.json).
 
 All final core hashes match every runtime-tested jar. All private servers stopped; supplied worlds/databases were untouched. Alpha.72 passed GitHub CI; alpha.73 CI awaits the owner's push. Frame capture does not backfill missing earlier records and does not certify arbitrary direct state edits. Connected-client prediction, packet serialization and claim-mod behavior remain in the existing R3 gate.
+
+## Entity/fluid history purge, 2026-10-24
+
+Alpha.73 passed GitHub CI. The owner then selected entity/fluid purge with existing safeguards. Alpha.74 adds entity/frame and fluid counts to preview/completion and includes those records in the same fixed global batch of at most 1,000 keys. Minimum age, requester-bound 60-second single-use confirmation, current permission, cancellation and maintenance exclusion remain unchanged. Recovery journals protect block/item history as before. Activity/entity/fluid-only deletion does not advance the item completeness marker. Installing this version alone deletes nothing; schema 19 and config version 12 are unchanged.
+
+670 tests passed, including eight new cross-backend regression tests for all entity kinds/frame BLOBs, strict cutoff, shared mixed-category cap, same UUIDs in different tables, late inserts, retimed records, cancellation rollback, journal preservation, restart and unchanged item completeness floor. SQLite, optional DuckDB and memory were exercised where applicable. Clean build, repeated configuration-cache reuse and the separate WorldEdit build passed through IDEA using Java 21/Gradle 9.8.0.
+
+Both isolated dedicated servers passed preview/cancel, confirmed mixed 1,000-record deletion, fixed late-insert exclusion, token replay refusal, recovery-protected second deletion, restart and SQLite integrity checks. Actual LuckPerms and operator fallback passed 442 purge permission checks, including independent level-four access, both aliases, cached suggestions, token revocation, queued authorization withdrawal, stop cancellation and maintenance exclusion. No supplied databases were opened for these tests. All owned servers stopped. Final jars match the runtime-tested hashes and bundle SQLite only. [Evidence and checksums](validation/entity-fluid-purge-alpha74.json).
+
+Connected-client presentation remains R3; these fixtures do not certify a rendered client. Alpha.74 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

@@ -124,13 +124,13 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     private fun purgeCandidates(cutoff: Long): Pair<List<PurgeCandidate>,Long> {
         val pending=entries.filter { it.rollbackState in setOf(BlockRollbackState.PENDING,BlockRollbackState.RESTORE_PENDING) }.map { it.snapshot.dimension to it.snapshot.position }.toSet()
         val blocks=entries.filter { it.snapshot.timestampEpochMillis<cutoff && (it.snapshot.dimension to it.snapshot.position) !in pending }
-        val candidates=blocks.map { PurgeCandidate(PurgeKind.BLOCK,it.rowId.toString(),it.snapshot.timestampEpochMillis) } + containers.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.CONTAINER,it.transactionId.toString(),it.timestampEpochMillis) } + activity.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.ACTIVITY,it.eventId.toString(),it.timestampEpochMillis) }
+        val candidates=blocks.map { PurgeCandidate(PurgeKind.BLOCK,it.rowId.toString(),it.snapshot.timestampEpochMillis) } + containers.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.CONTAINER,it.transactionId.toString(),it.timestampEpochMillis) } + activity.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.ACTIVITY,it.eventId.toString(),it.timestampEpochMillis) } + entities.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.ENTITY,it.eventId.toString(),it.timestampEpochMillis) } + fluids.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.FLUID,it.eventId.toString(),it.timestampEpochMillis) }
         return candidates to entries.count { it.snapshot.timestampEpochMillis<cutoff }.toLong()-blocks.size
     }
     override fun previewPurge(cutoff: Long, limit: Int): AuditPurgePlan = lock.read {
         require(open && cutoff>=0 && limit in 1..1000)
         val (candidates,protected)=purgeCandidates(cutoff)
-        AuditPurgePlan(cutoff,PurgeCounts(candidates.count{it.kind==PurgeKind.BLOCK}.toLong(),candidates.count{it.kind==PurgeKind.CONTAINER}.toLong(),candidates.count{it.kind==PurgeKind.ACTIVITY}.toLong()),PurgeCounts(protected),candidates.sortedWith(compareBy<PurgeCandidate>{it.time}.thenBy{it.kind}.thenBy{it.key}).take(limit))
+        AuditPurgePlan(cutoff,PurgeCounts(candidates.count{it.kind==PurgeKind.BLOCK}.toLong(),candidates.count{it.kind==PurgeKind.CONTAINER}.toLong(),candidates.count{it.kind==PurgeKind.ACTIVITY}.toLong(),candidates.count{it.kind==PurgeKind.ENTITY}.toLong(),candidates.count{it.kind==PurgeKind.FLUID}.toLong()),PurgeCounts(protected),candidates.sortedWith(compareBy<PurgeCandidate>{it.time}.thenBy{it.kind}.thenBy{it.key}).take(limit))
     }
     override fun applyPurge(plan: AuditPurgePlan, permitted: () -> Boolean) = lock.write {
         check(open && permitted())
@@ -140,8 +140,11 @@ class InMemoryStorageBackend : QueryableStorageBackend {
         val blocks=selected.filter { it.kind==PurgeKind.BLOCK }.map { it.key }.toSet()
         val items=selected.filter { it.kind==PurgeKind.CONTAINER }.map { it.key }.toSet()
         val events=selected.filter { it.kind==PurgeKind.ACTIVITY }.map { it.key }.toSet()
+        val entityEvents=selected.filter { it.kind==PurgeKind.ENTITY }.map { it.key }.toSet()
+        val fluidEvents=selected.filter { it.kind==PurgeKind.FLUID }.map { it.key }.toSet()
+        entities.removeAll { it.eventId.toString() in entityEvents };fluids.removeAll { it.eventId.toString() in fluidEvents }
         entries.removeAll { it.rowId.toString() in blocks };containers.removeAll { it.transactionId.toString() in items };activity.removeAll { it.eventId.toString() in events }
-        AuditPurgeResult(PurgeCounts(blocks.size.toLong(),items.size.toLong(),events.size.toLong()),plan.candidates.size-selected.size)
+        AuditPurgeResult(PurgeCounts(blocks.size.toLong(),items.size.toLong(),events.size.toLong(),entityEvents.size.toLong(),fluidEvents.size.toLong()),plan.candidates.size-selected.size)
     }
 
     override fun flush() = Unit

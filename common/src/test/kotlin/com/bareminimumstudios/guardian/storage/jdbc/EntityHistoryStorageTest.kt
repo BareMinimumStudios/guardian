@@ -74,9 +74,9 @@ class EntityHistoryStorageTest {
             db().use{it.open();assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()))}
         }
     }
-    @Test fun existingPurgeDoesNotDeleteEntityHistory()=stores { db->
-        val death=row(1);db.append(listOf(death));val plan=db.previewPurge(100);db.applyPurge(plan){true}
-        assertEquals(listOf(death),db.lookupEntities(EntityLookupQuery()))
+    @Test fun purgeIncludesEntityHistory()=stores { db->
+        val death=row(1);db.append(listOf(death));val plan=db.previewPurge(100);assertEquals(1,plan.eligible.entities);assertEquals(1,db.applyPurge(plan){true}.deleted.entities)
+        assertTrue(db.lookupEntities(EntityLookupQuery()).isEmpty())
     }
     @Test fun invalidQueriesRejectAmbiguousSpatialScopesAndUnboundedPages() {
         assertFailsWith<IllegalArgumentException>{EntityLookupQuery(limit=501)}

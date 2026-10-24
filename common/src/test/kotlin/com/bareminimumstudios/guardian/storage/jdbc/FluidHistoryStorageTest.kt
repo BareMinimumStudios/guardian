@@ -72,7 +72,7 @@ class FluidHistoryStorageTest {
             db().use{it.open();assertEquals(listOf(placed),it.lookupFluids(FluidLookupQuery()))}
         }
     }
-    @Test fun existingPurgeRetainsFluidHistory()=stores { db->
-        val placed=row();db.append(listOf(placed));db.applyPurge(db.previewPurge(100)){true};assertEquals(listOf(placed),db.lookupFluids(FluidLookupQuery()))
+    @Test fun purgeIncludesFluidHistory()=stores { db->
+        val placed=row();db.append(listOf(placed));assertEquals(1,db.applyPurge(db.previewPurge(100)){true}.deleted.fluids);assertTrue(db.lookupFluids(FluidLookupQuery()).isEmpty())
     }
 }

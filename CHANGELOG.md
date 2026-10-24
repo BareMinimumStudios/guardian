@@ -33,6 +33,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.74+1.21.1] - 2026-10-24
+
+### Added
+
+- Include old entity, item-frame and fluid history in confirmed purge. Preview and completion show separate entity/frame and fluid counts within the same global 1,000-record batch.
+
+### Changed
+
+- Retain the existing minimum age, fixed preview keys, expiring requester-bound confirmation, current permission checks, cancellation and recovery protection. Entity/fluid-only deletion does not advance the item-history completeness marker. Schema 19 and config version 12 are unchanged; upgrading alone deletes nothing.
+
 ## [0.4.0-alpha.73+1.21.1] - 2026-10-24
 
 ### Added

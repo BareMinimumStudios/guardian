@@ -57,7 +57,7 @@ class ItemFrameHistoryStorageTest {
             db().use{it.open();assertEquals(listOf(frame,prior),it.lookupEntities(EntityLookupQuery()))}
         }
     }
-    @Test fun frameHistoryDoesNotEnterExistingPurge()=stores { db->
-        val row=event();db.append(listOf(row));db.applyPurge(db.previewPurge(100)){true};assertEquals(listOf(row),db.lookupEntities(EntityLookupQuery()))
+    @Test fun purgeIncludesFrameHistory()=stores { db->
+        val row=event();db.append(listOf(row));assertEquals(1,db.applyPurge(db.previewPurge(100)){true}.deleted.entities);assertTrue(db.lookupEntities(EntityLookupQuery()).isEmpty())
     }
 }
