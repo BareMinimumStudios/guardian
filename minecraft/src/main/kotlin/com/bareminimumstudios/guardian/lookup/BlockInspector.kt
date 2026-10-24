@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 object BlockInspector {
     private val enabledPlayers = ConcurrentHashMap.newKeySet<UUID>()
-    private data class Selection(val owner: ItemSlotOwner.BlockContainer, val items: Boolean, val oldestFirst: Boolean = false)
-    private data class Click(val pos: BlockPos, val right: Boolean, val tick: Long)
+    private data class Selection(val owner: ItemSlotOwner.BlockContainer, val items: Boolean, val oldestFirst: Boolean = false, val entityUuid: UUID? = null)
+    private data class Click(val pos: BlockPos, val right: Boolean, val tick: Long, val entityUuid: UUID? = null)
     private val lastClicks = ConcurrentHashMap<UUID, Click>()
     private val selections = ConcurrentHashMap<UUID, Selection>()
     @Volatile private var historyProvider: () -> BlockHistoryService? = { null }
@@ -40,11 +40,32 @@ object BlockInspector {
         if (!player.canInteractWithBlock(pos, 1.0) || level.chunkSource.getChunkNow(pos.x shr 4, pos.z shr 4) == null) return true
         val tick = level.gameTime
         val last = lastClicks[player.uuid]
-        if (last != null && last.pos == pos && last.right == rightClick && tick - last.tick in 0..2) return true
+        if (last != null && last.entityUuid == null && last.pos == pos && last.right == rightClick && tick - last.tick in 0..2) return true
         lastClicks[player.uuid] = Click(pos.immutable(), rightClick, tick)
         inspectInteraction(player, level, pos, rightClick)
         return true
     }
+    private fun entityAuthorized(player: ServerPlayer) = runCatching { permissions?.has(player.createCommandSourceStack(), "guardian.entities", 2) == true }.getOrDefault(false)
+
+    @JvmStatic fun canInspectFrame(player: ServerPlayer,frame: net.minecraft.world.entity.decoration.ItemFrame): Boolean =
+        player.server.isSameThread && isEnabled(player) && authorized(player) && entityAuthorized(player) &&
+            frame.level()===player.serverLevel() && !frame.isRemoved && player.canInteractWithEntity(frame,1.0) &&
+            player.serverLevel().chunkSource.getChunkNow(frame.pos.x shr 4,frame.pos.z shr 4)!=null
+
+    @JvmStatic fun interceptFrame(player: ServerPlayer,frame: net.minecraft.world.entity.decoration.ItemFrame): Boolean {
+        if(!player.server.isSameThread || !isEnabled(player)) return false
+        if(!authorized(player)) { set(player,false);player.sendSystemMessage(Component.literal("Guardian inspection disabled: permission was removed."));return true }
+        if(!entityAuthorized(player)) { player.sendSystemMessage(Component.literal("Guardian: frame history also requires guardian.entities."));return true }
+        if(!canInspectFrame(player,frame)) return true
+        val pos=frame.pos;val tick=player.serverLevel().gameTime;val last=lastClicks[player.uuid]
+        if(last!=null && last.entityUuid==frame.uuid && tick-last.tick in 0..2) return true
+        lastClicks[player.uuid]=Click(pos.immutable(),false,tick,frame.uuid)
+        val owner=ItemSlotOwner.BlockContainer(ResourceId.parse(frame.level().dimension().location().toString()),BlockPosition(pos.x,pos.y,pos.z))
+        selections[player.uuid]=Selection(owner,false,selections[player.uuid]?.oldestFirst ?: false,frame.uuid)
+        showPage(player,1)
+        return true
+    }
+
     private fun authorized(player: ServerPlayer) = runCatching { permissions?.has(player.createCommandSourceStack(), "guardian.inspect", 2) == true }.getOrDefault(false)
 
     fun inspectInteraction(player: Player, world: Level, pos: BlockPos, rightClick: Boolean = false): InteractionResult {
@@ -68,7 +89,18 @@ object BlockInspector {
         val owner = selection.owner
         val footer = { hasNext: Boolean -> HistoryNavigation.footer(page, hasNext, selection.oldestFirst,
             { next -> "/guardian inspect page $next" }, "/guardian inspect order ${if (selection.oldestFirst) "newest" else "oldest"}") }
-        if (selection.items) history.lookupContainers(ContainerLookupQuery(owner.dimension, owner.position, limit = limit,
+        if(selection.entityUuid!=null) {
+            if(!entityAuthorized(player)) return
+            history.lookupEntities(EntityLookupQuery(targetUuid=selection.entityUuid,dimension=owner.dimension,limit=limit,
+                offset=(page-1)*limit,oldestFirst=selection.oldestFirst),{ rows ->
+                if(isEnabled(player) && authorized(player) && entityAuthorized(player) && selections[player.uuid]==selection) {
+                    player.sendSystemMessage(Component.literal("Guardian frame history (${rows.size} records):"))
+                    rows.forEach { player.sendSystemMessage(EntityHistoryFormatter.line(it)) }
+                    player.sendSystemMessage(footer(rows.size==limit))
+                }
+            },{ if(isEnabled(player) && authorized(player) && entityAuthorized(player) && selections[player.uuid]==selection) player.sendSystemMessage(Component.literal("Guardian frame lookup failed; see server log.")) })
+        }
+        else if (selection.items) history.lookupContainers(ContainerLookupQuery(owner.dimension, owner.position, limit = limit,
             offset = (page - 1) * limit, oldestFirst = selection.oldestFirst), { rows ->
             if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) {
                 ContainerHistoryFormatter.lines(rows, focus = owner).forEach(player::sendSystemMessage)

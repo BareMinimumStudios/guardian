@@ -58,7 +58,11 @@
     "HorseTameHistoryMixin",
     "BreedingHistoryMixin",
     "NeoForgeBucketFluidPlacementMixin",
-    "BucketFluidPickupMixin"
+    "BucketFluidPickupMixin",
+    "ItemFrameHistoryMixin",
+    "FrameRemovalHistoryMixin",
+    "FramePlacementHistoryMixin",
+    "ItemFrameDataAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

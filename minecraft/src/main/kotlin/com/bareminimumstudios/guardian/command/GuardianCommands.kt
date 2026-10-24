@@ -77,7 +77,7 @@ object GuardianCommands {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
                         val token=builder.input.substring(start)
                         val choices=when(token.substringBefore(':').lowercase()) {
-                            "a","action" -> listOf("${token.substringBefore(':')}:death","${token.substringBefore(':')}:rename","${token.substringBefore(':')}:tame","${token.substringBefore(':')}:breed","${token.substringBefore(':')}:death,rename").filter { it.startsWith(token,true) }
+                            "a","action" -> listOf("${token.substringBefore(':')}:death","${token.substringBefore(':')}:rename","${token.substringBefore(':')}:tame","${token.substringBefore(':')}:breed","${token.substringBefore(':')}:frame","${token.substringBefore(':')}:frame-place","${token.substringBefore(':')}:frame-remove","${token.substringBefore(':')}:frame-change","${token.substringBefore(':')}:death,rename").filter { it.startsWith(token,true) }
                             else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet().map { it.toString() }) +
                                 if (':' !in token) listOf("a:","id:").filter { it.startsWith(token,true) } else emptyList()
                         }

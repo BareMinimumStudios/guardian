@@ -55,7 +55,11 @@
     "HorseTameHistoryMixin",
     "BreedingHistoryMixin",
     "BucketFluidPlacementMixin",
-    "BucketFluidPickupMixin"
+    "BucketFluidPickupMixin",
+    "ItemFrameHistoryMixin",
+    "FrameRemovalHistoryMixin",
+    "FramePlacementHistoryMixin",
+    "ItemFrameDataAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

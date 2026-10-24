@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.72 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.73 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.72 passed 651 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current fluid/entity/activity permission acceptance passed 2,116 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.73 passed 662 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current frame/fluid/entity/activity permission acceptance passed 2,170 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -127,6 +127,20 @@ MixinMCP verified the exact shared pickup invocation and loader-specific placeme
 Real LuckPerms passed 617/618 checks on Fabric/NeoForge, including independent fluid grants, explicit operator denial, cached fluid time/user/action/resource suggestions after revocation and forty activity/entity/fluid success/error callbacks per loader. Actual provider-free operator levels passed 440/441 checks, including cached fluid suggestions after operator removal. These 2,116 permission decisions were not mocked. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/fluids-alpha72.json).
 
 Fixtures use synthetic players with unconnected real listeners, direct placement methods and actual bucket-use raycasts for pickup. Connected-client packet flow, protection mods, prediction and custom fluid containers remain unverified. No natural fluid spread or automation is claimed. All owned servers stopped; supplied worlds/databases were untouched. Remote alpha.72 CI awaits the owner's push; alpha.71 CI passed.
+
+## Item frames and inspection, 2026-10-24
+
+After pushing alpha.72, the owner reported missing item-frame detection. That category had been outside the block/container hooks. The owner paused for a restart, then explicitly resumed frame work. Alpha.73 adds off-by-default `entities.itemFrames`, normal/glow frame placement, supported display/rotation changes and destructive removal, with immutable persistent item components. `a:frame` and its place/remove/change variants reuse entity filters and permission. Frame inspection requires both `guardian.inspect` and `guardian.entities`, selects exact UUIDs and consumes entity packets without gameplay mutation. Schema 19 adds nullable before/after frame BLOBs; config version 12 preserves existing settings. No frame/item restoration or entity purge is enabled.
+
+662 tests passed with no failures, errors or skipped tests. Eleven new tests cover bounded frame codec/component round trips, malformed/oversized payload refusal, event shape invariants, three-backend identity/kind/target/paging separation, schema-18 upgrade/restart, existing purge separation and clear item-pop/rotation/frame-break presentation. Earlier schema simulations reconstruct the older entity columns and markers before replay. Full clean build, configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21/Gradle 9.8.0. A comment-only rebuild left core binary hashes unchanged.
+
+MixinMCP verified source/bytecode targets on both loader variants and inspected all five affected mixin/accessor files plus capture/inspector Kotlin. Both isolated dedicated servers persisted exactly nine expected frame records: normal frame placement, named/custom-data diamond insertion, rotation, item pop and frame break; glow placement/insertion and destructive removal retaining the display; and a fixed frame placement. The captured immutable item snapshot equalled the original component-aware snapshot. Empty interactions, fixed-frame refusals, repeated damage and unload removal produced no extra records. An actual NeoForge EntityJoinLevelEvent cancellation prevented a frame placement record. Nine query/restart cases per loader verified frame action groups, actor/type/position filters, paging and persistence, with SQLite integrity checks.
+
+Actual attack and interaction packet objects passed through the real server listener and inspector mixin. Display/rotation stayed unchanged, exact frame UUID selection and reach refusal passed, and explicit empty/default metadata synchronization succeeded without consuming entity dirty flags. These are unconnected-listener tests, not a rendered client or arbitrary protection-pack certification.
+
+LuckPerms passed 644/645 checks on Fabric/NeoForge, including independent entity access, ordinary cached suggestions and forty activity/entity/fluid callbacks per loader. Additional frame inspector checks confirmed either grant alone is insufficient, eight deferred frame success/error cases suppress output after partial/full revocation, and cached pages stop after revocation. Provider-free operator levels passed 440/441 checks. The total is 2,170 actual-provider/operator checks; permission decisions were not mocked. [Evidence and artifact checksums](validation/item-frames-alpha73.json).
+
+All final core hashes match every runtime-tested jar. All private servers stopped; supplied worlds/databases were untouched. Alpha.72 passed GitHub CI; alpha.73 CI awaits the owner's push. Frame capture does not backfill missing earlier records and does not certify arbitrary direct state edits. Connected-client prediction, packet serialization and claim-mod behavior remain in the existing R3 gate.
 
 ## Pending acceptance
 

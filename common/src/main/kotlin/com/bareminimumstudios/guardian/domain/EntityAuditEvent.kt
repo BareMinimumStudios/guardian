@@ -2,9 +2,9 @@ package com.bareminimumstudios.guardian.domain
 
 import java.util.UUID
 
-enum class EntityAuditKind { DEATH, NAME_CHANGE, TAME, BREED }
+enum class EntityAuditKind { DEATH, NAME_CHANGE, TAME, BREED, FRAME_PLACE, FRAME_REMOVE, FRAME_CHANGE }
 
-/** Only immutable identity, location and bounded plain names; no live entity or NBT payload. */
+/** Immutable identity/location and bounded names; frame displays retain opaque persistent item components. */
 data class EntityAuditEvent(
     val eventId: UUID = UUID.randomUUID(),
     override val timestampEpochMillis: Long,
@@ -18,7 +18,9 @@ data class EntityAuditEvent(
     val afterName: String? = null,
     val damageType: ResourceId? = null,
     val parentUuid: UUID? = null,
-    val partnerUuid: UUID? = null
+    val partnerUuid: UUID? = null,
+    val frameBefore: ItemFrameSnapshot? = null,
+    val frameAfter: ItemFrameSnapshot? = null
 ) : LogEntry {
     init {
         require(timestampEpochMillis >= 0)
@@ -27,11 +29,20 @@ data class EntityAuditEvent(
         require(kind == EntityAuditKind.DEATH || damageType == null)
         require(kind != EntityAuditKind.TAME || actor is ActorIdentity.Player)
         require(if (kind == EntityAuditKind.BREED) parentUuid != null && partnerUuid != null && parentUuid != partnerUuid && targetUuid != parentUuid && targetUuid != partnerUuid else parentUuid == null && partnerUuid == null)
+        when(kind) {
+            EntityAuditKind.FRAME_PLACE -> require(frameBefore==null && frameAfter!=null)
+            EntityAuditKind.FRAME_REMOVE -> require(frameBefore!=null && frameAfter==null)
+            EntityAuditKind.FRAME_CHANGE -> require(frameBefore!=null && frameAfter!=null && frameBefore!=frameAfter)
+            else -> require(frameBefore==null && frameAfter==null)
+        }
     }
     override val action: ActionType get() = when(kind) {
         EntityAuditKind.DEATH -> ActionType.ENTITY_DEATH
         EntityAuditKind.NAME_CHANGE -> ActionType.ENTITY_NAME_CHANGE
         EntityAuditKind.TAME -> ActionType.ENTITY_TAME
         EntityAuditKind.BREED -> ActionType.ENTITY_BREED
+        EntityAuditKind.FRAME_PLACE -> ActionType.FRAME_PLACE
+        EntityAuditKind.FRAME_REMOVE -> ActionType.FRAME_REMOVE
+        EntityAuditKind.FRAME_CHANGE -> ActionType.FRAME_CHANGE
     }
 }

@@ -1,0 +1,654 @@
+{
+  "version": "0.4.0-alpha.73+1.21.1",
+  "date": "2026-10-24",
+  "schema": 19,
+  "configVersion": 12,
+  "tests": {
+    "common": {
+      "tests": 600,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 62,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "providerChecks": 2170,
+  "capture": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=24",
+      "rows": [
+        [
+          "FRAME_PLACE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          6,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          146,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          146,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_REMOVE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          6,
+          null,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_PLACE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          6,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_PLACE",
+          "minecraft:item_frame",
+          14,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_REMOVE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          146,
+          null,
+          3,
+          null,
+          "world"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities a:frame t:1h",
+          "expected": "Guardian entity history: 9 records",
+          "output": [
+            "[15:39:54] [Server thread/INFO]: Guardian entity history: 9 records (page 1).",
+            "[15:39:54] [Server thread/INFO]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874394702522600"
+          ]
+        },
+        {
+          "command": "co entities a:frame-remove t:1h",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[15:39:54] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[15:39:54] [Server thread/INFO]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874394806057700"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame-change",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[15:39:54] [Server thread/INFO]: Guardian entity history: 4 records (page 1).",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:54] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874394900729700"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame-place",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[15:39:54] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:54] [Server thread/INFO]: 3s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:54] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:55] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874394993809900"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame u:GuardianFixture",
+          "expected": "Guardian entity history: 8 records",
+          "output": [
+            "[15:39:55] [Server thread/INFO]: Guardian entity history: 8 records (page 1).",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:55] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874395065756300"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame i:minecraft:glow_item_frame",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[15:39:55] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[15:39:55] [Server thread/INFO]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:39:55] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:55] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874395148943100"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame x:2 y:300 z:2",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[15:39:55] [Server thread/INFO]: Guardian entity history: 5 records (page 1).",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:39:55] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874395261448000"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame l:2 p:5",
+          "expected": "Guardian entity history: 1 records (page 5)",
+          "output": [
+            "[15:39:55] [Server thread/INFO]: Guardian entity history: 1 records (page 5).",
+            "[15:39:55] [Server thread/INFO]: 4s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:39:55] [Server thread/INFO]: [Previous]  Page 5    [Newest first]",
+            "[15:39:55] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874395353295300"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame l:20",
+          "expected": "Guardian entity history: 9 records",
+          "output": [
+            "[15:40:08] [Server thread/INFO]: Guardian entity history: 9 records (page 1).",
+            "[15:40:08] [Server thread/INFO]: 15s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:08] [Server thread/INFO]: 17s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:08] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[15:40:08] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792874408492441500"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "actualInspectorPacket": true,
+      "componentEqualityChecked": true
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=27",
+      "rows": [
+        [
+          "FRAME_PLACE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          6,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          146,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_REMOVE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          6,
+          null,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:item_frame",
+          2,
+          300,
+          2,
+          146,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_PLACE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_CHANGE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          6,
+          146,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_PLACE",
+          "minecraft:item_frame",
+          14,
+          300,
+          2,
+          null,
+          6,
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "FRAME_REMOVE",
+          "minecraft:glow_item_frame",
+          6,
+          300,
+          2,
+          146,
+          null,
+          3,
+          null,
+          "world"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities a:frame t:1h",
+          "expected": "Guardian entity history: 9 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 9 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429381137500"
+          ]
+        },
+        {
+          "command": "co entities a:frame-remove t:1h",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429476692600"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame-change",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 4 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429526701400"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame-place",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429626780400"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame u:GuardianFixture",
+          "expected": "Guardian entity history: 8 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 8 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 3s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429727783100"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame i:minecraft:glow_item_frame",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429827094400"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame x:2 y:300 z:2",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 5 records (page 1).",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874429926776200"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame l:2 p:5",
+          "expected": "Guardian entity history: 1 records (page 5)",
+          "output": [
+            "[15:40:30] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 5).",
+            "[15:40:30] [Server thread/INFO] [minecraft/MinecraftServer]: 4s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:30] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 5    [Newest first]",
+            "[15:40:30] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874430026441300"
+          ]
+        },
+        {
+          "command": "guardian entities a:frame l:20",
+          "expected": "Guardian entity history: 9 records",
+          "output": [
+            "[15:40:41] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[15:40:41] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=19",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 9 records (page 1).",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 14s ago: world removed minecraft:glow_item_frame displaying minecraft:diamond @ 6, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture placed minecraft:item_frame @ 14, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture put minecraft:diamond in minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture placed minecraft:glow_item_frame @ 6, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture removed minecraft:diamond from minecraft:item_frame @ 2, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture removed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture rotated minecraft:item_frame (0 -> 1) @ 2, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture put minecraft:diamond in minecraft:item_frame @ 2, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: 15s ago: GuardianFixture placed minecraft:item_frame @ 2, 300, 2",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[15:40:41] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792874441603787300"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "actualInspectorPacket": true,
+      "componentEqualityChecked": true
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 644,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 645,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "40_individual_activity_entity_fluid_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 440,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 441,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "frameInspectorPermissionCases": [
+    "inspect without entities cannot select frame history",
+    "entities without inspect disables inspector on click",
+    "eight deferred success/error cases preserve both grants and suppress output after either or both grants are revoked",
+    "cached frame pages stop after partial or full revocation"
+  ],
+  "builds": {
+    "clean": "passed, 1m 28s, all 36 tasks executed",
+    "build": "passed, 3s, configuration cache stored",
+    "commentOnlyRebuild": "passed, 2s; binary hashes unchanged",
+    "repeat": "passed, 185ms, configuration cache reused",
+    "worldedit": "passed, 2s"
+  },
+  "hooks": {
+    "sourceAndBytecode": "MixinMCP checked both loader ItemFrame interact/hurt and destructive removal contracts, shared HangingEntityItem.addFreshEntity invocation, frame data accessors and interact packet target",
+    "changedMixinInspections": "all five changed/new mixin files plus capture and inspector Kotlin files passed IDEA errors-only inspection",
+    "fixtureTransformsBytecode": false
+  },
+  "previousCI": {
+    "sha": "590570a4548d1e36e34546065b06419dbfc9f60c",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40126032629"
+  },
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.73+1.21.1.jar",
+      "bytes": 13133074,
+      "sha256": "bb459a4c29e4c456d2147c7e3eb88cdb0e3c48521c2a52ce687a471f0fd28bc0"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.73+1.21.1.jar",
+      "bytes": 13109239,
+      "sha256": "9d846dfb21ccb48038f5ada7deb412276bcea1f55016153324f0f0f1f9753a15"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.73+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "da895ed7d0df904c8eecb40a7670d36c0a9bb0e4e2e3f2d822951f9e1c65b0e0"
+    }
+  ],
+  "limits": [
+    "Synthetic server players with unconnected real listeners; direct standard game methods and actual listener packet handler, not connected-client presentation/serialization or pack claim acceptance",
+    "Standard normal/glow ItemFrame methods are covered; arbitrary direct setItem/setRotation edits and modded bypasses are excluded",
+    "Item snapshots preserve persistent Data Components through the bounded existing item codec; nonpersistent/oversized components can be refused",
+    "Damage actor attribution comes from the supplied damage source; destructive removal without context is world, not a guessed player",
+    "Frame history is separate from container transactions and does not enable frame/item restoration or entity purge",
+    "Capture is opt-in and cannot backfill frames or changes from before capture was enabled"
+  ],
+  "actualRuntimeChecks": [
+    "normal and glow frame placement",
+    "named/custom-data item snapshot exactly equals original immutable snapshot",
+    "rotation versus item pop versus frame break",
+    "fixed frame interaction/damage refusal",
+    "repeated damage on removed frame produces no record",
+    "UNLOADED_TO_CHUNK does not produce destruction history",
+    "actual attack and interaction inspector packets preserve display",
+    "explicit default/empty frame metadata resend is read-only",
+    "exact UUID inspector selection and out-of-reach refusal",
+    "actual NeoForge frame insertion cancellation",
+    "nine query/restart cases per loader"
+  ],
+  "allOwnedServersStopped": true
+}

@@ -63,9 +63,12 @@ class FluidHistoryStorageTest {
             val entity=EntityAuditEvent(timestampEpochMillis=1,actor=alex,dimension=row().dimension,position=row().position,targetUuid=UUID.randomUUID(),targetType=ResourceId.parse("minecraft:pig"),kind=EntityAuditKind.DEATH)
             db().use{it.open();it.append(listOf(entity))}
             DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { conn->conn.createStatement().use { s->
-                s.executeUpdate("DROP TABLE ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=18");s.executeUpdate("UPDATE ex_meta SET meta_value='17' WHERE meta_key='schema_version'")
+                listOf("ex_entity_time_idx","ex_entity_target_idx","ex_entity_location_idx","ex_entity_actor_idx").forEach { s.executeUpdate("DROP INDEX $it") }
+                s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_before");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_after")
+                GuardianSchema.migrations.single { it.version==16 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
+                s.executeUpdate("DROP TABLE ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=18");s.executeUpdate("UPDATE ex_meta SET meta_value='17' WHERE meta_key='schema_version'")
             } }
-            val placed=row();db().use{it.open();assertEquals(18,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
+            val placed=row();db().use{it.open();assertEquals(19,it.health().schemaVersion);assertEquals(listOf(entity),it.lookupEntities(EntityLookupQuery()));it.append(listOf(placed))}
             db().use{it.open();assertEquals(listOf(placed),it.lookupFluids(FluidLookupQuery()))}
         }
     }

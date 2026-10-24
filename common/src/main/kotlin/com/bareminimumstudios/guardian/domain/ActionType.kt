@@ -16,7 +16,10 @@ enum class ActionType(val storageCode: Int) {
     FLUID_REMOVE(37),
     PLAYER_SESSION(40),
     CHAT(50),
-    COMMAND(51);
+    COMMAND(51),
+    FRAME_PLACE(60),
+    FRAME_REMOVE(61),
+    FRAME_CHANGE(62);
 
     companion object {
         private val byStorageCode = entries.associateBy(ActionType::storageCode)

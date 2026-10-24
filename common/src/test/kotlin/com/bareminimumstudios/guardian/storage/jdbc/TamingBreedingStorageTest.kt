@@ -43,7 +43,7 @@ class TamingBreedingStorageTest {
     @Test fun filtersAcceptNewKindsIndependentlyAndTogether() {
         assertEquals(setOf(EntityAuditKind.TAME),EntityCommandFilters.parse("a:tame u:Alex t:1h").getOrThrow().kinds)
         assertEquals(setOf(EntityAuditKind.BREED),EntityCommandFilters.parse("a:breed").getOrThrow().kinds)
-        assertEquals(EntityAuditKind.entries.toSet(),EntityCommandFilters.parse("a:death,rename,tame,breed").getOrThrow().kinds)
+        assertEquals(setOf(EntityAuditKind.DEATH,EntityAuditKind.NAME_CHANGE,EntityAuditKind.TAME,EntityAuditKind.BREED),EntityCommandFilters.parse("a:death,rename,tame,breed").getOrThrow().kinds)
         assertTrue(EntityCommandFilters.parse("a:breed,spawn").isFailure)
     }
     @Test fun schema16UpgradePreservesOldEntityRowsAndNewParentsAcrossRestart() {
@@ -53,12 +53,13 @@ class TamingBreedingStorageTest {
             DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { conn->conn.createStatement().use { s->
                 // DuckDB requires removing dependent indexes before simulating the older table shape.
                 listOf("ex_entity_time_idx","ex_entity_target_idx","ex_entity_location_idx","ex_entity_actor_idx").forEach { s.executeUpdate("DROP INDEX $it") }
+                s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_before");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN frame_after")
                 s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN parent_uuid");s.executeUpdate("ALTER TABLE ex_entity DROP COLUMN partner_uuid")
                 GuardianSchema.migrations.single { it.version==16 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
                 s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=17");s.executeUpdate("UPDATE ex_meta SET meta_value='16' WHERE meta_key='schema_version'")
             } }
             val born=event(EntityAuditKind.BREED).copy(timestampEpochMillis=2000)
-            db().use{it.open();assertEquals(18,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
+            db().use{it.open();assertEquals(19,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
             db().use{it.open();assertEquals(listOf(born,death),it.lookupEntities(EntityLookupQuery()))}
         }
     }

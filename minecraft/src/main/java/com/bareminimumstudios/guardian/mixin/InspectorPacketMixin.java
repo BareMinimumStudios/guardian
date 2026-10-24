@@ -23,6 +23,20 @@ public abstract class InspectorPacketMixin {
         player.inventoryMenu.sendAllDataToRemote();
         ci.cancel();
     }
+    @Inject(method = "handleInteract", at = @At("HEAD"), cancellable = true)
+    private void guardian$inspectFrame(ServerboundInteractPacket packet, CallbackInfo ci) {
+        if(!player.server.isSameThread()) return;
+        net.minecraft.world.entity.Entity entity=packet.getTarget(player.serverLevel());
+        if(!(entity instanceof net.minecraft.world.entity.decoration.ItemFrame frame) || !BlockInspector.interceptFrame(player,frame)) return;
+        if(BlockInspector.canInspectFrame(player,frame)) {
+            player.connection.send(new ClientboundSetEntityDataPacket(frame.getId(),java.util.List.of(
+                net.minecraft.network.syncher.SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$itemData(),frame.getItem().copy()),
+                net.minecraft.network.syncher.SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$rotationData(),frame.getRotation()))));
+        }
+        player.inventoryMenu.sendAllDataToRemote();
+        ci.cancel();
+    }
+
     private void guardian$update(net.minecraft.core.BlockPos pos) {
         if (player.serverLevel().getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4) != null)
             player.connection.send(new ClientboundBlockUpdatePacket(player.serverLevel(), pos));

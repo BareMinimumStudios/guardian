@@ -13,14 +13,17 @@ data class EntityCommandFilters(val common: BlockCommandFilter, val kinds: Set<E
             raw.trim().split(Regex("\\s+")).filter(String::isNotEmpty).forEach { token ->
                 when(token.substringBefore(':').lowercase()) {
                     "a", "action" -> {
-                        require(!seenAction) { "Use one action filter with death, rename, tame or breed" }; seenAction=true
-                        kinds=token.substringAfter(':').split(',').map { when(it.lowercase()) {
+                        require(!seenAction) { "Use one action filter with death, rename, tame, breed or frame" }; seenAction=true
+                        kinds=token.substringAfter(':').split(',').flatMap { if(it.equals("frame",true)) listOf(EntityAuditKind.FRAME_PLACE,EntityAuditKind.FRAME_REMOVE,EntityAuditKind.FRAME_CHANGE) else listOf(when(it.lowercase()) {
                             "death" -> EntityAuditKind.DEATH
                             "rename" -> EntityAuditKind.NAME_CHANGE
                             "tame" -> EntityAuditKind.TAME
                             "breed" -> EntityAuditKind.BREED
-                            else -> error("Entity actions are death, rename, tame and breed")
-                        } }.toSet()
+                            "frame-place" -> EntityAuditKind.FRAME_PLACE
+                            "frame-remove" -> EntityAuditKind.FRAME_REMOVE
+                            "frame-change" -> EntityAuditKind.FRAME_CHANGE
+                            else -> error("Entity actions are death, rename, tame, breed and frame")
+                        }) }.toSet()
                     }
                     "id" -> { require(target==null) { "Use one entity id filter" }; target=UUID.fromString(token.substringAfter(':')) }
                     else -> common.add(token)

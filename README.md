@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.72+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.73+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 18**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 19**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -182,7 +182,7 @@ Entity capture is **off by default**. Enable `entities.deaths` and/or `entities.
 /guardian entities id:<entity-UUID>
 ```
 
-`/co entities` is also available. The separate `guardian.entities` permission uses operator level **2** fallback. Filters include `u:`, `t:`, `r:`, coordinates, `i:`/`e:` entity type IDs, `l:`, `p:` and `o:`. Use `a:death`, `a:rename`, `a:tame`, `a:breed` or a comma-separated combination; `id:` selects the target entity UUID. User filters select the attributed actor, not the victim or target. For example, a player filter finds deaths attributed to that player's damage source. A radius searches your current dimension; searches without a spatial filter cover all recorded dimensions. Entity types from mods can match when their events pass through the supported hooks.
+`/co entities` is also available. The separate `guardian.entities` permission uses operator level **2** fallback. Filters include `u:`, `t:`, `r:`, coordinates, `i:`/`e:` entity type IDs, `l:`, `p:` and `o:`. Use `a:death`, `a:rename`, `a:tame`, `a:breed`, `a:frame` or a comma-separated combination; `id:` selects the target entity UUID. User filters select the attributed actor, not the victim or target. For example, a player filter finds deaths attributed to that player's damage source. A radius searches your current dimension; searches without a spatial filter cover all recorded dimensions. Entity types from mods can match when their events pass through the supported hooks.
 
 Results show the entity type, recorded custom name and location. Hover for the entity UUID, dimension, timestamp and damage type; click to prepare a search for that entity. Death capture covers the standard living-entity and server-player death methods. It uses the damage source's entity for attribution, or `environment` when none is supplied. It does not infer a previous attacker or attribute `/kill` to the person who typed it. The tested NeoForge cancelled-death path creates no record.
 
@@ -204,6 +204,26 @@ Breeding records the child after the standard animal breeding method successfull
 Cancelled NeoForge baby-spawn events and refused child insertion produce no birth record in the tested paths. A child that is removed later is a separate event, not a failed birth. Egg-laying, pregnancy, villager breeding and custom reproduction/taming methods that bypass these hooks are not covered. This feature does not change breeding or taming gameplay.
 
 This is read-only history. It does not record every entity property, general spawn/despawn or entity inventory, and it cannot restore entities. Mods that replace these methods or bypass the setter need separate compatibility testing. Existing purge commands cover block, item and player-activity history; **entity history is retained and is not yet included in purge**. Capture changes apply to future events only.
+
+### Item frames
+
+Enable `entities.itemFrames` to record normal and glow item frames. It is **off by default**. Frames are entities, so their records appear in entity history rather than block lookup or container transactions.
+
+```text
+/guardian entities a:frame t:1h r:5
+/guardian entities a:frame-remove u:YourName t:1d
+/guardian entities a:frame i:minecraft:glow_item_frame t:1d
+```
+
+`a:frame` includes placement, destructive removal and display changes. Use `a:frame-place`, `a:frame-remove` or `a:frame-change` to narrow the search. Entity type filters match the frame type, not its displayed item. Target UUID searches distinguish frames even when they are nearby or a replacement occupies the same position.
+
+Right-clicking an empty frame with an item records insertion. Right-clicking an occupied frame records rotation. A normal attack on an occupied frame records item removal; the next attack can record the empty frame breaking. Destructive removal with an item still present retains that display snapshot. Standard persistent Data Components are captured with the existing immutable item codec, including named and modded items; nonpersistent or oversized components can be refused and reported in the log. Text summaries show item registry identities, not a full component dump.
+
+To inspect a live frame, enable `/guardian inspect` and click the frame. Both `guardian.inspect` and `guardian.entities` are required. Frame inspection consumes attack and interaction packets without removing, adding or rotating the item; paging stays tied to that frame UUID. Turn inspection off before changing the frame. If the frame is already gone, use `/guardian entities` with time, position, actor or UUID filters.
+
+Chunk unloads, dimension-transfer removals, repeated damage on a removed frame, unchanged interactions and tested fixed-frame refusals do not create destruction/change records. Damage attribution uses the supplied damage-source entity; a destructive removal without that context is recorded as `world`, not guessed from nearby players or the support block's history. Initial loaded frames and arbitrary direct item/rotation edits are not backfilled or universally captured. Failed placement and protection-mod cancellation before the relevant hook produce no accepted placement; actual pack protection and rendered client behavior still need connected-client acceptance.
+
+Frame history is read-only. It does not restore frames or transfer items, and it remains outside current purge categories. Existing frame history remains searchable when capture is disabled.
 
 ## Fluid bucket history
 
@@ -309,7 +329,7 @@ Cancel discards a pending confirmation or requests cancellation of running work.
 | `guardian.chat` | Public chat history | 3 |
 | `guardian.sessions` | Login/logout history | 3 |
 | `guardian.commands` | Parsed player command history | 3 |
-| `guardian.entities` | Entity death, name, tame and birth history | 2 |
+| `guardian.entities` | Entity and frame history; also required for frame inspection | 2 |
 | `guardian.fluids` | Player bucket fluid history | 2 |
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
@@ -344,6 +364,7 @@ Edit the generated server configuration. Restart after changing any setting mark
 | `entities.nameChanges` | `false` | Opt in to tracked custom-name changes |
 | `entities.taming` | `false` | Opt in to successful standard animal/horse taming |
 | `entities.breeding` | `false` | Opt in to accepted standard animal offspring births |
+| `entities.itemFrames` | `false` | Opt in to frame placement, display/rotation and destructive removal history |
 | `activity.chat` | `false` | Opt in to public chat capture |
 | `activity.sessions` | `true` | Login/logout event capture |
 | `activity.commands` | `false` | Opt in to parsed player command capture |

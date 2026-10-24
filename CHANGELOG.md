@@ -33,6 +33,14 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.73+1.21.1] - 2026-10-24
+
+### Added
+
+- Opt-in normal/glow item-frame placement, displayed-item/rotation and destructive removal history on both loaders, with immutable Data Component-aware item snapshots. Item removal and frame destruction are distinct; chunk unloads do not count as breaking.
+- `a:frame`, `a:frame-place`, `a:frame-remove` and `a:frame-change` entity filters and suggestions. Frame inspection uses the exact entity UUID, requires both inspector and entity-history permissions, and consumes clicks without changing the display.
+- Additive schema 19 frame payloads and configuration version 12 with `entities.itemFrames` disabled by default. Frame history remains read-only and outside rollback/purge.
+
 ## [0.4.0-alpha.72+1.21.1] - 2026-10-24
 
 ### Added

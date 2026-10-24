@@ -30,6 +30,7 @@ object EntityHistoryCapture {
                 EntityAuditKind.NAME_CHANGE -> settings.entities.nameChanges.get()
                 EntityAuditKind.TAME -> settings.entities.taming.get()
                 EntityAuditKind.BREED -> settings.entities.breeding.get()
+                EntityAuditKind.FRAME_PLACE, EntityAuditKind.FRAME_REMOVE, EntityAuditKind.FRAME_CHANGE -> settings.entities.itemFrames.get()
             }
     }
     @JvmStatic fun plainName(entity: Entity): String? = entity.customName?.getString(256)?.filter { !it.isISOControl() }
