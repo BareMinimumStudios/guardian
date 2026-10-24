@@ -33,6 +33,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.79+1.21.1] - 2026-10-24
+
+### Added
+
+- Exact world and included/excluded block/item filters for purge, with token-aware dimension/resource completion and explicit scope in preview and confirmation.
+- Isolated cross-backend tests for scoped selection, whole-transaction matching, immutable scope, confirmation rechecks, the shared cap, cancellation and atomic index/completeness-marker updates.
+
+### Changed
+
+- World-scoped purge retains activity and unlocated inventory history. Type-scoped purge selects only block/item history and retains entity/frame, fluid and activity records.
+- Preserve fixed expiring confirmation, global recovery protections and the 1,000-record shared limit. No schema/config migration or automatic deletion is added.
+
 ## [0.4.0-alpha.78+1.21.1] - 2026-10-24
 
 ### Added

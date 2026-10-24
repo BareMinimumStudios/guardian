@@ -166,15 +166,29 @@ object GuardianCommands {
                     .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
         root.then(Commands.literal("purge").requires { authorized(it.player?.createCommandSourceStack() ?: it,permissions,"guardian.purge",4) }
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian purge preview t:30d | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation."));0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian purge preview t:30d [w:minecraft:overworld] [i:minecraft:stone] [e:minecraft:coal] | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation."));0 }
             .then(Commands.literal("preview").then(Commands.argument("age",StringArgumentType.greedyString())
-                .suggests { context,builder -> if(authorized(context.source.player?.createCommandSourceStack() ?: context.source,permissions,"guardian.purge",4))net.minecraft.commands.SharedSuggestionProvider.suggest(listOf("t:1d","t:7d","t:30d","t:90d"),builder)else com.mojang.brigadier.suggestion.Suggestions.empty() }
+                .suggests { context,builder ->
+                    val source=context.source.player?.createCommandSourceStack() ?: context.source
+                    if(!authorized(source,permissions,"guardian.purge",4))com.mojang.brigadier.suggestion.Suggestions.empty() else {
+                        val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
+                        val token=builder.input.substring(start)
+                        val key=token.substringBefore(':').lowercase()
+                        val resources=if(key in setOf("i","include","e","exclude")) (net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()+net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet()).map { it.toString() } else emptyList()
+                        val worlds=if(key in setOf("w","world"))source.server.allLevels.map { it.dimension().location().toString() } else emptyList()
+                        val current=builder.createOffset(start)
+                        com.bareminimumstudios.guardian.command.PurgeCommandFilters.suggestions(token,worlds,resources).forEach(current::suggest)
+                        current.buildFuture()
+                    }
+                }
                 .executes { context ->
-                    val source=context.source;val raw=StringArgumentType.getString(context,"age")
-                    if(!raw.matches(Regex("(?:t|time):[^\\s]+"))){source.sendFailure(Component.literal("Guardian purge accepts only one age filter, for example t:30d."));return@executes 0}
-                    val age=BlockCommandFilterParser.parse(raw).getOrNull()?.lookbackMillis
+                    val source=context.source
+                    val parsed=com.bareminimumstudios.guardian.command.PurgeCommandFilters.parse(StringArgumentType.getString(context,"age"))
+                    val filters=parsed.getOrNull()
                     val purge=runtimeProvider()?.purge()
-                    if(age==null||purge==null){source.sendFailure(Component.literal("Guardian purge age is invalid or its service is unavailable."));0}else if(purge.preview(source,age))1 else 0
+                    if(filters==null){source.sendFailure(Component.literal("Guardian purge: ${parsed.exceptionOrNull()?.message}"));0}
+                    else if(purge==null){source.sendFailure(Component.literal("Guardian purge service is unavailable."));0}
+                    else if(purge.preview(source,filters.ageMillis,filters.scope))1 else 0
                 }))
             .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
                 .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.purge()?.suggestions(context.source) ?: emptyList(),builder) }
@@ -318,7 +332,7 @@ object GuardianCommands {
             source.sendSystemMessage(Component.literal("Guardian $name history: ${rows.size} records (page ${filter.page ?: 1})."))
             rows.forEach { row ->
                 val details = when (row.kind) { com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN -> "logged in"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT -> "logged out"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND -> "issued ${row.text}"; else -> "said: ${row.text}" }
-                val plain = "${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)} ${row.actor.lastKnownName} $details".filter { !it.isISOControl() }.replace('§', '?')
+                val plain = "${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)} ${row.actor.lastKnownName} $details".filter { !it.isISOControl() }.replace('\u00a7', '?')
                 source.sendSystemMessage(Component.literal(plain))
             }
             source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst, { page -> HistoryPageCommands.command(name, raw, page, filter.oldestFirst) }, HistoryPageCommands.command(name, raw, 1, !filter.oldestFirst)))

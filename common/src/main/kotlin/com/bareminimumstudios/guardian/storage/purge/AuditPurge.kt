@@ -10,7 +10,7 @@ data class PurgeCounts @JvmOverloads constructor(val blocks: Long = 0, val conta
     val total: Long get() = blocks + containers + activity + entities + fluids
 }
 /** Fixed immutable keys; later inserts cannot enter the confirmed batch. */
-class AuditPurgePlan(val cutoff: Long, val eligible: PurgeCounts, val protected: PurgeCounts, candidates: List<PurgeCandidate>) {
+class AuditPurgePlan @JvmOverloads constructor(val cutoff: Long, val eligible: PurgeCounts, val protected: PurgeCounts, candidates: List<PurgeCandidate>, val scope: PurgeScope = PurgeScope()) {
     val candidates: List<PurgeCandidate> = Collections.unmodifiableList(ArrayList(candidates))
     init {
         require(cutoff >= 0 && candidates.size <= 1000)

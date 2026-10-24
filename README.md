@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.78+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.79+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -371,21 +371,27 @@ Preview checks a bounded set of candidate transfers against observed inventories
 
 ## Purge old history
 
-Purge permanently removes old **history records**, across all users and worlds. It does not change blocks or inventories. Deleted history is no longer available for lookup, rollback or restore. Stop the server and back up the database before your first purge; keep the backup separately.
+Purge permanently removes old **history records**. With only an age filter, it covers all users and worlds; optional filters narrow that scope. It does not change blocks or inventories. Deleted history is no longer available for lookup, rollback or restore. Stop the server and back up the database before your first purge; keep the backup separately.
 
 ```text
 /guardian purge preview t:30d
+/guardian purge preview t:30d w:minecraft:overworld
+/guardian purge preview t:30d w:minecraft:overworld i:minecraft:stone,minecraft:coal e:example:protected_item
 /guardian purge confirm <token from preview>
 /guardian purge cancel
 ```
 
-`/co purge` also works. Purge requires its own `guardian.purge` permission, with **operator level 4** as the fallback. It accepts only one age filter (`t:` or `time:`), retaining at least one day. User, world, radius, resource and page filters are not supported. The cutoff is fixed when preview starts; only records strictly older than that UTC timestamp qualify.
+`/co purge` also works. Purge requires its own `guardian.purge` permission, with **operator level 4** as the fallback. It requires one age filter (`t:` or `time:`), retaining at least one day. Optional `w:`/`world:` selects one exact dimension ID, such as `minecraft:overworld`, rather than a save-folder name. `i:`/`include:` and `e:`/`exclude:` each accept up to 64 comma-separated exact block/item registry IDs. IDs without a namespace use `minecraft:`; wildcards are not supported. User, radius, cause, movement and page filters are refused. Duplicate filters are refused, including aliases. The cutoff is fixed when preview starts; only records strictly older than that UTC timestamp qualify.
+
+**Read the scope in preview before confirming.** A world filter includes located block/item/entity/fluid history and retains chat, session and command history because those rows have no stored world. Inventory-only item transactions with no block-container location are retained by a world filter. Adding either type filter limits selection to **block history and item transactions**; entity/frame, fluid and activity history are retained. A type matches either recorded block state or any changed before/after item ID. Include means any listed ID; an excluded ID anywhere in the record vetoes the whole record. Nested item contents/components are not searched.
+
+**Item transactions are indivisible.** A matching world or item endpoint selects the entire transaction, including its other item types, inventory slots and container endpoints in other worlds. The world and type matches can come from different endpoints in that transaction. Purge never deletes only part of a transaction. Preview states this behavior, counts each whole transaction once and freezes the exact scope with the confirmation token. Tab completion offers loaded dimension IDs and registered block/item IDs; valid historical IDs can also be entered manually.
 
 Preview changes nothing. It shows eligible block, item-transaction, activity (chat/login/logout/command), entity/frame and fluid counts, the protected count and a fixed batch of at most **1,000 records total**. One item transaction counts as one record, regardless of its slot count. Confirm with the complete token within 60 seconds using the same player or console authority. A new preview replaces the previous confirmation. Tokens are single-use and are not saved across restart. Records inserted after preview are outside that batch, even if they carry older timestamps. Run another preview and confirm to remove the next batch.
 
 Pending block rollback/restore rows and the history at their positions are retained. If any internal item journal, claim, saved image or recovery-protection data remains, Guardian conservatively retains all block/item history; activity, entity/frame and fluid history can still be purged because they do not participate in recovery. Recovery journals are never deleted by purge. Do not edit their tables to bypass protection.
 
-Purge rechecks protection before deleting and removes item-history indexes in the same transaction. Deleting only activity, entity/frame or fluid history does not advance the item-history completeness marker. A confirmed block/item deletion writes a durable history-gap marker that makes read-only item checks refuse selected history older than the purged cutoff with `incomplete history`, even when some older records remain protected. Lookups still show retained records. Purge shares a busy gate with block rollback/restore and item checks, and runs database work off the game thread. Logging continues; monitor storage/backpressure status as usual.
+Purge rechecks protection before deleting and removes item-history indexes in the same transaction. Deleting only activity, entity/frame or fluid history does not advance the item-history completeness marker. A confirmed block/item deletion, including a scoped purge, writes a conservative global history-gap marker that makes read-only item checks refuse selected history older than the purged cutoff with `incomplete history`, even when some older records remain protected. Lookups still show retained records. Purge shares a busy gate with block rollback/restore and item checks, and runs database work off the game thread. Logging continues; monitor storage/backpressure status as usual.
 
 Cancel discards a pending confirmation or requests cancellation of running work. Permission loss also cancels pending work. **Cancellation cannot undo a batch that already committed.** Check the reported outcome and history before trying again. Purge does not run VACUUM, remove mapping tables, reset identities or promise an immediate reduction in database-file size; freed pages can be reused by later writes.
 

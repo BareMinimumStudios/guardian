@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.78 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.79 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.78 passed 696 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.79 passed 707 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -191,6 +191,16 @@ Alpha.77 passed GitHub CI. The owner selected piston/falling history. Alpha.78 a
 Both isolated servers used real scheduled piston animations and falling physics. Normal pushes, sticky pulls, destroyed torch targets, slime branches and chunk-boundary moves settled to the independently asserted world states. Blocked obsidian, 13-block over-limit pushes and empty strokes produced no movement row. Correlated rows contained no moving-piston placeholder. Sand departure/landing shared an entity UUID; gravel breaking on a torch had no false landing. Actual NeoForge piston-pre and entity-spawn cancellation produced no movement record. Eight world/query/refusal/restart cases per loader and SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks. Final core hashes match all final runtime-tested jars; SQLite remains the only nested dependency. [Evidence/checksums](validation/movement-alpha78.json).
 
 All owned servers stopped and supplied worlds/databases were untouched. Correlation is observational, not atomic/guaranteed complete. Interference, unload, timeout or rejected queue rows can leave incomplete history; no animation or chunks are forced. Custom physics, waterlogged/state-changing plans, hydrated concrete and rendered-client behavior remain outside certification. Existing R3 stays pending; alpha.78 remote CI awaits the owner's push.
+
+## Scoped history purge, 2026-10-24
+
+Alpha.78 passed GitHub CI. The owner selected exact world and block/item purge filters. Alpha.79 adds `w:`/`world:`, `i:`/`include:` and `e:`/`exclude:`, immutable scope in the fixed confirmation plan, token-aware completion and explicit retained-category/whole-transaction wording. Schema 22 and config version 16 are unchanged; upgrading deletes nothing.
+
+707 tests passed, including 11 new tests across SQLite, optional DuckDB and memory for scoped selection, before/after matching, exclusion precedence, cross-world whole transactions, pending protection, immutable scope, fixed late-insert exclusion, shared cap, cancellation, malformed filters and canonical suggestions. SQLite-specific cases recheck changed world/resource indexes at confirmation and verify atomic child-index cleanup/completeness-floor updates. Required clean/build/configuration-cache/WorldEdit builds passed through IDEA. Changed parser/scope/SQL/command/service files passed errors-only inspection. The server fixture caught a second filtering pass hiding canonical shorthand completions; the final jars pass the corrected path.
+
+Both final loader jars passed 27 global/filtered-preview cases and 11 scoped-deletion/restart cases per loader on fresh isolated databases. Scoped block/item deletion retained activity and other categories; world-only entity/fluid deletion preserved the item floor; journals still protected block/item history. Late inserts, the shared 1,000-record cap, cancellation, child indexes and SQLite integrity passed. Actual LuckPerms and operator fallback passed 490 checks, including cached age/world/include/exclude suggestions, permission revocation, ticket invalidation and queued cancellation. Every final core hash matches all four final runtime/permission copies. Standard jars still nest only SQLite. [Evidence/checksums](validation/scoped-purge-alpha79.json).
+
+All owned servers stopped. Supplied databases/worlds were untouched. A self-contained private server wrapper enforces the private test-directory boundary; the older shared pressure harness is not used. No connected client was used; existing R3 and final release sign-off remain pending. Alpha.79 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

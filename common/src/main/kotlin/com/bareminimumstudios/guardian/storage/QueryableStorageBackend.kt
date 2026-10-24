@@ -18,6 +18,10 @@ interface QueryableStorageBackend : StorageBackend {
     fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = throw UnsupportedOperationException("Player activity history unavailable")
 
     fun previewPurge(cutoff: Long, limit: Int = 1000): com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan = throw UnsupportedOperationException("Purge unavailable")
+    fun previewPurge(cutoff: Long, limit: Int, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope): com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan {
+        require(scope.global) { "Scoped purge unavailable for this backend" }
+        return previewPurge(cutoff, limit)
+    }
     fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean): com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult = throw UnsupportedOperationException("Purge unavailable")
 
     fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery): List<com.bareminimumstudios.guardian.domain.EntityAuditEvent> = throw UnsupportedOperationException("Entity history unavailable")

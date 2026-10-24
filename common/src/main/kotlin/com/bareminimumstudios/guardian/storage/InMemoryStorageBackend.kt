@@ -123,20 +123,21 @@ class InMemoryStorageBackend : QueryableStorageBackend {
         containers.filter(query::matches).sortedWith(if (query.oldestFirst) compareBy<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenBy { it.transactionId.toString() } else compareByDescending<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).drop(query.offset).take(query.limit)
     }
 
-    private fun purgeCandidates(cutoff: Long): Pair<List<PurgeCandidate>,Long> {
+    private fun purgeCandidates(cutoff: Long, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope): Pair<List<PurgeCandidate>,Long> {
         val pending=entries.filter { it.rollbackState in setOf(BlockRollbackState.PENDING,BlockRollbackState.RESTORE_PENDING) }.map { it.snapshot.dimension to it.snapshot.position }.toSet()
-        val blocks=entries.filter { it.snapshot.timestampEpochMillis<cutoff && (it.snapshot.dimension to it.snapshot.position) !in pending }
-        val candidates=blocks.map { PurgeCandidate(PurgeKind.BLOCK,it.rowId.toString(),it.snapshot.timestampEpochMillis) } + containers.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.CONTAINER,it.transactionId.toString(),it.timestampEpochMillis) } + activity.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.ACTIVITY,it.eventId.toString(),it.timestampEpochMillis) } + entities.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.ENTITY,it.eventId.toString(),it.timestampEpochMillis) } + fluids.filter { it.timestampEpochMillis<cutoff }.map { PurgeCandidate(PurgeKind.FLUID,it.eventId.toString(),it.timestampEpochMillis) }
-        return candidates to entries.count { it.snapshot.timestampEpochMillis<cutoff }.toLong()-blocks.size
+        val blocks=entries.filter { it.snapshot.timestampEpochMillis<cutoff && scope.matches(it.snapshot) && (it.snapshot.dimension to it.snapshot.position) !in pending }
+        val candidates=blocks.map { PurgeCandidate(PurgeKind.BLOCK,it.rowId.toString(),it.snapshot.timestampEpochMillis) } + containers.filter { it.timestampEpochMillis<cutoff && scope.matches(it) }.map { PurgeCandidate(PurgeKind.CONTAINER,it.transactionId.toString(),it.timestampEpochMillis) } + activity.filter { it.timestampEpochMillis<cutoff && scope.global }.map { PurgeCandidate(PurgeKind.ACTIVITY,it.eventId.toString(),it.timestampEpochMillis) } + entities.filter { it.timestampEpochMillis<cutoff && !scope.typed && (scope.world==null || scope.world==it.dimension) }.map { PurgeCandidate(PurgeKind.ENTITY,it.eventId.toString(),it.timestampEpochMillis) } + fluids.filter { it.timestampEpochMillis<cutoff && !scope.typed && (scope.world==null || scope.world==it.dimension) }.map { PurgeCandidate(PurgeKind.FLUID,it.eventId.toString(),it.timestampEpochMillis) }
+        return candidates to entries.count { it.snapshot.timestampEpochMillis<cutoff && scope.matches(it.snapshot) }.toLong()-blocks.size
     }
-    override fun previewPurge(cutoff: Long, limit: Int): AuditPurgePlan = lock.read {
+    override fun previewPurge(cutoff: Long, limit: Int) = previewPurge(cutoff,limit,com.bareminimumstudios.guardian.storage.purge.PurgeScope())
+    override fun previewPurge(cutoff: Long, limit: Int, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope): AuditPurgePlan = lock.read {
         require(open && cutoff>=0 && limit in 1..1000)
-        val (candidates,protected)=purgeCandidates(cutoff)
-        AuditPurgePlan(cutoff,PurgeCounts(candidates.count{it.kind==PurgeKind.BLOCK}.toLong(),candidates.count{it.kind==PurgeKind.CONTAINER}.toLong(),candidates.count{it.kind==PurgeKind.ACTIVITY}.toLong(),candidates.count{it.kind==PurgeKind.ENTITY}.toLong(),candidates.count{it.kind==PurgeKind.FLUID}.toLong()),PurgeCounts(protected),candidates.sortedWith(compareBy<PurgeCandidate>{it.time}.thenBy{it.kind}.thenBy{it.key}).take(limit))
+        val (candidates,protected)=purgeCandidates(cutoff,scope)
+        AuditPurgePlan(cutoff,PurgeCounts(candidates.count{it.kind==PurgeKind.BLOCK}.toLong(),candidates.count{it.kind==PurgeKind.CONTAINER}.toLong(),candidates.count{it.kind==PurgeKind.ACTIVITY}.toLong(),candidates.count{it.kind==PurgeKind.ENTITY}.toLong(),candidates.count{it.kind==PurgeKind.FLUID}.toLong()),PurgeCounts(protected),candidates.sortedWith(compareBy<PurgeCandidate>{it.time}.thenBy{it.kind}.thenBy{it.key}).take(limit),scope)
     }
     override fun applyPurge(plan: AuditPurgePlan, permitted: () -> Boolean) = lock.write {
         check(open && permitted())
-        val eligible=purgeCandidates(plan.cutoff).first.toSet();val selected=plan.candidates.filter { it in eligible }
+        val eligible=purgeCandidates(plan.cutoff,plan.scope).first.toSet();val selected=plan.candidates.filter { it in eligible }
         // Stage all decisions before writes, so cancellation cannot leave a partial memory batch.
         selected.forEach { check(permitted()) };check(permitted())
         val blocks=selected.filter { it.kind==PurgeKind.BLOCK }.map { it.key }.toSet()

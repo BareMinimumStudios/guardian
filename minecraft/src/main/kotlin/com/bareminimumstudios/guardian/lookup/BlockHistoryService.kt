@@ -82,6 +82,7 @@ class BlockHistoryService(
     }
 
     fun previewPurge(cutoff: Long, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff) },onSuccess,onFailure)
+    fun previewPurge(cutoff: Long, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff,1000,scope) },onSuccess,onFailure)
     fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.applyPurge(plan,permitted) },onSuccess,onFailure)
 
     fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {

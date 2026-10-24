@@ -29,21 +29,22 @@ class AuditPurgeService(private val history: BlockHistoryService, private val pe
         if(isBusy()||otherBusy()){source.sendFailure(Component.literal("Guardian purge is unavailable while purge, rollback, restore or item checks are busy."));return false}
         return true
     }
-    fun preview(source: CommandSourceStack,ageMillis: Long): Boolean {
+    @JvmOverloads fun preview(source: CommandSourceStack,ageMillis: Long,scope: PurgeScope = PurgeScope()): Boolean {
         if(!admit(source))return false
         if(ageMillis<86_400_000L){source.sendFailure(Component.literal("Guardian purge requires retaining at least one day: use t:1d or older."));return false}
         val cutoff=(System.currentTimeMillis()-ageMillis).coerceAtLeast(0)
         tickets.clear();ticketSource=null
         val work=Work(source,owner(source),false);active=work
         message(source,"Guardian: counting old history for purge preview; nothing will be deleted.")
-        history.previewPurge(cutoff,{ plan ->
+        history.previewPurge(cutoff,scope,{ plan ->
             if(active!==work)return@previewPurge
             active=null
             if(!work.permit.get()||!allowed(source))return@previewPurge
-            message(source,"Guardian purge preview: global across all users/worlds; records strictly before ${java.time.Instant.ofEpochMilli(cutoff)} UTC. Eligible: ${plan.eligible.blocks} block, ${plan.eligible.containers} item, ${plan.eligible.activity} activity, ${plan.eligible.entities} entity/frame, ${plan.eligible.fluids} fluid. Protected: ${plan.protected.total}. This batch: ${plan.candidates.size}/1000.")
+            message(source,"Guardian purge preview: ${plan.scope.description()}; records strictly before ${java.time.Instant.ofEpochMilli(cutoff)} UTC. Eligible: ${plan.eligible.blocks} block, ${plan.eligible.containers} item, ${plan.eligible.activity} activity, ${plan.eligible.entities} entity/frame, ${plan.eligible.fluids} fluid. Protected: ${plan.protected.total}. This batch: ${plan.candidates.size}/1000.")
             if(plan.candidates.isEmpty()){message(source,"Guardian: no eligible old history to purge.");return@previewPurge}
+            if(!plan.scope.global)message(source,"Scoped purge retains activity history. Type filters retain entity/frame and fluid history. A matching item transaction is deleted whole, including its other endpoints; inventory-only transactions have no world location.")
             val ticket=tickets.offer(work.owner,plan);ticketSource=source
-            message(source,"Permanent deletion of this selected block/item/activity/entity/fluid batch requires /guardian purge confirm ${ticket.token} within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.")
+            message(source,"Permanent deletion of this selected block/item/activity/entity/fluid batch requires /guardian purge confirm ${ticket.token} within 60 seconds. Scope: ${plan.scope.description()}. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.")
         },{ error ->
             if(active!==work)return@previewPurge
             active=null
@@ -58,7 +59,7 @@ class AuditPurgeService(private val history: BlockHistoryService, private val pe
         if(plan==null){source.sendFailure(Component.literal("Guardian purge confirmation is invalid, expired or belongs to another requester. Run a new preview."));return false}
         ticketSource=null
         val work=Work(source,owner(source),true);active=work
-        message(source,"Guardian: purging the confirmed batch of at most ${plan.candidates.size} old history records.")
+        message(source,"Guardian: purging the confirmed batch of at most ${plan.candidates.size} old history records. Scope: ${plan.scope.description()}.")
         history.applyPurge(plan,{work.permit.get()},{ result ->
             if(active!==work)return@applyPurge
             active=null
