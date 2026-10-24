@@ -140,10 +140,10 @@ class AuditPurgeTest {
             val old=item(2);val audit=block(1);val chat=activity(3)
             db().use { it.open();it.append(listOf(audit,ContainerAuditEntry(old),chat)) }
             DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+file).use { conn->conn.createStatement().use { statement->
-                statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=14")
+                statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=14")
                 statement.executeUpdate("UPDATE ex_meta SET meta_value='13' WHERE meta_key='schema_version'")
             } }
-            db().use { store->store.open();assertEquals(14,store.health().schemaVersion)
+            db().use { store->store.open();assertEquals(15,store.health().schemaVersion)
                 assertEquals(audit,store.lookupBlocks(BlockLookupQuery()).single().snapshot)
                 val item=store.lookupContainers(ContainerLookupQuery()).single();assertEquals(old.transactionId,item.transactionId);assertEquals(old.changes,item.changes)
                 assertEquals(listOf(chat),store.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))))

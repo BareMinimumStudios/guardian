@@ -40,7 +40,7 @@ class AuditPurgeService(private val history: BlockHistoryService, private val pe
             if(active!==work)return@previewPurge
             active=null
             if(!work.permit.get()||!allowed(source))return@previewPurge
-            message(source,"Guardian purge preview: global across all users/worlds; records strictly before ${java.time.Instant.ofEpochMilli(cutoff)} UTC. Eligible: ${plan.eligible.blocks} block, ${plan.eligible.containers} item, ${plan.eligible.activity} chat/session. Protected: ${plan.protected.total}. This batch: ${plan.candidates.size}/1000.")
+            message(source,"Guardian purge preview: global across all users/worlds; records strictly before ${java.time.Instant.ofEpochMilli(cutoff)} UTC. Eligible: ${plan.eligible.blocks} block, ${plan.eligible.containers} item, ${plan.eligible.activity} activity. Protected: ${plan.protected.total}. This batch: ${plan.candidates.size}/1000.")
             if(plan.candidates.isEmpty()){message(source,"Guardian: no eligible old history to purge.");return@previewPurge}
             val ticket=tickets.offer(work.owner,plan);ticketSource=source
             message(source,"Permanent deletion requires /guardian purge confirm ${ticket.token} within 60 seconds. Back up first. Only this fixed batch is selected; new inserts are excluded. Purged history cannot be rolled back or restored.")
@@ -62,7 +62,7 @@ class AuditPurgeService(private val history: BlockHistoryService, private val pe
         history.applyPurge(plan,{work.permit.get()},{ result ->
             if(active!==work)return@applyPurge
             active=null
-            if(allowed(source))message(source,"Guardian purge complete: ${result.deleted.blocks} block, ${result.deleted.containers} item, ${result.deleted.activity} chat/session deleted; ${result.skipped} selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.")
+            if(allowed(source))message(source,"Guardian purge complete: ${result.deleted.blocks} block, ${result.deleted.containers} item, ${result.deleted.activity} activity deleted; ${result.skipped} selected records retained or already absent. Newer history and recovery records were preserved. Deleted history cannot be restored.")
         },{ error ->
             if(active!==work)return@applyPurge
             active=null

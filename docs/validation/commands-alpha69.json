@@ -1,0 +1,374 @@
+{
+  "date": "2026-10-24",
+  "version": "0.4.0-alpha.69+1.21.1",
+  "schema": 15,
+  "tests": {
+    "tests": 624,
+    "failures": 0,
+    "errors": 0
+  },
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=8",
+      "rows": [
+        [
+          "COMMAND",
+          "/execute"
+        ],
+        [
+          "COMMAND",
+          "/help"
+        ],
+        [
+          "COMMAND",
+          "/list"
+        ],
+        [
+          "COMMAND",
+          "/say"
+        ],
+        [
+          "COMMAND",
+          "/say COMMAND110_FULL_ARGUMENT snowman \u2603"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:2 p:1",
+          "expected": "Guardian commands history: 2 records (page 1).",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian commands history: 2 records (page 1).",
+            "[12:56:48] [Server thread/INFO]: 2026-10-24T17:56:45.907Z GuardianFixture issued /execute",
+            "[12:56:48] [Server thread/INFO]: 2026-10-24T17:56:45.906Z GuardianFixture issued /say COMMAND110_FULL_ARGUMENT snowman \u2603",
+            "[12:56:48] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608096883600"
+          ]
+        },
+        {
+          "command": "co commands u:GuardianFixture t:1h l:2 p:2",
+          "expected": "Guardian commands history: 2 records (page 2).",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian commands history: 2 records (page 2).",
+            "[12:56:48] [Server thread/INFO]: 2026-10-24T17:56:45.904Z GuardianFixture issued /say",
+            "[12:56:48] [Server thread/INFO]: 2026-10-24T17:56:45.886Z GuardianFixture issued /help",
+            "[12:56:48] [Server thread/INFO]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608185499100"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:2 p:3",
+          "expected": "Guardian commands history: 1 records (page 3).",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian commands history: 1 records (page 3).",
+            "[12:56:48] [Server thread/INFO]: 2026-10-24T17:56:45.883Z GuardianFixture issued /list",
+            "[12:56:48] [Server thread/INFO]: [Previous]  Page 3    [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608233097800"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture,!GuardianFixture t:1h",
+          "expected": "Guardian commands history: 0 records",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian commands history: 0 records (page 1).",
+            "[12:56:48] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608342245100"
+          ]
+        },
+        {
+          "command": "guardian chat u:GuardianFixture t:1h",
+          "expected": "Guardian chat history: 0 records",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian chat history: 0 records (page 1).",
+            "[12:56:48] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608434988600"
+          ]
+        },
+        {
+          "command": "guardian sessions u:GuardianFixture t:1h",
+          "expected": "Guardian sessions history: 0 records",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian sessions history: 0 records (page 1).",
+            "[12:56:48] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608542954100"
+          ]
+        },
+        {
+          "command": "guardian commands r:5",
+          "expected": "accepts user, time, limit, page and order filters only",
+          "output": [
+            "[12:56:48] [Server thread/INFO]: Guardian commands accepts user, time, limit, page and order filters only.",
+            "[12:56:48] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864608635429100"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:5",
+          "expected": "Guardian commands history: 5 records",
+          "output": [
+            "[12:57:02] [Server thread/INFO]: Guardian commands history: 5 records (page 1).",
+            "[12:57:02] [Server thread/INFO]: 2026-10-24T17:56:45.907Z GuardianFixture issued /execute",
+            "[12:57:02] [Server thread/INFO]: 2026-10-24T17:56:45.906Z GuardianFixture issued /say COMMAND110_FULL_ARGUMENT snowman \u2603",
+            "[12:57:02] [Server thread/INFO]: 2026-10-24T17:56:45.904Z GuardianFixture issued /say",
+            "[12:57:02] [Server thread/INFO]: 2026-10-24T17:56:45.886Z GuardianFixture issued /help",
+            "[12:57:02] [Server thread/INFO]: 2026-10-24T17:56:45.883Z GuardianFixture issued /list",
+            "[12:57:02] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[12:57:02] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792864622079906400"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeCommandEventCancellation": false,
+      "scope": "Actual dispatcher performCommand and shared mixin; synthetic player source, no network command packets"
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=10",
+      "rows": [
+        [
+          "COMMAND",
+          "/execute"
+        ],
+        [
+          "COMMAND",
+          "/help"
+        ],
+        [
+          "COMMAND",
+          "/list"
+        ],
+        [
+          "COMMAND",
+          "/say"
+        ],
+        [
+          "COMMAND",
+          "/say COMMAND110_FULL_ARGUMENT snowman \u2603"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:2 p:1",
+          "expected": "Guardian commands history: 2 records (page 1).",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands history: 2 records (page 1).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.899Z GuardianFixture issued /execute",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.898Z GuardianFixture issued /say COMMAND110_FULL_ARGUMENT snowman \u2603",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643042796500"
+          ]
+        },
+        {
+          "command": "co commands u:GuardianFixture t:1h l:2 p:2",
+          "expected": "Guardian commands history: 2 records (page 2).",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands history: 2 records (page 2).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.896Z GuardianFixture issued /say",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.891Z GuardianFixture issued /help",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643134160600"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:2 p:3",
+          "expected": "Guardian commands history: 1 records (page 3).",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands history: 1 records (page 3).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.881Z GuardianFixture issued /list",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 3    [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643243375700"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture,!GuardianFixture t:1h",
+          "expected": "Guardian commands history: 0 records",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands history: 0 records (page 1).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643336642900"
+          ]
+        },
+        {
+          "command": "guardian chat u:GuardianFixture t:1h",
+          "expected": "Guardian chat history: 0 records",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian chat history: 0 records (page 1).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643443647800"
+          ]
+        },
+        {
+          "command": "guardian sessions u:GuardianFixture t:1h",
+          "expected": "Guardian sessions history: 0 records",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian sessions history: 0 records (page 1).",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643537101000"
+          ]
+        },
+        {
+          "command": "guardian commands r:5",
+          "expected": "accepts user, time, limit, page and order filters only",
+          "output": [
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands accepts user, time, limit, page and order filters only.",
+            "[12:57:23] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864643644429500"
+          ]
+        },
+        {
+          "command": "guardian commands u:GuardianFixture t:1h l:5",
+          "expected": "Guardian commands history: 5 records",
+          "output": [
+            "[12:57:37] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[12:57:37] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=15",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian commands history: 5 records (page 1).",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.899Z GuardianFixture issued /execute",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.898Z GuardianFixture issued /say COMMAND110_FULL_ARGUMENT snowman \u2603",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.896Z GuardianFixture issued /say",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.891Z GuardianFixture issued /help",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: 2026-10-24T17:57:20.881Z GuardianFixture issued /list",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[12:57:37] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792864657558841600"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeCommandEventCancellation": true,
+      "scope": "Actual dispatcher performCommand and shared mixin; synthetic player source, no network command packets"
+    }
+  ],
+  "realProvider": [
+    {
+      "loader": "Fabric",
+      "checks": 449,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "24_individual_activity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 450,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "24_individual_activity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 368,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 369,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "permissionChecksTotal": 1636,
+  "capture": {
+    "commandsDefault": false,
+    "argumentsDefault": false,
+    "recordedBoundary": "Player-source Commands.performCommand after non-null finishParsing; admission, not result",
+    "console": false,
+    "sensitiveRoots": "Common authentication/private/Guardian roots always excluded, namespace-insensitive",
+    "opaqueWrappers": "Root only even with arguments enabled",
+    "extraExcludedRoots": 64,
+    "extraExclusionConfigMaxChars": 4096,
+    "maxRawInputChars": 32768,
+    "maxRootChars": 128,
+    "maxStoredChars": 4096,
+    "controlHiddenFormatting": "rejected",
+    "invalidExclusionConfig": "fail closed"
+  },
+  "hookVerification": {
+    "sourceAndBytecode": "MixinMCP inspected both Guardian.main and Guardian.neoforge.main",
+    "invocation": "INVOKESTATIC Commands.finishParsing(ParseResults,String,CommandSourceStack) -> ContextChain",
+    "injector": "WrapOperation require=1, registered in both loader JSONs",
+    "actualNeoForgeCancellationTested": true,
+    "fixtureTransformsMinecraftBytecode": false
+  },
+  "builds": {
+    "clean": "passed, 1m 2s, all 36 tasks executed",
+    "build": "passed, 3s, configuration cache stored",
+    "repeat": "passed, 360ms, configuration cache reused",
+    "worldedit": "passed, 153ms, configuration cache reused"
+  },
+  "priorCheckpointCI": {
+    "sha": "901477d88d7e958c1d1d73b866dc9bde76ff66b2",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40077751585"
+  },
+  "suppliedDatabasesUsed": false,
+  "limits": [
+    "Synthetic player command sources and unconnected packet listeners; no signed/unsigned network command packet or client presentation acceptance",
+    "Only tested NeoForge CommandEvent cancellation before the hook, not arbitrary pack cancellations/rewrites",
+    "Unknown custom sensitive roots need explicit exclusions before optional argument capture; root-only is the default",
+    "Not a console/command-block/function execution trace or success audit",
+    "No item apply, fluid/entity capture or new purge scope"
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.69+1.21.1.jar",
+      "bytes": 13015381,
+      "sha256": "6671a4394dceda883833a9da1906b3fd1a185fa09aeb7e51cea64175f61eeb6a"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.69+1.21.1.jar",
+      "bytes": 12991990,
+      "sha256": "5bd88bf346716790803822d22d51c56e73cbb92fb87c7083f0cfe23f9cc79824"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.69+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "fe28926a05b113b1f4a1be83fdbe5e400d584df3edfcf6ca90cc5d1cd3012fc1"
+    }
+  ]
+}

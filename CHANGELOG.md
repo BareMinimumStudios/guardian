@@ -33,6 +33,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.69+1.21.1] - 2026-10-24
+
+### Added
+
+- Opt-in parsed player command logging, off by default, with a separate argument-capture switch that is also off by default. Common authentication/private/Guardian roots are excluded; nested wrappers retain root names only. Additional custom root exclusions and bounded plain-text sanitization are supported.
+- `/guardian commands` and `/co commands` history with user/time filters, exclusions, paging, order controls and a separate `guardian.commands` permission (operator level 3 fallback).
+- Schema 15 stores COMMAND activity independently from public chat and session events. Existing activity purge includes old command records.
+
+### Changed
+
+- Record command admission after syntax parsing rather than claiming execution success. NeoForge command events cancelled before parsing completion do not reach capture. Console sources are excluded. No client installation is required.
+
 ## [0.4.0-alpha.68+1.21.1] - 2026-10-24
 
 ### Added

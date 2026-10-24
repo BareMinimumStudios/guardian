@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.68 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.69 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.68 passed 611 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. The full purge suite includes SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current purge permission acceptance passed 418 actual-provider/operator checks on both loaders. Prior restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.69 passed 624 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Command tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current command/activity permission acceptance passed 1,636 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -79,6 +79,18 @@ The owner explicitly approved old block/item/chat/session purge with preview, co
 Both isolated loader servers passed fifteen command/database cases each: preview/no-op, age/filter rejection, cancellation, exact 1,000-record confirmation, late insert exclusion, single-use confirmation, subsequent batches, journal protection, index integrity and restart persistence. Current final jar hashes match all runtime fixtures. Actual LuckPerms checks passed 95/96 cases on Fabric/NeoForge; operator fallback passed 113/114. These include independent grants, explicit operator denial, levels zero through four, cached suggestions, queued permission revocation and stop, rollback/purge mutual exclusion, busy-confirm ticket preservation and authorized deletion. [Evidence and artifact checksums](validation/purge-alpha68.json).
 
 All writes and purges used fresh private databases or temporary unit-test databases. Supplied server databases/worlds were untouched. The first private NeoForge fixture signalled before runtime installation; adding a main-thread status barrier corrected the fixture and both final runs passed. Connected-client acceptance remains pending, and cannot be replaced by these synthetic-player fixtures. Remote alpha.68 CI awaits the owner's push. A committed purge cannot be undone, and the operation makes no immediate file-shrink promise.
+
+## Opt-in command logging, 2026-10-24
+
+After alpha.68 passed GitHub CI, the owner selected bounded opt-in command logging. Alpha.69 adds independent `activity.commands`, optional `activity.commandArguments` and extra excluded roots, all with root-only capture off by default. Common authentication/private/Guardian roots are always excluded; nested wrappers retain roots only. Schema 15 adds COMMAND activity without rewriting old records. `/guardian commands` and `/co commands` use separate level-three `guardian.commands` access, current operator state, standard user/time filters and navigation.
+
+624 automated tests passed, including thirteen new contracts for defaults, argument opt-in, namespaced sensitive roots, opaque wrappers, custom/invalid exclusions, bounds, control/bidirectional text, navigation, activity separation/filtering/paging/idempotence, persistence, isolated activity purge and schema-14 upgrade. MixinMCP source and bytecode checks verified the same finishParsing invocation on both loaders. The require-one WrapOperation is registered in both JSONs; changed mixin and command files have no IDE errors. Full clean, repeated-cache and WorldEdit builds passed.
+
+Both dedicated isolated servers exercised actual Commands.performCommand with a synthetic operator player source. They persisted exactly five expected command records, including only-root defaults, an explicitly enabled argument example and an opaque execute root without nested secret text. Unknown/incomplete commands, disabled switches, private/auth/Guardian roots, custom exclusions, invalid exclusion configuration and console sources produced no extra records. Actual NeoForge CommandEvent cancellation prevented capture. Eight console history cases per loader checked paging, exclusions, separation, rejected spatial filters and restart persistence. Final core hashes match the runtime jars. [Evidence and checksums](validation/commands-alpha69.json).
+
+Real LuckPerms passed 449/450 checks on Fabric/NeoForge, including independent command grants, explicit denial to an actual operator, cached time/user suggestions and 24 individual activity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator entries passed 368/369 checks, including cached-source suggestion revocation after operator removal. No permission decisions were mocked.
+
+These are dispatcher/player-source tests, not actual network command packets, rendered client UI or universal pack cancellation acceptance. The first private fixture used broad reflection on a Fzzy field and linked an unused client widget signature; using its Supplier interface fixed the fixture. The first NeoForge cancellation fixture selected a wrong overload; an exact IEventBus signature fixed it. All final runs passed; no client dependency was added to Guardian. All private servers stopped, and supplied databases/worlds were untouched. Remote alpha.69 CI awaits the owner's push; alpha.68 CI already passed.
 
 ## Pending acceptance
 

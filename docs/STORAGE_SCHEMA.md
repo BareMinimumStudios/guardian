@@ -1,6 +1,6 @@
 # Guardian storage schema
 
-Current schema: **14**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+Current schema: **15**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
 
 The `ex_` table prefix preserves the native ExProtect format lineage. It is not a CoreProtect `co_` schema or an automatic importer.
 
@@ -25,3 +25,5 @@ Schema 13 marks the directional restore journal contract without rewriting audit
 Schema 14 marks purge completeness semantics. Installing/upgrading does not delete history. A successful confirmed block/item purge writes a monotonic `ex_meta.history_purged_before` cutoff in the same transaction as the selected deletions. Item guards report INCOMPLETE_HISTORY for selected transactions strictly older than that floor, including late reinsertions. Journal preparation also checks this guard. Activity-only purge does not advance the floor.
 
 Purge selects fixed keys for at most 1,000 records across block, container and activity tables. It rechecks timestamps and recovery protection under the backend lock before deleting. Container location, logical owner and resource indexes are deleted with their parent row. Block PENDING/RESTORE_PENDING rows and their positions are protected. Any retained item-journal/protection/claim/image data conservatively protects all block/container rows. Journal tables, maps, sequences and recent data remain. There is no automatic compaction or identity reset. Pre-commit cancellation rolls the transaction back, including index changes and the floor; cancellation after commit cannot restore deleted history. Retain a pre-upgrade database backup for downgrade to a schema-13 build.
+
+Schema 15 admits COMMAND in `ex_player_activity.kind`, using the existing unique event UUID and kind/time/player indexes. Bounded command text is stored only after capture policy redaction; it uses ActionType.COMMAND (51). Commands are queried independently from chat and session kinds. Standard activity purge includes old command records in its fixed batch. No old payloads are rewritten by the empty marker migration, and older builds refuse schema 15. Argument-capture changes do not rewrite stored records. Signed command/chat materials and transport metadata are not persisted by this feature.

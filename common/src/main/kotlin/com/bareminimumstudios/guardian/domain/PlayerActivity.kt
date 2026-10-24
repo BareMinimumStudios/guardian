@@ -2,9 +2,9 @@ package com.bareminimumstudios.guardian.domain
 
 import java.util.UUID
 
-enum class PlayerActivityKind { CHAT, LOGIN, LOGOUT }
+enum class PlayerActivityKind { CHAT, LOGIN, LOGOUT, COMMAND }
 
-/** Plain immutable text only: no IP, signed-chat material, components or commands. */
+/** Plain immutable text only: no signed-chat material or components. Commands pass a separate redaction policy. */
 data class PlayerActivity(
     val eventId: UUID = UUID.randomUUID(),
     override val timestampEpochMillis: Long,
@@ -15,7 +15,7 @@ data class PlayerActivity(
     init {
         require(timestampEpochMillis >= 0)
         require(actor.lastKnownName != null && actor.lastKnownName.length in 1..64)
-        require(if (kind == PlayerActivityKind.CHAT) text != null && text.length in 1..4096 else text == null)
+        require(if (kind == PlayerActivityKind.CHAT || kind == PlayerActivityKind.COMMAND) text != null && text.length in 1..4096 else text == null)
     }
-    override val action: ActionType get() = if (kind == PlayerActivityKind.CHAT) ActionType.CHAT else ActionType.PLAYER_SESSION
+    override val action: ActionType get() = when(kind) { PlayerActivityKind.CHAT -> ActionType.CHAT; PlayerActivityKind.COMMAND -> ActionType.COMMAND; else -> ActionType.PLAYER_SESSION }
 }

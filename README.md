@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.68+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.69+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 14**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 15**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -152,7 +152,24 @@ Chat searches require **`guardian.chat`** and session searches require **`guardi
 
 The chat record contains plain decorated public text at the broadcast boundary, capped at 4,096 characters. Commands, `/msg`/private-message chat types, system messages and fully filtered messages are excluded. This does not promise capture of arbitrary custom chat channels from other mods. Login/logout capture starts after Guardian is running; it cannot reconstruct earlier sessions. Orderly shutdown records currently connected players leaving before storage closes. A crash may leave a login with no logout.
 
-Startup upgrades supported databases to schema 14 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
+Startup upgrades supported databases to schema 15 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
+
+## Player command history
+
+Command capture is **off by default**. Enable `activity.commands` in the server configuration to record player-attributed commands after Minecraft accepts their syntax. This is an admission record, **not proof that the command succeeded**. Unknown commands, syntax failures and cancellations before the capture boundary are not recorded. Console commands are excluded; this is not a command-block or function trace.
+
+```text
+/guardian commands u:Poke097 t:1h l:20 p:1
+/guardian commands u:Alex,Bob,!Charlie t:1d o:oldest
+```
+
+`/co commands` also works. Searches use the same user/time/limit/page/order filters and clickable navigation as chat history. They require the separate **`guardian.commands`** permission, with operator level **3** fallback. Ordinary lookup, chat or session grants do not grant command-history access. Capture and history access are independent: disabling capture leaves existing records searchable by authorized staff.
+
+By default only the command root is kept, such as `/give`; its arguments are not stored. Set `activity.commandArguments` to `true` only if you also want arguments recorded. Arguments can contain sensitive text, including values from custom mod commands. Review your command handlers and exclusions before enabling them. Changing this setting affects future records, not existing history.
+
+Common authentication, password, private-message, account-link and Guardian commands are always excluded, including their namespaced forms. This keeps `/login`, `/register`, `/msg`, `/tell`, `/reply`, team messages and Guardian confirmation/search commands out of command history. It does not promise recognition of every custom authentication alias. Add custom roots to `activity.commandExcludedRoots`, for example `signin,myplugin:accountlink`. A bare root excludes its namespaced variants; a namespaced entry excludes that exact root. Up to 64 comma-separated ASCII roots are accepted; malformed/oversized exclusion settings fail closed and stop command capture until corrected.
+
+Nested wrappers such as `execute`, `function`, `schedule`, `return`, `sudo` and `runas` retain only their roots even when argument capture is enabled. Payloads are capped at 4,096 characters; oversized argument text falls back to the root rather than a partial argument. Inputs above 32,768 characters or with control/hidden formatting characters are skipped. Public chat, sessions and commands have independent capture switches under the shared `general.enabled` and `logging.enabled` master switches. Existing bounded writer/backpressure reporting applies. Pack-specific command rewriting/cancellation and connected-client presentation still require acceptance on your pack.
 
 ## Roll back blocks
 
@@ -223,7 +240,7 @@ Purge permanently removes old **history records**, across all users and worlds. 
 
 `/co purge` also works. Purge requires its own `guardian.purge` permission, with **operator level 4** as the fallback. It accepts only one age filter (`t:` or `time:`), retaining at least one day. User, world, radius, resource and page filters are not supported. The cutoff is fixed when preview starts; only records strictly older than that UTC timestamp qualify.
 
-Preview changes nothing. It shows eligible block, item-transaction and chat/login/logout counts, the protected count and a fixed batch of at most **1,000 records total**. One item transaction counts as one record, regardless of its slot count. Confirm with the complete token within 60 seconds using the same player or console authority. A new preview replaces the previous confirmation. Tokens are single-use and are not saved across restart. Records inserted after preview are outside that batch, even if they carry older timestamps. Run another preview and confirm to remove the next batch.
+Preview changes nothing. It shows eligible block, item-transaction and activity (chat/login/logout/command) counts, the protected count and a fixed batch of at most **1,000 records total**. One item transaction counts as one record, regardless of its slot count. Confirm with the complete token within 60 seconds using the same player or console authority. A new preview replaces the previous confirmation. Tokens are single-use and are not saved across restart. Records inserted after preview are outside that batch, even if they carry older timestamps. Run another preview and confirm to remove the next batch.
 
 Pending block rollback/restore rows and the history at their positions are retained. If any internal item journal, claim, saved image or recovery-protection data remains, Guardian conservatively retains all block/item history; chat/session history can still be purged. Recovery journals are never deleted by purge. Do not edit their tables to bypass protection.
 
@@ -239,6 +256,7 @@ Cancel discards a pending confirmation or requests cancellation of running work.
 | `guardian.inspect` | Inspector clicks and pages | 2 |
 | `guardian.chat` | Public chat history | 3 |
 | `guardian.sessions` | Login/logout history | 3 |
+| `guardian.commands` | Parsed player command history | 3 |
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
 | `guardian.restore` | Block restore/redo and its preview | 3 |
@@ -269,6 +287,9 @@ Edit the generated server configuration. Restart after changing any setting mark
 | `logging.automatedContainerTransfers` | `false` | Supported block-hopper capture |
 | `activity.chat` | `false` | Opt in to public chat capture |
 | `activity.sessions` | `true` | Login/logout event capture |
+| `activity.commands` | `false` | Opt in to parsed player command capture |
+| `activity.commandArguments` | `false` | Include permitted command arguments in new records |
+| `activity.commandExcludedRoots` | empty | Additional comma-separated command roots to omit |
 | `storage.backend` | `SQLITE` | Database backend; use SQLite with standard jars |
 | `storage.sqliteFile` | `guardian.sqlite` | Database filename inside the server's Guardian directory |
 | `lookup.defaultResults` / `lookup.maxResults` | `10` / `500` | History page defaults and limits |
@@ -282,7 +303,7 @@ Item history has a hard maximum of 500 results per page even if the configured l
 
 Guardian captures player block placement/breaking, accepted supported block interactions, ordinary player inventory moves, supported block-backed menu changes, cursor returns, standalone drops, offhand swaps, accepted creative slot changes and exact vanilla 2×2/3×3 crafting paths. Optional hopper and Fabric WorldEdit capture are available as described above.
 
-Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. General fluid/entity history, command/private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
+Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. General fluid/entity history, private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
 
 ## Troubleshooting
 
