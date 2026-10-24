@@ -302,7 +302,8 @@ abstract class JdbcStorageBackend(
         val resources = HistorySearchSql.resources(query.search) { count -> "EXISTS (SELECT 1 FROM ex_resource_map fr WHERE fr.id IN (b.before_type,b.after_type) AND fr.resource IN (${List(count) { "?" }.joinToString(",")}))" }
         sql.append(actors.clause).append(resources.clause)
         (actors.values + resources.values).forEach { value -> binders += { statement, index -> statement.setString(index,value) } }
-        if (!query.includeRolledBack) sql.append(" AND b.rolled_back <> 1")
+        if (query.rollbackStates.isNotEmpty()) sql.append(" AND b.rolled_back IN (${query.rollbackStates.joinToString { it.storageCode.toString() }})")
+        else if (!query.includeRolledBack) sql.append(" AND b.rolled_back IN (0, 2)")
         if (query.actions.isNotEmpty()) {
             val actions = query.actions.sortedBy { it.storageCode }
             sql.append(" AND b.action IN (")

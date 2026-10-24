@@ -3,7 +3,8 @@ package com.bareminimumstudios.guardian.storage.query
 enum class BlockRollbackState(val storageCode: Int) {
     ACTIVE(0),
     ROLLED_BACK(1),
-    PENDING(2);
+    PENDING(2),
+    RESTORE_PENDING(3);
 
     companion object {
         private val byCode = entries.associateBy(BlockRollbackState::storageCode)

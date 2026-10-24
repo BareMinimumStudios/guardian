@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.command
 
+import com.bareminimumstudios.guardian.rollback.BlockHistoryOperation
 import com.bareminimumstudios.guardian.GuardianRuntime
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.BlockPosition
@@ -43,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, inspect/i, rollback/rb, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, inspect/i, rollback/rb, restore/redo, rollback-items preview, or status."))
                 1
             }
 
@@ -59,6 +60,10 @@ object GuardianCommands {
             rollbackNode("rollback", permissions, runtimeProvider, configProvider)
         ).then(
             rollbackNode("rb", permissions, runtimeProvider, configProvider)
+        ).then(
+            rollbackNode("restore", permissions, runtimeProvider, configProvider, BlockHistoryOperation.RESTORE)
+        ).then(
+            rollbackNode("redo", permissions, runtimeProvider, configProvider, BlockHistoryOperation.RESTORE)
         ).then(
             statusNode(permissions, runtimeProvider)
         )
@@ -271,29 +276,31 @@ object GuardianCommands {
         name: String,
         permissions: PermissionService,
         runtimeProvider: () -> GuardianRuntime?,
-        configProvider: () -> GuardianConfig
+        configProvider: () -> GuardianConfig,
+        operation: BlockHistoryOperation = BlockHistoryOperation.ROLLBACK
     ) = Commands.literal(name)
-        .requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
+        .requires { permissions.has(it, operation.permission, 3) }
         .executes { context ->
             context.source.sendSystemMessage(
-                Component.literal("Usage: /guardian rollback t:<time> [u:<player>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
+                Component.literal("Usage: /guardian ${operation.command} t:<time> [u:<player>] [r:<radius|#worldedit>] [a:<place|break|change>] [x:<x> y:<y> z:<z>]")
             )
             0
         }
         .then(Commands.literal("preview")
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback preview t:1h r:5. Read-only; no blocks change.")); 0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian ${operation.command} preview t:1h r:5. Read-only; no blocks change.")); 0 }
             .then(Commands.argument("filters", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3, extended = false) }
-                .executes { context -> executeRollback(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider(), previewOnly = true) }))
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, extended = false) }
+                .executes { context -> executeRollback(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider(), previewOnly = true, operation = operation) }))
         .then(
             Commands.argument("params", StringArgumentType.greedyString())
-                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = ROLLBACK_PERMISSION, fallback = 3, extended = false) }
+                .suggests { context, builder -> suggestFilters(context.source, builder, permissions, permission = operation.permission, fallback = 3, extended = false) }
                 .executes { context ->
                     executeRollback(
                         source = context.source,
                         raw = StringArgumentType.getString(context, "params"),
                         runtime = runtimeProvider(),
-                        config = configProvider()
+                        config = configProvider(),
+                        operation = operation
                     )
                 }
         )
@@ -400,34 +407,35 @@ object GuardianCommands {
         raw: String,
         runtime: GuardianRuntime?,
         config: GuardianConfig,
-        previewOnly: Boolean = false
+        previewOnly: Boolean = false,
+        operation: BlockHistoryOperation = BlockHistoryOperation.ROLLBACK
     ): Int {
         val rollback = runtime?.rollback()
         if (rollback == null) {
-            source.sendFailure(Component.literal("Guardian rollback service is not running."))
+            source.sendFailure(Component.literal("Guardian ${operation.command} service is not running."))
             return 0
         }
 
         val filter = BlockCommandFilterParser.parse(raw).getOrElse {
-            source.sendFailure(Component.literal("Guardian rollback: ${it.message}"))
+            source.sendFailure(Component.literal("Guardian ${operation.command}: ${it.message}"))
             return 0
         }
         if (filter.search.extended) {
-            source.sendFailure(Component.literal("Extended user and resource filters are history-only. Block rollback still accepts one included user.")); return 0
+            source.sendFailure(Component.literal("Extended user and resource filters are history-only. Block ${operation.command} still accepts one included user.")); return 0
         }
         val lookbackMillis = filter.lookbackMillis ?: run {
-            source.sendFailure(Component.literal("Guardian rollback requires a t:<time> filter for safety."))
+            source.sendFailure(Component.literal("Guardian ${operation.command} requires a t:<time> filter for safety."))
             return 0
         }
         if (filter.limit != null || filter.page != null) {
-            source.sendFailure(Component.literal("Guardian rollback does not accept l: or p:. Narrow the rollback with t:, r:, or u: instead."))
+            source.sendFailure(Component.literal("Guardian ${operation.command} does not accept l: or p:. Narrow the ${operation.command} with t:, r:, or u: instead."))
             return 0
         }
 
         val scope = resolveScope(source, filter) ?: return 0
         val radius = if (scope.bounds == null) (filter.radius ?: config.rollback.defaultRadius.get()) else null
         if (radius != null && radius > config.rollback.maxRadius.get()) {
-            source.sendFailure(Component.literal("Guardian rollback radius exceeds the configured maximum of ${config.rollback.maxRadius.get()}."))
+            source.sendFailure(Component.literal("Guardian ${operation.command} radius exceeds the configured maximum of ${config.rollback.maxRadius.get()}."))
             return 0
         }
         val center = if (scope.bounds == null) (filter.explicitPosition ?: sourcePosition(source)) else null
@@ -451,7 +459,12 @@ object GuardianCommands {
         } else {
             "filter=[$raw], center=${center!!.x},${center.y},${center.z}, radius=$radius"
         }
-        return if (if (previewOnly) rollback.preview(source, query, description) else rollback.request(source, query, description)) 1 else 0
+        return if (when {
+            operation == BlockHistoryOperation.RESTORE && previewOnly -> rollback.previewRestore(source, query, description)
+            operation == BlockHistoryOperation.RESTORE -> rollback.restore(source, query, description)
+            previewOnly -> rollback.preview(source, query, description)
+            else -> rollback.request(source, query, description)
+        }) 1 else 0
     }
 
     private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?,saved: Boolean=false): Int {

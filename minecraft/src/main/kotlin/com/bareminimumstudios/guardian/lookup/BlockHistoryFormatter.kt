@@ -44,6 +44,7 @@ object BlockHistoryFormatter {
             BlockRollbackState.ACTIVE -> ""
             BlockRollbackState.ROLLED_BACK -> " [rolled back]"
             BlockRollbackState.PENDING -> " [rollback pending]"
+            BlockRollbackState.RESTORE_PENDING -> " [restore pending]"
         }
         return "#${row.rowId} ${age(nowEpochMillis, s.timestampEpochMillis)}: $actor $change$cause " +
             "@ ${s.position.x},${s.position.y},${s.position.z}$journal"

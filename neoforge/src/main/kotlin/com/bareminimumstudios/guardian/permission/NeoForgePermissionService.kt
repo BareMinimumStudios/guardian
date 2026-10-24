@@ -10,7 +10,7 @@ import net.neoforged.neoforge.common.NeoForge
 /** NeoForge's permission handler can be supplied by LuckPerms; vanilla levels remain the default. */
 class NeoForgePermissionService(private val useApi: Boolean) : PermissionService {
     override val providerName = if (useApi) "neoforge-permissions-api" else "vanilla-op-levels"
-    private val nodes = mapOf("lookup" to 2, "inspect" to 2, "rollback" to 3, "status" to 2, "chat" to 3, "sessions" to 3).map { (name, level) ->
+    private val nodes = mapOf("lookup" to 2, "inspect" to 2, "rollback" to 3, "restore" to 3, "status" to 2, "chat" to 3, "sessions" to 3).map { (name, level) ->
         PermissionNode("guardian", name, PermissionTypes.BOOLEAN, { player, _, _ -> player?.createCommandSourceStack()?.hasPermission(level) == true })
     }.associateBy { it.nodeName }
 

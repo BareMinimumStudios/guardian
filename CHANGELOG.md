@@ -31,6 +31,17 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.67+1.21.1] - 2026-10-23
+
+### Added
+
+- Block restore/redo and read-only restore preview. Restore replays rolled-back history oldest first with a separate `guardian.restore` permission and the existing bounded replay executor.
+- Schema 13 distinguishes restore-pending journal work from rollback-pending work while preserving original audit records and payloads. Restored rows can be rolled back again.
+
+### Fixed
+
+- Preserve pre-existing pending rows when a replay skips a conflict, unavailable chunk or failed read instead of clearing their unresolved journal state.
+
 ## [0.4.0-alpha.66+1.21.1] - 2026-10-17
 
 ### Added
@@ -807,7 +818,7 @@ This first Step 4 slice captures accepted clicks in supported block-container me
 
 ### Added
 
-- A lightweight 256Ã—256 Guardian shield and rollback icon.
+- A lightweight 256×256 Guardian shield and rollback icon.
 - Release publishing through mc-publish with separate destination selection.
 - Development notes for the Fabric baseline and planned NeoForge migration.
 

@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.66+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.67+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 12**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 13**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -152,11 +152,11 @@ Chat searches require **`guardian.chat`** and session searches require **`guardi
 
 The chat record contains plain decorated public text at the broadcast boundary, capped at 4,096 characters. Commands, `/msg`/private-message chat types, system messages and fully filtered messages are excluded. This does not promise capture of arbitrary custom chat channels from other mods. Login/logout capture starts after Guardian is running; it cannot reconstruct earlier sessions. Orderly shutdown records currently connected players leaving before storage closes. A crash may leave a login with no logout.
 
-Startup upgrades supported databases to schema 12 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
+Startup upgrades supported databases to schema 13 without replacing existing block/item history. Back up before upgrading. This milestone passed synthetic server checks; actual network login, cancellation by pack mods and connected-client presentation still need acceptance on your pack.
 
 ## Roll back blocks
 
-**Applying block rollback changes the world directly.** Back up the world, run a preview and use a small, explicit region first. General restore/redo is not available yet.
+**Applying block rollback changes the world directly.** Back up the world, run a preview and use a small, explicit region first. Use block restore/redo below to reapply previously rolled-back history.
 
 ```text
 /guardian lookup u:YourName t:10m r:3
@@ -177,11 +177,27 @@ The summary distinguishes rows that would restore, rows already in their before 
 
 Guardian simulates the selected newest-first chain; it does not just count lookup results. This is a check of the recorded and observed state, not a promise that a future apply will succeed. Neighbor updates, mod behavior and later player/world changes can alter the outcome. Preview creates no reservation or confirmation token. Applying the same filters runs a fresh query and revalidates live state; your position, dimension and moving time window also matter.
 
-Both preview and apply still accept one included user. They refuse the extended multi-user/exclusion/resource history filters. Preview does not add item restoration or general redo.
+Both preview and apply still accept one included user. They refuse the extended multi-user/exclusion/resource history filters. Block preview does not restore items. Block restore/redo has its own preview and permission below.
 
 Rollback requires `t:<time>`. Without an explicit radius it uses the configured default of 10 around your position or supplied coordinates. You can narrow by one included player and block action. Multi-user lists, player exclusions and resource filters are refused by rollback in this release. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
 
 **Item rollback apply is unavailable**, including for vanilla inventories. Block rollback is not a replacement for restoring a container's item transaction history.
+
+### Restore a block rollback (redo)
+
+Restore reapplies the original changes that Guardian previously marked as rolled back. It is a filtered history operation, not an automatic undo of your last command. Use the same player, location and action filters as the rollback you intend to reverse. `t:` refers to the **original event time**, so use a long enough window to include those changes.
+
+```text
+/guardian restore preview u:YourName t:1h r:3
+/guardian restore u:YourName t:1h r:3
+/guardian redo preview u:YourName t:1h r:3
+```
+
+`redo` is an alias for `restore`; both also work under `/co`. Preview is read-only, and applying restore is a separate command. Back up the world and inspect the preview first. Restore uses `guardian.restore` (operator level 3 by default), separately from `guardian.rollback`.
+
+Restore replays only rolled-back or restore-pending rows, oldest first. The live block must match the recorded before state; Guardian then reproduces the recorded after state. Conflicts stop later selected changes at that position. Unloaded chunks are skipped; unsupported or unverifiable targets are refused. A block already matching its target can be reconciled without another write. The same record/tick/radius limits and shared busy lock apply to rollback and restore. Both use one included player and refuse extended history filters and paging/limit parameters.
+
+Successful restore returns the original history rows to active state without adding replacement audit records. A later rollback can reverse them again. Interrupted restore work has a distinct `restore pending` label and is excluded from ordinary rollback; retry restore with the original filters to reconcile matching live states. Unresolved conflicts stay pending. Preview reserves nothing, and database journal completion does not guarantee the matching chunk save survived an abrupt process or machine failure. Inspect uncertain outcomes before retrying; keep backups. Restore follows the existing block snapshot support, including recorded block-entity data; it is not item-transaction rollback and cannot reconstruct unrecorded changes.
 
 ### Read-only item checks
 
@@ -205,6 +221,7 @@ Preview checks a bounded set of candidate transfers against observed inventories
 | `guardian.sessions` | Login/logout history | 3 |
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
+| `guardian.restore` | Block restore/redo and its preview | 3 |
 | `guardian.config.edit` | Fzzy Config editing | 3 |
 | `guardian.config.admin` | Fzzy Config administrative access | 4 |
 

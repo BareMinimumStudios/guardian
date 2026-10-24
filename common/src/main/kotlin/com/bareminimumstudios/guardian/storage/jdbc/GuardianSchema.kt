@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 12
+    const val CURRENT_VERSION = 13
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -115,6 +115,7 @@ internal object GuardianSchema {
         SchemaMigration(12, "Historical item resource filter index", listOf(
             "CREATE TABLE ex_container_item (transaction_uuid VARCHAR NOT NULL, resource VARCHAR NOT NULL, PRIMARY KEY(transaction_uuid, resource))",
             "CREATE INDEX ex_container_item_resource_idx ON ex_container_item(resource, transaction_uuid)"
-        ), ContainerItemIndex::backfill)
+        ), ContainerItemIndex::backfill),
+        SchemaMigration(13, "Directional block restore journal state", emptyList())
     )
 }

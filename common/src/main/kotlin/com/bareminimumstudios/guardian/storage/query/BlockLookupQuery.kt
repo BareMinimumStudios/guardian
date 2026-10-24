@@ -21,7 +21,9 @@ data class BlockLookupQuery(
     val includeRolledBack: Boolean = true,
     val limit: Int = 100,
     val offset: Int = 0, val oldestFirst: Boolean = false,
-    val search: HistorySearchFilter = HistorySearchFilter()
+    val search: HistorySearchFilter = HistorySearchFilter(),
+    /** Explicit journal selection takes precedence over includeRolledBack. Empty selects the legacy history scope. */
+    val rollbackStates: Set<BlockRollbackState> = emptySet()
 ) {
     init {
         require(offset >= 0)

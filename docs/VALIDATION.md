@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.66 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.67 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- The alpha.66 executable baseline passed 589 automated tests with no failures/errors, a clean build, a repeated build with configuration-cache reuse and the separate WorldEdit build. The following acceptance pass changed documentation only; executable builds were not rerun.
+- Alpha.67 passed 597 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. The final clean build reused unchanged common/test outputs from the successful full restore build; final NeoForge permission wiring was rebuilt and runtime-tested.
 - 2,068 current server-side permission checks passed across actual LuckPerms and provider-free operator fallback on both loaders, including the new activity nodes and block-preview revocation boundaries. The prior 1,150 checks remain historical evidence for the earlier permission paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -53,6 +53,16 @@ The unchanged alpha.66 jars passed 2,068 checks on four isolated servers: LuckPe
 Block preview was cancelled during planning, before its first tick and between ticks after 100 of 101 rows. Revoked success/failure callbacks emitted no results; authorized completion/failure still emitted results. All 101 actual stone blocks and all 101 ACTIVE journal rows remained unchanged on each provider server. Operator entries at levels zero through four confirmed level-three access for chat, sessions and block preview, then access removal. Real permission decisions were not mocked. [Evidence and artifact hashes](validation/acceptance-alpha66.json).
 
 The pushed executable [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/39099179448) passed. No executable files or jar hashes changed in this acceptance pass. R2 is complete for server-side activity/preview permissions; actual network login, client presentation and pack acceptance remain R3. Private agents and test servers are excluded from the source repository.
+
+## Block restore/redo, 2026-10-23
+
+The owner explicitly selected block restore/redo. Alpha.67 adds `/guardian restore`, `/guardian redo` and their read-only preview branches under both root aliases. The separate `guardian.restore` permission defaults to operator level three and is registered with NeoForge's actual PermissionAPI. Restore selects ROLLED_BACK/RESTORE_PENDING rows oldest first, inverts source/target only for replay, and returns successful original rows to ACTIVE. Schema 13 protects the new pending-state interpretation from older builds. History and payloads are preserved.
+
+597 automated tests passed, including eight new tests for forward simulation, blocked chains, unsupported/unavailable targets, matching-target reconciliation, state predicates before paging across memory/SQLite/DuckDB, repeated state cycles and schema-12 upgrade/restart. Historical migration fixtures were corrected to remove all newer migration markers when reconstructing old schemas. Clean, repeated-cache and WorldEdit builds passed. No mixins changed.
+
+Final core jars passed 28 command/world/database checks per loader, including rollback/restore/rollback, both preview aliases, no preview mutation, repeated restore with no work, conflicts, unsupported targets, unloaded chunks, pending target reconciliation, unresolved pending preservation and restart replay without duplicate audit records. Actual LuckPerms and provider-free operator fixtures passed 2,420 checks, including preview revocation boundaries and seven apply stages: planning, before claim, during claim, before apply, preservation of older pending work, authorized apply, and permission loss after mutation before final journal completion. Tested hashes equal final artifacts. [Evidence and checksums](validation/restore-alpha67.json).
+
+Pending-state fixtures are synthetic; this does not certify atomic persistence between SQLite and Minecraft chunk saves or a new process-kill recovery guarantee. Connected-client/claim/pack acceptance, including the new restore command, remains R3. No item apply or purge was added. Remote CI for alpha.67 awaits the owner's push.
 
 ## Pending acceptance
 
