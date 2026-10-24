@@ -16,11 +16,16 @@ object EntityHistoryFormatter {
             ActorIdentity.Unknown -> "unknown actor"
         }
         val entity = row.targetType.toString() + (row.beforeName?.let { " \"${safe(it)}\"" } ?: "")
-        val detail = if(row.kind==EntityAuditKind.DEATH) "$entity died; source: ${safe(actor)}" else
-            "${safe(actor)} renamed $entity to ${row.afterName?.let { "\"${safe(it)}\"" } ?: "no custom name"}"
+        val detail = when(row.kind) {
+            EntityAuditKind.DEATH -> "$entity died; source: ${safe(actor)}"
+            EntityAuditKind.NAME_CHANGE -> "${safe(actor)} renamed $entity to ${row.afterName?.let { "\"${safe(it)}\"" } ?: "no custom name"}"
+            EntityAuditKind.TAME -> "${safe(actor)} tamed $entity"
+            EntityAuditKind.BREED -> "$entity was born; breeding credited to ${safe(actor)}"
+        }
         val pos=row.position
         val hover="Entity: ${row.targetUuid}\nType: ${row.targetType}\nDimension: ${row.dimension}\nTime: ${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)}" +
-            (row.damageType?.let { "\nDamage: $it" } ?: "") + "\nClick to search this entity."
+            (row.damageType?.let { "\nDamage: $it" } ?: "") +
+            (row.parentUuid?.let { "\nParent: $it\nPartner: ${row.partnerUuid}" } ?: "") + "\nClick to search this entity."
         return Component.literal("${((now-row.timestampEpochMillis).coerceAtLeast(0)/1000)}s ago: $detail @ ${pos.x}, ${pos.y}, ${pos.z}")
             .withStyle(if(row.kind==EntityAuditKind.DEATH) ChatFormatting.RED else ChatFormatting.AQUA)
             .withStyle { it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT,Component.literal(hover)))

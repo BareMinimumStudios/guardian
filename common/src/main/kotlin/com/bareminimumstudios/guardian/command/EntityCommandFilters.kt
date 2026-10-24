@@ -13,11 +13,13 @@ data class EntityCommandFilters(val common: BlockCommandFilter, val kinds: Set<E
             raw.trim().split(Regex("\\s+")).filter(String::isNotEmpty).forEach { token ->
                 when(token.substringBefore(':').lowercase()) {
                     "a", "action" -> {
-                        require(!seenAction) { "Use one action filter: a:death, a:rename or a:death,rename" }; seenAction=true
+                        require(!seenAction) { "Use one action filter with death, rename, tame or breed" }; seenAction=true
                         kinds=token.substringAfter(':').split(',').map { when(it.lowercase()) {
                             "death" -> EntityAuditKind.DEATH
                             "rename" -> EntityAuditKind.NAME_CHANGE
-                            else -> error("Entity actions are death and rename")
+                            "tame" -> EntityAuditKind.TAME
+                            "breed" -> EntityAuditKind.BREED
+                            else -> error("Entity actions are death, rename, tame and breed")
                         } }.toSet()
                     }
                     "id" -> { require(target==null) { "Use one entity id filter" }; target=UUID.fromString(token.substringAfter(':')) }

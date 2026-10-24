@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 16
+    const val CURRENT_VERSION = 17
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -125,6 +125,10 @@ internal object GuardianSchema {
             "CREATE INDEX ex_entity_target_idx ON ex_entity(target_uuid, time)",
             "CREATE INDEX ex_entity_location_idx ON ex_entity(dimension, x, y, z, time)",
             "CREATE INDEX ex_entity_actor_idx ON ex_entity(actor, time)"
+        )),
+        SchemaMigration(17, "Entity tame and offspring parent history", listOf(
+            "ALTER TABLE ex_entity ADD COLUMN parent_uuid VARCHAR",
+            "ALTER TABLE ex_entity ADD COLUMN partner_uuid VARCHAR"
         ))
     )
 }

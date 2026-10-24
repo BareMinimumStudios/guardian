@@ -1,11 +1,11 @@
 # Release validation
 
-Alpha.70 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.71 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.70 passed 635 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current entity/activity permission acceptance passed 1,872 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.71 passed 642 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Current taming/breeding entity/activity permission acceptance passed 1,872 actual-provider/operator checks on both loaders. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
@@ -103,6 +103,18 @@ MixinMCP source/bytecode checks verified both loader variants. All four new mixi
 Real LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 activity/entity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator levels zero through four passed 404/405 checks, including cached entity suggestions after operator removal. Permissions were not mocked. All runtime-tested core hashes match the delivered jars. [Evidence and checksums](validation/entities-alpha70.json).
 
 These fixtures use synthetic players and unconnected listeners, not connected-client acceptance or universal modpack certification. Entity-property tracking, entity rollback, entity purge and production mob-farm capacity are not claimed. All owned servers stopped; no supplied server world or database was used. Remote alpha.70 CI awaits the owner's push; alpha.69 CI passed.
+
+## Taming and breeding, 2026-10-24
+
+After pushing alpha.70, the owner selected taming and breeding and confirmed that work should continue. The previous alpha.70 commit passed GitHub CI. Alpha.71 adds separate off-by-default `entities.taming` and `entities.breeding` switches, `a:tame`/`a:breed`, completed-event summaries and parent identities on hover. It uses the existing entity permission and stable filtering/navigation. Schema 17 adds nullable parent fields; configuration version 10 preserves existing switches. Entity history remains read-only and excluded from purge.
+
+642 automated tests passed with no failures, errors or skipped tests. Seven new contracts cover three-backend identity/kind/filter/paging/duplicate behavior, unknown breeding credit, invalid parent/owner/damage shapes, action parsing, schema-16 upgrade/restart and tame/birth presentation. The optional DuckDB simulation initially tried dropping columns with dependent indexes; rebuilding those test-only indexes fixed the fixture. The production upgrade only adds nullable columns and passed on both JDBC backends. Clean build, repeated build with configuration-cache reuse and WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
+
+MixinMCP checked tame/horse methods and both loader child-insertion bytecode. Three new mixins and shared capture code passed IDEA error inspections. Each isolated dedicated server persisted exactly two tames (wolf and horse) and three pig births with exact parent IDs: primary-parent credit, unknown credit and partner-parent credit. Repeated tame calls, already-tamed animals enabled later, disabled defaults and the master switch produced no extra records. NeoForge's actual BabyEntitySpawnEvent cancellation, EntityJoinLevelEvent child refusal and AnimalTameEvent cancellation during a bone interaction created no capture rows. Eight history/restart cases per loader verified kinds, both aliases, actor inclusion/exclusion, type filters, paging, separation and restart persistence; SQLite integrity passed.
+
+The unchanged real-provider acceptance fixture was rerun against alpha.71: LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 success/failure/revocation callbacks per loader. Provider-free actual operator levels passed 404/405 checks, including cached entity suggestions after removal. Both loaders also reran prior death/name capture and twenty query/restart cases, preserving exactly the five expected rows each, including name-tag attribution and actual NeoForge death cancellation. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/taming-breeding-alpha71.json).
+
+Fixtures use synthetic players with unconnected real listeners and direct standard game methods. The player temporarily joined the private level's player list so vanilla breeding-credit lookup could resolve it, then was removed. Natural breeding AI, connected-client feeding/riding/presentation, egg/pregnancy paths and arbitrary pack overrides remain outside this evidence. All owned servers stopped and supplied worlds/databases were untouched. Remote alpha.71 CI awaits the owner's push; alpha.70 CI passed.
 
 ## Pending acceptance
 

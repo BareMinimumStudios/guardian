@@ -1,0 +1,825 @@
+{
+  "version": "0.4.0-alpha.71+1.21.1",
+  "date": "2026-10-24",
+  "schema": 17,
+  "configVersion": 10,
+  "tests": {
+    "common": {
+      "tests": 585,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "providerChecks": 1872,
+  "capture": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=21",
+      "rows": [
+        [
+          "TAME",
+          "00000000-0000-0000-0000-000000000014",
+          "minecraft:wolf",
+          null,
+          null,
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "TAME",
+          "00000000-0000-0000-0000-000000000015",
+          "minecraft:horse",
+          null,
+          null,
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "BREED",
+          "61d86f8d-4469-4f5a-b908-23a26aa39e64",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-00000000001e",
+          "00000000-0000-0000-0000-00000000001f",
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "BREED",
+          "5e917be9-f8e1-428b-a35f-3eb18cb65bdc",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-000000000020",
+          "00000000-0000-0000-0000-000000000021",
+          null,
+          null
+        ],
+        [
+          "BREED",
+          "9fe989b4-6b5b-47ab-b1de-5670212a793f",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-000000000022",
+          "00000000-0000-0000-0000-000000000023",
+          1,
+          "GuardianFixture"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities a:tame t:1h",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:13:12] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[14:13:12] [Server thread/INFO]: 2s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]: 2s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:12] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869192683510900"
+          ]
+        },
+        {
+          "command": "co entities a:breed t:1h",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:13:12] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:12] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869192784358000"
+          ]
+        },
+        {
+          "command": "guardian entities a:breed u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:13:12] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:12] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869192879410800"
+          ]
+        },
+        {
+          "command": "guardian entities a:breed u:!GuardianFixture",
+          "expected": "Guardian entity history: 1 records",
+          "output": [
+            "[14:13:12] [Server thread/INFO]: Guardian entity history: 1 records (page 1).",
+            "[14:13:12] [Server thread/INFO]: 2s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:13:12] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869192986307100"
+          ]
+        },
+        {
+          "command": "guardian entities a:tame i:minecraft:horse",
+          "expected": "Guardian entity history: 1 records",
+          "output": [
+            "[14:13:13] [Server thread/INFO]: Guardian entity history: 1 records (page 1).",
+            "[14:13:13] [Server thread/INFO]: 2s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:13:13] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869193080707700"
+          ]
+        },
+        {
+          "command": "guardian entities a:tame,breed l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3)",
+          "output": [
+            "[14:13:13] [Server thread/INFO]: Guardian entity history: 1 records (page 3).",
+            "[14:13:13] [Server thread/INFO]: 2s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:13:13] [Server thread/INFO]: [Previous]  Page 3    [Newest first]",
+            "[14:13:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869193173655900"
+          ]
+        },
+        {
+          "command": "guardian entities a:death,rename",
+          "expected": "Guardian entity history: 0 records",
+          "output": [
+            "[14:13:13] [Server thread/INFO]: Guardian entity history: 0 records (page 1).",
+            "[14:13:13] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869193280907300"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[14:13:26] [Server thread/INFO]: Guardian entity history: 5 records (page 1).",
+            "[14:13:26] [Server thread/INFO]: 16s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:26] [Server thread/INFO]: 16s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:13:26] [Server thread/INFO]: 16s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:26] [Server thread/INFO]: 16s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:13:26] [Server thread/INFO]: 16s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:13:26] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:13:27] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869206937785200"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeCancelledBabyTameAndJoin": false
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=31",
+      "rows": [
+        [
+          "TAME",
+          "00000000-0000-0000-0000-000000000014",
+          "minecraft:wolf",
+          null,
+          null,
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "TAME",
+          "00000000-0000-0000-0000-000000000015",
+          "minecraft:horse",
+          null,
+          null,
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "BREED",
+          "c5105879-e583-4b5c-8d54-863663f59e63",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-00000000001e",
+          "00000000-0000-0000-0000-00000000001f",
+          1,
+          "GuardianFixture"
+        ],
+        [
+          "BREED",
+          "0a0b0221-f77e-44d4-a6f7-ec9b906ad668",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-000000000020",
+          "00000000-0000-0000-0000-000000000021",
+          null,
+          null
+        ],
+        [
+          "BREED",
+          "fb38cc6c-2756-4476-8b7b-67a7bff91aa1",
+          "minecraft:pig",
+          "00000000-0000-0000-0000-000000000022",
+          "00000000-0000-0000-0000-000000000023",
+          1,
+          "GuardianFixture"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities a:tame t:1h",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:13:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[14:13:51] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:13:51] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:13:51] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869231942738100"
+          ]
+        },
+        {
+          "command": "co entities a:breed t:1h",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232029892800"
+          ]
+        },
+        {
+          "command": "guardian entities a:breed u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232078808200"
+          ]
+        },
+        {
+          "command": "guardian entities a:breed u:!GuardianFixture",
+          "expected": "Guardian entity history: 1 records",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 1).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232138979900"
+          ]
+        },
+        {
+          "command": "guardian entities a:tame i:minecraft:horse",
+          "expected": "Guardian entity history: 1 records",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 1).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232230859300"
+          ]
+        },
+        {
+          "command": "guardian entities a:tame,breed l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3)",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 3).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 3    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232322678000"
+          ]
+        },
+        {
+          "command": "guardian entities a:death,rename",
+          "expected": "Guardian entity history: 0 records",
+          "output": [
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 0 records (page 1).",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:13:52] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869232430954300"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[14:14:05] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[14:14:06] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=17",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 5 records (page 1).",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: minecraft:pig was born; breeding credited to unknown actor @ 2, 300, 2",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: minecraft:pig was born; breeding credited to GuardianFixture @ 2, 300, 2",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture tamed minecraft:horse @ 2, 300, 2",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: 16s ago: GuardianFixture tamed minecraft:wolf @ 2, 300, 2",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:14:06] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869246245702100"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeCancelledBabyTameAndJoin": true
+    }
+  ],
+  "deathNameRegression": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=9",
+      "rows": [
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Loaded",
+          "Renamed",
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Renamed",
+          "Tagged",
+          null
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          "Tagged",
+          null,
+          "minecraft:player_attack"
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ],
+        [
+          "DEATH",
+          "minecraft:player",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ]
+      ],
+      "actors": [
+        [
+          "NAME_CHANGE",
+          null,
+          null,
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities t:1h l:2 p:1",
+          "expected": "Guardian entity history: 2 records (page 1).",
+          "output": [
+            "[14:18:00] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[14:18:00] [Server thread/INFO]: 2s ago: minecraft:player died; source: environment @ 109, 70, 171",
+            "[14:18:00] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:00] [Server thread/INFO]:   Page 1  [Next]  [Newest first]",
+            "[14:18:00] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869480655046200"
+          ]
+        },
+        {
+          "command": "co entities t:1h l:2 p:2",
+          "expected": "Guardian entity history: 2 records (page 2).",
+          "output": [
+            "[14:18:00] [Server thread/INFO]: Guardian entity history: 2 records (page 2).",
+            "[14:18:00] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:00] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:00] [Server thread/INFO]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[14:18:00] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869480755485900"
+          ]
+        },
+        {
+          "command": "guardian entities t:1h l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3).",
+          "output": [
+            "[14:18:00] [Server thread/INFO]: Guardian entity history: 1 records (page 3).",
+            "[14:18:00] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:00] [Server thread/INFO]: [Previous]  Page 3    [Newest first]",
+            "[14:18:00] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869480849106700"
+          ]
+        },
+        {
+          "command": "guardian entities a:rename",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:18:00] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[14:18:00] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:00] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:00] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869480943577900"
+          ]
+        },
+        {
+          "command": "guardian entities a:death",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:18:01] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:player died; source: environment @ 109, 70, 171",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869481049999000"
+          ]
+        },
+        {
+          "command": "guardian entities u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:18:01] [Server thread/INFO]: Guardian entity history: 2 records (page 1).",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869481144106600"
+          ]
+        },
+        {
+          "command": "guardian entities i:minecraft:pig",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[14:18:01] [Server thread/INFO]: Guardian entity history: 4 records (page 1).",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869481253910200"
+          ]
+        },
+        {
+          "command": "guardian entities id:00000001-0000-0002-0000-000300000004",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:18:01] [Server thread/INFO]: Guardian entity history: 3 records (page 1).",
+            "[14:18:01] [Server thread/INFO]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:01] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869481345759400"
+          ]
+        },
+        {
+          "command": "guardian entities a:place",
+          "expected": "Entity actions are death, rename, tame and breed",
+          "output": [
+            "[14:18:01] [Server thread/INFO]: Guardian entities: Entity actions are death, rename, tame and breed",
+            "[14:18:01] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869481453833700"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[14:18:15] [Server thread/INFO]: Guardian entity history: 5 records (page 1).",
+            "[14:18:15] [Server thread/INFO]: 17s ago: minecraft:player died; source: environment @ 109, 70, 171",
+            "[14:18:15] [Server thread/INFO]: 17s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:15] [Server thread/INFO]: 17s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:15] [Server thread/INFO]: 17s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:15] [Server thread/INFO]: 17s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:15] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[14:18:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792869495835802400"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeDeathCancellation": false
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=11",
+      "rows": [
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Loaded",
+          "Renamed",
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          "minecraft:pig",
+          "Renamed",
+          "Tagged",
+          null
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          "Tagged",
+          null,
+          "minecraft:player_attack"
+        ],
+        [
+          "DEATH",
+          "minecraft:pig",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ],
+        [
+          "DEATH",
+          "minecraft:player",
+          null,
+          null,
+          "minecraft:generic_kill"
+        ]
+      ],
+      "actors": [
+        [
+          "NAME_CHANGE",
+          null,
+          null,
+          null
+        ],
+        [
+          "NAME_CHANGE",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          1,
+          "GuardianFixture",
+          null
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ],
+        [
+          "DEATH",
+          3,
+          null,
+          "environment"
+        ]
+      ],
+      "cases": [
+        {
+          "command": "guardian entities t:1h l:2 p:1",
+          "expected": "Guardian entity history: 2 records (page 1).",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:player died; source: environment @ 105, 71, 168",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1  [Next]  [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519257645200"
+          ]
+        },
+        {
+          "command": "co entities t:1h l:2 p:2",
+          "expected": "Guardian entity history: 2 records (page 2).",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 2).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 2  [Next]  [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519360132100"
+          ]
+        },
+        {
+          "command": "guardian entities t:1h l:2 p:3",
+          "expected": "Guardian entity history: 1 records (page 3).",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 1 records (page 3).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Previous]  Page 3    [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519452743400"
+          ]
+        },
+        {
+          "command": "guardian entities a:rename",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519562018300"
+          ]
+        },
+        {
+          "command": "guardian entities a:death",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:player died; source: environment @ 105, 71, 168",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519654008500"
+          ]
+        },
+        {
+          "command": "guardian entities u:GuardianFixture",
+          "expected": "Guardian entity history: 2 records",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 2 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519764323400"
+          ]
+        },
+        {
+          "command": "guardian entities i:minecraft:pig",
+          "expected": "Guardian entity history: 4 records",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 4 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519856600000"
+          ]
+        },
+        {
+          "command": "guardian entities id:00000001-0000-0002-0000-000300000004",
+          "expected": "Guardian entity history: 3 records",
+          "output": [
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 3 records (page 1).",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]: 2s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:39] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:40] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869519964661600"
+          ]
+        },
+        {
+          "command": "guardian entities a:place",
+          "expected": "Entity actions are death, rename, tame and breed",
+          "output": [
+            "[14:18:40] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entities: Entity actions are death, rename, tame and breed",
+            "[14:18:40] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869520058208200"
+          ]
+        },
+        {
+          "command": "guardian entities l:10",
+          "expected": "Guardian entity history: 5 records",
+          "output": [
+            "[14:18:54] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[14:18:54] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=17",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian entity history: 5 records (page 1).",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: 17s ago: minecraft:player died; source: environment @ 105, 71, 168",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: 17s ago: minecraft:pig died; source: environment @ 3, 300, 2",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: 17s ago: minecraft:pig \"Tagged\" died; source: GuardianFixture @ 2, 300, 2",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: 17s ago: GuardianFixture renamed minecraft:pig \"Renamed\" to \"Tagged\" @ 2, 300, 2",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: 17s ago: unknown actor renamed minecraft:pig \"Loaded\" to \"Renamed\" @ 2, 300, 2",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[14:18:54] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792869534846770700"
+          ]
+        }
+      ],
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "bytecodeTransformedByFixture": false,
+      "connectedClients": 0,
+      "neoForgeDeathCancellation": true
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 531,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "32_individual_activity_entity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 532,
+      "cases": [
+        "commands_independent_permission",
+        "actual_grant_deny_operator_override_and_removal",
+        "cached_time_user_suggestions",
+        "32_individual_activity_entity_callbacks_both_aliases_success_failure_revocation"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 404,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 405,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "builds": {
+    "clean": "passed, 1m 2s, 36 tasks; configuration cache reused",
+    "build": "passed, 2s, configuration cache stored",
+    "repeat": "passed, 200ms, configuration cache reused",
+    "worldedit": "passed, 2s"
+  },
+  "hooks": {
+    "sourceAndBytecode": "MixinMCP verified both loader tame methods and Animal.spawnChildFromBreeding child-insertion invocation",
+    "changedMixinInspections": "all three mixins and capture Kotlin file passed IDEA errors-only inspection",
+    "fixtureTransformsBytecode": false
+  },
+  "previousCI": {
+    "sha": "473029f973ec4df87241d52b546151c67df2cd8b",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40123728303"
+  },
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.71+1.21.1.jar",
+      "bytes": 13068929,
+      "sha256": "da4472a877c2cc15afb4b07815d938b0ae4e89f0f1731a80ae6ff0b65cc33101"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.71+1.21.1.jar",
+      "bytes": 13045011,
+      "sha256": "4d35e13390a9d25db61db262585b7c2b2673dcda218f04df350651716d652408"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.71+1.21.1.jar",
+      "bytes": 25381,
+      "sha256": "c3eb56fcd50b0dee2ff12109a3b6c9c0cf291a797bf4963d6e8b22d9445355db"
+    }
+  ],
+  "limits": [
+    "Synthetic server players and direct real tame/birth method invocations; no connected-client feeding/riding or natural breeding AI acceptance",
+    "Standard TamableAnimal.tame, AbstractHorse.tameWithName and Animal.spawnChildFromBreeding are covered; overridden bypasses need compatibility testing",
+    "Taming captures untamed-to-tamed state with matching owner, not ownership transfers or direct UUID edits",
+    "Breeding targets the inserted offspring and stores both parent UUIDs; one vanilla-available breeding credit or unknown is retained",
+    "Egg-laying, pregnancy, villager breeding and custom reproduction are excluded",
+    "Entity history remains read-only and outside existing purge categories",
+    "No production farm capacity claim; opt-in capture shares the bounded queue"
+  ],
+  "fixtureNotes": [
+    "The synthetic player is temporarily in the private level player list so vanilla love-cause lookup can resolve it; removed before fixture completion",
+    "Optional DuckDB test-only schema simulation rebuilds dependent indexes around column removal; production migration only adds nullable columns"
+  ],
+  "allOwnedServersStopped": true
+}

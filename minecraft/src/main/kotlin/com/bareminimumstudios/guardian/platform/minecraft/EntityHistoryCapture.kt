@@ -5,7 +5,8 @@ import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
 import com.bareminimumstudios.guardian.logging.SubmissionResult
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.animal.Animal
+import net.minecraft.world.entity.player.Player
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.damagesource.DamageSource
@@ -16,13 +17,20 @@ object EntityHistoryCapture {
     private var pipeline: () -> BufferedLogPipeline? = { null }
     private var config: () -> GuardianConfig? = { null }
     private val renameActor = ThreadLocal<ActorIdentity>()
+    private data class BreedingContext(val parent: java.util.UUID, val partner: java.util.UUID, val actor: ActorIdentity)
+    private val breedingContext = ThreadLocal<BreedingContext>()
     private var lastWarning = 0L
 
     fun install(writer: () -> BufferedLogPipeline?, settings: () -> GuardianConfig?) { pipeline = writer; config = settings }
-    private fun enabled(death: Boolean): Boolean {
+    private fun enabled(kind: EntityAuditKind): Boolean {
         val settings = config() ?: return false
         return settings.general.enabled.get() && settings.logging.enabled.get() &&
-            if (death) settings.entities.deaths.get() else settings.entities.nameChanges.get()
+            when(kind) {
+                EntityAuditKind.DEATH -> settings.entities.deaths.get()
+                EntityAuditKind.NAME_CHANGE -> settings.entities.nameChanges.get()
+                EntityAuditKind.TAME -> settings.entities.taming.get()
+                EntityAuditKind.BREED -> settings.entities.breeding.get()
+            }
     }
     @JvmStatic fun plainName(entity: Entity): String? = entity.customName?.getString(256)?.filter { !it.isISOControl() }
     @JvmStatic fun withRenameActor(player: net.minecraft.world.entity.player.Player, change: Runnable) {
@@ -31,7 +39,7 @@ object EntityHistoryCapture {
         try { change.run() } finally { if (previous == null) renameActor.remove() else renameActor.set(previous) }
     }
     @JvmStatic fun renamed(entity: Entity, before: String?) {
-        if (!enabled(false)) return
+        if (!enabled(EntityAuditKind.NAME_CHANGE)) return
         val level = entity.level() as? ServerLevel ?: return
         // NBT loading and construction set names before the entity is registered in its level.
         if (level.getEntity(entity.uuid) !== entity) return
@@ -40,7 +48,7 @@ object EntityHistoryCapture {
         submit(entity, EntityAuditKind.NAME_CHANGE, renameActor.get() ?: ActorIdentity.Unknown, before, after, null)
     }
     @JvmStatic fun died(entity: Entity, source: DamageSource) {
-        if (!enabled(true) || entity.level() !is ServerLevel) return
+        if (!enabled(EntityAuditKind.DEATH) || entity.level() !is ServerLevel) return
         val killer = source.entity
         val actor = when(killer) {
             is ServerPlayer -> ActorIdentity.Player(killer.uuid,killer.gameProfile.name)
@@ -50,14 +58,33 @@ object EntityHistoryCapture {
         val damage = source.typeHolder().unwrapKey().orElse(null)?.location()?.toString()?.let(ResourceId::parse)
         submit(entity,EntityAuditKind.DEATH,actor,plainName(entity),null,damage)
     }
-    private fun submit(entity: Entity, kind: EntityAuditKind, actor: ActorIdentity, before: String?, after: String?, damage: ResourceId?) {
+    @JvmStatic fun tamed(entity: Entity, player: Player) {
+        if (!enabled(EntityAuditKind.TAME) || player !is ServerPlayer) return
+        val level=entity.level() as? ServerLevel ?: return
+        if (level.getEntity(entity.uuid) !== entity) return
+        submit(entity,EntityAuditKind.TAME,ActorIdentity.Player(player.uuid,player.gameProfile.name),plainName(entity),null,null)
+    }
+    @JvmStatic fun withBreeding(parent: Animal, partner: Animal, change: Runnable) {
+        if (!enabled(EntityAuditKind.BREED)) { change.run();return }
+        val player=parent.loveCause ?: partner.loveCause
+        val actor=player?.let { ActorIdentity.Player(it.uuid,it.gameProfile.name) } ?: ActorIdentity.Unknown
+        val previous=breedingContext.get()
+        breedingContext.set(BreedingContext(parent.uuid,partner.uuid,actor))
+        try { change.run() } finally { if(previous==null) breedingContext.remove() else breedingContext.set(previous) }
+    }
+    @JvmStatic fun bred(level: ServerLevel, child: Entity) {
+        if (!enabled(EntityAuditKind.BREED) || level.getEntity(child.uuid) !== child) return
+        val context=breedingContext.get() ?: return
+        submit(child,EntityAuditKind.BREED,context.actor,plainName(child),null,null,context.parent,context.partner)
+    }
+    private fun submit(entity: Entity, kind: EntityAuditKind, actor: ActorIdentity, before: String?, after: String?, damage: ResourceId?, parent: java.util.UUID? = null, partner: java.util.UUID? = null) {
         val writer = pipeline() ?: return
         runCatching {
             val pos = entity.blockPosition()
             val row = EntityAuditEvent(timestampEpochMillis=System.currentTimeMillis(),actor=actor,
                 dimension=ResourceId.parse(entity.level().dimension().location().toString()),position=BlockPosition(pos.x,pos.y,pos.z),
                 targetUuid=entity.uuid,targetType=ResourceId.parse(BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString()),kind=kind,
-                beforeName=before,afterName=after,damageType=damage)
+                beforeName=before,afterName=after,damageType=damage,parentUuid=parent,partnerUuid=partner)
             if (writer.submit(row) != SubmissionResult.ACCEPTED) warn(null)
         }.onFailure(::warn)
     }

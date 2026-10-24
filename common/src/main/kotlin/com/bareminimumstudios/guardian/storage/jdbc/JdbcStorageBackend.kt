@@ -135,8 +135,8 @@ abstract class JdbcStorageBackend(
     }
 
     private fun insertEntity(conn: Connection, row: EntityAuditEvent) {
-        conn.prepareStatement("INSERT INTO ex_entity(event_uuid,time,actor,dimension,x,y,z,target_uuid,target_type,kind,before_name,after_name,damage_type) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
-            val values = listOf(row.eventId.toString(), row.timestampEpochMillis, actorCodec.idFor(conn,row.actor), row.dimension.toString(), row.position.x, row.position.y, row.position.z, row.targetUuid.toString(), row.targetType.toString(), row.kind.name, row.beforeName, row.afterName, row.damageType?.toString())
+        conn.prepareStatement("INSERT INTO ex_entity(event_uuid,time,actor,dimension,x,y,z,target_uuid,target_type,kind,before_name,after_name,damage_type,parent_uuid,partner_uuid) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
+            val values = listOf(row.eventId.toString(), row.timestampEpochMillis, actorCodec.idFor(conn,row.actor), row.dimension.toString(), row.position.x, row.position.y, row.position.z, row.targetUuid.toString(), row.targetType.toString(), row.kind.name, row.beforeName, row.afterName, row.damageType?.toString(), row.parentUuid?.toString(), row.partnerUuid?.toString())
             values.forEachIndexed { index,value -> statement.setObject(index+1,value) }
             statement.executeUpdate()
         }
@@ -169,7 +169,7 @@ abstract class JdbcStorageBackend(
             statement.executeQuery().use { rows -> buildList {
                 while(rows.next()) {
                     val actorId = rows.getLong("actor").let { if(rows.wasNull()) null else it }
-                    add(EntityAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId),ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),UUID.fromString(rows.getString("target_uuid")),ResourceId.parse(rows.getString("target_type")),EntityAuditKind.valueOf(rows.getString("kind")),rows.getString("before_name"),rows.getString("after_name"),rows.getString("damage_type")?.let(ResourceId::parse)))
+                    add(EntityAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId),ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),UUID.fromString(rows.getString("target_uuid")),ResourceId.parse(rows.getString("target_type")),EntityAuditKind.valueOf(rows.getString("kind")),rows.getString("before_name"),rows.getString("after_name"),rows.getString("damage_type")?.let(ResourceId::parse),rows.getString("parent_uuid")?.let(UUID::fromString),rows.getString("partner_uuid")?.let(UUID::fromString)))
                 }
             } }
         }

@@ -33,6 +33,14 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.71+1.21.1] - 2026-10-24
+
+### Added
+
+- Separate opt-in taming and breeding history on Fabric and NeoForge. Successful standard animal/horse tame transitions retain the verified player owner. Accepted standard animal births retain offspring and parent identities with Minecraft's available breeding credit.
+- `a:tame` and `a:breed` entity-history filters and tab completion, concise summaries and parent identities on hover. Repeated tames, disabled capture and tested NeoForge tame/baby/child-insertion cancellations create no extra records.
+- Additive schema 17 parent fields, config version 10 with both new switches disabled by default, and storage/upgrade/presentation regression coverage. Entity history remains read-only and outside purge.
+
 ## [0.4.0-alpha.70+1.21.1] - 2026-10-24
 
 ### Added

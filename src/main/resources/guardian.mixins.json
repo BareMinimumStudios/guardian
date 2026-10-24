@@ -50,7 +50,10 @@
     "LivingEntityHistoryMixin",
     "PlayerEntityHistoryMixin",
     "EntityNameHistoryMixin",
-    "NameTagHistoryMixin"
+    "NameTagHistoryMixin",
+    "TameEntityHistoryMixin",
+    "HorseTameHistoryMixin",
+    "BreedingHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

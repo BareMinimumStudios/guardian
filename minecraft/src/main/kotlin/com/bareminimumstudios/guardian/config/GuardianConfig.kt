@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(9)
+@Version(10)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -49,6 +49,8 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
         /** Opt in separately; busy mob farms can generate substantial death history. */
         var deaths = ValidatedBoolean(false)
         var nameChanges = ValidatedBoolean(false)
+        var taming = ValidatedBoolean(false)
+        var breeding = ValidatedBoolean(false)
     }
 
     var activity = Activity()
