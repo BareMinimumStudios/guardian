@@ -1,0 +1,98 @@
+{
+  "version": "0.4.0-alpha.90+1.21.1",
+  "date": "2026-10-25",
+  "schemaVersion": 24,
+  "configVersion": 17,
+  "tests": {
+    "tests": 781,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.90+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.90+1.21.1.jar",
+      "bytes": 13482532,
+      "sha256": "b01bfe0bfee7b17a98055ac45f6e776f20a6eaec9cd3f846b709313fcbd7215b",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.90+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.90+1.21.1.jar",
+      "bytes": 13453420,
+      "sha256": "7fd1537461fb3d6d2ec4e0712480e0109e8fbb9b037205b04f3f7b9f5b43a8b6",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.90+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.90+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "9971f70b102a29e501b4d92e33c89f870024aead4225fe5a88c75df08344b3f3",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "scope": "Detailed unavailable-inventory reasons for the reported item rollback preview failure. No eligibility bypass or new recovery support.",
+  "native": [
+    {
+      "diagnostics": "cursor is holding an item\npersonal crafting input slot 1 is occupied\nplayer is offline or no longer registered on this server\nan open menu is still active (net.minecraft.class_1707)\nno block entity exists at this position\ncontainer chunk is not loaded\ndimension is not available\ncontainer has unopened generated loot; reading it would generate loot\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Fabric",
+      "fixture": "OK checks=621",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "diagnostics": "cursor is holding an item\npersonal crafting input slot 1 is occupied\nplayer is offline or no longer registered on this server\nan open menu is still active (net.minecraft.world.inventory.ChestMenu)\nno block entity exists at this position\ncontainer chunk is not loaded\ndimension is not available\ncontainer has unopened generated loot; reading it would generate loot\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Neoforge",
+      "fixture": "OK checks=607",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "cases": [
+    "Normal player observation accepted",
+    "Cursor and crafting input report distinct reasons",
+    "Final observation binding reports changed crafting state and remains invalid",
+    "Offline player and open menu report distinct reasons",
+    "Missing block entity, unloaded chunk and missing dimension report distinct reasons",
+    "Unopened generated loot refused without generating loot",
+    "Actual public preview prints affected player and cursor reason",
+    "Native shift-click, apply/confirm and verified saved counterpart/components still succeed",
+    "Wrong confirmation and duplicate source claims still refuse"
+  ],
+  "outputLimits": {
+    "ownerDetails": 8,
+    "remainingOwnersSummarized": true,
+    "itemNbtExposed": false
+  },
+  "finalRuntimeJarHashesMatch": true,
+  "suppliedServerDataTouched": false,
+  "connectedClients": 0,
+  "limits": "Synthetic players and native unconnected listeners. Real pack failure is not yet identified; owner must capture the new detail. Item-codec error reporting inspected but no malicious codec fault injected.",
+  "ci": "Awaiting owner push"
+}

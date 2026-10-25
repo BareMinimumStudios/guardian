@@ -416,6 +416,14 @@ and current permission is checked again before showing results and while browsin
 ### Online item transaction rollback
 
 Use item rollback to reverse a **recorded transfer**, including both its source and destination.
+
+If preview reports an unavailable inventory, alpha.90 adds a detail line naming the player or
+the container's dimension and coordinates, followed by the failed check. This distinguishes
+an open menu, cursor/crafting slot, unsupported inventory implementation, unloaded container
+or sealed loot. A late change during checking is reported separately. Copy these detail
+lines when reporting a failure; the summary alone combines several different conditions.
+At most eight owners are detailed per response. Preview remains read-only, and a more
+specific message does not make an unsupported inventory eligible.
 It is not an inventory backup command and does not recreate items that have since been used,
 dropped, crafted or moved through unsupported/unrecorded actions. Start with a small recent
 shift-click transfer between your inventory and a nearby barrel.

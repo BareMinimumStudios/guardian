@@ -69,12 +69,12 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         if (owner != null) {
             if (owner is ItemSlotOwner.BlockContainer && !inside(owner,session.query)) session.outside.add(owner)
             else try {
-                val observation=MinecraftInventoryObservation.read(server,owner,session.wanted.filter { it.owner==owner }.toSet())
+                val observation=MinecraftInventoryObservation.read(server,owner,session.wanted.filter { it.owner==owner }.toSet()) { reason->session.details[owner]=reason }
                 val snapshot=observation?.snapshot
                 if (snapshot == null) session.unavailable.add(owner)
                 else {
                     val bytes=snapshot.slots.values.sumOf { (it.itemData?.size ?: 0).toLong() }
-                    if(session.retainedBytes+bytes>16L*1024*1024) { session.unavailable.add(owner);return }
+                    if(session.retainedBytes+bytes>16L*1024*1024) { session.unavailable.add(owner);session.details[owner]="combined inventory snapshots exceeded the 16 MiB preview budget";return }
                     session.retainedBytes+=bytes
                     session.bindings[owner]=checkNotNull(observation)
                     // Keep only addresses referenced by the selected history, bounded to 2048 slots.
@@ -83,6 +83,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             } catch (error: Throwable) {
                 logger.warn("Could not observe inventory for item rollback preview",error)
                 session.unavailable.add(owner)
+                session.details.putIfAbsent(owner,(error as? com.bareminimumstudios.guardian.platform.minecraft.InventorySnapshotReadException)?.diagnostic ?: "inventory could not be snapshotted ("+error.javaClass.simpleName+"); see server log")
             }
             return
         }
@@ -104,12 +105,20 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
 
     private fun finish(session: Session) {
         if(!authorize(session)) return
-        session.watch?.changedOwners()?.let { session.unavailable.addAll(it) }
-        session.bindings.filterValues { !it.isCurrent() }.keys.forEach { session.unavailable.add(it) }
+        session.watch?.changedOwners()?.forEach { owner->
+            session.unavailable.add(owner);session.details.putIfAbsent(owner,"item activity was captured while checking this inventory")
+        }
+        session.bindings.forEach { (owner,binding)-> binding.failureReason()?.let { reason->
+            session.unavailable.add(owner);session.details.putIfAbsent(owner,reason)
+        } }
         val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard))
         val summary=preview.entries.groupingBy { it.reason }.eachCount()
         session.source.sendSystemMessage(Component.literal("Guardian item rollback preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
         for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
+        session.unavailable.take(8).forEach { owner->
+            session.source.sendSystemMessage(Component.literal("  "+ownerLabel(owner,session)+": "+(session.details[owner] ?: "inventory observation became unavailable")+"."))
+        }
+        if(session.unavailable.size>8) session.source.sendSystemMessage(Component.literal("  "+(session.unavailable.size-8)+" more unavailable inventories; narrow the filters."))
         session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use rollback-items apply with the same filters to request a separately checked confirmation."))
         session.watch?.close();active=null
     }
@@ -142,6 +151,11 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         return false
     }
     private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
+    private fun ownerLabel(owner:ItemSlotOwner,session:Session):String = when(owner) {
+        is ItemSlotOwner.PlayerInventory -> "Player "+(server.playerList.getPlayer(owner.playerId)?.gameProfile?.name ?: session.rows.mapNotNull { it.actor as? ActorIdentity.Player }.firstOrNull { it.uuid==owner.playerId }?.lastKnownName ?: owner.playerId.toString())
+        is ItemSlotOwner.BlockContainer -> "Container "+owner.dimension+" @ "+owner.position.x+","+owner.position.y+","+owner.position.z
+        else -> "Temporary player inventory"
+    }
     private fun label(reason: ContainerPreviewReason) = when(reason) {
         ContainerPreviewReason.UNSUPPORTED_ACTION -> "crafting, creative, drop, close or unsupported action"
         ContainerPreviewReason.AMBIGUOUS_ORDER -> "shared inventory records have the same timestamp; order is uncertain"
@@ -165,6 +179,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val owners=ArrayDeque<ItemSlotOwner>()
         val live=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
         val unavailable=mutableSetOf<ItemSlotOwner>()
+        val details=linkedMapOf<ItemSlotOwner,String>()
         val outside=mutableSetOf<ItemSlotOwner>()
         var wanted: Set<ItemSlotAddress> = emptySet()
         var guard: ContainerHistoryGuard? = null

@@ -1,7 +1,18 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.89+1.21.1**. Schema 24, config version 17.
+Current executable checkpoint: **0.4.0-alpha.90+1.21.1**. Schema 24, config version 17.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Item preview diagnostics
+
+781 automated tests and required builds pass. Both-loader native checks exercise distinct
+inventory rejection reasons, final-binding invalidation and the actual public preview detail.
+The same fixtures then complete native shift-click apply/confirm with verified saved counts
+and components. No supplied server data was changed. The reported pack-specific rejection
+still needs its new detail line; no safety check was disabled.
+[Evidence](validation/item-preview-diagnostics-alpha90.json).
+Alpha.89 GitHub CI passed: [run](https://github.com/BareMinimumStudios/guardian/actions/runs/40206943947).
+Alpha.90 CI awaits the owner's push.
 
 ## Sign and display acceptance corrections
 

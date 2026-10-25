@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-25 against `0.4.0-alpha.89+1.21.1`.
+Assessed: 2026-10-25 against `0.4.0-alpha.90+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
@@ -17,6 +17,10 @@ The owner subsequently reported missing sign appearance changes, direct modded d
 ground pickups and confusing UI navigation. Alpha.89 addresses those specific acceptance reports.
 New direct display/pickup actions remain excluded from rollback. Schema 24 preserves existing
 history and prevents incompatible downgrades. [Evidence](validation/display-signs-alpha89.json).
+
+Alpha.90 adds precise owner/check diagnostics for a reported unavailable-inventory preview.
+Eligibility, online apply and recovery ownership remain unchanged. The actual pack failure
+awaits the owner's new diagnostic line. [Evidence](validation/item-preview-diagnostics-alpha90.json).
 
 ## Current release
 
@@ -43,7 +47,7 @@ their existing query shape. No schema/config migration or new index is required.
 
 | Gate | Current status | Evidence / remaining action |
 | --- | --- | --- |
-| R1: automated baseline | Alpha.89 passes 781 local tests and required builds; alpha.87 passed GitHub CI | [Current login fix](validation/login-commands-alpha88.json), [optimization evidence](validation/polish-alpha87.json), [alpha.87 CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40190105399). Check alpha.89 CI after the owner's push. |
+| R1: automated baseline | Alpha.90 passes 781 local tests and required builds; alpha.89 passed GitHub CI | [Current login fix](validation/login-commands-alpha88.json), [optimization evidence](validation/polish-alpha87.json), [alpha.87 CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40190105399). Check alpha.90 CI after the owner's push. |
 | R2: server permissions | Recorded server-side checks pass within the tested contracts | [Actual-provider baseline](validation/exports-alpha82.json), [native UI authority checks](validation/item-ui-alpha86.json), [current regressions](validation/polish-alpha87.json). Synthetic requests are not connected-client acceptance. |
 | R3: connected-client / pack acceptance | Pending | Run the six existing rows below on both loaders when a tester is available, including actual claim/mod behavior and UI visuals. The owner cannot join yet; do not repeatedly request it or replace it with synthetic evidence. |
 | R4: release package and approval | Local artifact checks/package prepared; final sign-off pending | Review the final selected jars, instructions, licenses and publishing metadata; confirm platform project configuration, then obtain the owner's release approval. No push, tag or publication is authorized by this document. |

@@ -50,7 +50,7 @@ object MinecraftBlockContainerSnapshotter {
             val address = address(container, index, level)
             if(wanted!=null && address !in wanted) continue
             require(address !in slots) { "Container aliases a logical slot" }
-            val item=items.capture(container.getItem(index))
+            val item=try { items.capture(container.getItem(index)) } catch(error:Exception) { throw InventorySnapshotReadException("container slot "+address.index+" cannot be read ("+error.javaClass.simpleName+")",error) }
             retainedBytes+=(item.itemData?.size ?: 0)
             if(wanted!=null) require(retainedBytes<=16L*1024*1024) { "Observation payload budget exceeded" }
             slots[address] = item
