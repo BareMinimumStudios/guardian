@@ -37,6 +37,14 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.86+1.21.1] - 2026-10-25
+
+### Added
+
+- Read-only item transaction menus for Fabric and NeoForge using the vanilla chest protocol. Add `/guardian transactions ui [filters]`, result/transaction/changed-slot navigation and `/guardian inspect ui` for the selected container.
+- Show aligned before/after changes with recorded counts, IDs, ownership, time, actor and action. Keep historical component data in immutable history; use plain vanilla icons and labeled placeholders for modded items without decoding or transmitting recorded components.
+- Keep all displayed slots virtual, including the player inventory area. Refuse inventory movement, correct client predictions and discard late lookup results after closure or authority loss. Reuse current lookup/inspect permissions and existing bounded history queries without new dependencies or schema changes.
+
 ## [0.4.0-alpha.85+1.21.1] - 2026-10-25
 
 ### Added

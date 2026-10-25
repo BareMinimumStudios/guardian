@@ -1,0 +1,113 @@
+{
+  "version": "0.4.0-alpha.86+1.21.1",
+  "date": "2026-10-25",
+  "baseCommit": "e74fea313f60d766a80ff329b70a1a7c9b91abdb",
+  "schemaVersion": 23,
+  "configVersion": 17,
+  "tests": {
+    "tests": 777,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.86+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.86+1.21.1.jar",
+      "bytes": 13447763,
+      "sha256": "cab3a424f1a2cbb6224ec1af29af2ebfa587cf8eef87a05f0d4a546501975805",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.86+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.86+1.21.1.jar",
+      "bytes": 13419648,
+      "sha256": "b5175904e15ade0f19ef5e4a831d04713d4e8a657cd9ae7e1cfc9e63c92b53d4",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.86+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.86+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "2c217b97d2e022fcfb6e53e7cc5288281d40bd15bc26fa5064e2f9887f983c8f",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "alpha85Ci": {
+    "status": "passed",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976"
+  },
+  "alpha86Ci": "awaiting owner push",
+  "ui": {
+    "command": "/guardian transactions ui [filters]",
+    "inspectCommand": "/guardian inspect ui",
+    "permission": "guardian.lookup",
+    "operatorFallback": 2,
+    "inspectAlsoRequires": "guardian.inspect and enabled selection",
+    "nativeType": "GENERIC_9x6",
+    "allSlotsVirtual": true,
+    "recordedPayloadsDecoded": false,
+    "extraDependencies": [],
+    "spectatorNavigationSupported": false
+  },
+  "limits": {
+    "resultRows": 50,
+    "changesPerResultPage": 4096,
+    "snapshotBytesPerResultPage": 8388608,
+    "changedSlotsPerMenuPage": 16,
+    "maxResultPages": 10000
+  },
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=949",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=949",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    }
+  ],
+  "runtimeDetails": [
+    "Public command and co alias; current user/time/limit/page filters",
+    "Native server click packet handler and authoritative 90-slot synchronization",
+    "All seven click types, eight target slots including bottom inventory and outside, four button values: 224 forged-prediction packets per loader",
+    "Real 41-slot inventory counts/components remain unchanged; no carried display stack",
+    "Changed-slot, transaction and asynchronous result-page navigation",
+    "Actual operator grant/removal, loaded and deferred permission withdrawal",
+    "Late lookup cannot reopen or populate a closed viewer",
+    "Unknown mod item IDs use paper; malformed historical component encodings never decode",
+    "Inspector opens selected physical-container context; disabling inspect closes its viewer",
+    "Independent stopped SQLite check: three seeded item transactions remain exactly three; zero item rollback journals; integrity check passes"
+  ],
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "connectedClientAcceptanceCompleted": false,
+  "productionPackCertified": false,
+  "suppliedServerDataTouched": false,
+  "scope": "Read-only recorded changed-slot presentation. No full historical inventory reconstruction, item editing, rollback button, InventoryEx dependency or historical component transmission. Existing R3 client item-audit row extended; no new release gate."
+}

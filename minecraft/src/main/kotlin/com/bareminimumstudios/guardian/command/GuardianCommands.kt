@@ -135,8 +135,14 @@ object GuardianCommands {
                 }, { if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
                 1
             })))
+        root.then(Commands.literal("transactions").requires { authorized(it, permissions, LOOKUP_PERMISSION, 2) }
+            .then(Commands.literal("ui").requires { authorized(it,permissions,LOOKUP_PERMISSION,2) }
+                .executes { context -> executeTransactions(context.source,"",runtimeProvider(),configProvider(),true) }
+                .then(Commands.argument("filters",StringArgumentType.greedyString())
+                    .suggests { context,builder -> suggestFilters(context.source,builder,permissions,true) }
+                    .executes { context -> executeTransactions(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),true) })))
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian transactions u:<player> [t:1h] [l:20], or /guardian transactions <x> <y> <z>")); 0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian transactions u:<player> [t:1h] [l:20], /guardian transactions ui [filters], or /guardian transactions <x> <y> <z>")); 0 }
             .then(Commands.argument("filters", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, permissions, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
@@ -409,12 +415,12 @@ object GuardianCommands {
         return 1
     }
 
-    private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
+    private fun executeTransactions(source: CommandSourceStack, raw: String, runtime: GuardianRuntime?, config: GuardianConfig, ui: Boolean = false): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
         val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian transactions: ${it.message}")); return 0 }
         if (filter.actions.isNotEmpty() || filter.causes.isNotEmpty() || filter.movementId!=null) { source.sendFailure(Component.literal("Item history does not accept block action, cause or movement filters.")); return 0 }
         val scope = resolveScope(source, filter) ?: return 0
-        val limit = filter.limit ?: config.lookup.defaultResults.get()
+        val limit = filter.limit ?: config.lookup.defaultResults.get().let { if(ui)it.coerceAtMost(50) else it }
         if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
             source.sendFailure(Component.literal("Guardian transaction limit/radius exceeds the configured maximum (limit at most 500).")); return 0
         }
@@ -426,9 +432,16 @@ object GuardianCommands {
             radius = filter.radius, bounds = scope.bounds, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst
         )
         val navigationRaw = if (filter.radius != null && filter.explicitPosition == null) "$raw x:${query.position!!.x} y:${query.position!!.y} z:${query.position!!.z}" else raw
+        if(ui) {
+            val player=source.player ?: run { source.sendFailure(Component.literal("Guardian item UI can only be used by a player."));return 0 }
+            if(limit>50) { source.sendFailure(Component.literal("Guardian item UI supports l:1 through l:50."));return 0 }
+            com.bareminimumstudios.guardian.lookup.ItemTransactionViewer.open(player,query,history,runtime.permissions) { runtime.history()===history }
+            return 1
+        }
         history.lookupContainers(query, { rows ->
             if (!authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
             com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
+            if(source.player!=null) source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.ItemTransactionViewer.link("/guardian transactions ui $navigationRaw"))
             source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst,
                 { page -> HistoryPageCommands.command("transactions", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("transactions", navigationRaw, 1, !filter.oldestFirst)))
         }, { if (authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
@@ -447,6 +460,7 @@ object GuardianCommands {
             context.source.sendSystemMessage(Component.literal("Guardian inspector ${if (enabled) "enabled" else "disabled"}."))
             1
         }
+        .then(Commands.literal("ui").executes { context -> context.source.player?.let(BlockInspector::openItemUi);1 })
         .then(Commands.literal("page").then(Commands.argument("page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10000)).executes { context ->
             val player = context.source.player ?: return@executes 0
             BlockInspector.showPage(player, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "page")); 1

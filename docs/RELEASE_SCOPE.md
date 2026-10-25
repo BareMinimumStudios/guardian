@@ -1,10 +1,19 @@
 # Release scope and acceptance
 
+## Newly authorized item transaction UI
+
+On 2026-10-25 the owner requested a read-only item transaction UI on Fabric and NeoForge.
+Alpha.86 adds shared vanilla-protocol menus, filtered result/transaction/changed-slot paging,
+safe generated item cards and inspector entry under current lookup/inspect authority. All slots
+are virtual; no historical component codec executes and no inventory is edited. InventoryEx
+provided a layout reference, not a bundled dependency. Real connected-client acceptance remains
+in the existing R3 gate; no new release gate or item mutation scope is introduced.
+
 ## Newly authorized online item rollback
 
 On 2026-10-24 the owner requested online item transaction rollback. Alpha.84 implements the bounded live handoff, confirmed apply and conservative interruption/restart behavior described in [online item rollback](ONLINE_ITEM_ROLLBACK.md). This supersedes historical milestone decisions below that deferred item implementation. Alpha.84 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380). On 2026-10-25 the owner authorized safe partial-item recovery. Alpha.85 adds explicit confirmed stopped-gameplay repair and original baseline saves; see [recovery](ITEM_RECOVERY.md). Item redo and automatic replay remain excluded. Connected-client acceptance and final sign-off remain pending.
 
-Assessed: 2026-10-25 against `0.4.0-alpha.85+1.21.1`.
+Assessed: 2026-10-25 against `0.4.0-alpha.86+1.21.1`.
 
 This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.
 
@@ -124,7 +133,7 @@ handoff, saved-state, command, cancellation/reconciliation and restart-refusal c
 [alpha.84 evidence](validation/online-items-alpha84.json). These are synthetic server fixtures,
 not connected-client or universal modpack acceptance. Alpha.84 subsequently passed GitHub CI.
 Alpha.85 passed 770 automated tests and both-loader targeted recovery/interruption/restart
-fixtures; see [evidence](validation/item-recovery-alpha85.json). Its remote CI awaits push.
+fixtures; see [evidence](validation/item-recovery-alpha85.json). Its [remote CI passed](https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976). Alpha.86 UI validation is tracked in [item UI evidence](validation/item-ui-alpha86.json).
 
 ## Fixed release gates
 
@@ -151,7 +160,7 @@ With movement capture enabled, check settled piston pushes/pulls, slime branches
 With sign-text capture enabled, edit both sides of standing/wall/hanging signs, check filtered literal hover details and left-click inspection, no-op/waxed/claim-denied attempts, capture switches and persistence. Confirm public sign-edit recovery refuses. These are checks of the existing sign feature within the same lookup/claim rows.
 
 2. **Inspection and claims:** left-click block history and right-click container item history, including a protected claim with inspector permission. For normal/glow frames, verify insertion, rotation, item removal versus frame breaking, exact target history, both required permissions and read-only inspector clicks. Verify reach, both hands, predicted item/block/frame state, no duplicated result pages, and ordinary claim denial with inspection off. Revoke inspection permission while enabled and confirm access stops.
-3. **Item audit:** add/remove/swap/shift-click items with distinctive persistent components; test cursor return, ordinary player actions and vanilla crafting. Verify no-op actions create no movement and unsupported menus are skipped rather than misreported.
+3. **Item audit:** add/remove/swap/shift-click items with distinctive persistent components; test cursor return, ordinary player actions and vanilla crafting. Verify no-op actions create no movement and unsupported menus are skipped rather than misreported. Open the item transaction UI and its inspector link, compare before/after pairs, hover counts/owners, browse result/transaction/slot pages, verify modded placeholders and try every move/drop/drag action. Confirm the viewer cannot change real items and closes on permission removal. This extends the existing item-audit row.
 4. **Hopper audit:** enable capture, test a successful transfer and a full destination, then restart and query history. Failed pushes must produce no transfer record; a pull into a hopper must not imply delivery to the barrel below it.
 5. **Block rollback and persistence:** preview a small known block rollback, confirm no world/journal changes, then apply it separately with narrowly checked filters, verify the intended region and states, then restore/redo the same history with a preview and separate apply, check conflicts and restart again to verify flags and world state. Check the separate restore grant/denial/revocation. Repeat with multiple included/excluded users and block IDs, verify the operation ordering, and check that filtered gaps stop at live-state conflicts. Do not use read-only item commands as item restoration.
 6. **Item recovery and administration:** preview/recovery/saved/cancel with valid permission, unsupported/busy endpoints and permission revocation. Verify clear refusal/skipping and no changed items, consumed source history or cleared unresolved claims. For online items, use a recent completed shift-click transfer in the isolated world: preview, apply, confirm, token suggestions, wrong-requester/permission refusal, exact count/components after saved completion, and clear interruption/reconciliation wording. Verify open-menu/unsupported/conflicting requests refuse. Synthetic checks do not replace this client acceptance. On an isolated database only, preview/cancel purge, check separate level-four permission and confirmation suggestions, confirm a known batch, and verify retained recent/recovery history after restart. Never use a production database for this acceptance exercise. For scoped purge, verify the world/type scope and whole-transaction wording before confirming. For export, check its separate level-four/category grants, client messages, generated server-local path, filters/counts, JSON/native bytes, cancellation and completed-file retention. These remain within this existing administration/read-only acceptance row.

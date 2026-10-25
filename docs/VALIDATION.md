@@ -1,6 +1,27 @@
 # Release validation
 
-Alpha.85 is the current executable checkpoint.
+Alpha.86 is the current executable checkpoint.
+
+## Read-only item transaction UI, 2026-10-25
+
+Alpha.85 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976),
+including clean build/tests, actual configuration-cache reuse and WorldEdit. The owner then
+authorized the read-only item UI for both loaders. Alpha.86 implements the filtered command,
+dimension-stable inspector selection, generated before/after cards and asynchronous result
+paging with current authority and menu-identity checks.
+
+777 automated tests passed. New tests cover exact paired-slot paging, transaction bounds,
+immutable snapshots, empty results and record/change/byte limits. Isolated Fabric/NeoForge
+fixtures exercise the public command and alias, native container click packets with forged
+carried/changed-slot predictions, all seven click modes, DB paging, actual operator revocation
+and deferred result suppression. Real inventory counts/components remain unchanged. Extended
+fixtures cover modded placeholders, undecodable recorded payloads, late results after close,
+transaction navigation and inspector entry/withdrawal. See [evidence](validation/item-ui-alpha86.json).
+
+All menus use synthetic players with unconnected listeners. No real client, production pack
+or supplied database is used; visual/network client acceptance remains R3. No extra dependency,
+schema/config migration or item mutation is introduced. Alpha.86 remote CI awaits push.
+
 
 ## Targeted partial item recovery, 2026-10-25
 

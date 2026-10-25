@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits and supported item transfers. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.85+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.86+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -367,6 +367,48 @@ Restore reapplies the original changes that Guardian previously marked as rolled
 Restore replays only rolled-back or restore-pending rows, oldest first. The live block must match the recorded before state; Guardian then reproduces the recorded after state. Conflicts stop later selected changes at that position. Unloaded chunks are skipped; unsupported or unverifiable targets are refused. A block already matching its target can be reconciled without another write. The same record/tick/radius limits and shared busy lock apply to rollback and restore. Both accept multiple included/excluded users and included/excluded block IDs, and refuse paging/limit parameters. Their replay order is fixed by the operation.
 
 Successful restore returns the original history rows to active state without adding replacement audit records. A later rollback can reverse them again. Interrupted restore work has a distinct `restore pending` label and is excluded from ordinary rollback; retry restore with the original filters to reconcile matching live states. Unresolved conflicts stay pending. Preview reserves nothing, and database journal completion does not guarantee the matching chunk save survived an abrupt process or machine failure. Inspect uncertain outcomes before retrying; keep backups. Restore follows the existing block snapshot support, including recorded block-entity data; it is not item-transaction rollback and cannot reconstruct unrecorded changes.
+
+### Read-only item transaction viewer
+
+```text
+/guardian transactions ui u:YourName t:1h l:20
+/guardian transactions ui x:133 y:67 z:-3366 l:10
+/guardian transactions ui i:minecraft:coal t:1h
+```
+
+The viewer opens an ordinary chest-style menu on **Fabric and NeoForge**, with no client mod,
+resource pack, InventoryEx, SGUI or Polymer dependency. It requires `guardian.lookup`
+(operator level 2 fallback). `/co transactions ui` is an alias. Existing user, time, position,
+radius, item include/exclude, order and page filters apply. `l:` is limited to 50 transactions
+per result page and the configured history maximum. Console users can use text history.
+
+**Before is on the left; after is on the right.** Each aligned pair represents one recorded
+changed slot. Hover a card for the exact recorded count, item ID, owner and slot number.
+The book shows player/system, UTC timestamp, action and transaction UUID. All item cards are
+plain display icons: historical names, lore, nested contents and custom components are not
+decoded or sent to the client. The history keeps those original component bytes, and the UI
+marks a saved-component change. Modded/unknown item IDs use paper icons with the recorded ID
+and count in their tooltip. Icon stacks are display markers; read the named recorded count.
+
+Left-click the bottom buttons for previous/next result page, transaction, or changed-slot
+page. Each changed-slot page shows 16 before/after pairs. Gray buttons mark unavailable
+directions; the barrier closes the viewer. **Every slot is read-only, including the shown
+copy of your own inventory.** Close the viewer before rearranging your items. Shift-click,
+dragging, hotbar swaps, double-click, drops and creative clone clicks cannot move display items.
+There is no rollback button in this UI. These are transaction changes, not a complete
+historical inventory backup.
+
+Container inspection also offers `[Open item UI]`. With inspect enabled, right-click the
+container and click that link or run `/guardian inspect ui`. This uses the selected container's
+dimension and requires both inspect and lookup permission. Disabling inspection or losing
+permission closes that inspector viewer. Ordinary text inspection remains available.
+
+Close other menus and clear your cursor first. The first UI implementation supports
+non-spectator players; vanilla spectator chest menus do not send navigation clicks. It refuses
+oversized result pages (over 4,096 changed slots or 8 MiB of recorded snapshot bytes); narrow
+the search if needed. Each result page reads current history, so concurrent new records or
+purge can change later search pages. Pending results cannot reopen a closed/replaced menu,
+and current permission is checked again before showing results and while browsing.
 
 ### Online item transaction rollback
 

@@ -81,6 +81,19 @@ object BlockInspector {
         val selection = selections[player.uuid] ?: return
         selections[player.uuid] = selection.copy(oldestFirst = oldest); showPage(player, 1)
     }
+    fun openItemUi(player: ServerPlayer) {
+        if(!isEnabled(player) || !authorized(player))return
+        val selection=selections[player.uuid]
+        if(selection==null || !selection.items || selection.entityUuid!=null) {
+            player.sendSystemMessage(Component.literal("Guardian: right-click a container with inspect enabled first."));return
+        }
+        val history=historyProvider() ?: return
+        val currentPermissions=permissions ?: return
+        ItemTransactionViewer.open(player,ContainerLookupQuery(selection.owner.dimension,selection.owner.position,
+            limit=(configProvider()?.lookup?.inspectorResults?.get() ?: 5).coerceIn(1,5),oldestFirst=selection.oldestFirst),history,currentPermissions) {
+            isEnabled(player) && authorized(player) && historyProvider()===history
+        }
+    }
     fun showPage(player: ServerPlayer, page: Int) {
         if (!isEnabled(player) || !authorized(player)) return
         val selection = selections[player.uuid] ?: run { player.sendSystemMessage(Component.literal("Guardian: inspect a block first.")); return }
@@ -104,6 +117,7 @@ object BlockInspector {
             offset = (page - 1) * limit, oldestFirst = selection.oldestFirst), { rows ->
             if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) {
                 ContainerHistoryFormatter.lines(rows, focus = owner).forEach(player::sendSystemMessage)
+                player.sendSystemMessage(ItemTransactionViewer.link("/guardian inspect ui"))
                 player.sendSystemMessage(footer(rows.size == limit))
             }
         }, { if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) player.sendSystemMessage(Component.literal("Guardian container lookup failed; see server log.")) })
