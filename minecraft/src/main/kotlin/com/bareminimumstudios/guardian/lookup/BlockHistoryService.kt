@@ -96,6 +96,14 @@ class BlockHistoryService(
     fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
     }
+    internal fun prepareItemRollback(id: java.util.UUID, time: Long, rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>,
+        onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) -> Unit, onFailure: (Throwable) -> Unit) =
+        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareItemRollback(id,time,rows) },onSuccess,onFailure)
+
+    internal fun cancelPreparedItemRollback(id: java.util.UUID, onSuccess: (Boolean) -> Unit, onFailure: (Throwable) -> Unit) =
+        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).transitionItemRollback(id,
+            com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.PREPARED,com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.CANCELLED) },onSuccess,onFailure)
+
     fun recoveryHeaders(onSuccess: (List<com.bareminimumstudios.guardian.rollback.ItemRollbackSummary>) -> Unit,onFailure: (Throwable) -> Unit) {
         recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.unfinishedItemRollbacks(10) ?: throw IllegalStateException("Persistent journal unavailable") },onSuccess,onFailure)
     }

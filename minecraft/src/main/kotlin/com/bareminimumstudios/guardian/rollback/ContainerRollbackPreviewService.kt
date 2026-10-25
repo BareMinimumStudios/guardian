@@ -110,7 +110,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val summary=preview.entries.groupingBy { it.reason }.eachCount()
         session.source.sendSystemMessage(Component.literal("Guardian item rollback preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
         for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
-        session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; item rollback apply is not enabled yet."))
+        session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use rollback-items apply with the same filters to request a separately checked confirmation."))
         session.watch?.close();active=null
     }
 

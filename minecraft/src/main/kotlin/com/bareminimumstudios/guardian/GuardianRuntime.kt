@@ -36,6 +36,8 @@ class GuardianRuntime(
     private var shutdownDrains: List<java.util.concurrent.CompletionStage<Void>>? = null
     private var shutdownClean = true
 
+    private var onlineItems: com.bareminimumstudios.guardian.rollback.OnlineItemRollbackService? = null
+
     private var itemRecovery: com.bareminimumstudios.guardian.rollback.ItemRecoveryService? = null
 
     fun start(server: MinecraftServer) {
@@ -48,13 +50,23 @@ class GuardianRuntime(
         val batchSize = configuredBatch.coerceAtMost(queueCapacity)
         val selectedStorage = StorageBackendFactory.create(config.storage, storageRoot)
 
-        val selectedPipeline = BufferedLogPipeline(
+        val selectedPipeline = try { BufferedLogPipeline(
             storage = selectedStorage,
             queueCapacity = queueCapacity,
             batchSize = batchSize,
             flushIntervalMillis = config.performance.flushIntervalMillis.get().toLong(),
             closeStorageOnStop = false
-        ).also { it.start() }
+        ).also { it.start {
+            (selectedStorage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.let {
+                com.bareminimumstudios.guardian.rollback.ItemRollbackStartupGuard.verify(it)
+            }
+        } } } catch (refusal: com.bareminimumstudios.guardian.rollback.ItemRollbackStartupRefused) {
+            // Fabric starts Guardian before vanilla world setup. Request a normal stop after setup
+            // instead of throwing through the early lifecycle hook into incomplete world teardown.
+            org.slf4j.LoggerFactory.getLogger("Guardian").error(refusal.message)
+            server.halt(false)
+            return
+        }
 
         val selectedBulk = BulkAuditDispatcher(
             pipeline = selectedPipeline,
@@ -69,11 +81,11 @@ class GuardianRuntime(
         export = com.bareminimumstudios.guardian.export.HistoryExportService(selectedHistory,permissions,storageRoot)
         rollback = BlockRollbackService(server, selectedHistory, config, permissions)
         purge = com.bareminimumstudios.guardian.purge.AuditPurgeService(selectedHistory,permissions) {
-            rollback?.isBusy()==true || itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || inventoryCoordination?.hasReservations()==true
+            rollback?.isBusy()==true || itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || onlineItems?.isBusy()==true || inventoryCoordination?.hasReservations()==true
         }
-        rollback?.installMaintenanceGate { purge?.isBusy()==true }
-        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline,permissions) { itemRecovery?.isBusy()==true || purge?.isBusy()==true }
-        itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline,permissions) { itemPreview?.isBusy()==true || purge?.isBusy()==true }
+        rollback?.installMaintenanceGate { purge?.isBusy()==true || onlineItems?.isBusy()==true }
+        itemPreview = com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService(server,selectedHistory,selectedPipeline,permissions) { itemRecovery?.isBusy()==true || purge?.isBusy()==true || onlineItems?.isBusy()==true }
+        itemRecovery = com.bareminimumstudios.guardian.rollback.ItemRecoveryService(server,selectedHistory,selectedPipeline,permissions) { itemPreview?.isBusy()==true || purge?.isBusy()==true || onlineItems?.blocksObservation()==true }
         inventoryCoordination = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.install(server)
         itemOperations = (selectedStorage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.let { journal ->
             com.bareminimumstudios.guardian.platform.minecraft.MinecraftItemOperations(server, checkNotNull(inventoryCoordination), journal) {
@@ -81,6 +93,11 @@ class GuardianRuntime(
             }
         }
         itemOperations?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.attachOperations(server,it) }
+        onlineItems = itemOperations?.let { operations ->
+            com.bareminimumstudios.guardian.rollback.OnlineItemRollbackService(server,selectedHistory,selectedPipeline,permissions,operations) {
+                itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || purge?.isBusy()==true || rollback?.isBusy()==true
+            }
+        }
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.install({ pipeline }, { config })
@@ -107,6 +124,7 @@ class GuardianRuntime(
         export?.stop()
         export=null
         purge?.stop()
+        onlineItems?.stop()
         val itemDrain = itemOperations?.stopAndDrain()
         managedRetentions = itemOperations?.ownsAllRetentions() == true
         val diskDrain = com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.beginShutdown(inventoryCoordination)
@@ -144,6 +162,7 @@ class GuardianRuntime(
         try {shutdown?.closed?.toCompletableFuture()?.get(5L,java.util.concurrent.TimeUnit.SECONDS)}
         catch(_: Exception){return false}
         if(!com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination.tryUninstall(inventoryCoordination)) return false
+        onlineItems = null
         itemOperations = null
         inventoryCoordination = null
         storage = null
@@ -160,8 +179,10 @@ class GuardianRuntime(
         itemPreview?.tick()
         itemRecovery?.tick()
         itemOperations?.tick()
+        onlineItems?.tick()
     }
 
+    internal fun onlineItems() = onlineItems
     internal fun itemOperations() = itemOperations
     fun inventoryCoordination() = inventoryCoordination
     fun pipeline(): BufferedLogPipeline? = pipeline

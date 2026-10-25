@@ -141,9 +141,22 @@ object GuardianCommands {
                 .suggests { context, builder -> suggestFilters(context.source, builder, permissions, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
         root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
-            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, recovery [operation UUID], or cancel. These commands are read-only.")); 0 }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, apply t:1h r:10, confirm <token>, reconcile, recovery [operation UUID], or cancel. Apply requires guardian.rollback.items and guardian.rollback.")); 0 }
+            .then(Commands.literal("apply").requires { permissions.has(it,"guardian.rollback.items",3) }
+                .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items apply u:YourName t:1h r:5. No changes until you confirm the returned token."));0 }
+                .then(Commands.argument("filters",StringArgumentType.greedyString())
+                    .suggests { context,builder -> suggestFilters(context.source,builder,permissions,true,true,ROLLBACK_PERMISSION,3) }
+                    .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),apply=true) }))
+            .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
+                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .executes { context -> if(runtimeProvider()?.onlineItems()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
+            .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
             .then(Commands.literal("cancel").executes { context ->
                 val runtime=runtimeProvider()
+                if(runtime?.onlineItems()?.cancel(context.source)==true) {
+                    context.source.sendSystemMessage(Component.literal("Guardian: online item rollback cancellation requested. Started writes/saves are not undone; recovery protection remains until verified."))
+                    return@executes 1
+                }
                 val previewCancelled=runtime?.itemRollbackPreview()?.cancel() ?: false
                 val recoveryCancelled=runtime?.itemRecovery()?.cancel() ?: false
                 context.source.sendSystemMessage(Component.literal(if(previewCancelled || recoveryCancelled)
@@ -676,7 +689,8 @@ object GuardianCommands {
         return if(recovery.request(source,id,saved)) 1 else 0
     }
 
-    private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig): Int {
+    private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig,apply: Boolean=false): Int {
+        if(apply && runtime?.onlineItems()==null) { source.sendFailure(Component.literal("Guardian online item rollback requires an active persistent journal backend."));return 0 }
         val preview=runtime?.itemRollbackPreview()
         if (preview == null) { source.sendFailure(Component.literal("Guardian item rollback preview is unavailable."));return 0 }
         val filter=ItemRollbackPreviewFilters.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian item rollback preview: ${it.message}"));return 0 }
@@ -686,7 +700,8 @@ object GuardianCommands {
         val center=if (scope.bounds == null) filter.explicitPosition ?: sourcePosition(source) else null
         val player=filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name,ignoreCase=true) } }
         val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=scope.dimension,position=center,bounds=scope.bounds,radius=radius,actorUuid=player?.uuid,actorName=if(player==null)filter.actorName else null,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0),limit=51)
-        return if(preview.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))) 1 else 0
+        return if(if(apply) runtime?.onlineItems()?.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))==true
+            else preview.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))) 1 else 0
     }
 
     private fun resolveScope(source: CommandSourceStack, filter: BlockCommandFilter): QueryScope? {

@@ -82,7 +82,7 @@ class ItemRestartRecoveryHost private constructor(
         if(!isJournalDrained || !retention.isDrained)return
         val success=resolved && !stopped && lease.isRetained(lease.owners)
         val old=binding;binding=null
-        try {(old?.port as? AutoCloseable)?.close()}
+        try { if (success) old?.port?.complete() else (old?.port as? AutoCloseable)?.close() }
         catch(_: Exception) {resolved=false;reason="Read-only resource closure failed"}
         // Close callbacks may stop this host or registry. No such callback can release ownership.
         if(success && resolved && !stopped && lease.isRetained(lease.owners)) {

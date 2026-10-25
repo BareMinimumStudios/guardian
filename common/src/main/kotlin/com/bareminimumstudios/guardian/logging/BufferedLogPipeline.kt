@@ -88,13 +88,17 @@ class BufferedLogPipeline(
     private val backpressure = AtomicLong()
     private val writeFailures = AtomicLong()
 
-    fun start() {
+    fun start() = start { }
+
+    /** Validate opened storage before any writer thread or gameplay producer is admitted. */
+    fun start(beforeWriterStart: () -> Unit) {
         check(state.compareAndSet(PipelineState.CREATED, PipelineState.RUNNING)) {
             "Pipeline can only be started once; current state=${state.get()}"
         }
 
         try {
             storage.open()
+            beforeWriterStart()
             val thread = Thread(::writerLoop, "Guardian-LogWriter").apply {
                 isDaemon = true
                 uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, throwable ->

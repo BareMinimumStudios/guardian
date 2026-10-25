@@ -21,6 +21,8 @@ interface ItemReconciliationPort {
     fun isExclusiveAndQuiescent(owners: Set<ItemSlotOwner>): Boolean
     fun readLiveOwners(owners: Set<ItemSlotOwner>): InventorySnapshot?
     fun readSavedOwner(owner: ItemSlotOwner): CompletionStage<InventorySnapshot?>
+    /** Completion is distinct from cancellation/resource closure. No inventory replay is implied. */
+    fun complete() { (this as? AutoCloseable)?.close() }
 }
 
 enum class ItemReconciliationState { CHECKING_JOURNAL, READING_IMAGES, READING_SAVED, RECHECKING_JOURNAL, ACKNOWLEDGING, CONFIRMING, RESOLVED, ALREADY_RESOLVED, UNRESOLVED }

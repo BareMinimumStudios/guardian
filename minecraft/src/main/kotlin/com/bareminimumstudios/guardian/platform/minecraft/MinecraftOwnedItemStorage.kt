@@ -18,6 +18,8 @@ internal class MinecraftOwnedItemStorage private constructor(
     private val thread = Thread.currentThread()
     private val image = initial.toMutableList()
     private var released = false
+    private data class Write(val index: Int, val stack: ItemStack, val replacement: ItemStackSnapshot)
+    private var write: Write? = null
 
     /** Vanilla serialization may read this fixed-size view, but cannot acquire mutable backing items. */
     val view: NonNullList<ItemStack> = object : NonNullList<ItemStack>(mutableListOf(), ItemStack.EMPTY) {
@@ -26,7 +28,16 @@ internal class MinecraftOwnedItemStorage private constructor(
             checkCurrent()
             return MinecraftItemSnapshotter.restore(image[index], registries)
         }
-        override fun set(index: Int, element: ItemStack): ItemStack = denied()
+        override fun set(index: Int, element: ItemStack): ItemStack {
+            checkCurrent()
+            val permit = write ?: denied()
+            check(index == permit.index && element === permit.stack) { "Unrelated owned inventory setter" }
+            write = null
+            val previous = get(index)
+            check(MinecraftItemSnapshotter.capture(element, registries) == permit.replacement)
+            replace(index, image[index], permit.replacement)
+            return previous
+        }
         override fun add(index: Int, element: ItemStack): Unit = denied()
         override fun removeAt(index: Int): ItemStack = denied()
         override fun clear(): Unit = denied()
@@ -51,6 +62,19 @@ internal class MinecraftOwnedItemStorage private constructor(
         image[index] = replacement
     }
 
+    /** One exact vanilla setter may consume this capability, before any subsequent setter callback. */
+    fun throughSetter(index: Int, expected: ItemStackSnapshot, replacement: ItemStackSnapshot, setter: (ItemStack) -> Unit) {
+        checkCurrent()
+        check(write == null && image[index] == expected)
+        val stack = MinecraftItemSnapshotter.restore(replacement, registries)
+        val permit = Write(index, stack, replacement)
+        write = permit
+        try {
+            setter(stack)
+            check(write == null && image[index] == replacement) { "Native setter did not consume its owned slot write" }
+        } finally { write = null }
+    }
+
     /** Fresh mutable items for handing ownership back, with no alias to an earlier read or input list. */
     fun release(): NonNullList<ItemStack> {
         checkCurrent()
@@ -60,6 +84,8 @@ internal class MinecraftOwnedItemStorage private constructor(
         image.clear()
         return result
     }
+
+    fun retire() { checkCurrent(); check(write == null); released = true; image.clear() }
 
     private fun checkCurrent() {
         check(Thread.currentThread() === thread) { "Owned item storage must use its inventory thread" }

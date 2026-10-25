@@ -57,6 +57,31 @@ internal class MinecraftItemOperations(
         host
     }
 
+    fun admitOwned(record: ItemRollbackRecord, authorized: () -> Boolean): ItemOperationHost? = control {
+        checkThread(); check(!stopped && !busy())
+        check(entries.size + restarts.size < 32)
+        var lease: ItemOwnerCoordination.Lease? = null
+        val host = try { scope.startProtected(record, owners, { acquired ->
+            lease = acquired
+            check(authorized())
+            val session = MinecraftInventoryCoordination.bindOwnedInventories(server, acquired, record)
+            MinecraftBoundOperationPort(server, acquired, session,
+                { authorized() && MinecraftInventoryCoordination.ownsDetached(acquired) }, owned = true)
+        }) } catch (error: Exception) {
+            // startProtected submits no journal request and performs no slot write before returning.
+            // Only this failed admission may return its unchanged native backing lists immediately.
+            lease?.let { if (MinecraftInventoryCoordination.ownsDetached(it)) MinecraftInventoryCoordination.releaseOwned(it) }
+            throw error
+        } ?: return@control null
+        entries.add(Entry(host, checkNotNull(lease)))
+        host
+    }
+
+    fun reconcileOwned(host: ItemOperationHost) {
+        val entry = entries.single { it.host === host }
+        requestRecovery(host) { MinecraftInventoryCoordination.ownsDetached(entry.lease) }
+    }
+
     fun cancel(host: ItemOperationHost) = control {
         checkThread();check(!stopped)
         val entry = entries.single { it.host === host }

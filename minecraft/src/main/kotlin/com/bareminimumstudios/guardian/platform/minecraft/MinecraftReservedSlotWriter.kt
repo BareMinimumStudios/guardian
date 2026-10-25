@@ -41,7 +41,7 @@ internal class MinecraftReservedSlotWriter(
     }
 
     fun write(lease: ItemOwnerCoordination.Lease, container: Container, slot: Int,
-              expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
+              expected: ItemStackSnapshot, replacement: ItemStackSnapshot, ownedStack: ItemStack? = null) {
         check(server.isSameThread)
         check(ticket == null) { "A reserved setter is already in progress" }
         val owner = resolve(container)
@@ -51,7 +51,8 @@ internal class MinecraftReservedSlotWriter(
                 "Deferred loot inventories cannot be written"
             }
             val registries = server.registryAccess()
-            val stack = MinecraftItemSnapshotter.restore(replacement, registries)
+            val stack = ownedStack ?: MinecraftItemSnapshotter.restore(replacement, registries)
+            check(MinecraftItemSnapshotter.capture(stack, registries) == replacement)
             require(stack.isEmpty || stack.count <= container.getMaxStackSize(stack)) { "Replacement exceeds the slot stack limit" }
             check(MinecraftItemSnapshotter.capture(container.getItem(slot), registries) == expected) {
                 "Inventory contents changed before the reserved write"

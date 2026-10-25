@@ -16,9 +16,9 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 ## What is Guardian?
 
-Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
+Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits and supported item transfers. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.82+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.84+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -350,7 +350,7 @@ Rollback requires `t:<time>`. Without an explicit radius it uses the configured 
 
 Filters select **history rows**, not a promise to restore every matching block. They can leave gaps between changes at the same position. Existing live-state checks still apply and a mismatch blocks the remaining selected chain at that position. Review skipped/blocked counts. Preview and apply run separate queries with their own moving time windows and do not reserve a fixed batch. Rollback remains newest first; restore remains oldest first, using the IDs in the original recorded before/after states. The record cap applies after filtering. Work is bounded per tick and by a maximum record count. Unloaded chunks are skipped rather than loaded for you; changed or unverifiable states can be refused. Check the completion summary instead of assuming every matching row was restored.
 
-**Item rollback apply is unavailable**, including for vanilla inventories. Block rollback is not a replacement for restoring a container's item transaction history.
+Online item transaction rollback is available for the bounded supported inventories below. Block rollback is not a replacement for restoring a container's item transaction history.
 
 ### Restore a block rollback (redo)
 
@@ -368,17 +368,73 @@ Restore replays only rolled-back or restore-pending rows, oldest first. The live
 
 Successful restore returns the original history rows to active state without adding replacement audit records. A later rollback can reverse them again. Interrupted restore work has a distinct `restore pending` label and is excluded from ordinary rollback; retry restore with the original filters to reconcile matching live states. Unresolved conflicts stay pending. Preview reserves nothing, and database journal completion does not guarantee the matching chunk save survived an abrupt process or machine failure. Inspect uncertain outcomes before retrying; keep backups. Restore follows the existing block snapshot support, including recorded block-entity data; it is not item-transaction rollback and cannot reconstruct unrecorded changes.
 
-### Read-only item checks
+### Online item transaction rollback
+
+Use item rollback to reverse a **recorded transfer**, including both its source and destination.
+It is not an inventory backup command and does not recreate items that have since been used,
+dropped, crafted or moved through unsupported/unrecorded actions. Start with a small recent
+shift-click transfer between your inventory and a nearby barrel.
 
 ```text
-/guardian rollback-items preview u:YourName t:1h r:5
+/guardian rollback-items preview u:YourName t:10m r:5
+/guardian rollback-items apply u:YourName t:10m r:5
+/guardian rollback-items confirm <token returned by apply>
+```
+
+`preview` changes nothing. `apply` selects history and returns a requester-bound token that
+expires after 30 seconds; **selection does not change items**. Close all players' open menus
+before confirming. Confirmation rechecks current permissions, history, source claims, every
+endpoint and the complete live inventory images. Keep every block endpoint inside the chosen
+region and loaded, and keep affected players online with idle inventory menus. One included
+`u:`/`user:` filter is supported; item rollback does not accept multi-user or item-type filters.
+
+The first online implementation supports exact vanilla barrels, chests, hoppers, dispensers,
+droppers, furnaces, blast furnaces and smokers, plus the ordinary 41-slot online player
+inventory. It refuses sealed loot, missing/unloaded blocks, custom inventory subclasses,
+entity/capability storage, temporary cursor/crafting slots and nonconserving transactions.
+That makes completed shift-click transfers the most useful first test. A normally clicked
+transfer may include a temporary cursor owner and be refused. Registered item components are
+preserved through the same immutable snapshot codec used by history; transient components
+that cannot be saved losslessly are refused.
+
+Requests are limited to 50 selected transactions, 8 inventories, 64 changed final slots and
+2 MiB of combined complete before/after images. Narrow `t:` or `r:` if a request is too large.
+No inventory is overwritten when its observed contents conflict with the recorded transfer.
+Already claimed source transactions cannot be rolled back twice.
+
+While applying and verifying saves, Guardian temporarily pauses guarded inventory/gameplay
+mutation paths across the server. The server stays online, but inventory interaction and
+automation may briefly be unavailable. Native backing lists are detached so retained stack
+references cannot alter the owned image. Supported vanilla caller guards prevent unpaid
+transfer side effects; arbitrary mod callers, reflective field writes and custom storage
+models are not certified by a vanilla class check.
+
+Success is reported only after actual saved owner images and the durable journal receipt
+match the expected result. **There is no item redo command.** Both `guardian.rollback` and
+`guardian.rollback.items` are required, each with operator level 3 fallback.
+
+```text
+/guardian rollback-items cancel
+/guardian rollback-items reconcile
 /guardian rollback-items recovery
 /guardian rollback-items recovery <operation UUID>
 /guardian rollback-items recovery saved <operation UUID>
-/guardian rollback-items cancel
 ```
 
-Preview checks a bounded set of candidate transfers against observed inventories. Recovery lists unfinished internal journals or compares their observed state; `saved` compares supported saved data. These commands **do not restore items**. An eligible preview does not establish that applying it would be safe. Busy, unsupported, missing, unloaded or sealed-loot inventories are skipped or refused. Cancel stops the running observation; it does not clear unresolved recovery claims or undo items.
+`cancel` stops your pending request or requests a stop of your active operation. It does not
+undo started writes or saves. Interrupted apply retains inventory protection and its journal.
+For an operation retained in the current process, `reconcile` can release protection only
+when the complete live and actual saved images already prove the expected result. It does
+not retry partial writes or force conflicting contents into place. The `recovery` and `saved`
+forms remain read-only diagnostics and do not release claims.
+
+**Restart protection:** an unresolved protected item journal stops normal server startup;
+gameplay must not resume with an uncertain cross-inventory save. Preserve `guardian.sqlite`
+and the matching world/player data together. For a partial/conflicting operation, this version
+requires restoring a consistent backup or separately resolving the protected data; it has no
+automatic partial replay or offline repair tool. Do not delete journal rows to bypass this
+check. An unprotected admission proven not to have begun writing may be cancelled automatically
+at startup. Use a backed-up isolated world for initial testing.
 
 ## Sign-text history
 
@@ -460,7 +516,8 @@ Cancel discards a pending confirmation or requests cancellation of running work.
 | `guardian.entities` | Entity and frame history; also required for frame inspection | 2 |
 | `guardian.fluids` | Player bucket fluid history | 2 |
 | `guardian.status` | Storage/capture status | 2 |
-| `guardian.rollback` | Block rollback and read-only item checks | 3 |
+| `guardian.rollback` | Block rollback, item checks and required base grant for item apply | 3 |
+| `guardian.rollback.items` | Confirmed online item rollback and retained-operation reconciliation | 3 |
 | `guardian.restore` | Block restore/redo and its preview | 3 |
 | `guardian.export` | Write bounded history files; also needs the category history grant | 4 |
 | `guardian.purge` | Preview/confirm/cancel old-history deletion | 4 |

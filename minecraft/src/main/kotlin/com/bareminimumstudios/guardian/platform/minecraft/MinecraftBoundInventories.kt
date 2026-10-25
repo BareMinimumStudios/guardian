@@ -83,6 +83,22 @@ class MinecraftBoundInventories internal constructor(
         return InventorySnapshot(slots)
     }
 
+    internal fun detach(): Map<ItemSlotOwner, MinecraftDetachedInventory> {
+        check(isCurrent() && !readOnly)
+        check(server.playerList.players.all { it.containerMenu === it.inventoryMenu }) {
+            "Online item rollback requires players to close their open menus"
+        }
+        val result = linkedMapOf<ItemSlotOwner, MinecraftDetachedInventory>()
+        try {
+            pins.forEach { (owner, pin) -> result[owner] = MinecraftDetachedInventory.capture(pin.container, server.registryAccess()) }
+            check(isCurrent())
+            return result
+        } catch (error: Exception) {
+            result.values.forEach { if (it.isCurrent()) it.release() }
+            throw error
+        }
+    }
+
     fun write(address: ItemSlotAddress, expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
         checkThread()
         check(isCurrent()) { "Bound inventory identities are no longer current" }

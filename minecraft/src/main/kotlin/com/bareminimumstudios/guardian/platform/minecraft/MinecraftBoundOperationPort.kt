@@ -11,7 +11,8 @@ internal class MinecraftBoundOperationPort(
     private val server: MinecraftServer,
     private val lease: ItemOwnerCoordination.Lease,
     private val session: MinecraftBoundInventories,
-    private val exclusive: () -> Boolean
+    private val exclusive: () -> Boolean,
+    private val owned: Boolean = false
 ) : ItemOperationPort {
     private var closed = false
     override fun isExclusiveAndCurrent(owners: Set<ItemSlotOwner>): Boolean {
@@ -28,6 +29,11 @@ internal class MinecraftBoundOperationPort(
     override fun saveAndReadBack(owner: ItemSlotOwner, addresses: Set<ItemSlotAddress>): CompletionStage<InventorySnapshot?> {
         check(isExclusiveAndCurrent(lease.owners) && owner in lease.owners && addresses.all { it.owner == owner })
         return session.saveAndReadBack(owner).thenApply<InventorySnapshot?> { it }
+    }
+    override fun complete() {
+        check(isExclusiveAndCurrent(lease.owners))
+        if (owned) MinecraftInventoryCoordination.releaseOwned(lease)
+        close()
     }
     override fun close() {
         check(server.isSameThread)

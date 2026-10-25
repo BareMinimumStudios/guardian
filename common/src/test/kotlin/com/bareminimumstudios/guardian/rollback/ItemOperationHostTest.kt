@@ -42,6 +42,8 @@ class ItemOperationHostTest {
         val live = linkedMapOf(a to ItemStackSnapshot.EMPTY,b to item,spareA to ItemStackSnapshot.EMPTY,spareB to ItemStackSnapshot.EMPTY)
         var exclusive = true
         var closed = false
+        var completions = 0
+        override fun complete() { completions++;close() }
         var writes = 0
         var saves = 0
         var onWrite: () -> Unit = {}
@@ -79,10 +81,17 @@ class ItemOperationHostTest {
         assertNotNull(journal.value)
     }
 
+    @Test fun cancellationNeverCallsSuccessfulInventoryHandoff() {
+        val journal=Journal();val port=Port();start(journal,port)
+        host.close();finish();held(journal)
+        assertEquals(0,port.completions)
+        assertEquals(0,port.writes)
+    }
+
     @Test fun successfulHostAppliesSavesConfirmsAndReleasesAllOwners() {
         val journal=Journal();val port=Port();start(journal,port);finish()
         assertEquals(ItemOperationState.COMPLETED,host.state);assertEquals(ItemRollbackPhase.COMPLETED,journal.value.phase)
-        assertEquals(2,port.writes);assertEquals(2,port.saves);assertEquals(1,journal.marks);assertEquals(1,journal.commits)
+        assertEquals(1,port.completions);assertEquals(2,port.writes);assertEquals(2,port.saves);assertEquals(1,journal.marks);assertEquals(1,journal.commits)
         assertEquals(item,port.live[a]);assertEquals(ItemStackSnapshot.EMPTY,port.live[b]);assertTrue(port.closed)
         assertFalse(coordination.hasJournalRetention());assertNotNull(coordination.acquire(UUID.randomUUID(),listOf(a.owner,b.owner)))
         host.advance();host.close();assertEquals(2,port.writes)

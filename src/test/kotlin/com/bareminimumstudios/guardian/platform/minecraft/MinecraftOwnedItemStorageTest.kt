@@ -101,6 +101,40 @@ class MinecraftOwnedItemStorageTest {
         }.join()
         assertEquals(before, storage.snapshot())
     }
+    @Test fun exactSetterCapabilityIsConsumedOnceAndCannotAuthorizeAnotherStack() {
+        val storage = MinecraftOwnedItemStorage.capture(listOf(ItemStack(Items.COAL,9)), registries)
+        val expected = storage.snapshot().single()
+        val target = snapshot(named())
+        storage.throughSetter(0,expected,target) { stack ->
+            assertFailsWith<IllegalStateException> { storage.view[0] = stack.copy() }
+            storage.view[0] = stack
+            assertFailsWith<UnsupportedOperationException> { storage.view[0] = stack }
+        }
+        assertEquals(target, storage.snapshot().single())
+        assertFailsWith<UnsupportedOperationException> { storage.view[0] = named() }
+    }
+    @Test fun throwingSetterDoesNotUndoAnAlreadyConsumedWriteOrLeaveAWritePermit() {
+        val storage = MinecraftOwnedItemStorage.capture(listOf(ItemStack(Items.COAL,9)), registries)
+        val expected = storage.snapshot().single()
+        val target = snapshot(named())
+        assertFailsWith<IllegalArgumentException> {
+            storage.throughSetter(0,expected,target) { stack -> storage.view[0] = stack; throw IllegalArgumentException("callback failed") }
+        }
+        assertEquals(target,storage.snapshot().single())
+        assertFailsWith<UnsupportedOperationException> { storage.view[0] = named() }
+    }
+    @Test fun omittedOrAlteredNativeSetterRefusesWithoutChangingBackingImage() {
+        val storage = MinecraftOwnedItemStorage.capture(listOf(ItemStack(Items.COAL,9)), registries)
+        val expected = storage.snapshot().single()
+        val target = snapshot(named())
+        assertFailsWith<IllegalStateException> { storage.throughSetter(0,expected,target) { } }
+        assertEquals(expected,storage.snapshot().single())
+        assertFailsWith<IllegalStateException> {
+            storage.throughSetter(0,expected,target) { stack -> stack.count=2; storage.view[0]=stack }
+        }
+        assertEquals(expected,storage.snapshot().single())
+        assertFailsWith<UnsupportedOperationException> { storage.view[0] = named() }
+    }
     @Test fun unsupportedSizesAndTransientComponentsRefuseAtCapture() {
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(emptyList(), registries) }
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(List(257) { ItemStack.EMPTY }, registries) }

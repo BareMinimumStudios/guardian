@@ -4,7 +4,10 @@ import com.bareminimumstudios.guardian.domain.*
 import java.util.concurrent.CompletionStage
 
 /** Only a trusted platform may supply exclusion. Closing releases resources, never mutates items. */
-interface ItemOperationPort : ItemApplyPort, ItemSavePort, AutoCloseable
+interface ItemOperationPort : ItemApplyPort, ItemSavePort, AutoCloseable {
+    /** Called only after a durable receipt, actual saves and journal drain have been verified. */
+    fun complete() = close()
+}
 
 enum class ItemOperationState { PROTECTING, APPLYING, SAVING, ACKNOWLEDGING, CONFIRMING, RECONCILING, DRAINING, COMPLETED, RECOVERY_REQUIRED }
 
@@ -204,7 +207,10 @@ class ItemOperationHost private constructor(
             val resolved = recoveryResolved
             val generation = stopGeneration
             recoveryResolved = false
-            try { (recoveryPort as? AutoCloseable)?.close() }
+            try {
+                if (resolved && generation == stopGeneration) recoveryPort?.complete()
+                else (recoveryPort as? AutoCloseable)?.close()
+            }
             catch (_: Exception) { reason = "Reconciliation resource closure failed"; state = ItemOperationState.RECOVERY_REQUIRED; return }
             recoveryPort = null
             // A stop from resource closure must not turn an unresolved outcome into release.
@@ -216,7 +222,7 @@ class ItemOperationHost private constructor(
             return
         }
         if (confirmed && current() && image()?.slots == virtual) {
-            closePort()
+            closePort(completed = true)
             if (confirmed && lease.isCurrent(owners)) {
                 lease.close()
                 state = ItemOperationState.COMPLETED
@@ -250,10 +256,10 @@ class ItemOperationHost private constructor(
         state = ItemOperationState.RECONCILING
     }
 
-    private fun closePort() {
+    private fun closePort(completed: Boolean = false) {
         if (closedPort) return
         closedPort = true
-        try { port.close() } catch (_: Exception) {
+        try { if (completed) port.complete() else port.close() } catch (_: Exception) {
             confirmed = false
             reason = "Inventory resource closure failed; persistent outcome requires reconciliation"
         }

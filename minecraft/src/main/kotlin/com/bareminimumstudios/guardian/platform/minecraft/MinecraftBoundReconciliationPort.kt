@@ -24,6 +24,11 @@ internal class MinecraftBoundReconciliationPort(
         check(isExclusiveAndQuiescent(lease.owners) && owner in lease.owners)
         return session.readSaved(owner).thenApply<InventorySnapshot?> { it }
     }
+    override fun complete() {
+        check(isExclusiveAndQuiescent(lease.owners))
+        if (MinecraftInventoryCoordination.ownsDetached(lease)) MinecraftInventoryCoordination.releaseOwned(lease)
+        close()
+    }
     override fun close() {
         check(server.isSameThread)
         if(closed)return

@@ -1,6 +1,27 @@
 # Release validation
 
-Alpha.82 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.84 is the current executable checkpoint.
+
+## Alpha.84 online item ownership, 2026-10-24
+
+The explicitly requested bounded online item rollback milestone adds native backing-list
+handoff, requester-bound apply/confirm, actual-save completion and conservative retained
+reconciliation. It passed 747 automated tests, both-loader native ownership checks for all
+eight supported container types, interrupted apply/late-save recovery fixtures, internal and
+public command confirmation checks, public cancel/reconcile and clean protected-journal
+restart refusal. See [evidence](validation/online-items-alpha84.json) and the
+[support contract](ONLINE_ITEM_ROLLBACK.md).
+
+All worlds/databases are private fixtures; supplied server data was untouched. These checks
+use synthetic players with unconnected packet queues, not real clients. The new item grant
+and console behavior were exercised locally; older actual-provider cohorts below are
+historical evidence for their then-current command surface. Connected-client/production-pack
+acceptance, alpha.84 GitHub CI and final release sign-off remain pending. Partial replay and
+offline repair are not implemented; a partial/conflicting protected operation requires a
+consistent backup or separately reviewed data recovery before gameplay resumes.
+
+The sections below retain historical milestone evidence. Alpha.82 was the prior executable
+checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Alpha.82 release-readiness review, 2026-10-24
 
@@ -10,7 +31,7 @@ Reviewed all three final jars and both original checkpoint archives. Hashes matc
 
 Corrected the README's stale schema and early recovery-filter wording, refreshed current permission evidence and added concise references to existing features within the same six-row client matrix. Historical milestone descriptions remain historical. [Review evidence and checksums](validation/readiness-alpha82.json).
 
-Remaining sign-off is the real connected-client/actual-pack matrix on both loaders, followed by owner selection/approval of the final artifacts. The user cannot join yet; this review neither asks for that now nor substitutes synthetic players. Item apply remains deferred. No feature expansion, new acceptance gate, production-data testing, push, tag or publication is part of this review.
+Remaining sign-off is the real connected-client/actual-pack matrix on both loaders, followed by owner selection/approval of the final artifacts. The user cannot join yet; this review neither asks for that now nor substitutes synthetic players. Item apply was deferred in that alpha.82 assessment; alpha.84 now implements the bounded contract above. No feature expansion, new acceptance gate, production-data testing, push, tag or publication is part of this review.
 
 ## Completed checks
 

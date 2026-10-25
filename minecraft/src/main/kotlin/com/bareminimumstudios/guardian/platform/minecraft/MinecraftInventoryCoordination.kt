@@ -36,6 +36,7 @@ object MinecraftInventoryCoordination {
         val actualIo = com.bareminimumstudios.guardian.rollback.ActualIoDrain()
         var operations: MinecraftItemOperations? = null
         var stopping = false
+        val detached = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftDetachedInventory>>()
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
         fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader(actualIo, false).also { savedPlayers = it }
@@ -137,6 +138,38 @@ object MinecraftInventoryCoordination {
             { current.playerReader() },{ current.owners.invalidate(it) },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }, current.actualIo).also { current.sessions[lease] = it }
     }
 
+    internal fun bindOwnedInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease, record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord): MinecraftBoundInventories {
+        val current = checkNotNull(binding)
+        check(current.server === server && !current.detached.containsKey(lease))
+        val session = bindInventories(server, lease)
+        try {
+            val original=session.read()
+            val images=com.bareminimumstudios.guardian.rollback.ItemRollbackImages(record,original)
+            require(lease.owners.size<=8 && original.slots.count { (address, stack) -> images.expected.slots[address]!=stack }<=64) {
+                "Online rollback supports at most 8 inventories and 64 changed final slots; narrow the filters"
+            }
+            require((original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024) {
+                "Online rollback exceeds its 2 MiB complete-image budget"
+            }
+            current.detached[lease] = session.detach(); return session
+        }
+        catch (error: Exception) { session.close(); throw error }
+    }
+
+    internal fun ownsDetached(lease: ItemOwnerCoordination.Lease): Boolean {
+        val current = binding ?: return false
+        check(current.server.isSameThread)
+        val owned = current.detached[lease] ?: return false
+        return owned.keys == lease.owners && owned.values.all { it.isCurrent() }
+    }
+
+    internal fun releaseOwned(lease: ItemOwnerCoordination.Lease) {
+        val current = checkNotNull(binding)
+        check(current.server.isSameThread && ownsDetached(lease))
+        current.detached.getValue(lease).values.forEach { it.release() }
+        current.detached.remove(lease)
+    }
+
     /** Close the old mutating session first. A prefix fence leaves new read-only I/O admission open. */
     internal fun retainedDiskFence(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): java.util.concurrent.CompletionStage<Void> {
         check(server.isSameThread)
@@ -166,7 +199,16 @@ object MinecraftInventoryCoordination {
     fun writeReservedSlot(lease: ItemOwnerCoordination.Lease, container: Container, slot: Int,
                           expected: ItemStackSnapshot, replacement: ItemStackSnapshot) {
         val current = checkNotNull(binding) { "Inventory coordination is not installed" }
-        current.slotWriter.write(lease, container, slot, expected, replacement)
+        val owned = current.detached[lease]?.get(lease.owners.singleOrNull { owner ->
+            when (owner) {
+                is ItemSlotOwner.PlayerInventory -> container is Inventory && container.player.uuid == owner.playerId
+                is ItemSlotOwner.BlockContainer -> container is BlockEntity && container.blockPos.let { it.x == owner.position.x && it.y == owner.position.y && it.z == owner.position.z } &&
+                    (container.level as? ServerLevel)?.dimension()?.location()?.toString() == owner.dimension.toString()
+                else -> false
+            }
+        })
+        if (owned == null) current.slotWriter.write(lease, container, slot, expected, replacement)
+        else owned.write(slot, expected, replacement) { stack -> current.slotWriter.write(lease, container, slot, expected, replacement, stack) }
     }
 
     /** Main-thread block API guard. Unknown callbacks can affect owners beyond this block. */

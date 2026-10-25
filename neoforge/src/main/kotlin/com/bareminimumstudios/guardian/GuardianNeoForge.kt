@@ -50,7 +50,7 @@ class GuardianNeoForge {
         }
     }
     private fun stopping(event: ServerStoppingEvent) {
-        event.server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
+        event.server.playerList?.players?.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
         BlockInspector.clear()
         if (runtime?.stop() == false) logger.error("Guardian shutdown retained protected item operations or incomplete storage work; check recovery journals and writer errors.")
         runtime = null
