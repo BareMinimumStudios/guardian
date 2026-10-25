@@ -1,0 +1,144 @@
+{
+  "version": "0.4.0-alpha.91+1.21.1",
+  "date": "2026-10-25",
+  "schemaVersion": 24,
+  "configVersion": 17,
+  "tests": {
+    "tests": 786,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.91+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.91+1.21.1.jar",
+      "bytes": 13485049,
+      "sha256": "047ec84fba241513457cce4b6f89c811727c50960c87f21cbd89f7d5c4aa707c",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.91+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.91+1.21.1.jar",
+      "bytes": 13455959,
+      "sha256": "93327a0022a5c10c91cab314ab207dd2404c2e7d9f351acbe6af1d13c4e78acb",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.91+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.91+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "f8ff506934bdc0e4cdffb22c30abfc67da6df360586ec633f947911fe570a7ea",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "native": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=57",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          12,
+          1
+        ]
+      ],
+      "items": [
+        [
+          "BLOCK_USE",
+          8
+        ],
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ],
+      "copper": [
+        [
+          3,
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=58",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          12,
+          1
+        ]
+      ],
+      "items": [
+        [
+          "BLOCK_USE",
+          8
+        ],
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ],
+      "copper": [
+        [
+          3,
+          1,
+          5
+        ]
+      ]
+    }
+  ],
+  "mod": "Supplementaries Squared 1.21-1.2.18 with Supplementaries 3.9.9 and Moonlight 3.7.1",
+  "cases": [
+    "Plaque custom text packet accepted; unchanged edit absent",
+    "Plaque dye/glow/ink/wax accepted; repeated wax and waxed text refusal absent",
+    "Dyeing waxed plaques remains allowed by this mod and is logged",
+    "Disabled capture absent; filtered text preserved",
+    "Copper wax, wax removal and three oxidation scraping stages; unoxidized no-op absent",
+    "Existing sign, hanging-display, notice-board, Vinery/Bakery, ground pickup and UI native regressions retained"
+  ],
+  "connectedClients": 0,
+  "finalRuntimeJarHashesMatch": true,
+  "suppliedServersModified": false,
+  "limits": "Native fixtures use synthetic unconnected players. Custom client GUI opening not certified; no-op text packets avoid that GUI. Minecart/lectern work authorized separately and not part of this checkpoint. Item rollback pack diagnosis remains awaiting owner alpha.90 detail.",
+  "ci": "Awaiting owner push"
+}

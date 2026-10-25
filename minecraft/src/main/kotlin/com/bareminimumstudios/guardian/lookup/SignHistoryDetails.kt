@@ -32,6 +32,7 @@ object SignHistoryDetails {
             if(tag.contains("SignUp") && tag.contains("SignDown"))return View(tag.getBoolean("Waxed"),linkedMapOf("upper" to custom(tag.getCompound("SignUp").getCompound("TextHolder")),"lower" to custom(tag.getCompound("SignDown").getCompound("TextHolder"))))
             if(tag.contains("TextHolder"))return View(tag.getBoolean("Waxed"),mapOf("notice-board" to custom(tag.getCompound("TextHolder"))))
         }
+        if(state.blockId.namespace=="suppsquared" && tag.contains("TextHolder"))return View(tag.getBoolean("Waxed"),mapOf("plaque" to custom(tag.getCompound("TextHolder"))))
         return View(tag.getBoolean("is_waxed"),linkedMapOf("front" to vanilla("front_text"),"back" to vanilla("back_text")))
     }
     fun changed(before:BlockStateSnapshot,after:BlockStateSnapshot):Boolean = read(before)!=read(after)
@@ -42,17 +43,19 @@ object SignHistoryDetails {
     private fun changes(row:BlockChangeSnapshot):List<String> {
         val a=read(row.before);val b=read(row.after)
         require(a.panels.keys==b.panels.keys)
+        val plaque=a.panels.keys==setOf("plaque")
         return buildList {
-            if(a.waxed!=b.waxed)add(if(b.waxed)"waxed sign" else "removed sign wax")
+            if(a.waxed!=b.waxed)add(if(b.waxed) "waxed "+(if(plaque)"plaque" else "sign") else "removed "+(if(plaque)"plaque" else "sign")+" wax")
             val edited=mutableListOf<String>()
             for((side,x) in a.panels) {
                 val y=b.panels.getValue(side)
+                val label=if(side=="plaque")"plaque text" else "$side sign text"
                 if(x.raw!=y.raw || x.filtered!=y.filtered)edited.add(side)
-                if(x.color!=y.color)add("dyed $side sign text ${plain(y.color)}")
-                if(x.glow!=y.glow)add(if(y.glow)"made $side sign text glow" else "removed $side sign text glow")
-                if(x.antique!=y.antique)add(if(y.antique)"applied antique ink to $side sign text" else "removed antique ink from $side sign text")
+                if(x.color!=y.color)add("dyed $label ${plain(y.color)}")
+                if(x.glow!=y.glow)add(if(y.glow)"made $label glow" else "removed $label glow")
+                if(x.antique!=y.antique)add(if(y.antique)"applied antique ink to $label" else "removed antique ink from $label")
             }
-            if(edited.isNotEmpty())add("edited ${edited.joinToString("/")} sign text")
+            if(edited.isNotEmpty())add(if(plaque)"edited plaque text" else "edited ${edited.joinToString("/")} sign text")
         }
     }
     fun summary(row:BlockChangeSnapshot):String = runCatching { changes(row).joinToString("; ").ifEmpty { "changed sign (details unavailable)" } }.getOrDefault("edited sign text (details unavailable)")
@@ -65,7 +68,7 @@ object SignHistoryDetails {
                 val y=b.panels.getValue(side)
                 if(x.raw==y.raw && x.filtered==y.filtered)continue
                 fun render(panel:Panel)=panel.filtered.mapIndexed { i,line->"${i+1}: ${plain(line)}" }.joinToString("\n")
-                add("${side.replaceFirstChar { it.uppercase() }} sign text (filtered view)\nBefore:\n${render(x)}\nAfter:\n${render(y)}")
+                add("${if(side=="plaque")"Plaque text" else side.replaceFirstChar { it.uppercase() }+" sign text"} (filtered view)\nBefore:\n${render(x)}\nAfter:\n${render(y)}")
             }
         }.joinToString("\n").ifEmpty { "Sign text details unavailable" }
     }.getOrDefault("Sign text details unavailable")

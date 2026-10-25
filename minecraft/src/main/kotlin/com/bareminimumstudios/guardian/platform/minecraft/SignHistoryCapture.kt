@@ -76,7 +76,7 @@ object SignHistoryCapture {
         val level=player.serverLevel()
         if(!enabled() || !level.server.isSameThread || !level.hasChunk(pos.x shr 4,pos.z shr 4))return null
         val block=level.getBlockEntity(pos) ?: return null
-        if(block.javaClass.name !in setOf("net.mehvahdjukaar.supplementaries.common.block.tiles.SignPostBlockTile","net.mehvahdjukaar.supplementaries.common.block.tiles.NoticeBoardBlockTile"))return null
+        if(block.javaClass.name !in setOf("net.mehvahdjukaar.supplementaries.common.block.tiles.SignPostBlockTile","net.mehvahdjukaar.supplementaries.common.block.tiles.NoticeBoardBlockTile","net.mehvahdjukaar.suppsquared.common.PlaqueBlockTile"))return null
         return runCatching {
             val before=MinecraftBlockSnapshotter.snapshot(level,pos)
             require((before.blockEntityData?.size ?: 0)<=1_048_576)

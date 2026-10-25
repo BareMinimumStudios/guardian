@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-25 against `0.4.0-alpha.90+1.21.1`.
+Assessed: 2026-10-25 against `0.4.0-alpha.91+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
@@ -21,6 +21,11 @@ history and prevents incompatible downgrades. [Evidence](validation/display-sign
 Alpha.90 adds precise owner/check diagnostics for a reported unavailable-inventory preview.
 Eligibility, online apply and recovery ownership remain unchanged. The actual pack failure
 awaits the owner's new diagnostic line. [Evidence](validation/item-preview-diagnostics-alpha90.json).
+
+The owner identified Supplementaries Squared plaques and explicitly authorized copper
+surface capture, minecart inventories and lectern history. Alpha.91 completes plaque/copper
+capture. Minecart and lectern work remains a separate authorized milestone; it is not included
+in this checkpoint or claimed as accepted. [Evidence](validation/plaques-copper-alpha91.json).
 
 ## Current release
 

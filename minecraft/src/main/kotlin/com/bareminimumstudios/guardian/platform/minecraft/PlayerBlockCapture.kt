@@ -201,7 +201,7 @@ object PlayerBlockCapture {
         if (!shouldCapture(world, player) || com.bareminimumstudios.guardian.lookup.BlockInspector.isEnabled(player as? net.minecraft.server.level.ServerPlayer ?: return null)) return null
         val block = world.getBlockState(pos).block
         if (block !is net.minecraft.world.level.block.DoorBlock && block !is net.minecraft.world.level.block.TrapDoorBlock &&
-            block !is net.minecraft.world.level.block.FenceGateBlock && block !is net.minecraft.world.level.block.LeverBlock && block !is net.minecraft.world.level.block.ButtonBlock) return null
+            block !is net.minecraft.world.level.block.FenceGateBlock && block !is net.minecraft.world.level.block.LeverBlock && block !is net.minecraft.world.level.block.ButtonBlock && !CopperSurfaceHistory.supported(block)) return null
         return runCatching { MinecraftBlockSnapshotter.snapshot(world, pos) }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to snapshot interaction at {}", pos, it) }.getOrNull()
     }
 
@@ -210,7 +210,7 @@ object PlayerBlockCapture {
         if (before == null || !result.consumesAction() || !shouldCapture(world, player)) return
         runCatching {
             val after = MinecraftBlockSnapshotter.snapshot(world, pos)
-            if (before.blockId != after.blockId || before.properties == after.properties) return@runCatching
+            if (CopperSurfaceHistory.describe(before,after)==null && (before.blockId != after.blockId || before.properties == after.properties)) return@runCatching
             submit(BlockChangeSnapshot(System.currentTimeMillis(), MinecraftActorAdapter.player(player), dimensionId(world), pos.toDomain(),
                 before, after, ChangeCause.PLAYER, ActionType.BLOCK_CHANGE))
         }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to capture accepted interaction at {}", pos, it) }

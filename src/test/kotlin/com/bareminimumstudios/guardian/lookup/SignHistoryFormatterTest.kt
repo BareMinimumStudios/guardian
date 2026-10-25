@@ -66,4 +66,28 @@ class SignHistoryFormatterTest {
         assertTrue(SignHistoryDetails.changed(a,b));assertEquals("edited upper sign text",SignHistoryDetails.summary(row(a,b)))
         assertTrue("new visible" in SignHistoryDetails.hover(row(a,b)));assertFalse("secret" in SignHistoryDetails.hover(row(a,b)))
     }
+    private fun plaque(raw:String,filtered:String=raw,waxed:Boolean=false,color:String="black",glow:Boolean=false):BlockStateSnapshot {
+        val holder=CompoundTag()
+        fun encoded(value:String)=net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow()
+        holder.put("message",encoded(raw));holder.put("filtered_message",encoded(filtered))
+        holder.putString("color",color);holder.putBoolean("has_glowing_text",glow)
+        val tag=CompoundTag();tag.put("TextHolder",holder);tag.putBoolean("Waxed",waxed)
+        return BlockStateSnapshot(ResourceId.parse("suppsquared:iron_plaque"),emptyMap(),MinecraftNbtPayloadCodec.encode(tag))
+    }
+    @Test fun plaquesUseTheirOwnNamespaceAndFilteredText() {
+        val change=row(plaque("old secret","old visible"),plaque("new secret","new visible"))
+        assertEquals("edited plaque text",SignHistoryDetails.summary(change))
+        assertTrue("new visible" in SignHistoryDetails.hover(change));assertFalse("secret" in SignHistoryDetails.hover(change))
+    }
+    @Test fun plaqueAppearanceChangesHaveDistinctDescriptions() {
+        val a=plaque("same");val b=plaque("same",waxed=true,color="red",glow=true)
+        assertEquals("waxed plaque; dyed plaque text red; made plaque text glow",SignHistoryDetails.summary(row(a,b)))
+        assertTrue("removed plaque wax" in SignHistoryDetails.summary(row(b,a)))
+        assertFalse(SignHistoryDetails.changed(b,b))
+    }
+    @Test fun unrelatedNamespacesDoNotInheritPlaquePayloadParsing() {
+        val original=plaque("same")
+        val unrelated=BlockStateSnapshot(ResourceId.parse("fixture:unknown"),original.properties,original.blockEntityData)
+        assertTrue("details unavailable" in SignHistoryDetails.summary(row(unrelated,unrelated)))
+    }
 }

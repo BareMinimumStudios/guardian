@@ -1,7 +1,16 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.90+1.21.1**. Schema 24, config version 17.
+Current executable checkpoint: **0.4.0-alpha.91+1.21.1**. Schema 24, config version 17.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Plaque and copper capture
+
+786 automated tests, required builds and native Fabric/NeoForge tests pass. Supplementaries
+Squared 1.2.18 plaques use the optional text-holder capture path; supported copper wax/oxidation
+surface transitions use player block history. Accepted changes are distinct from no-op/refused
+attempts. Custom plaque GUI reception and real-pack acceptance still need client testing.
+[Evidence](validation/plaques-copper-alpha91.json).
+Alpha.90 CI passed: [run](https://github.com/BareMinimumStudios/guardian/actions/runs/40225463098).
 
 ## Item preview diagnostics
 

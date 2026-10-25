@@ -37,6 +37,13 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.91+1.21.1] - 2026-10-25
+
+### Fixed
+
+- Capture accepted Supplementaries Squared plaque text, dye, glow and wax changes through its existing optional Supplementaries text-holder path. Plaque descriptions and filtered literal hover details are distinct from ordinary sign panels.
+- Record accepted copper waxing, wax removal and oxidation scraping as player block changes, including shaped and functional copper blocks. Failed/no-op attempts do not create changes; descriptions distinguish each operation.
+
 ## [0.4.0-alpha.90+1.21.1] - 2026-10-25
 
 ### Fixed

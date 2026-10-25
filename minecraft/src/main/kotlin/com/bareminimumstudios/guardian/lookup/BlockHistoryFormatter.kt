@@ -31,8 +31,9 @@ object BlockHistoryFormatter {
             is ActorIdentity.System -> identity.source
             ActorIdentity.Unknown -> "unknown"
         }
+        val copper=if(s.cause==ChangeCause.PLAYER && s.action==ActionType.BLOCK_CHANGE)com.bareminimumstudios.guardian.platform.minecraft.CopperSurfaceHistory.describe(s.before,s.after) else null
         val fireIds=setOf("minecraft:fire","minecraft:soul_fire")
-        val change = if(s.cause==ChangeCause.SIGN_TEXT) SignHistoryDetails.summary(s) else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
+        val change = if(s.cause==ChangeCause.SIGN_TEXT) SignHistoryDetails.summary(s) else if(copper!=null)copper else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
         else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_LAND) "falling block landed: ${s.after.blockId}"
         else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.PISTON) "piston changed ${s.before.blockId} -> ${s.after.blockId}"
         else if(s.cause==ChangeCause.FIRE) when {
