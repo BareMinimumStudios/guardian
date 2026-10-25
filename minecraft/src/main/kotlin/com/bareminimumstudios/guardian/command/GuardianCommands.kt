@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items preview, or status."))
                 1
             }
 
@@ -194,7 +194,58 @@ object GuardianCommands {
                 .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.purge()?.suggestions(context.source) ?: emptyList(),builder) }
                 .executes { context -> if(runtimeProvider()?.purge()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("cancel").executes { context -> if(runtimeProvider()?.purge()?.cancel(context.source)==true)1 else 0 }))
+        val exportNode=Commands.literal("export").requires { authorized(it,permissions,"guardian.export",4) }
+            .executes { context->context.source.sendSystemMessage(Component.literal("Usage: /guardian export <blocks|items|chat|sessions|commands|entities|fluids> t:1h [filters] [l:100] | cancel. Server-side JSONL, at most 500 records."));0 }
+            .then(Commands.literal("cancel").executes { context->if(runtimeProvider()?.export()?.cancel(context.source)==true)1 else 0 })
+        for(kind in com.bareminimumstudios.guardian.export.ExportKind.entries)exportNode.then(Commands.literal(kind.name.lowercase())
+            .requires { exportAllowed(it,permissions,kind) }
+            .executes { context->context.source.sendFailure(Component.literal("Guardian export requires t:<time>, for example /guardian export ${kind.name.lowercase()} t:1h"));0 }
+            .then(Commands.argument("filters",StringArgumentType.greedyString())
+                .suggests { context,builder->
+                    if(!exportAllowed(context.source,permissions,kind))com.mojang.brigadier.suggestion.Suggestions.empty() else {
+                        val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start);val token=builder.input.substring(start)
+                        val key=token.substringBefore(':').lowercase()
+                        val resources=if(key in setOf("i","include","e","exclude")) (if(kind==com.bareminimumstudios.guardian.export.ExportKind.ITEMS)net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else if(kind==com.bareminimumstudios.guardian.export.ExportKind.ENTITIES)net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet() else if(kind==com.bareminimumstudios.guardian.export.ExportKind.FLUIDS)net.minecraft.core.registries.BuiltInRegistries.FLUID.keySet()+net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() } else emptyList()
+                        val choices=when {
+                            key in setOf("a","action") && kind==com.bareminimumstudios.guardian.export.ExportKind.ENTITIES -> listOf("death","rename","tame","breed","frame","frame-place","frame-remove","frame-change").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
+                            key in setOf("a","action") && kind==com.bareminimumstudios.guardian.export.ExportKind.FLUIDS -> listOf("place","remove","flow","form").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },kind!=com.bareminimumstudios.guardian.export.ExportKind.BLOCKS,resources)
+                        }
+                        val target=builder.createOffset(start)
+                        choices.filter { it.substringBefore(':').lowercase() !in setOf("p","page") && (kind !in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS) || it.substringBefore(':').lowercase() in setOf("u","user","t","time","l","limit","o","order")) }.take(100).forEach(target::suggest)
+                        target.buildFuture()
+                    }
+                }
+                .executes { context->executeExport(context.source,kind,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
+        root.then(exportNode)
         dispatcher.register(root)
+    }
+
+    private fun exportAllowed(source:CommandSourceStack,permissions:PermissionService,kind:com.bareminimumstudios.guardian.export.ExportKind)=authorized(source,permissions,"guardian.export",4) && authorized(source,permissions,kind.permission,kind.fallback)
+
+    private fun executeExport(source:CommandSourceStack,kind:com.bareminimumstudios.guardian.export.ExportKind,raw:String,runtime:GuardianRuntime?,config:GuardianConfig):Int {
+        val service=runtime?.export() ?: run { source.sendFailure(Component.literal("Guardian export service is unavailable."));return 0 }
+        if(!exportAllowed(source,runtime.permissions,kind))return 0
+        val parsed=com.bareminimumstudios.guardian.command.ExportFilters.parse(kind,raw).getOrElse { source.sendFailure(Component.literal("Guardian export: ${it.message}"));return 0 }
+        val f=parsed.common;val limit=f.limit ?: 100
+        if(limit>config.lookup.maxResults.get()){source.sendFailure(Component.literal("Guardian export exceeds the configured history result limit."));return 0}
+        val activity=kind in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS)
+        val scope=if(activity)null else (resolveScope(source,f) ?: return 0)
+        val radius=f.radius
+        if(radius!=null && radius>config.lookup.maxRadius.get()){source.sendFailure(Component.literal("Guardian export radius exceeds the configured maximum."));return 0}
+        val position=if(scope?.bounds!=null)null else f.explicitPosition ?: if(radius!=null)sourcePosition(source)else null
+        val after=(System.currentTimeMillis()-checkNotNull(f.lookbackMillis)).coerceAtLeast(0)
+        val search=resolvedSearch(source,f)
+        val dimension=if(kind==com.bareminimumstudios.guardian.export.ExportKind.ITEMS && position==null && scope?.bounds==null && radius==null)null else scope?.dimension
+        val query:com.bareminimumstudios.guardian.export.ExportQuery=when(kind) {
+            com.bareminimumstudios.guardian.export.ExportKind.BLOCKS -> com.bareminimumstudios.guardian.export.ExportQuery.Blocks(BlockLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,actions=f.actions,causes=f.causes,movementId=f.movementId,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+            com.bareminimumstudios.guardian.export.ExportKind.ITEMS -> com.bareminimumstudios.guardian.export.ExportQuery.Items(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=dimension,position=position,bounds=scope!!.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+            com.bareminimumstudios.guardian.export.ExportKind.ENTITIES -> com.bareminimumstudios.guardian.export.ExportQuery.Entities(com.bareminimumstudios.guardian.storage.query.EntityLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.entityKinds,targetUuid=parsed.entityId))
+            com.bareminimumstudios.guardian.export.ExportKind.FLUIDS -> com.bareminimumstudios.guardian.export.ExportQuery.Fluids(com.bareminimumstudios.guardian.storage.query.FluidLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.fluidKinds))
+            else -> com.bareminimumstudios.guardian.export.ExportQuery.Activity(kind,com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(when(kind){com.bareminimumstudios.guardian.export.ExportKind.CHAT->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT);com.bareminimumstudios.guardian.export.ExportKind.COMMANDS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND);else->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN,com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)},search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+        }
+        val metadata=mapOf<String,Any?>("dimension" to dimension?.toString(),"position" to position?.let { listOf(it.x,it.y,it.z) },"radius" to radius,"bounds" to scope?.bounds?.let { listOf(it.min.x,it.min.y,it.min.z,it.max.x,it.max.y,it.max.z) },"afterEpochMillis" to after,"oldestFirst" to f.oldestFirst,"includedPlayers" to search.players.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) },"excludedPlayers" to search.excludedPlayers.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) })
+        return if(service.request(source,query,raw,metadata))1 else 0
     }
 
     private fun lookupNode(

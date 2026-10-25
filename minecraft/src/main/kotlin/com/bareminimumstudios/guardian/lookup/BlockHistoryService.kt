@@ -81,6 +81,14 @@ class BlockHistoryService(
         recoveryWork({ storage.lookupActivity(query) }, onSuccess, onFailure)
     }
 
+    fun exportRows(query: com.bareminimumstudios.guardian.export.ExportQuery, permitted: () -> Boolean, onSuccess: (List<Any>) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
+        check(permitted()) { "Export cancelled" };require(query.limit in 1..500);query.read(storage).toList().also { require(it.size<=query.limit) }
+    },onSuccess,onFailure)
+
+    fun exportFile(root: java.nio.file.Path, kind: com.bareminimumstudios.guardian.export.ExportKind, limit: Int, filters: String, requester: String, requestedAt: Long, scope: Map<String,Any?>, rows: List<Any>, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.export.ExportFiles.Result) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
+        com.bareminimumstudios.guardian.export.ExportFiles.write(root,kind,limit,filters,requester,requestedAt,scope,rows,permitted)
+    },onSuccess,onFailure)
+
     fun previewPurge(cutoff: Long, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff) },onSuccess,onFailure)
     fun previewPurge(cutoff: Long, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff,1000,scope) },onSuccess,onFailure)
     fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.applyPurge(plan,permitted) },onSuccess,onFailure)
@@ -94,7 +102,7 @@ class BlockHistoryService(
     private fun <T> recoveryWork(task: () -> T,onSuccess: (T) -> Unit,onFailure: (Throwable) -> Unit) {
         if(!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) };return }
         executor.execute {
-            runCatching(task).onSuccess { result -> server.execute { onSuccess(result) } }.onFailure { error -> logger.warn("Item recovery observation failed",error);server.execute { onFailure(error) } }
+            runCatching(task).onSuccess { result -> server.execute { onSuccess(result) } }.onFailure { error -> logger.warn("History task failed",error);server.execute { onFailure(error) } }
         }
     }
 

@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.81+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.82+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -395,6 +395,33 @@ No-op edits, waxed signs and edits by a player who is not the allowed editor cre
 
 Sign-text history is **read-only for recovery**: public rollback/restore excludes sign-edit rows and refuses `c:sign`. Ordinary sign placement/break rows keep their existing block behavior. Protected, confirmed block-history purge includes old sign-edit rows and accepts their block IDs. Schema 23 is an empty compatibility marker for the new cause; existing payloads are unchanged. Config version 17 adds the disabled setting. Back up before upgrading; older builds refuse the new schema.
 
+## Export filtered history
+
+Export writes a **server-side UTF-8 JSON Lines (`.jsonl`) file** under `guardian/exports/`. It does not change history, blocks, inventories or journal flags, and does not send a download to the client. A server administrator retrieves the file from disk.
+
+```text
+/guardian export blocks t:1h u:Alice,Bob i:minecraft:stone l:100
+/guardian export items t:1d u:YourName l:100
+/guardian export chat t:1d u:YourName l:100
+/guardian export sessions t:7d l:500
+/guardian export commands t:1d l:100
+/guardian export entities t:1d a:frame l:100
+/guardian export fluids t:1h a:flow l:100
+/guardian export cancel
+```
+
+`/co export` also works. Every export requires **`guardian.export`**, with operator level 4 as fallback, **plus the category's existing history permission**. Export alone does not grant access to chat, commands or other histories. Each command requires `t:` and accepts the category's normal history filters. `l:` defaults to 100 and cannot exceed 500 or the configured history result limit. `o:oldest`/`o:newest` controls ordering. Pages are refused; this is a bounded extract, not a paginated backup.
+
+Block, entity and fluid exports use the command's dimension and optional position/radius or WorldEdit selection. Item exports without a location filter include inventory-only transactions and all worlds. Adding a location filter selects transactions with a matching container endpoint; the **whole transaction**, including its other endpoints and changed slots, is exported. Activity exports are global and accept only user, time, limit and order filters because those rows do not store a world location.
+
+The first JSON object records format version, category, requester, raw filters, resolved scope, time cutoff, row count, limit and `mayHaveMore`. Subsequent lines are structured records. When the limit is reached, more rows may match; no exact total is claimed. Each command runs one query with a fixed lower time cutoff, then writes the returned immutable rows. Logging continues, and separate exports are not one shared point-in-time database snapshot.
+
+Exports preserve stored text, identities, locations, transaction changes, journal labels, correlations and available entity/fluid details. Native block-entity/item snapshots are included as Base64; they are not decoded or executed by export. **These files can contain raw sign components, private history and stored command arguments.** Existing capture redaction remains in effect, but the export is not a public or filtered-chat view. Protect the directory and backups, and grant export permission carefully.
+
+One export runs at a time. Normal cancellation, permission loss or shutdown before publication removes its partial file. Completed files remain on disk after cancellation or permission loss; no command can retract a file already copied elsewhere. Files have generated names, no caller-supplied path and no replacement of existing files. There is no automatic cleanup. The folder accepts fewer than 64 existing entries before a new export; move or remove old files manually when it fills. A crash or storage failure may leave a `.part` file for the administrator to inspect after stopping the server.
+
+Each file is limited to 16 MiB, with at most 8 MiB of raw snapshot payloads total and 4 MiB in one record. Oversized selections fail rather than publishing a truncated file; narrow the filters or lower `l:`. This format has no import/restore command, does not contain a complete database backup and does not establish world-save durability. Keep normal server/database backups.
+
 ## Purge old history
 
 Purge permanently removes old **history records**. With only an age filter, it covers all users and worlds; optional filters narrow that scope. It does not change blocks or inventories. Deleted history is no longer available for lookup, rollback or restore. Stop the server and back up the database before your first purge; keep the backup separately.
@@ -435,6 +462,7 @@ Cancel discards a pending confirmation or requests cancellation of running work.
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback and read-only item checks | 3 |
 | `guardian.restore` | Block restore/redo and its preview | 3 |
+| `guardian.export` | Write bounded history files; also needs the category history grant | 4 |
 | `guardian.purge` | Preview/confirm/cancel old-history deletion | 4 |
 | `guardian.config.edit` | Fzzy Config editing | 3 |
 | `guardian.config.admin` | Fzzy Config administrative access | 4 |

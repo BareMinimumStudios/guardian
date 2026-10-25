@@ -1,0 +1,514 @@
+{
+  "version": "0.4.0-alpha.82+1.21.1",
+  "date": "2026-10-24",
+  "schema": 23,
+  "configVersion": 17,
+  "tests": {
+    "common": {
+      "tests": 656,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 73,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2704,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "cases": [
+        {
+          "command": "guardian export blocks t:365d u:PurgeFixture i:stone l:2",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:13] [Server thread/INFO]: Guardian: exporting up to 2 blocks records to a server-side JSONL file.",
+            "[19:28:13] [Server thread/INFO]: Guardian export complete: 2 records in guardian/exports/guardian-blocks-1792888093757-f04f81aa-f48b-4507-a464-ae0df6d1a4dc.jsonl. Limit reached; more records may match. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888093880835300"
+          ]
+        },
+        {
+          "command": "guardian export items t:365d u:PurgeFixture l:20",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:13] [Server thread/INFO]: Guardian: exporting up to 20 items records to a server-side JSONL file.",
+            "[19:28:13] [Server thread/INFO]: Guardian export complete: 4 records in guardian/exports/guardian-items-1792888093949-a7c28970-3a86-4043-9e52-bd33e6fb2371.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:13] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888093955196500"
+          ]
+        },
+        {
+          "command": "guardian export items t:365d u:PurgeFixture i:coal r:20 x:0 y:299 z:0",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 100 items records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 3 records in guardian/exports/guardian-items-1792888094090-d9c46a90-9bba-4635-b1ba-e9acd7e56f29.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094099669400"
+          ]
+        },
+        {
+          "command": "guardian export chat t:365d u:PurgeFixture l:500 o:oldest",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 500 chat records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 337 records in guardian/exports/guardian-chat-1792888094244-31f7fc54-d53b-4499-8a74-d32bb29965cf.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094291193100"
+          ]
+        },
+        {
+          "command": "guardian export sessions t:365d l:500",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 500 sessions records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 500 records in guardian/exports/guardian-sessions-1792888094446-a0c3e2c1-71d2-403f-8e1d-fc2349a346db.jsonl. Limit reached; more records may match. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094568300700"
+          ]
+        },
+        {
+          "command": "guardian export commands t:365d",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 100 commands records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 1 records in guardian/exports/guardian-commands-1792888094646-727e0367-c104-47ce-9a07-ea955ae582a7.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094650343500"
+          ]
+        },
+        {
+          "command": "guardian export entities t:365d a:frame",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 100 entities records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 1 records in guardian/exports/guardian-entities-1792888094741-79d2aeca-f908-42fc-9158-da4012339c78.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094745569000"
+          ]
+        },
+        {
+          "command": "guardian export fluids t:365d a:place",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 100 fluids records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 1 records in guardian/exports/guardian-fluids-1792888094849-a159dbb8-90ed-4d92-a6e3-93ac6c1a9edd.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:14] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094852015000"
+          ]
+        },
+        {
+          "command": "guardian export blocks t:365d u:Nobody",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:14] [Server thread/INFO]: Guardian: exporting up to 100 blocks records to a server-side JSONL file.",
+            "[19:28:14] [Server thread/INFO]: Guardian export complete: 0 records in guardian/exports/guardian-blocks-1792888094989-8ce9d086-f8e2-43b7-ae80-3a1e539e8eb5.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888094993412600"
+          ]
+        },
+        {
+          "command": "guardian export chat t:365d r:5",
+          "expected": "Activity export accepts only",
+          "output": [
+            "[19:28:15] [Server thread/INFO]: Guardian export: Activity export accepts only u:, t:, l: and o:",
+            "[19:28:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888095098783200"
+          ]
+        },
+        {
+          "command": "guardian export blocks t:365d p:2",
+          "expected": "Export does not accept pages",
+          "output": [
+            "[19:28:15] [Server thread/INFO]: Guardian export: Export does not accept pages; narrow filters or use l: up to 500",
+            "[19:28:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888095192321800"
+          ]
+        },
+        {
+          "command": "guardian export blocks u:PurgeFixture",
+          "expected": "Export requires t:",
+          "output": [
+            "[19:28:15] [Server thread/INFO]: Guardian export: Export requires t:<time>, for example t:1h",
+            "[19:28:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888095299995400"
+          ]
+        },
+        {
+          "command": "guardian export cancel",
+          "expected": "no export is running",
+          "output": [
+            "[19:28:15] [Server thread/INFO]: Guardian: no export is running.",
+            "[19:28:15] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888095346564400"
+          ]
+        },
+        {
+          "command": "guardian export commands t:365d",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:29] [Server thread/INFO]: Guardian: exporting up to 100 commands records to a server-side JSONL file.",
+            "[19:28:29] [Server thread/INFO]: Guardian export complete: 1 records in guardian/exports/guardian-commands-1792888109090-ce2f6383-ca33-4472-899d-b9f99391bf88.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:29] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792888109154155900"
+          ]
+        }
+      ],
+      "initialRows": [
+        5,
+        4,
+        1008,
+        2,
+        1
+      ],
+      "finalRows": [
+        5,
+        4,
+        1008,
+        2,
+        1
+      ],
+      "allCategoriesParsedAsJson": true,
+      "opaqueComponentsRoundTrip": true,
+      "inventoryOnlyAndLocatedItems": true,
+      "chatUnicodeAndControlEscapes": true,
+      "limitsAndEmptySelection": true,
+      "noPartialFiles": true,
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "isolatedDatabase": true,
+      "connectedClients": 0,
+      "seededJournalStatesUnchanged": [
+        0,
+        0,
+        1,
+        2,
+        3
+      ],
+      "completenessMarkerUnchanged": true
+    },
+    {
+      "loader": "Neoforge",
+      "cases": [
+        {
+          "command": "guardian export blocks t:365d u:PurgeFixture i:stone l:2",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 2 blocks records to a server-side JSONL file.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 2 records in guardian/exports/guardian-blocks-1792888128710-ac903665-65b8-4094-836b-eb60fd94eaf2.jsonl. Limit reached; more records may match. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888128724112100"
+          ]
+        },
+        {
+          "command": "guardian export items t:365d u:PurgeFixture l:20",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 20 items records to a server-side JSONL file.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 4 records in guardian/exports/guardian-items-1792888128796-d011f3e7-5c9e-4f7e-97a3-82933fae41d4.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888128802484200"
+          ]
+        },
+        {
+          "command": "guardian export items t:365d u:PurgeFixture i:coal r:20 x:0 y:299 z:0",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 items records to a server-side JSONL file.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 3 records in guardian/exports/guardian-items-1792888128904-5f53ff7f-a61a-4f5d-8d62-d30245800202.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888128914065700"
+          ]
+        },
+        {
+          "command": "guardian export chat t:365d u:PurgeFixture l:500 o:oldest",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:48] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 500 chat records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 337 records in guardian/exports/guardian-chat-1792888128999-2439d1a6-090f-4080-b584-51000365e028.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129015751600"
+          ]
+        },
+        {
+          "command": "guardian export sessions t:365d l:500",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 500 sessions records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 500 records in guardian/exports/guardian-sessions-1792888129108-c53e4328-a764-4511-a479-fc1545455e57.jsonl. Limit reached; more records may match. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129118365300"
+          ]
+        },
+        {
+          "command": "guardian export commands t:365d",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 commands records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 1 records in guardian/exports/guardian-commands-1792888129200-9be64fe6-433b-4fee-969f-a12de5a5b155.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129204155900"
+          ]
+        },
+        {
+          "command": "guardian export entities t:365d a:frame",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 entities records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 1 records in guardian/exports/guardian-entities-1792888129295-03637a26-048a-4047-96a4-01398c389a59.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129298953300"
+          ]
+        },
+        {
+          "command": "guardian export fluids t:365d a:place",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 fluids records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 1 records in guardian/exports/guardian-fluids-1792888129404-3f42fee0-de96-476c-87b5-8262b8f082f2.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129408511000"
+          ]
+        },
+        {
+          "command": "guardian export blocks t:365d u:Nobody",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 blocks records to a server-side JSONL file.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 0 records in guardian/exports/guardian-blocks-1792888129501-6b60ec67-b827-412c-8d83-8073ea7c3637.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129503721100"
+          ]
+        },
+        {
+          "command": "guardian export chat t:365d r:5",
+          "expected": "Activity export accepts only",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export: Activity export accepts only u:, t:, l: and o:",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129606343700"
+          ]
+        },
+        {
+          "command": "guardian export blocks t:365d p:2",
+          "expected": "Export does not accept pages",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export: Export does not accept pages; narrow filters or use l: up to 500",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129698421800"
+          ]
+        },
+        {
+          "command": "guardian export blocks u:PurgeFixture",
+          "expected": "Export requires t:",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export: Export requires t:<time>, for example t:1h",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129807102200"
+          ]
+        },
+        {
+          "command": "guardian export cancel",
+          "expected": "no export is running",
+          "output": [
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no export is running.",
+            "[19:28:49] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888129855406100"
+          ]
+        },
+        {
+          "command": "guardian export commands t:365d",
+          "expected": "Guardian export complete:",
+          "output": [
+            "[19:29:04] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[19:29:04] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=23",
+            "[19:29:04] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: exporting up to 100 commands records to a server-side JSONL file.",
+            "[19:29:04] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian export complete: 1 records in guardian/exports/guardian-commands-1792888144677-f2cc0457-70a3-423b-919a-7529fe39b02c.jsonl. Completed exports contain sensitive stored data and remain on disk until a server administrator removes them.",
+            "[19:29:04] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792888144756739900"
+          ]
+        }
+      ],
+      "initialRows": [
+        5,
+        4,
+        1008,
+        2,
+        1
+      ],
+      "finalRows": [
+        5,
+        4,
+        1008,
+        2,
+        1
+      ],
+      "allCategoriesParsedAsJson": true,
+      "opaqueComponentsRoundTrip": true,
+      "inventoryOnlyAndLocatedItems": true,
+      "chatUnicodeAndControlEscapes": true,
+      "limitsAndEmptySelection": true,
+      "noPartialFiles": true,
+      "restart": true,
+      "sqliteIntegrity": "ok",
+      "isolatedDatabase": true,
+      "connectedClients": 0,
+      "seededJournalStatesUnchanged": [
+        0,
+        0,
+        1,
+        2,
+        3
+      ],
+      "completenessMarkerUnchanged": true
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 902,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "exportPermissionAndPublication": {
+        "queryThenRevocation": "no file",
+        "requesterCancel": "no file",
+        "otherRequesterCancel": "refused",
+        "stopDuringRead": "no file",
+        "successfulWrite": "one JSONL record plus metadata",
+        "completedFileAfterRevocation": "retained",
+        "partialFiles": 0
+      }
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 903,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "exportPermissionAndPublication": {
+        "queryThenRevocation": "no file",
+        "requesterCancel": "no file",
+        "otherRequesterCancel": "refused",
+        "stopDuringRead": "no file",
+        "successfulWrite": "one JSONL record plus metadata",
+        "completedFileAfterRevocation": "retained",
+        "partialFiles": 0
+      }
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 449,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "cachedSignSuggestionsAfterOperatorRemoval": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "exportPermissionAndPublication": {
+        "queryThenRevocation": "no file",
+        "requesterCancel": "no file",
+        "otherRequesterCancel": "refused",
+        "stopDuringRead": "no file",
+        "successfulWrite": "one JSONL record plus metadata",
+        "completedFileAfterRevocation": "retained",
+        "partialFiles": 0
+      }
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 450,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "cachedSignSuggestionsAfterOperatorRemoval": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok",
+      "exportPermissionAndPublication": {
+        "queryThenRevocation": "no file",
+        "requesterCancel": "no file",
+        "otherRequesterCancel": "refused",
+        "stopDuringRead": "no file",
+        "successfulWrite": "one JSONL record plus metadata",
+        "completedFileAfterRevocation": "retained",
+        "partialFiles": 0
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 13312138,
+      "sha256": "027f88ab891fc35102f9c68453f9431972b442cc9c3725520cea3e6181f9ca9d"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 13286975,
+      "sha256": "60c026cc31618a95c1de6426adc45bd3ecdaad86ba7ec67a7abf0e33e4cdfe3d"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "82c116698ed37d0f919bbd62809f4c798d9fb22d8e77bd55e3cc9ccd18819f86"
+    }
+  ],
+  "builds": {
+    "clean": "passed through IDEA; final clean includes updated tests",
+    "build": "passed; configuration cache reused",
+    "worldedit": "passed separate adapter build"
+  },
+  "previousCI": {
+    "sha": "68ecc76cd0397a16c58bbc53d86e2ee974cff921",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40146001853"
+  },
+  "sourceChecks": "Export writer/projection/service/commands passed IDEA errors-only inspection. No new Minecraft hooks. MixinMCP LevelReader source confirms the equivalent non-loading chunk-coordinate replacement for deprecated sign checks.",
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "coverage": [
+    "all seven categories exported and independently parsed with Python JSON",
+    "UTF8, control characters, quotes and Unicode preserved; native item components Base64 round trip",
+    "category-specific filters/order and limit metadata; zero-match files",
+    "inventory-only global item history and located whole transactions",
+    "export reads leave storage rows, journal flags and completeness semantics unchanged",
+    "bounded UTF8 writer, snapshot budgets, directory quota and partial cleanup",
+    "actual LuckPerms export/category grants remain independent; cached completions after revocation",
+    "operator level four gate independently tested on both loaders",
+    "paused read then permission withdrawal, requester cancellation, foreign cancellation refusal, stop and successful publication",
+    "completed exports retained after permission loss",
+    "server restart preserves files and history; SQLite integrity; final hashes match every runtime/permission copy"
+  ],
+  "limits": [
+    "Export is a bounded extract, not a database backup or import/restore format.",
+    "Each command is a separate storage query with a fixed lower time cutoff; capture continues and queued logs may not yet be visible.",
+    "Opaque native Base64 snapshots may contain raw sign components and sensitive item data; stored text/command redaction is unchanged.",
+    "Maximum 500 rows, 16MiB encoded file, 8MiB total raw snapshots and 4MiB raw snapshots in one record; oversized requests fail.",
+    "One active export; fewer than 64 entries required in the export directory; completed files are never automatically deleted.",
+    "Cancellation/permission loss cannot retract completed/copied files. Abrupt crashes or storage errors can leave a partial file.",
+    "Only generated server-local paths; no client download or caller-selected destination.",
+    "Synthetic fixtures do not certify connected-client presentation, remote filesystems or crash durability. Existing R3/final sign-off remain pending."
+  ]
+}

@@ -33,6 +33,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.82+1.21.1] - 2026-10-24
+
+### Added
+
+- Bounded filtered JSONL exports for block, item, chat, session, command, entity and fluid history, with generated server-side filenames and preserved native snapshots.
+- Independent level-four export permission plus category grants, requester cancellation, current-permission checks, partial-file cleanup and file/payload/directory limits.
+- Tests for JSON/control-character handling, binary round trips, read-only queries, filters, file limits, quotas and cancellation.
+
+### Changed
+
+- Ignore generated export directories in Git. Schema 23/config 17 are unchanged; export adds no history migration or import/restore behavior.
+- Use the non-deprecated, non-loading chunk-coordinate check in sign capture; behavior is unchanged.
+
 ## [0.4.0-alpha.81+1.21.1] - 2026-10-24
 
 ### Fixed

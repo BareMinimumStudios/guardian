@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.81 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.82 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.81 passed 720 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.82 passed 729 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -221,6 +221,16 @@ Alpha.80 passed GitHub CI. The owner selected sign-text history. Alpha.81 adds d
 Both isolated loaders executed actual sign editing calls with a synthetic ServerPlayer. Each stored exactly seven accepted rows: five front/back/filtered changes at the standing sign, one hanging sign edit and one wall-back edit. Disabled capture/master switches, no-ops, waxed/wrong-editor attempts and an oversized edit added no row. Both final jars passed eight query/refusal/restart cases each; default recovery left sign rows active, explicit sign recovery refused, and SQLite integrity passed. The operator-removal fixture exposed stale cached completion authority. The shared filter completer now checks the player's current command stack before enumerating results. Current actual LuckPerms/operator checks passed 2508 assertions, including cached c:sign suggestions. Final core hashes match all three final runtime/permission copies. Standard jars nest only SQLite. [Evidence/checksums](validation/signs-alpha81.json).
 
 All owned servers stopped; supplied data was untouched. Tests call the actual editing method and do not certify packet filtering or arbitrary claim packs. The formatter displays literal filtered text; snapshots retain raw and filtered components and backups need the same access controls as the database. No connected client was used. Existing R3/final sign-off remain pending; alpha.81 remote CI awaits the owner's push.
+
+## Filtered file export, 2026-10-24
+
+Alpha.81 passed GitHub CI. The owner selected filtered history export. Alpha.82 adds server-local format-version-1 JSONL for blocks, items, chat, sessions, commands, entities and fluids. Native immutable snapshots remain Base64; no Minecraft object is decoded on the file worker. Query and file work use the existing draining history executor, with main-thread authority checked again between read and write and an atomic cancellation permit during writing. Schema 23/config 17 are unchanged.
+
+729 tests passed, including nine new tests for JSON escaping, binary preservation, read-only filtered queries, malformed/unsupported filters, quotas, byte/snapshot bounds and cancellation cleanup. Independent Python JSON parsing accepted the writer's Unicode control escapes; a unit expectation for short escapes was corrected. Required clean/build/cache-reuse/WorldEdit checks and errors-only export inspections passed. Deprecated sign chunk checks were replaced with the exact non-loading coordinate equivalent verified in MixinMCP source.
+
+Both loaders passed 14 export/query/refusal/restart cases each. Files for all seven categories parsed independently; control/Unicode text and native component bytes round-tripped; inventory-only items and located transaction scope behaved as documented. Row counts/journal state were unchanged and SQLite integrity passed. Limit metadata remained honest, empty selections produced metadata only, and no partial files remained. Actual LuckPerms/operator acceptance passed 2704 checks, including independent export/category grants, cached completions, the level-four gate and paused-query revoke/cancel/stop/success cases. Foreign cancellation refused; completed files remained after permission loss. Final core hashes match all three runtime/permission copies; SQLite remains the only nested dependency. [Evidence/checksums](validation/exports-alpha82.json).
+
+All owned servers stopped. Supplied databases/worlds were untouched. Files remain sensitive server-local extracts, not public downloads or consistent multi-file backups. Encoded/snapshot/directory limits fail without publishing truncated output. Completed files need manual management; abrupt crash durability and remote filesystem behavior are not certified. Existing R3/final sign-off remain pending; alpha.82 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

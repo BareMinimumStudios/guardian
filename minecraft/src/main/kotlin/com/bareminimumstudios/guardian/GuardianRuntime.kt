@@ -23,6 +23,7 @@ class GuardianRuntime(
     private var history: BlockHistoryService? = null
     private var bulk: BulkAuditDispatcher? = null
     private var rollback: BlockRollbackService? = null
+    private var export: com.bareminimumstudios.guardian.export.HistoryExportService? = null
     private var purge: com.bareminimumstudios.guardian.purge.AuditPurgeService? = null
     private var itemPreview: com.bareminimumstudios.guardian.rollback.ContainerRollbackPreviewService? = null
 
@@ -65,6 +66,7 @@ class GuardianRuntime(
         pipeline = selectedPipeline
         bulk = selectedBulk
         history = selectedHistory
+        export = com.bareminimumstudios.guardian.export.HistoryExportService(selectedHistory,permissions,storageRoot)
         rollback = BlockRollbackService(server, selectedHistory, config, permissions)
         purge = com.bareminimumstudios.guardian.purge.AuditPurgeService(selectedHistory,permissions) {
             rollback?.isBusy()==true || itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || inventoryCoordination?.hasReservations()==true
@@ -102,6 +104,8 @@ class GuardianRuntime(
         com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ null }, { null })
+        export?.stop()
+        export=null
         purge?.stop()
         val itemDrain = itemOperations?.stopAndDrain()
         managedRetentions = itemOperations?.ownsAllRetentions() == true
@@ -150,6 +154,7 @@ class GuardianRuntime(
     /** Both loaders use the same tick order and item lifecycle. */
     fun tick() {
         com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.tick()
+        export?.tick()
         purge?.tick()
         rollback?.tick()
         itemPreview?.tick()
@@ -164,6 +169,7 @@ class GuardianRuntime(
     fun history(): BlockHistoryService? = history
     fun bulk(): BulkAuditDispatcher? = bulk
     fun rollback(): BlockRollbackService? = rollback
+    fun export() = export
     fun purge() = purge
     fun itemRecovery() = itemRecovery
     fun itemRollbackPreview() = itemPreview

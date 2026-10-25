@@ -23,7 +23,7 @@ object SignHistoryCapture {
     @JvmStatic fun before(sign:SignBlockEntity,player:Player,front:Boolean):Pending? {
         val level=sign.level as? ServerLevel ?: return null
         if(!enabled() || player !is ServerPlayer || !level.server.isSameThread || player.level()!==level || sign.isWaxed || sign.playerWhoMayEdit!=player.uuid)return null
-        if(!level.hasChunkAt(sign.blockPos) || level.getBlockEntity(sign.blockPos)!==sign)return null
+        if(!level.hasChunk(sign.blockPos.x shr 4,sign.blockPos.z shr 4) || level.getBlockEntity(sign.blockPos)!==sign)return null
         return runCatching {
             val text=lines(sign.getText(front));val before=MinecraftBlockSnapshotter.snapshot(level,sign.blockPos)
             require((before.blockEntityData?.size ?: 0)<=1_048_576)
@@ -33,7 +33,7 @@ object SignHistoryCapture {
     @JvmStatic fun after(sign:SignBlockEntity,player:Player,pending:Pending?) {
         if(pending==null || !enabled())return
         val level=sign.level as? ServerLevel ?: return
-        if(!level.server.isSameThread || !level.hasChunkAt(sign.blockPos) || level.getBlockEntity(sign.blockPos)!==sign)return
+        if(!level.server.isSameThread || !level.hasChunk(sign.blockPos.x shr 4,sign.blockPos.z shr 4) || level.getBlockEntity(sign.blockPos)!==sign)return
         runCatching {
             if(lines(sign.getText(pending.front))==pending.text)return@runCatching
             val after=MinecraftBlockSnapshotter.snapshot(level,sign.blockPos)

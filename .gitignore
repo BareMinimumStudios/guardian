@@ -9,6 +9,7 @@ out/
 .DS_Store
 
 # Local server, editor, and release outputs
+exports/
 logs/
 .kotlinc/
 *.zip
