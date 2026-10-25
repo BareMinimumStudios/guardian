@@ -1,5 +1,9 @@
 # Release scope and acceptance
 
+## Newly authorized online item rollback
+
+On 2026-10-24 the owner requested online item transaction rollback. The implementation and bounded acceptance contract are tracked in [online item rollback](ONLINE_ITEM_ROLLBACK.md). This new scope supersedes the earlier decision to defer implementation, but does not enable public item writes before ownership and persistence acceptance pass. Alpha.83 introduces only detached backing storage and its regression tests; native inventory installation, command admission and online apply remain unfinished.
+
 Assessed: 2026-10-24 against `0.4.0-alpha.78+1.21.1`.
 
 This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.

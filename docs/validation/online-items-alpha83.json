@@ -1,0 +1,44 @@
+{
+  "version": "0.4.0-alpha.83+1.21.1",
+  "date": "2026-10-24",
+  "milestone": "detached immutable item backing storage",
+  "baseCommit": "d5902422380e69cbbb7acd6cac1f32b50aa2cfa0",
+  "tests": {
+    "tests": 738,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "newStorageTests": 9,
+  "builds": {
+    "clean": "passed",
+    "build": "passed",
+    "repeatedBuild": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "ideInspections": "no errors in both added Kotlin files",
+  "artifacts": [
+    {
+      "path": "build/libs/guardian-0.4.0-alpha.83+1.21.1.jar",
+      "bytes": 13321032,
+      "sha256": "e83a6bdd6d2436b04df3cc3148c00221c8b9e4e61a9577d6290364b743392e0a"
+    },
+    {
+      "path": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.83+1.21.1.jar",
+      "bytes": 13295632,
+      "sha256": "5b61bb37d123713a44306cfaa1b77b4ae3099d62cefb94a5963f9347d28d3be7"
+    },
+    {
+      "path": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.83+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "f1a7bc3ef08a94383de71ac83d4c92b96b1ce0ecb821fbb04426d888994a2f47"
+    }
+  ],
+  "onlineApplyAvailable": false,
+  "nativeInventoryInstallationImplemented": false,
+  "runtimeOwnershipAcceptance": "not yet performed",
+  "connectedClientAcceptance": "pending",
+  "scope": "Implementation primitive only; no command admission, live inventory installation, schema or config change.",
+  "suppliedServerDataTouched": false,
+  "githubCi": "not run for this local commit"
+}
