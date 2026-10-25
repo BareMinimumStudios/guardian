@@ -107,6 +107,54 @@ object PlayerContainerCapture {
         }.onFailure(::failed)
     }
 
+    class DirectPending internal constructor(
+        internal val block:BlockEntity,internal val playerId:UUID,internal val menu:AbstractContainerMenu,
+        internal val before:InventorySnapshot,internal val correlation:ContainerTransactionCorrelation,
+        private val lease:ActionCaptureScope.Lease
+    ):AutoCloseable { override fun close()=lease.close() }
+
+    @JvmStatic fun beginBlockUse(world:net.minecraft.world.level.Level,player:ServerPlayer,pos:net.minecraft.core.BlockPos):DirectPending? {
+        if(!enabled() || world!==player.level() || !player.server.isSameThread || !world.hasChunk(pos.x shr 4,pos.z shr 4))return null
+        val block=world.getBlockEntity(pos) ?: return null
+        if(!DirectBlockItems.supported(block))return null
+        val lease=scope.enter(player.uuid) ?: return null
+        var retained=false
+        try {
+            return runCatching {
+                val before=directSnapshot(block,player,player.containerMenu)
+                DirectPending(block,player.uuid,player.containerMenu,before,ContainerTransactionCorrelation(MinecraftActorAdapter.player(player),player.containerMenu.containerId,ContainerAction.BLOCK_USE,before),lease).also { retained=true }
+            }.onFailure(::failed).getOrNull()
+        } finally { if(!retained)lease.close() }
+    }
+    @JvmStatic fun finishBlockUse(player:ServerPlayer,pending:DirectPending?,accepted:Boolean) {
+        if(pending==null)return
+        try {
+            if(!accepted || !enabled() || pending.playerId!=player.uuid || !player.server.isSameThread || player.containerMenu!==pending.menu)return
+            val block=pending.block;val world=player.serverLevel();val pos=block.blockPos
+            if(block.level!==world || !world.hasChunk(pos.x shr 4,pos.z shr 4) || world.getBlockEntity(pos)!==block)return
+            runCatching {
+                val after=directSnapshot(block,player,pending.menu)
+                // Ignore inventory-only changes (e.g. consuming a dye) and rejected/no-op interactions.
+                if(pending.before.slots.none { (address,item)->address.owner is ItemSlotOwner.BlockContainer && after.slots[address]!=item })return@runCatching
+                val transaction=pending.correlation.finish(after,true) ?: return@runCatching
+                ContainerChangesCodec.encode(transaction.changes)
+                when(pipeline()?.submit(ContainerAuditEntry(transaction)) ?: SubmissionResult.NOT_RUNNING) {
+                    SubmissionResult.ACCEPTED->submitted.incrementAndGet()
+                    SubmissionResult.BACKPRESSURE->failed(IllegalStateException("Direct item audit queue is saturated"))
+                    SubmissionResult.NOT_RUNNING->failed(IllegalStateException("Direct item audit writer is unavailable"))
+                }
+            }.onFailure(::failed)
+        } finally { pending.close() }
+    }
+    private fun directSnapshot(block:BlockEntity,player:ServerPlayer,menu:AbstractContainerMenu):InventorySnapshot {
+        val slots=LinkedHashMap(MinecraftInventorySnapshotter.capturePlayer(menu,player.inventory,player.uuid,player.registryAccess()).slots)
+        val pos=block.blockPos
+        val owner=ItemSlotOwner.BlockContainer(ResourceId.parse(player.serverLevel().dimension().location().toString()),BlockPosition(pos.x,pos.y,pos.z))
+        DirectBlockItems.items(block).forEachIndexed { index,item->slots[ItemSlotAddress(owner,index)]=MinecraftItemSnapshotter.capture(item,player.registryAccess()) }
+        require(slots.size<=ContainerChangesCodec.MAX_SLOTS)
+        return InventorySnapshot(slots)
+    }
+
     private fun failed(error: Throwable) {
         val count = failures.incrementAndGet()
         if (count == 1L || count and (count - 1L) == 0L) logger.error("Unable to capture item transaction; failures={}", count, error)

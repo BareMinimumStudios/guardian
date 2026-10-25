@@ -72,7 +72,7 @@ object BlockInspector {
         if (world.isClientSide || player !is ServerPlayer || !isEnabled(player)) return InteractionResult.PASS
         if (!authorized(player)) return InteractionResult.SUCCESS
         val owner = ItemSlotOwner.BlockContainer(ResourceId.parse(world.dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z))
-        selections[player.uuid] = Selection(owner, rightClick && world.getBlockEntity(pos) is net.minecraft.world.Container,
+        selections[player.uuid] = Selection(owner, rightClick && world.getBlockEntity(pos)?.let(com.bareminimumstudios.guardian.platform.minecraft.DirectBlockItems::supported)==true,
             selections[player.uuid]?.oldestFirst ?: false)
         showPage(player, 1)
         return InteractionResult.SUCCESS

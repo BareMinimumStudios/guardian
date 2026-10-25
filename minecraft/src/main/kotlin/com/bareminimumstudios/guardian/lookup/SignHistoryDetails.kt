@@ -3,25 +3,70 @@ package com.bareminimumstudios.guardian.lookup
 import com.bareminimumstudios.guardian.domain.BlockStateSnapshot
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftNbtPayloadCodec
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
+import net.minecraft.network.chat.ComponentSerialization
 import net.minecraft.world.level.block.entity.SignText
 
-/** Render plain literals only; stored component styles and click actions never become chat actions. */
+/** Stored components become bounded plain literals. Their actions/styles never become chat actions. */
 object SignHistoryDetails {
-    private fun text(state:BlockStateSnapshot,front:Boolean):SignText {
+    private data class Panel(val raw:List<String>,val filtered:List<String>,val color:String,val glow:Boolean,val antique:Boolean=false)
+    private data class View(val waxed:Boolean,val panels:Map<String,Panel>)
+    private fun read(state:BlockStateSnapshot):View {
         val tag=MinecraftNbtPayloadCodec.decode(requireNotNull(state.blockEntityData))
-        return SignText.DIRECT_CODEC.parse(NbtOps.INSTANCE,tag.getCompound(if(front)"front_text" else "back_text")).getOrThrow()
+        fun vanilla(key:String):Panel {
+            val text=SignText.DIRECT_CODEC.parse(NbtOps.INSTANCE,tag.getCompound(key)).getOrThrow()
+            fun lines(filtered:Boolean)=(0..3).map { text.getMessage(it,filtered).string }
+            return Panel(lines(false),lines(true),text.color.name.lowercase(),text.hasGlowingText())
+        }
+        fun custom(holder:CompoundTag):Panel {
+            fun lines(key:String):List<String> {
+                val result=ComponentSerialization.CODEC.listOf().parse(NbtOps.INSTANCE,requireNotNull(holder.get(key))).getOrThrow()
+                require(result.size<=16)
+                return result.map { it.string.also { line->require(line.length<=1024) } }
+            }
+            val raw=lines("message")
+            return Panel(raw,if(holder.contains("filtered_message"))lines("filtered_message") else raw,holder.getString("color"),holder.getBoolean("has_glowing_text"),holder.getBoolean("has_antique_ink"))
+        }
+        if(state.blockId.toString().startsWith("supplementaries:")) {
+            if(tag.contains("SignUp") && tag.contains("SignDown"))return View(tag.getBoolean("Waxed"),linkedMapOf("upper" to custom(tag.getCompound("SignUp").getCompound("TextHolder")),"lower" to custom(tag.getCompound("SignDown").getCompound("TextHolder"))))
+            if(tag.contains("TextHolder"))return View(tag.getBoolean("Waxed"),mapOf("notice-board" to custom(tag.getCompound("TextHolder"))))
+        }
+        return View(tag.getBoolean("is_waxed"),linkedMapOf("front" to vanilla("front_text"),"back" to vanilla("back_text")))
     }
-    private fun lines(text:SignText,filtered:Boolean)=(0..3).map { text.getMessage(it,filtered).string }
-    fun sides(row:BlockChangeSnapshot):List<Boolean> = runCatching { listOf(true,false).filter { side->
-        val before=text(row.before,side);val after=text(row.after,side)
-        lines(before,false)!=lines(after,false) || lines(before,true)!=lines(after,true)
-    } }.getOrDefault(emptyList())
-    fun summary(row:BlockChangeSnapshot):String = when(sides(row)) { listOf(true)->"edited front sign text";listOf(false)->"edited back sign text";listOf(true,false)->"edited front/back sign text";else->"edited sign text (details unavailable)" }
+    fun changed(before:BlockStateSnapshot,after:BlockStateSnapshot):Boolean = read(before)!=read(after)
+    fun sides(row:BlockChangeSnapshot):List<Boolean> = runCatching {
+        val a=read(row.before);val b=read(row.after)
+        listOf(true,false).filter { side->val key=if(side)"front" else "back";val x=a.panels[key];val y=b.panels[key];x!=null && y!=null && (x.raw!=y.raw || x.filtered!=y.filtered) }
+    }.getOrDefault(emptyList())
+    private fun changes(row:BlockChangeSnapshot):List<String> {
+        val a=read(row.before);val b=read(row.after)
+        require(a.panels.keys==b.panels.keys)
+        return buildList {
+            if(a.waxed!=b.waxed)add(if(b.waxed)"waxed sign" else "removed sign wax")
+            val edited=mutableListOf<String>()
+            for((side,x) in a.panels) {
+                val y=b.panels.getValue(side)
+                if(x.raw!=y.raw || x.filtered!=y.filtered)edited.add(side)
+                if(x.color!=y.color)add("dyed $side sign text ${plain(y.color)}")
+                if(x.glow!=y.glow)add(if(y.glow)"made $side sign text glow" else "removed $side sign text glow")
+                if(x.antique!=y.antique)add(if(y.antique)"applied antique ink to $side sign text" else "removed antique ink from $side sign text")
+            }
+            if(edited.isNotEmpty())add("edited ${edited.joinToString("/")} sign text")
+        }
+    }
+    fun summary(row:BlockChangeSnapshot):String = runCatching { changes(row).joinToString("; ").ifEmpty { "changed sign (details unavailable)" } }.getOrDefault("edited sign text (details unavailable)")
+    private fun plain(text:String)=text.filter { !it.isISOControl() && it.code!=167 }.take(256)
     fun hover(row:BlockChangeSnapshot):String = runCatching {
-        sides(row).joinToString("\n") { side->
-            fun render(state:BlockStateSnapshot)=lines(text(state,side),true).mapIndexed { i,line->"${i+1}: "+line.filter { !it.isISOControl() && it.code!=167 }.take(256) }.joinToString("\n")
-            "${if(side)"Front" else "Back"} sign text (filtered view)\nBefore:\n${render(row.before)}\nAfter:\n${render(row.after)}"
-        }.ifEmpty { "Sign text details unavailable" }
+        val a=read(row.before);val b=read(row.after)
+        buildList {
+            addAll(changes(row))
+            for((side,x) in a.panels) {
+                val y=b.panels.getValue(side)
+                if(x.raw==y.raw && x.filtered==y.filtered)continue
+                fun render(panel:Panel)=panel.filtered.mapIndexed { i,line->"${i+1}: ${plain(line)}" }.joinToString("\n")
+                add("${side.replaceFirstChar { it.uppercase() }} sign text (filtered view)\nBefore:\n${render(x)}\nAfter:\n${render(y)}")
+            }
+        }.joinToString("\n").ifEmpty { "Sign text details unavailable" }
     }.getOrDefault("Sign text details unavailable")
 }

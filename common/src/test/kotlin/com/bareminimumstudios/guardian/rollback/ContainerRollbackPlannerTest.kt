@@ -46,7 +46,7 @@ class ContainerRollbackPlannerTest {
         assertEquals(ContainerPreviewReason.NONCONSERVING_ACTION,ContainerRollbackPlanner.plan(listOf(row),live(row)).entries.single().reason)
     }
     @Test fun craftingAndCreativeActionsAreExcluded() {
-        for(action in listOf(ContainerAction.CRAFT,ContainerAction.RECIPE_PLACE,ContainerAction.CREATIVE_SET,ContainerAction.DROP_ONE,ContainerAction.CLOSE)) {
+        for(action in listOf(ContainerAction.CRAFT,ContainerAction.RECIPE_PLACE,ContainerAction.CREATIVE_SET,ContainerAction.DROP_ONE,ContainerAction.CLOSE,ContainerAction.BLOCK_USE,ContainerAction.GROUND_PICKUP)) {
             val original=tx(1);val row=ContainerTransactionSnapshot(UUID.randomUUID(),1,actor,1,action,original.changes)
             assertEquals(ContainerPreviewReason.UNSUPPORTED_ACTION,ContainerRollbackPlanner.plan(listOf(row),live(row)).entries.single().reason)
         }

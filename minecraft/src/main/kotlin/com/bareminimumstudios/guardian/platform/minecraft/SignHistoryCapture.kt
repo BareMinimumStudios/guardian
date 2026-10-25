@@ -43,5 +43,58 @@ object SignHistoryCapture {
             if(pipeline()?.submit(row)!=SubmissionResult.ACCEPTED)warn(null)
         }.onFailure(::warn)
     }
+    data class Appearance(val waxed:Boolean,val frontColor:String,val frontGlow:Boolean,val backColor:String,val backGlow:Boolean)
+    class InteractionPending internal constructor(internal val sign:SignBlockEntity,internal val before:BlockStateSnapshot,internal val appearance:Appearance)
+    private fun appearance(sign:SignBlockEntity)=Appearance(sign.isWaxed,sign.frontText.color.name,sign.frontText.hasGlowingText(),sign.backText.color.name,sign.backText.hasGlowingText())
+
+    /** Block use has already passed claim checks before it can change the sign. Compare the result, not the held item. */
+    @JvmStatic fun beginInteraction(world:net.minecraft.world.level.Level,player:Player,pos:net.minecraft.core.BlockPos):InteractionPending? {
+        val level=world as? ServerLevel ?: return null
+        if(!enabled() || player !is ServerPlayer || !level.server.isSameThread || player.level()!==level || !level.hasChunk(pos.x shr 4,pos.z shr 4))return null
+        val sign=level.getBlockEntity(pos) as? SignBlockEntity ?: return null
+        return runCatching {
+            val before=MinecraftBlockSnapshotter.snapshot(level,pos)
+            require((before.blockEntityData?.size ?: 0)<=1_048_576)
+            InteractionPending(sign,before,appearance(sign))
+        }.onFailure(::warn).getOrNull()
+    }
+    @JvmStatic fun finishInteraction(world:net.minecraft.world.level.Level,player:Player,pending:InteractionPending?,accepted:Boolean) {
+        if(pending==null || !accepted || !enabled() || player !is ServerPlayer)return
+        val level=world as? ServerLevel ?: return
+        val sign=pending.sign;val p=sign.blockPos
+        if(!level.server.isSameThread || player.level()!==level || !level.hasChunk(p.x shr 4,p.z shr 4) || level.getBlockEntity(p)!==sign)return
+        runCatching {
+            if(appearance(sign)==pending.appearance)return@runCatching
+            val after=MinecraftBlockSnapshotter.snapshot(level,p)
+            require(after.blockId==pending.before.blockId && (after.blockEntityData?.size ?: 0)<=1_048_576)
+            val row=BlockChangeSnapshot(System.currentTimeMillis(),MinecraftActorAdapter.player(player),ResourceId.parse(level.dimension().location().toString()),BlockPosition(p.x,p.y,p.z),pending.before,after,ChangeCause.SIGN_TEXT,ActionType.BLOCK_CHANGE)
+            if(pipeline()?.submit(row)!=SubmissionResult.ACCEPTED)warn(null)
+        }.onFailure(::warn)
+    }
+    class CustomPending internal constructor(internal val block:net.minecraft.world.level.block.entity.BlockEntity,internal val before:BlockStateSnapshot)
+    @JvmStatic fun beginCustom(player:ServerPlayer,pos:net.minecraft.core.BlockPos):CustomPending? {
+        val level=player.serverLevel()
+        if(!enabled() || !level.server.isSameThread || !level.hasChunk(pos.x shr 4,pos.z shr 4))return null
+        val block=level.getBlockEntity(pos) ?: return null
+        if(block.javaClass.name !in setOf("net.mehvahdjukaar.supplementaries.common.block.tiles.SignPostBlockTile","net.mehvahdjukaar.supplementaries.common.block.tiles.NoticeBoardBlockTile"))return null
+        return runCatching {
+            val before=MinecraftBlockSnapshotter.snapshot(level,pos)
+            require((before.blockEntityData?.size ?: 0)<=1_048_576)
+            com.bareminimumstudios.guardian.lookup.SignHistoryDetails.changed(before,before)
+            CustomPending(block,before)
+        }.onFailure(::warn).getOrNull()
+    }
+    @JvmStatic fun finishCustom(player:ServerPlayer,pending:CustomPending?,accepted:Boolean) {
+        if(pending==null || !accepted || !enabled())return
+        val level=player.serverLevel();val block=pending.block;val p=block.blockPos
+        if(!level.server.isSameThread || block.level!==level || !level.hasChunk(p.x shr 4,p.z shr 4) || level.getBlockEntity(p)!==block)return
+        runCatching {
+            val after=MinecraftBlockSnapshotter.snapshot(level,p)
+            require(after.blockId==pending.before.blockId && (after.blockEntityData?.size ?: 0)<=1_048_576)
+            if(!com.bareminimumstudios.guardian.lookup.SignHistoryDetails.changed(pending.before,after))return@runCatching
+            val row=BlockChangeSnapshot(System.currentTimeMillis(),MinecraftActorAdapter.player(player),ResourceId.parse(level.dimension().location().toString()),BlockPosition(p.x,p.y,p.z),pending.before,after,ChangeCause.SIGN_TEXT,ActionType.BLOCK_CHANGE)
+            if(pipeline()?.submit(row)!=SubmissionResult.ACCEPTED)warn(null)
+        }.onFailure(::warn)
+    }
     private fun warn(t:Throwable?) { val now=System.currentTimeMillis();if(now-lastWarning>=10000){lastWarning=now;LoggerFactory.getLogger("Guardian/Signs").warn("Sign audit capture failed, exceeded its text/payload bound or rejected a queue entry; history may be incomplete",t)} }
 }

@@ -38,7 +38,7 @@ class BlockMovementStorageTest {
             val old=source(UUID.randomUUID()).copy(cause=ChangeCause.PLAYER,movementId=null,movementPhase=null);val id=UUID.randomUUID();val a=source(id);val b=land(id)
             db().use{it.open();it.append(listOf(old))}
             DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+path).use{c->c.createStatement().use{s->LegacyMovementSchema.strip(s);s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=22");s.executeUpdate("UPDATE ex_meta SET meta_value='21' WHERE meta_key='schema_version'")}}
-            db().use{it.open();assertEquals(23,it.health().schemaVersion);assertEquals(listOf(old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot});it.append(listOf(a,b))}
+            db().use{it.open();assertEquals(com.bareminimumstudios.guardian.storage.jdbc.GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot});it.append(listOf(a,b))}
             db().use{it.open();assertEquals(listOf(b,a),it.lookupBlocks(BlockLookupQuery(movementId=id)).map{r->r.snapshot})}
         }
     }

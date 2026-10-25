@@ -32,4 +32,38 @@ class SignHistoryFormatterTest {
         val s=row(BlockStateSnapshot(ResourceId.parse("oak_sign")),BlockStateSnapshot(ResourceId.parse("oak_sign")))
         assertTrue("details unavailable" in SignHistoryDetails.summary(s));assertEquals("Sign text details unavailable",SignHistoryDetails.hover(s))
     }
+    private fun appearance(base:BlockStateSnapshot,waxed:Boolean=false,color:net.minecraft.world.item.DyeColor=net.minecraft.world.item.DyeColor.BLACK,glowing:Boolean=false):BlockStateSnapshot {
+        val tag=MinecraftNbtPayloadCodec.decode(requireNotNull(base.blockEntityData))
+        val text=SignText.DIRECT_CODEC.parse(NbtOps.INSTANCE,tag.getCompound("front_text")).getOrThrow().setColor(color).setHasGlowingText(glowing)
+        tag.put("front_text",SignText.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE,text).getOrThrow());tag.putBoolean("is_waxed",waxed)
+        return BlockStateSnapshot(base.blockId,base.properties,MinecraftNbtPayloadCodec.encode(tag))
+    }
+    @Test fun waxAndUnwaxAreNotReportedAsTextEdits() {
+        val a=state("same");val b=appearance(a,waxed=true)
+        assertEquals("waxed sign",SignHistoryDetails.summary(row(a,b)))
+        assertEquals("removed sign wax",SignHistoryDetails.summary(row(b,a)))
+        assertEquals(emptyList(),SignHistoryDetails.sides(row(a,b)))
+    }
+    @Test fun colorAndGlowIdentifyTheSideAndActualResult() {
+        val a=state("same");val b=appearance(a,color=net.minecraft.world.item.DyeColor.RED,glowing=true)
+        assertEquals("dyed front sign text red; made front sign text glow",SignHistoryDetails.summary(row(a,b)))
+        assertTrue("removed front sign text glow" in SignHistoryDetails.summary(row(b,a)))
+        assertFalse("edited" in SignHistoryDetails.summary(row(a,b)))
+        assertFalse(SignHistoryDetails.changed(b,b))
+    }
+    private fun post(raw:String,filtered:String):BlockStateSnapshot {
+        fun panel(value:String,view:String):CompoundTag {
+            val holder=CompoundTag();holder.putString("color","black")
+            holder.put("message",net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow())
+            holder.put("filtered_message",net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(view))).getOrThrow())
+            return CompoundTag().also { it.put("TextHolder",holder) }
+        }
+        val tag=CompoundTag();tag.put("SignUp",panel(raw,filtered));tag.put("SignDown",panel("",""))
+        return BlockStateSnapshot(ResourceId.parse("supplementaries:way_sign"),emptyMap(),MinecraftNbtPayloadCodec.encode(tag))
+    }
+    @Test fun customSignpostDetailsUseFilteredPlainText() {
+        val a=post("old secret","old visible");val b=post("new secret","new visible")
+        assertTrue(SignHistoryDetails.changed(a,b));assertEquals("edited upper sign text",SignHistoryDetails.summary(row(a,b)))
+        assertTrue("new visible" in SignHistoryDetails.hover(row(a,b)));assertFalse("secret" in SignHistoryDetails.hover(row(a,b)))
+    }
 }

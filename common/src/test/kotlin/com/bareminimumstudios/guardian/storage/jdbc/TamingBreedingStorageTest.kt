@@ -59,7 +59,7 @@ class TamingBreedingStorageTest {
                 s.executeUpdate("DROP TABLE IF EXISTS ex_fluid");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=17");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='16' WHERE meta_key='schema_version'")
             } }
             val born=event(EntityAuditKind.BREED).copy(timestampEpochMillis=2000)
-            db().use{it.open();assertEquals(23,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
+            db().use{it.open();assertEquals(com.bareminimumstudios.guardian.storage.jdbc.GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(death),it.lookupEntities(EntityLookupQuery()));it.append(listOf(born))}
             db().use{it.open();assertEquals(listOf(born,death),it.lookupEntities(EntityLookupQuery()))}
         }
     }

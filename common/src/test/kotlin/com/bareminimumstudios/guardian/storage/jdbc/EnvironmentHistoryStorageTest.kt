@@ -31,7 +31,7 @@ class EnvironmentHistoryStorageTest {
         for(duck in listOf(false,true)) {
             val path=Files.createTempDirectory("hazard-restart").resolve("audit.db");fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(path)else SqliteStorageBackend(path)
             val event=row(1,ChangeCause.EXPLOSION,player)
-            db().use{it.open();it.append(listOf(event))};db().use{it.open();assertEquals(23,it.health().schemaVersion);assertEquals(listOf(event),it.lookupBlocks(BlockLookupQuery(causes=setOf(ChangeCause.EXPLOSION))).map{r->r.snapshot})}
+            db().use{it.open();it.append(listOf(event))};db().use{it.open();assertEquals(com.bareminimumstudios.guardian.storage.jdbc.GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(event),it.lookupBlocks(BlockLookupQuery(causes=setOf(ChangeCause.EXPLOSION))).map{r->r.snapshot})}
         }
     }
     @Test fun causeParserAndSuggestionsRejectMistakesAndNonBlockCommands() {

@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 23**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 24**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -490,20 +490,33 @@ overwrite. Do not delete journal rows to bypass protection. An unprotected admis
 not to have begun writing may be cancelled automatically at startup. Keep ordinary backups
 and use a backed-up isolated world for initial testing.
 
-## Sign-text history
+## Direct item displays and ground pickups
 
-Set `logging.signTextChanges = true` in the server configuration to capture future accepted player text edits. It is off by default and follows the general and logging master switches. Supported standing, wall and hanging signs share this path, on both sides. Existing text is not imported merely by enabling capture.
+Item history now records accepted direct insertion/removal from block entities using Minecraft's inventory contract, as well as the optional display adapters below. Keep `logging.containerTransactions = true` to capture future actions.
+
+- Supplementaries notice-board books and other displays using that inventory contract.
+- Amendments hanging-sign items, with separate front/back slots.
+- Vinery/Foundation bottle racks and Bakery/Farm & Charm display storage.
+- Items actually picked up from the ground, including partial pickups when only part of the stack fits. Full inventories, pickup delays and denied/no-op attempts produce no successful pickup row.
+
+Use `/guardian transactions u:YourName t:10m`, or right-click a supported display with inspection enabled. Left-click a sign for its text, colour, glow and wax history; right-click its item display for item history. No compatibility mod is required to run Guardian. Other mods with custom storage need their own verified adapter; this does not promise every modded display or shop is covered.
+
+Direct display actions and ground pickups are history-only. Item rollback does not restore dropped item entities or write to these custom display inventories. Ordinary supported menu transfers retain their existing rollback rules. The item UI's previous/next transaction buttons continue across result pages; changed-slot buttons only navigate within one transaction.
+
+## Sign history
+
+Set `logging.signTextChanges = true` in the server configuration to capture future accepted player text edits, dye/glow changes and waxing or supported wax removal. It is off by default and follows the general and logging master switches. Supported standing, wall and hanging signs share this path, on both sides. Existing text is not imported merely by enabling capture.
 
 ```text
 /guardian lookup c:sign t:1h r:10
 /guardian lookup c:sign u:YourName i:minecraft:oak_sign t:1d
 ```
 
-Use ordinary **left-click inspection** for sign history. Lookup and inspection retain their existing permissions. Each row says whether the front or back text changed. Hover the row for numbered before/after lines, shown as plain text using the stored filtered view where available. Sign click commands and formatting are never turned into chat actions. Hover lines are limited to 256 characters. Raw and filtered sign components remain in the database snapshots, so treat database access and backups as sensitive.
+Use ordinary **left-click inspection** for sign history. Lookup and inspection retain their existing permissions. Each row identifies text edits, colour, glow and wax changes. Supplementaries signposts identify the upper/lower panel. Hover the row for numbered before/after lines, shown as plain text using the stored filtered view where available. Sign click commands and formatting are never turned into chat actions. Hover lines are limited to 256 characters. Raw and filtered sign components remain in the database snapshots, so treat database access and backups as sensitive.
 
-No-op edits, waxed signs and edits by a player who is not the allowed editor create no successful edit record. Capture observes the final result of the supported editing method and does not grant editing rights, open a sign editor or bypass claim protection. Dye/glow/wax changes, command/NBT edits and mods that bypass this method are outside text-edit capture. Packet filtering and your pack's claims still need connected-client acceptance. Text exceeding 1,024 plain characters per line, or a compressed snapshot over 1 MiB, is skipped with a throttled incomplete-history warning. Logging failures do not cancel gameplay.
+No-op edits, waxed signs and edits by a player who is not the allowed editor create no successful edit record. Capture observes the final result of the supported editing method and does not grant editing rights, open a sign editor or bypass claim protection. Vanilla dye, glow-ink and ink-sac changes are observed after block use; Supplementaries 3.9.9 signposts/notice-board text and Amendments 2.1.10 hanging-sign displays have optional compatibility paths. Command/NBT edits and unsupported custom edit paths are outside this capture. Packet filtering and your pack's claims still need connected-client acceptance. Text exceeding 1,024 plain characters per line, or a compressed snapshot over 1 MiB, is skipped with a throttled incomplete-history warning. Logging failures do not cancel gameplay.
 
-Sign-text history is **read-only for recovery**: public rollback/restore excludes sign-edit rows and refuses `c:sign`. Ordinary sign placement/break rows keep their existing block behavior. Protected, confirmed block-history purge includes old sign-edit rows and accepts their block IDs. Schema 23 is an empty compatibility marker for the new cause; existing payloads are unchanged. Config version 17 adds the disabled setting. Back up before upgrading; older builds refuse the new schema.
+Sign-text history is **read-only for recovery**: public rollback/restore excludes sign-edit rows and refuses `c:sign`. Ordinary sign placement/break rows keep their existing block behavior. Protected, confirmed block-history purge includes old sign-edit rows and accepts their block IDs. Schema 24 adds an empty compatibility marker for direct item actions; existing history and payloads are preserved. Config version 17 adds the disabled setting. Back up before upgrading; older builds refuse the new schema.
 
 ## Export filtered history
 

@@ -84,7 +84,10 @@
     "NeoForgeEnvironmentalItemHistoryMixin",
     "PistonMovementHistoryMixin",
     "FallingBlockMovementHistoryMixin",
-    "SignTextHistoryMixin"
+    "SignTextHistoryMixin",
+    "SupplementariesSignTextMixin",
+    "LetsDoDisplayInventoryMixin",
+    "GroundItemPickupMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,0 +1,202 @@
+{
+  "version": "0.4.0-alpha.89+1.21.1",
+  "date": "2026-10-25",
+  "schemaVersion": 24,
+  "configVersion": 17,
+  "scope": "Owner-reported sign/display/pickup capture and item UI acceptance defects. Rollback safeguards remain.",
+  "tests": {
+    "tests": 781,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.89+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.89+1.21.1.jar",
+      "bytes": 13476593,
+      "sha256": "53d1588221d5a88efd40e3835501b41fde22980c5a8ff84ae59adf86f65e2587",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.89+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.89+1.21.1.jar",
+      "bytes": 13447959,
+      "sha256": "d164389e87c4913842a67a53b40d5b45e1f97565ea7a6a5ebda437da1c64fb3e",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.89+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.89+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "9ae94a690742d91b0218c9f58726bddca8962b6e8222e8b19779c97639f220ee",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "mods": {
+    "supplementaries": "1.21.1-3.9.9",
+    "moonlight": "1.21.1-3.7.1",
+    "amendments": "1.21-2.1.10",
+    "vinery": "1.5.5",
+    "bakery": "2.1.7",
+    "farm_and_charm": "1.1.26",
+    "architectury": "13.0.11"
+  },
+  "bothLoaderOptionalMods": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=39",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          12,
+          1
+        ]
+      ],
+      "items": [
+        [
+          "BLOCK_USE",
+          8
+        ],
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=40",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          12,
+          1
+        ]
+      ],
+      "items": [
+        [
+          "BLOCK_USE",
+          8
+        ],
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ]
+    }
+  ],
+  "bothLoaderModsAbsent": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=28",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "items": [
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=29",
+      "signRowsByX": [
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "items": [
+        [
+          "GROUND_PICKUP",
+          2
+        ]
+      ]
+    }
+  ],
+  "nativeNineCoalShiftClickPublicRollback": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=145",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=134",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "cases": [
+    "Native dye/glow ink/normal ink/wax; no-op wax and dye on waxed sign excluded",
+    "Standing and hanging front/back edits; disabled capture excluded",
+    "Supplementaries text packet accepted/no-op/waxed refusal",
+    "Hanging-sign items, notice-board books, Vinery bottles and Bakery bread inserted/removed",
+    "Actual full/partial ground pickups; full inventory no-op",
+    "UI crosses result batches; previous selects final transaction; old page arrows inert",
+    "Real inventory-click packet shift-moves nine named coal; public apply/confirm saves exact counts/components",
+    "Wrong confirmation token and repeated source claim refused"
+  ],
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "suppliedServersModified": false,
+  "remoteDiagnostics": "Authorized read-only SFTP download and local read-only queries. No remote write or stop. Production data excluded from all committed evidence and packages.",
+  "limits": [
+    "Real client/pack acceptance remains pending.",
+    "Explicit optional adapters and standard inventory contracts, not universal custom display/shop coverage.",
+    "Direct display and ground pickup actions excluded from rollback; cursor/crafting rollback remains excluded."
+  ],
+  "ci": "Awaiting owner push; nothing published"
+}

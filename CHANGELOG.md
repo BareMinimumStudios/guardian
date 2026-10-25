@@ -37,6 +37,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.89+1.21.1] - 2026-10-25
+
+### Fixed
+
+- Record accepted sign dye, glow-ink, ink-sac and wax-state changes under the existing opt-in sign capture setting, with distinct descriptions and filtered plain-text details.
+- Add optional Supplementaries signpost/notice-board text capture and direct display item history for notice boards, Amendments hanging signs, Vinery/Foundation racks and Bakery/Farm & Charm storage. Capture before/after component-aware slot contents without granting interaction rights.
+- Record the amount actually received from ground items, including partial pickups. No-op pickups and failed display interactions do not create transfer records.
+- Let the read-only item viewer's previous/next transaction buttons continue across search result pages, removing redundant outer page arrows.
+
+### Changed
+
+- Advance the database compatibility marker to schema 24 for the new item action names. Upgrades retain existing history; older builds refuse the new schema. Direct display and ground-pickup history remains excluded from item rollback.
+
 ## [0.4.0-alpha.88+1.21.1] - 2026-10-25
 
 ### Fixed

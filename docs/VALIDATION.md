@@ -1,7 +1,16 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.88+1.21.1**. Schema 23 and config version 17
-are unchanged. The feature list is frozen; this pass contains optimization and release polish.
+Current executable checkpoint: **0.4.0-alpha.89+1.21.1**. Schema 24, config version 17.
+The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Sign and display acceptance corrections
+
+781 automated tests and the required clean/cache-reuse/WorldEdit builds pass. Native fixtures
+pass on both loaders with the exact reported mod versions and without optional mods. These
+cover sign text/colour/glow/wax, display insertion/removal, actual/partial pickups and continuous
+transaction navigation. A native inventory-click packet produces the nine-named-coal transfer;
+public rollback apply/confirm saves it on both loaders. Real client/pack acceptance remains
+open. No supplied server was changed. [Evidence](validation/display-signs-alpha89.json).
 
 ## Login command-list correction
 

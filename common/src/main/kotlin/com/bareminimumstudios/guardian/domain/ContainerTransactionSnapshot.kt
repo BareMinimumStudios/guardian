@@ -3,7 +3,7 @@ package com.bareminimumstudios.guardian.domain
 import java.util.Collections
 import java.util.UUID
 
-enum class ContainerAction { PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT, PICKUP_ALL, CLOSE, DROP_ONE, DROP_STACK, SWAP_OFFHAND, CREATIVE_SET, HOPPER_TRANSFER, CRAFT, RECIPE_PLACE }
+enum class ContainerAction { PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT, PICKUP_ALL, CLOSE, DROP_ONE, DROP_STACK, SWAP_OFFHAND, CREATIVE_SET, HOPPER_TRANSFER, CRAFT, RECIPE_PLACE, BLOCK_USE, GROUND_PICKUP }
 data class ItemSlotChange(val address: ItemSlotAddress, val before: ItemStackSnapshot, val after: ItemStackSnapshot) {
     init { require(before != after) { "An item change must change a slot" } }
 }

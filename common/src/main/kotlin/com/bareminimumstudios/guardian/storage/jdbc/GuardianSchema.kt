@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 23
+    const val CURRENT_VERSION = 24
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -156,6 +156,7 @@ internal object GuardianSchema {
             "ALTER TABLE ex_block ADD COLUMN movement_phase VARCHAR",
             "CREATE INDEX ex_block_movement_idx ON ex_block(movement_uuid,time)"
         )),
-        SchemaMigration(23, "Accepted sign-text history cause", emptyList())
+        SchemaMigration(23, "Accepted sign-text history cause", emptyList()),
+        SchemaMigration(24, "Direct block display and ground pickup item actions", emptyList())
     )
 }

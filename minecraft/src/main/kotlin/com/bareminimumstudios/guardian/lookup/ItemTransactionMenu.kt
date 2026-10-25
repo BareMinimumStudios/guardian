@@ -27,6 +27,7 @@ internal class ItemTransactionMenu(
     private var resultPage=1
     private var previous=false
     private var next=false
+    private var selectLastOnResults=false
     private var loading=true
     private var closed=false
     private var resync=false
@@ -39,7 +40,10 @@ internal class ItemTransactionMenu(
     }
     fun loading(page: Int) { resultPage=page;loading=true;render() }
     fun results(rows: List<ContainerTransactionSnapshot>, page: Int, hasPrevious: Boolean, hasNext: Boolean) {
-        view=ItemTransactionView(rows);resultPage=page;previous=hasPrevious;next=hasNext;loading=false;render()
+        view=ItemTransactionView(rows)
+        if(selectLastOnResults && rows.isNotEmpty())repeat(rows.lastIndex) { view.transaction(1) }
+        selectLastOnResults=false
+        resultPage=page;previous=hasPrevious;next=hasNext;loading=false;render()
     }
     override fun stillValid(player: Player)= !closed && player===viewer && permitted()
     override fun quickMoveStack(player: Player,index: Int): ItemStack=ItemStack.EMPTY
@@ -57,12 +61,10 @@ internal class ItemTransactionMenu(
         if(index==53) { viewer.closeContainer();return }
         if(loading)return
         when(index) {
-            45 -> if(previous)requestPage(-1)
-            46 -> if(view.transaction>0) { view.transaction(-1);render() }
-            47 -> if(view.transaction+1<view.rows.size) { view.transaction(1);render() }
+            46 -> if(view.transaction>0) { view.transaction(-1);render() } else if(previous) { selectLastOnResults=true;requestPage(-1) }
+            47 -> if(view.transaction+1<view.rows.size) { view.transaction(1);render() } else if(next)requestPage(1)
             48 -> if(view.changePage>0) { view.changes(-1);render() }
             50 -> if(view.changePage+1<view.changePages) { view.changes(1);render() }
-            51 -> if(next)requestPage(1)
         }
     }
     override fun broadcastChanges() {
@@ -105,13 +107,11 @@ internal class ItemTransactionMenu(
             display.setItem(left,item(change.before,"Before",location,changed,identity))
             display.setItem(left+5,item(change.after,"After",location,changed,identity))
         }
-        display.setItem(45,card(if(!loading && previous)Items.ARROW else Items.GRAY_DYE,"Previous results",listOf("Search result page ${resultPage-1}")))
-        display.setItem(46,card(if(!loading && view.transaction>0)Items.ARROW else Items.GRAY_DYE,"Previous transaction"))
-        display.setItem(47,card(if(!loading && view.transaction+1<view.rows.size)Items.ARROW else Items.GRAY_DYE,"Next transaction"))
+        display.setItem(46,card(if(!loading && (view.transaction>0 || previous))Items.ARROW else Items.GRAY_DYE,"Previous transaction"))
+        display.setItem(47,card(if(!loading && (view.transaction+1<view.rows.size || next))Items.ARROW else Items.GRAY_DYE,"Next transaction"))
         display.setItem(48,card(if(!loading && view.changePage>0)Items.ARROW else Items.GRAY_DYE,"Previous changed slots"))
-        display.setItem(49,card(Items.PAPER,if(loading)"Loading results $resultPage..." else if(row==null)"Results $resultPage | no matches" else "Results $resultPage | slots ${view.changePage+1}/${view.changePages}",listOf("Left-click buttons to navigate","Hover items for recorded counts, IDs and ownership","Read-only; close to use your inventory")))
+        display.setItem(49,card(Items.PAPER,if(loading)"Loading results $resultPage..." else if(row==null)"Results $resultPage | no matches" else "Results $resultPage | slots ${view.changePage+1}/${view.changePages}",listOf("Previous/next transaction continues through all results","Hover items for recorded counts, IDs and ownership","Read-only; close to use your inventory")))
         display.setItem(50,card(if(!loading && view.changePage+1<view.changePages)Items.ARROW else Items.GRAY_DYE,"Next changed slots"))
-        display.setItem(51,card(if(!loading && next)Items.ARROW else Items.GRAY_DYE,"Next results",listOf("Search result page ${resultPage+1}")))
         resync=true
     }
     private fun item(snapshot: ItemStackSnapshot,side: String,location: String,componentsChanged: Boolean,identity: String?): ItemStack {
@@ -139,5 +139,5 @@ internal class ItemTransactionMenu(
         stack.set(DataComponents.CUSTOM_NAME,text(title).withStyle(ChatFormatting.WHITE))
         stack.set(DataComponents.LORE,ItemLore(lines.map { text(it).withStyle(ChatFormatting.GRAY) }))
     }
-    private fun text(value: String)=Component.literal(value.filter { !it.isISOControl() && it!='§' }.take(256)).withStyle { it.withItalic(false) }
+    private fun text(value: String)=Component.literal(value.filter { !it.isISOControl() && it.code!=167 }.take(256)).withStyle { it.withItalic(false) }
 }
