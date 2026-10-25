@@ -1,0 +1,9 @@
+package com.bareminimumstudios.guardian.mixin;
+import net.minecraft.util.DirectoryLock;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+@Mixin(LevelStorageSource.LevelStorageAccess.class)
+public interface ItemRecoveryStorageAccessor {
+    @Accessor("lock") DirectoryLock guardian$itemRecoveryLock();
+}

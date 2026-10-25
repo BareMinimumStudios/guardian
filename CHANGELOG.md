@@ -37,6 +37,19 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.85+1.21.1] - 2026-10-25
+
+### Added
+
+- Confirmed maintenance recovery for protected partial item rollbacks on Fabric and NeoForge. Preview stages targeted player/region files without changing their contents; confirmation finishes the recorded expected inventories and verifies the durable receipt before releasing protection.
+- Retain checksummed before/after file plans, exact Data Component snapshots and same-token retries after interrupted file replacement. Refuse conflicting inventories, unrelated file changes, damaged plans and unsupported native data. Keep gameplay stopped throughout maintenance.
+- Cancel protected unstarted admissions through a separate maintenance confirmation without creating or rewriting inventory files. Document the operator procedure, limits and retained copies.
+
+### Fixed
+
+- Save and verify every original owner before admitting rollback item writes, so interrupted operations have a recoverable baseline. Validate native saved representations before writes and refuse external chunk streams or expected chunks above 512 KiB uncompressed.
+- Point protected-startup diagnostics to targeted recovery instead of requiring a whole backup restore as the only documented option.
+
 ## [0.4.0-alpha.84+1.21.1] - 2026-10-24
 
 ### Added

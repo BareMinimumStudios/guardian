@@ -126,6 +126,21 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
         }
     }
 
+    fun cancelUnstarted(record: ItemRollbackRecord): Boolean {
+        require(record.phase==ItemRollbackPhase.PREPARED)
+        return atomic {
+            val receipt=images(record.operationId) ?: return@atomic false
+            val id=record.operationId.toString()
+            if(receipt.acknowledged || !sameSaveRecord(record,read(record.operationId)) || !protected(record.operationId) ||
+                claimSet("ex_item_rollback_owner","owner_key",id)!=ItemRecoveryCheck(record).owners.map(::ownerKey).toSet())return@atomic false
+            connection.prepareStatement("UPDATE ex_item_rollback SET phase='CANCELLED' WHERE operation_uuid=? AND phase='PREPARED'").use { it.setString(1,id);check(it.executeUpdate()==1) }
+            for(table in listOf("ex_item_rollback_images","ex_item_rollback_protection","ex_item_rollback_owner","ex_item_rollback_claim")) {
+                connection.prepareStatement("DELETE FROM $table WHERE operation_uuid=?").use { it.setString(1,id);it.executeUpdate() }
+            }
+            true
+        }
+    }
+
     fun acknowledge(record: ItemRollbackRecord, expected: ItemRollbackImages, saved: InventorySnapshot): Boolean {
         require(record.phase==ItemRollbackPhase.COMPLETED || record.phase==ItemRollbackPhase.RECOVERY_REQUIRED)
         ItemRecoveryCheck(record)

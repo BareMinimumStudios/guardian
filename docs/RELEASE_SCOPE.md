@@ -2,9 +2,9 @@
 
 ## Newly authorized online item rollback
 
-On 2026-10-24 the owner requested online item transaction rollback. Alpha.84 implements the bounded live handoff, confirmed apply and conservative interruption/restart behavior described in [online item rollback](ONLINE_ITEM_ROLLBACK.md). This supersedes historical milestone decisions below that deferred item implementation. It does not add item redo, partial replay or an offline repair tool. Local validation is tracked separately from alpha.82's passed CI; alpha.84 CI and connected-client acceptance remain pending.
+On 2026-10-24 the owner requested online item transaction rollback. Alpha.84 implements the bounded live handoff, confirmed apply and conservative interruption/restart behavior described in [online item rollback](ONLINE_ITEM_ROLLBACK.md). This supersedes historical milestone decisions below that deferred item implementation. Alpha.84 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380). On 2026-10-25 the owner authorized safe partial-item recovery. Alpha.85 adds explicit confirmed stopped-gameplay repair and original baseline saves; see [recovery](ITEM_RECOVERY.md). Item redo and automatic replay remain excluded. Connected-client acceptance and final sign-off remain pending.
 
-Assessed: 2026-10-24 against `0.4.0-alpha.84+1.21.1`.
+Assessed: 2026-10-25 against `0.4.0-alpha.85+1.21.1`.
 
 This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.
 
@@ -72,7 +72,7 @@ The owner explicitly added public chat and login/logout logging on 2026-10-17. T
 
 Guardian is a server-only Minecraft 1.21.1 alpha for Fabric and NeoForge, using Java 21 and SQLite. Existing block lookup, inspection, bounded block rollback/restore, bounded confirmed history purge, correlated item history, supported vanilla crafting capture and opt-in block-hopper capture are in scope. Separately configured player activity, bounded entity death/name/tame/birth/frame history and standard player bucket fluid history are also included. The optional Fabric WorldEdit 7.3.8 adapter retains its separate GPL boundary. Players do not need Guardian or Fzzy Config on their client.
 
-Item preview/recovery/saved checks remain read-only. Confirmed online apply is available for the bounded native ownership contract, with separate item permission, actual save verification and persistent source claims. Cancellation never undoes started writes. Reconciliation releases only an already complete live/saved outcome; partial/conflicting operations stay protected and block gameplay after restart.
+Item preview/recovery/saved checks remain read-only. Confirmed online apply is available for the bounded native ownership contract, with separate item permission, actual save verification and persistent source claims. Cancellation never undoes started writes. Reconciliation releases only an already complete live/saved outcome; partial/conflicting operations stay protected and block normal gameplay startup. Explicit maintenance recovery can finish exact recorded partial images; conflicting images remain protected.
 
 Capture support does not imply rollback support. Block-backed menu capture follows the documented backing-slot rules; unknown or extended menu/storage models are skipped. Hopper records describe observed balanced source/destination changes, not a promise of delivery beyond the recorded endpoints. Missing captures and backpressure/failure counters must remain visible; this alpha does not promise every mutation from every mod is logged.
 
@@ -84,7 +84,7 @@ Capture support does not imply rollback support. Block-backed menu capture follo
 | Item history | Supported block-backed menus, ordinary player inventory actions, exact vanilla crafting models and optional supported block-hopper transfers. No arbitrary custom menus, capability-only storage or entity inventory promise. |
 | Read-only item checks | Existing eligibility, history and identity checks apply. Unloaded, missing, sealed-loot, busy or unsupported endpoints are skipped/refused without loading chunks or unpacking loot. |
 | Internal bound inventories | Exact barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker classes with expected sizes; exact 41-slot player inventory with current online player and idle ordinary menu. Subclasses and custom inventories are refused. Bindings alone do not authorize item apply; the online adapter must install detached native ownership. |
-| Item rollback writes | Confirmed supported conserving transfers only, at most 50 source transactions, 8 inventories, 64 final changed slots and 2 MiB of full images. No partial replay, item redo or offline repair. See online contract. |
+| Item rollback writes | Confirmed supported conserving transfers only, at most 50 source transactions, 8 inventories, 64 final changed slots and 2 MiB of full images. Confirmed targeted maintenance recovery for exact partial images; no automatic replay, force overwrite or item redo. See online/recovery contracts. |
 | Permissions | Vanilla operator fallback and optional provider integration exist. Server-side actual-provider and revocation acceptance passed in alpha.62. Network/client acceptance remains R3; simulated permissions are not evidence of a tested provider. |
 | Entity history | Opt-in standard living/player deaths, tracked custom names, verified animal/horse tame transitions, inserted standard animal offspring with parent IDs, and normal/glow frame placement/display/rotation/removal history. Read-only world history, with separate query permission; confirmed old-history purge is supported, restoration is excluded. |
 | Fluid history | Opt-in persistent standard player bucket placement/collection and supported waterlogging. Read-only and separately permissioned; opt-in supported scheduled flow/levels/recession and liquid-formed blocks; no arbitrary automation, cauldron/custom storage or rollback. Confirmed old-history purge is supported. |
@@ -122,8 +122,9 @@ After alpha.81 was pushed, the owner selected filtered file export. Alpha.82 add
 The online ownership milestone passed 747 automated tests and both-loader isolated native
 handoff, saved-state, command, cancellation/reconciliation and restart-refusal checks. See
 [alpha.84 evidence](validation/online-items-alpha84.json). These are synthetic server fixtures,
-not connected-client or universal modpack acceptance. GitHub CI has not run for this local
-checkpoint; alpha.82 CI references below remain the historical baseline.
+not connected-client or universal modpack acceptance. Alpha.84 subsequently passed GitHub CI.
+Alpha.85 passed 770 automated tests and both-loader targeted recovery/interruption/restart
+fixtures; see [evidence](validation/item-recovery-alpha85.json). Its remote CI awaits push.
 
 ## Fixed release gates
 

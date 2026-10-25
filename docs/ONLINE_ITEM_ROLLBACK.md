@@ -2,7 +2,8 @@
 
 Alpha.84 implements the bounded online ownership and command milestone explicitly requested
 on 2026-10-24. Maintenance-only operation does not satisfy that request. See the README for
-commands, operational limits and the restart/backup requirement.
+commands and operational limits. Alpha.85 adds [confirmed maintenance recovery](ITEM_RECOVERY.md)
+for protected partial operations while gameplay is stopped.
 
 ## Implemented contract
 
@@ -15,7 +16,10 @@ commands, operational limits and the restart/backup requirement.
   immutable encoded item data; reads decode fresh stacks and ordinary list writes throw.
 - Audited native setters consume one exact stack/index capability. Consumption is revoked
   before later callbacks; a setter that throws after changing its slot is not silently undone.
-- Persist complete before/after images and claims before writing; preserve actual I/O drain
+- Persist complete before/after images and claims, then save/read back each original owner
+  before marking APPLYING or admitting any slot setter. Validate native recovery encoding,
+  refuse external chunk streams and cap expected saved chunk NBT at 512 KiB.
+- Preserve actual I/O drain
   and compare real saved inventories before acknowledging success. Only verified completion
   returns fresh mutable native lists. Closing a failed/cancelled port keeps its ownership.
 - Apply selection is read-only until its requester confirms a 30-second token. Recheck current
@@ -38,10 +42,12 @@ All runtime fixtures use private synthetic players, worlds and databases, with n
 clients. These tests do not certify client menu presentation, arbitrary mod callbacks or a
 particular production pack.
 
-There is no item redo, forced restore, offline player editing, automatic partial replay or
-offline repair utility. A partial/conflicting protected operation needs a consistent backup
-or separately reviewed data recovery before gameplay can resume. Keep world/player saves
-and the journal together; do not remove claims to bypass protection.
+There is no item redo, forced restore or automatic partial replay. Explicit maintenance
+preview/confirmation can finish a proven partial protected image, including its recorded
+player files, through targeted file replacements. A protected PREPARED admission can be
+cancelled without item writes. See [recovery procedure and limits](ITEM_RECOVERY.md). Conflicts
+remain protected for review; keep world/player saves and the journal together, and do not
+remove claims to bypass protection.
 
 Native backing ownership does not certify enclosing arbitrary mod transactions. Existing
 supported vanilla caller guards exclude their side effects during retention; raw reflective

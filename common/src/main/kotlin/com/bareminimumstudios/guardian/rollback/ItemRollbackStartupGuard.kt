@@ -19,6 +19,6 @@ object ItemRollbackStartupGuard {
         }
         val unresolved = journal.unfinishedItemRollbacks(1).firstOrNull() ?: return
         throw ItemRollbackStartupRefused("Guardian cannot resume gameplay: unfinished item rollback ${unresolved.operationId} (${unresolved.phase}). " +
-            "Keep guardian.sqlite and the world/player data together. Restore a consistent backup or resolve the protected operation before restarting; do not delete journal rows.")
+            "Keep guardian.sqlite and the world/player data together. Stop the server and preview targeted recovery with -Dguardian.itemRecovery=preview:${unresolved.operationId}; see docs/ITEM_RECOVERY.md. Do not delete journal rows.")
     }
 }

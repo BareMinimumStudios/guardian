@@ -1,6 +1,25 @@
 # Release validation
 
-Alpha.84 is the current executable checkpoint.
+Alpha.85 is the current executable checkpoint.
+
+## Targeted partial item recovery, 2026-10-25
+
+Alpha.84 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380).
+The owner then authorized safe interrupted item recovery. Alpha.85 adds explicit maintenance
+preview/confirmation before gameplay, exact component-aware native file repair, checksummed
+before/after plans, atomic per-file replacement and durable completion acknowledgment.
+Online admissions now save and validate original owner images before any slot write.
+Protected unstarted admissions can be cancelled without inventory files.
+
+770 automated tests passed, including file-plan corruption/conflict/retry, native NBT,
+SQLite claim release and stalled/failed/mismatched baseline coverage. Both loaders passed
+preview without world-file changes, wrong-token and third-state refusal, exact repair,
+hard-process interruption during replacement, same-token retry and no-write receipt replay.
+Normal restarts verify saved player counts/components and container images through native
+decoders. All tests use isolated worlds/databases and synthetic players; no supplied server
+data or connected client was used. See [evidence](validation/item-recovery-alpha85.json) and
+[operator guide](ITEM_RECOVERY.md). Remote CI and existing client/final sign-off remain pending.
+
 
 ## Alpha.84 online item ownership, 2026-10-24
 
@@ -16,9 +35,8 @@ All worlds/databases are private fixtures; supplied server data was untouched. T
 use synthetic players with unconnected packet queues, not real clients. The new item grant
 and console behavior were exercised locally; older actual-provider cohorts below are
 historical evidence for their then-current command surface. Connected-client/production-pack
-acceptance, alpha.84 GitHub CI and final release sign-off remain pending. Partial replay and
-offline repair are not implemented; a partial/conflicting protected operation requires a
-consistent backup or separately reviewed data recovery before gameplay resumes.
+acceptance and final release sign-off remain pending. Alpha.84 passed GitHub CI after push.
+Its original absence of offline repair is superseded by alpha.85 above.
 
 The sections below retain historical milestone evidence. Alpha.82 was the prior executable
 checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.

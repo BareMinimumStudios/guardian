@@ -60,7 +60,7 @@ object MinecraftItemSnapshotter {
         return restored
     }
 
-    private fun decodeTag(bytes: ByteArray): CompoundTag {
+    internal fun decodeTag(bytes: ByteArray): CompoundTag {
         require(bytes.size in (HEADER.size + 1)..MAX_ENCODED_BYTES) { "Invalid item snapshot size" }
         require(bytes.copyOfRange(0, HEADER.size).contentEquals(HEADER)) { "Unsupported Guardian item payload format/version" }
         return ByteArrayInputStream(bytes, HEADER.size, bytes.size - HEADER.size).use {

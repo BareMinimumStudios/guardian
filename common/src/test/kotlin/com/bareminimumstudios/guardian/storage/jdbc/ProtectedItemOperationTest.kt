@@ -23,6 +23,10 @@ class ProtectedItemOperationTest {
 
     @Test fun shutdownFromReconciliationResourceClosureCannotReleaseOwners() = exercise(10)
 
+    @Test fun interruptedOriginalSaveNeverAdmitsAnItemWriteAndCanCancelItsUnstartedJournal() = exercise(11)
+    @Test fun wrongOriginalSavedImagePreventsEveryItemWrite() = exercise(12)
+    @Test fun failedOriginalSavePreventsEveryItemWrite() = exercise(13)
+
     private fun exercise(mode: Int) {
         val path=Files.createTempDirectory("guardian-protected-host").resolve("audit.sqlite")
         val db=SqliteStorageBackend(path)
@@ -56,6 +60,7 @@ class ProtectedItemOperationTest {
         val scope=ItemOperationScope(journal){db.close()}
         val live=linkedMapOf(a to ItemStackSnapshot.EMPTY,b to item,spare to ItemStackSnapshot.EMPTY)
         var writes=0
+        var saveAttempts=0
         val pending=CompletableFuture<InventorySnapshot?>()
         val port=object: ItemOperationPort {
             override fun isExclusiveAndCurrent(owners:Set<ItemSlotOwner>)=true
@@ -65,8 +70,13 @@ class ProtectedItemOperationTest {
                 assertNotNull(db.itemRollbackImages(record.operationId))
                 assertEquals(expected,live[address]);live[address]=replacement;writes++
             }
-            override fun saveAndReadBack(owner:ItemSlotOwner,addresses:Set<ItemSlotAddress>):CompletionStage<InventorySnapshot?> =
-                if(mode in 2..5 || mode==10)pending else CompletableFuture.completedFuture(InventorySnapshot(live.filterKeys{it.owner==owner}))
+            override fun saveAndReadBack(owner:ItemSlotOwner,addresses:Set<ItemSlotAddress>):CompletionStage<InventorySnapshot?> {
+                saveAttempts++
+                if(mode==11 || writes>0 && (mode in 2..5 || mode==10))return pending
+                if(mode==12)return CompletableFuture.completedFuture(InventorySnapshot(emptyMap()))
+                if(mode==13)return CompletableFuture.failedFuture(IllegalStateException("Original save failed"))
+                return CompletableFuture.completedFuture(InventorySnapshot(live.filterKeys{it.owner==owner}))
+            }
             override fun close()=Unit
         }
         val host=assertNotNull(scope.startProtected(record,coordination,{port}))
@@ -75,7 +85,15 @@ class ProtectedItemOperationTest {
             while(!condition()){check(System.nanoTime()<deadline){"Protected host timed out: ${host.state}"};scope.advance();Thread.sleep(1)}
         }
         try {
-            if(mode==8 || mode==9){
+            if(mode==11) {
+                until{host.state==ItemOperationState.BASELINING && saveAttempts==1}
+                assertEquals(0,writes);assertEquals(ItemRollbackPhase.PREPARED,db.itemRollback(record.operationId)!!.phase)
+                scope.cancel(host);until{host.state==ItemOperationState.RECOVERY_REQUIRED}
+                assertTrue(host.isJournalDrained);assertTrue(db.cancelUnstartedItemRollback(record))
+                assertEquals(ItemRollbackPhase.CANCELLED,db.itemRollback(record.operationId)!!.phase)
+                assertFalse(db.itemRollbackProtected(record.operationId));assertNull(db.itemRollbackImages(record.operationId))
+                assertNotNull(db.prepareItemRollback(UUID.randomUUID(),201,listOf(row)))
+            } else if(mode==8 || mode==9){
                 until{entered.count==0L}
                 scope.cancel(host);assertFalse(host.isJournalDrained);assertTrue(coordination.hasJournalRetention())
                 release.countDown();until{host.state==ItemOperationState.RECOVERY_REQUIRED}
@@ -124,7 +142,7 @@ class ProtectedItemOperationTest {
         SqliteStorageBackend(path).use { reopened ->
             reopened.open()
             val receipt=reopened.itemRollbackImages(record.operationId)
-            if(mode==1 || mode==6)assertNull(receipt)
+            if(mode==1 || mode==6 || mode==11)assertNull(receipt)
             else {
                 assertNotNull(receipt)
                 assertEquals(mode in setOf(0,2,4,9,10),receipt.acknowledged)

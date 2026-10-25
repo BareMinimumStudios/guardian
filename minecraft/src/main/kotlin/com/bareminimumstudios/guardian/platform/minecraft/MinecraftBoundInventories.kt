@@ -170,6 +170,7 @@ class MinecraftBoundInventories internal constructor(
                             }
                             check(saved.slots == expected) { "Actual saved inventory differs from the live image" }
                             check(read().slots == baseline.slots) { "Live contents changed while checking saved data" }
+                            if(save) MinecraftInventoryCoordination.validateRecoverySave(lease,owner,tag.get())
                             pending.remove(result)
                             result.complete(saved)
                         } catch (error: Exception) { pending.remove(result);result.completeExceptionally(error) }

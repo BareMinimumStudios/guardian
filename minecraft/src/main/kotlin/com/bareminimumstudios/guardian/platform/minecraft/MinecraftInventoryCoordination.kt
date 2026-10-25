@@ -36,6 +36,7 @@ object MinecraftInventoryCoordination {
         val actualIo = com.bareminimumstudios.guardian.rollback.ActualIoDrain()
         var operations: MinecraftItemOperations? = null
         var stopping = false
+        val detachedImages = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, com.bareminimumstudios.guardian.rollback.ItemRollbackImages>()
         val detached = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftDetachedInventory>>()
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
@@ -151,7 +152,7 @@ object MinecraftInventoryCoordination {
             require((original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024) {
                 "Online rollback exceeds its 2 MiB complete-image budget"
             }
-            current.detached[lease] = session.detach(); return session
+            current.detached[lease] = session.detach(); current.detachedImages[lease]=images; return session
         }
         catch (error: Exception) { session.close(); throw error }
     }
@@ -163,11 +164,32 @@ object MinecraftInventoryCoordination {
         return owned.keys == lease.owners && owned.values.all { it.isCurrent() }
     }
 
+    /** Prove that the original saved baseline can be read and repaired without instantiating owners. */
+    internal fun validateRecoverySave(lease: ItemOwnerCoordination.Lease, owner: ItemSlotOwner, tag: net.minecraft.nbt.CompoundTag) {
+        val current=checkNotNull(binding)
+        val images=current.detachedImages[lease] ?: return
+        check(current.server.isSameThread && ownsDetached(lease))
+        val expected=tag.copy()
+        if(owner is ItemSlotOwner.BlockContainer) {
+            val folder=net.minecraft.world.level.dimension.DimensionType.getStorageFolder(
+                net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.ResourceLocation.parse(owner.dimension.toString())),
+                current.server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("region")
+            require(!java.nio.file.Files.exists(folder.resolve("c.${owner.position.x shr 4}.${owner.position.z shr 4}.mcc"))) { "External chunk inventories cannot be admitted for recoverable item rollback" }
+            lease.owners.filterIsInstance<ItemSlotOwner.BlockContainer>().filter {
+                it.dimension==owner.dimension && (it.position.x shr 4)==(owner.position.x shr 4) && (it.position.z shr 4)==(owner.position.z shr 4)
+            }.forEach { MaintenanceInventoryNbt.repair(expected,it,images) }
+            val output=java.io.ByteArrayOutputStream()
+            java.io.DataOutputStream(output).use { net.minecraft.nbt.NbtIo.write(expected,it) }
+            require(output.size()<=512*1024) { "Expected saved inventory chunk exceeds the recoverable 512 KiB bound" }
+        } else MaintenanceInventoryNbt.repair(expected,owner,images)
+    }
+
     internal fun releaseOwned(lease: ItemOwnerCoordination.Lease) {
         val current = checkNotNull(binding)
         check(current.server.isSameThread && ownsDetached(lease))
         current.detached.getValue(lease).values.forEach { it.release() }
         current.detached.remove(lease)
+        current.detachedImages.remove(lease)
     }
 
     /** Close the old mutating session first. A prefix fence leaves new read-only I/O admission open. */

@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits and supported item transfers. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.84+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.85+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -398,7 +398,10 @@ preserved through the same immutable snapshot codec used by history; transient c
 that cannot be saved losslessly are refused.
 
 Requests are limited to 50 selected transactions, 8 inventories, 64 changed final slots and
-2 MiB of combined complete before/after images. Narrow `t:` or `r:` if a request is too large.
+2 MiB of combined complete before/after images. Before item writes, Guardian saves and verifies
+each original inventory and checks its maintenance recovery representation. Expected affected
+chunks must fit within 512 KiB of uncompressed saved NBT; external `.mcc` chunks are refused.
+Narrow `t:` or `r:` if a request is too large.
 No inventory is overwritten when its observed contents conflict with the recorded transfer.
 Already claimed source transactions cannot be rolled back twice.
 
@@ -430,11 +433,17 @@ forms remain read-only diagnostics and do not release claims.
 
 **Restart protection:** an unresolved protected item journal stops normal server startup;
 gameplay must not resume with an uncertain cross-inventory save. Preserve `guardian.sqlite`
-and the matching world/player data together. For a partial/conflicting operation, this version
-requires restoring a consistent backup or separately resolving the protected data; it has no
-automatic partial replay or offline repair tool. Do not delete journal rows to bypass this
-check. An unprotected admission proven not to have begun writing may be cancelled automatically
-at startup. Use a backed-up isolated world for initial testing.
+and the matching world/player data together. Alpha.85 adds [confirmed maintenance recovery](docs/ITEM_RECOVERY.md)
+to finish a protected partial rollback using its recorded inventory images. Stop gameplay,
+start once with `-Dguardian.itemRecovery=preview:<operation UUID>`, then use the exact
+`apply:<operation UUID>:<token>` JVM flag printed by that preview. Both runs exit without
+starting gameplay. Recovery stages targeted player/region files, retains before/after copies
+and supports retry after interruption; it refuses conflicting files or inventory contents.
+Remove the flag before normal startup. A protected operation that never began item writes
+can instead be cancelled safely in maintenance. There is no automatic partial replay or force
+overwrite. Do not delete journal rows to bypass protection. An unprotected admission proven
+not to have begun writing may be cancelled automatically at startup. Keep ordinary backups
+and use a backed-up isolated world for initial testing.
 
 ## Sign-text history
 

@@ -16,6 +16,8 @@ interface ItemRollbackProtectionJournal : ItemRollbackJournal {
     /** Complete images must be registered atomically while the exact record is still PREPARED. */
     fun protectItemRollback(record: ItemRollbackRecord, original: InventorySnapshot): Boolean
     fun itemRollbackImages(operationId: UUID): ItemRollbackImageRecord?
+    /** Exact protected PREPARED receipt only: no item setter can have been admitted. */
+    fun cancelUnstartedItemRollback(record: ItemRollbackRecord): Boolean = false
     /** Trusted caller must exclude mutations and drain prior journal/disk work before sampling. */
     fun acknowledgeItemRollback(record: ItemRollbackRecord, images: ItemRollbackImages, saved: InventorySnapshot): Boolean
 }

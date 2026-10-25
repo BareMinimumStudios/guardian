@@ -1,0 +1,413 @@
+{
+  "version": "0.4.0-alpha.85+1.21.1",
+  "date": "2026-10-25",
+  "baseCommit": "1f55abbd410b65edc4f5afb030f2932cd94d08fa",
+  "schemaVersion": 23,
+  "configVersion": 17,
+  "tests": {
+    "tests": 770,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.85+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.85+1.21.1.jar",
+      "bytes": 13425613,
+      "sha256": "9ef24229f0af234fc3febbb59f6ac9cfd391bcf44dd19c8115bea9c0b49b248c",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.85+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.85+1.21.1.jar",
+      "bytes": 13397896,
+      "sha256": "887dc2be6139736ba683c25a932addf2895f678d726fa8d00933899c9c9beb5f",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.85+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.85+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "a2fcd62c9fa3c0326239a099ef85f77b6232a7a7cbc3227c991e6338c016b7e0",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "alpha84Ci": {
+    "status": "passed",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380"
+  },
+  "alpha85Ci": "awaiting owner push",
+  "recoveryAvailable": true,
+  "onlineRollbackStillAvailable": true,
+  "automaticPartialReplay": false,
+  "forceOverwrite": false,
+  "limits": {
+    "inventories": 8,
+    "changedFinalSlots": 64,
+    "completeImageBytes": 2097152,
+    "expectedChunkNbtBytes": 524288,
+    "targetFileBytes": 134217728,
+    "committedCopyBytes": 536870912,
+    "externalChunkStreams": false
+  },
+  "partialProducers": [
+    {
+      "loader": "Fabric",
+      "mode": "cancel",
+      "fixture": "OK checks=192",
+      "operation": "605bf904-7d7d-421c-94be-4e044da36fae",
+      "phase": "APPLYING",
+      "acknowledged": 0,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "cancel",
+      "fixture": "OK checks=55",
+      "operation": "55a51e12-982c-4392-8392-d0b84368f06b",
+      "phase": "APPLYING",
+      "acknowledged": 0,
+      "isolated": true,
+      "connectedClients": 0
+    }
+  ],
+  "unstartedProducers": [
+    {
+      "loader": "Fabric",
+      "mode": "unstarted",
+      "fixture": "OK checks=53",
+      "operation": "92555f49-9ef3-4db5-ba34-6dbda0c227f9",
+      "phase": "PREPARED",
+      "acknowledged": 0,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "mode": "unstarted",
+      "fixture": "OK checks=51",
+      "operation": "2afd9712-d888-43ac-89f1-e10dbf3cc7c3",
+      "phase": "PREPARED",
+      "acknowledged": 0,
+      "isolated": true,
+      "connectedClients": 0
+    }
+  ],
+  "maintenanceMatrix": [
+    {
+      "loader": "Fabric",
+      "case": "repair",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": false
+    },
+    {
+      "loader": "Fabric",
+      "case": "conflict",
+      "previewUnchanged": true,
+      "conflictRefusedBeforeReplacement": true,
+      "journalProtected": true
+    },
+    {
+      "loader": "Fabric",
+      "case": "crash",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": true,
+      "missingPlayerFileNotCreated": false
+    },
+    {
+      "loader": "Fabric",
+      "case": "unstarted",
+      "previewUnchanged": true,
+      "completedPhase": "CANCELLED",
+      "acknowledged": null,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": true
+    },
+    {
+      "loader": "Neoforge",
+      "case": "repair",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": false
+    },
+    {
+      "loader": "Neoforge",
+      "case": "conflict",
+      "previewUnchanged": true,
+      "conflictRefusedBeforeReplacement": true,
+      "journalProtected": true
+    },
+    {
+      "loader": "Neoforge",
+      "case": "crash",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": true,
+      "missingPlayerFileNotCreated": false
+    },
+    {
+      "loader": "Neoforge",
+      "case": "unstarted",
+      "previewUnchanged": true,
+      "completedPhase": "CANCELLED",
+      "acknowledged": null,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": true
+    }
+  ],
+  "normalRestarts": [
+    {
+      "loader": "Fabric",
+      "case": "repair",
+      "savedInventoryVerification": "OK checks=3",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "case": "crash",
+      "savedInventoryVerification": "OK checks=3",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "case": "unstarted",
+      "savedInventoryVerification": "OK checks=1",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "case": "repair",
+      "savedInventoryVerification": "OK checks=3",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "case": "crash",
+      "savedInventoryVerification": "OK checks=3",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "case": "unstarted",
+      "savedInventoryVerification": "OK checks=1",
+      "normalStartup": true,
+      "gameplayResumed": true,
+      "isolated": true,
+      "connectedClients": 0
+    }
+  ],
+  "finalMaintenance": [
+    {
+      "loader": "Fabric",
+      "case": "repair",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": false
+    },
+    {
+      "loader": "Neoforge",
+      "case": "repair",
+      "previewUnchanged": true,
+      "completedPhase": "COMPLETED",
+      "acknowledged": 1,
+      "protectionReleased": true,
+      "repeatDidNotRewriteFiles": true,
+      "hardProcessInterruptionRetried": false,
+      "missingPlayerFileNotCreated": false
+    }
+  ],
+  "nativeTypes": [
+    {
+      "loader": "Fabric",
+      "block": "barrel",
+      "result": "OK checks=119",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "chest",
+      "result": "OK checks=239",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "hopper",
+      "result": "OK checks=358",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "dispenser",
+      "result": "OK checks=478",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "dropper",
+      "result": "OK checks=598",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "furnace",
+      "result": "OK checks=716",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "blast_furnace",
+      "result": "OK checks=835",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Fabric",
+      "block": "smoker",
+      "result": "OK checks=956",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "barrel",
+      "result": "OK checks=118",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "chest",
+      "result": "OK checks=245",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "hopper",
+      "result": "OK checks=799",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "dispenser",
+      "result": "OK checks=1349",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "dropper",
+      "result": "OK checks=1901",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "furnace",
+      "result": "OK checks=2444",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "blast_furnace",
+      "result": "OK checks=2988",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "block": "smoker",
+      "result": "OK checks=3533",
+      "connectedClients": 0
+    }
+  ],
+  "publicCommands": [
+    {
+      "loader": "Fabric",
+      "fixture": "OK checks=848",
+      "publicApplyConfirm": true,
+      "publicCancelAfterActualSave": true,
+      "publicSavedReconciliation": true,
+      "retainedJournalDiagnostics": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "loader": "Neoforge",
+      "fixture": "OK checks=913",
+      "publicApplyConfirm": true,
+      "publicCancelAfterActualSave": true,
+      "publicSavedReconciliation": true,
+      "retainedJournalDiagnostics": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "artifactEvidence": {
+    "finalMaintenanceAndRegressionHashesMatch": true,
+    "interruptionProtocolClassBytesMatch": true,
+    "interruptionMatrixNotes": "Final checkpoint adds only operator-facing world/file preview logs and startup guidance after this matrix; affected file/host/NBT/native ownership and boot classes are byte-identical."
+  },
+  "policy": "Explicit stopped-gameplay preview/confirmation finishes exact recorded expected inventories. Native exclusive world/database locks, full inventory comparisons, bound before/after file hashes, atomic replacements and durable receipt are required. Third states refuse. Protected PREPARED admissions cancel without item files.",
+  "previewEffects": "No world/player file content changes. Existing SQLite open marks interrupted APPLYING journals RECOVERY_REQUIRED. Targeted copies/plans are created under guardian/item-recovery.",
+  "connectedClients": 0,
+  "connectedClientAcceptanceCompleted": false,
+  "productionPackCertified": false,
+  "powerLossCertified": false,
+  "suppliedServerDataTouched": false
+}

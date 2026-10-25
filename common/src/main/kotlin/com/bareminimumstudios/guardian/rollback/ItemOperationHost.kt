@@ -9,7 +9,7 @@ interface ItemOperationPort : ItemApplyPort, ItemSavePort, AutoCloseable {
     fun complete() = close()
 }
 
-enum class ItemOperationState { PROTECTING, APPLYING, SAVING, ACKNOWLEDGING, CONFIRMING, RECONCILING, DRAINING, COMPLETED, RECOVERY_REQUIRED }
+enum class ItemOperationState { PROTECTING, BASELINING, APPLYING, SAVING, ACKNOWLEDGING, CONFIRMING, RECONCILING, DRAINING, COMPLETED, RECOVERY_REQUIRED }
 
 /**
  * Serialized internal host. No commands construct it. Polls never wait for worker or disk I/O.
@@ -56,6 +56,9 @@ class ItemOperationHost private constructor(
             virtual[address] = replacement
         }
     }
+    private val baselineRemaining = ArrayDeque(owners)
+    private var baselineOwner: ItemSlotOwner? = null
+    private var baselineResult: java.util.concurrent.CompletableFuture<InventorySnapshot?>? = null
     private val pendingSaved = linkedMapOf<ItemSlotOwner, CompletionStage<InventorySnapshot?>>()
     private val savePort = object : ItemSavePort {
         override fun isExclusiveAndCurrent(owners: Set<ItemSlotOwner>) =
@@ -97,7 +100,7 @@ class ItemOperationHost private constructor(
         if (state == ItemOperationState.COMPLETED || state == ItemOperationState.RECOVERY_REQUIRED) return state
         advancing = true
         try {
-            if (state in setOf(ItemOperationState.PROTECTING, ItemOperationState.ACKNOWLEDGING, ItemOperationState.CONFIRMING) &&
+            if (state in setOf(ItemOperationState.PROTECTING, ItemOperationState.BASELINING, ItemOperationState.ACKNOWLEDGING, ItemOperationState.CONFIRMING) &&
                 clock() - started > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) {
                 drain(false, "Durable admission or acknowledgment timed out")
                 return state
@@ -111,9 +114,24 @@ class ItemOperationHost private constructor(
                         if (state != ItemOperationState.PROTECTING) return state
                         if (protection!!.isDone) {
                             if (!protection!!.join()) drain(false, "Complete durable protection was refused")
-                            else if (current() && state == ItemOperationState.PROTECTING && image()?.slots == virtual && state == ItemOperationState.PROTECTING) state = ItemOperationState.APPLYING
+                            else if (current() && state == ItemOperationState.PROTECTING && image()?.slots == virtual && state == ItemOperationState.PROTECTING) state = ItemOperationState.BASELINING
                             else drain(false, "Ownership changed during durable admission")
                         }
+                    }
+                }
+                ItemOperationState.BASELINING -> {
+                    check(current() && image()?.slots == checkNotNull(fullImages).original.slots)
+                    if (baselineResult != null) {
+                        if (!baselineResult!!.isDone) return state
+                        val wanted=fullImages.original.slots.filterKeys { it.owner==baselineOwner }
+                        check(baselineResult!!.join()?.slots==wanted) { "Original inventory save could not be verified" }
+                        baselineResult=null;baselineOwner=null
+                    }
+                    if (baselineRemaining.isEmpty()) state=ItemOperationState.APPLYING
+                    else {
+                        val owner=baselineRemaining.removeFirst();baselineOwner=owner
+                        baselineResult=port.saveAndReadBack(owner,fullImages.original.slots.keys.filter { it.owner==owner }.toSet()).toCompletableFuture()
+                        check(current() && image()?.slots==fullImages.original.slots)
                     }
                 }
                 ItemOperationState.ACKNOWLEDGING -> {
