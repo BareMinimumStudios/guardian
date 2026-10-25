@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(16)
+@Version(17)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -42,6 +42,9 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
 
         /** Opt-in block-to-block hopper capture while broader load/gameplay acceptance is pending. */
         var automatedContainerTransfers = ValidatedBoolean(false)
+
+        /** Accepted player edits on either side of supported signs. */
+        var signTextChanges = ValidatedBoolean(false)
     }
 
     var environment = Environment()

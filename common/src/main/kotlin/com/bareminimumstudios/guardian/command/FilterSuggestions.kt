@@ -32,7 +32,7 @@ object FilterSuggestions {
             "l", "limit" -> listOf("10", "20", "50", "100", "500")
             "o", "order" -> listOf("newest", "oldest")
             "p", "page" -> listOf("1", "2", "3", "4", "5")
-            "c", "cause" -> if(items) emptyList() else listOf("fire","explosion","growth","decay","piston","gravity","player","worldedit")
+            "c", "cause" -> if(items) emptyList() else listOf("fire","explosion","growth","decay","piston","gravity","sign","player","worldedit")
             "a", "action" -> if (items) emptyList() else listOf("place", "break", "change", "block")
             else -> emptyList()
         }

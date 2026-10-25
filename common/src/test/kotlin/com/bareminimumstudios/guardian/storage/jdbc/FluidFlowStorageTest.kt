@@ -45,7 +45,7 @@ class FluidFlowStorageTest {
                 listOf("ex_fluid_time_idx","ex_fluid_actor_idx","ex_fluid_location_idx").forEach { s.executeUpdate("DROP INDEX $it") };s.executeUpdate("ALTER TABLE ex_fluid DROP COLUMN before_amount");s.executeUpdate("ALTER TABLE ex_fluid DROP COLUMN after_amount");GuardianSchema.migrations.single { it.version==18 }.statements.filter { it.startsWith("CREATE INDEX") }.forEach(s::executeUpdate)
                 s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=20");com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(s);s.executeUpdate("UPDATE ex_meta SET meta_value='19' WHERE meta_key='schema_version'")
             }}
-            db().use{it.open();assertEquals(22,it.health().schemaVersion);assertEquals(listOf(old),it.lookupFluids(FluidLookupQuery()));it.append(listOf(row()))}
+            db().use{it.open();assertEquals(23,it.health().schemaVersion);assertEquals(listOf(old),it.lookupFluids(FluidLookupQuery()));it.append(listOf(row()))}
             db().use{it.open();assertEquals(2,it.lookupFluids(FluidLookupQuery()).size)}
         }
     }

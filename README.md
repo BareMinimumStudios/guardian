@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.80+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.81+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -379,6 +379,21 @@ Successful restore returns the original history rows to active state without add
 ```
 
 Preview checks a bounded set of candidate transfers against observed inventories. Recovery lists unfinished internal journals or compares their observed state; `saved` compares supported saved data. These commands **do not restore items**. An eligible preview does not establish that applying it would be safe. Busy, unsupported, missing, unloaded or sealed-loot inventories are skipped or refused. Cancel stops the running observation; it does not clear unresolved recovery claims or undo items.
+
+## Sign-text history
+
+Set `logging.signTextChanges = true` in the server configuration to capture future accepted player text edits. It is off by default and follows the general and logging master switches. Supported standing, wall and hanging signs share this path, on both sides. Existing text is not imported merely by enabling capture.
+
+```text
+/guardian lookup c:sign t:1h r:10
+/guardian lookup c:sign u:YourName i:minecraft:oak_sign t:1d
+```
+
+Use ordinary **left-click inspection** for sign history. Lookup and inspection retain their existing permissions. Each row says whether the front or back text changed. Hover the row for numbered before/after lines, shown as plain text using the stored filtered view where available. Sign click commands and formatting are never turned into chat actions. Hover lines are limited to 256 characters. Raw and filtered sign components remain in the database snapshots, so treat database access and backups as sensitive.
+
+No-op edits, waxed signs and edits by a player who is not the allowed editor create no successful edit record. Capture observes the final result of the supported editing method and does not grant editing rights, open a sign editor or bypass claim protection. Dye/glow/wax changes, command/NBT edits and mods that bypass this method are outside text-edit capture. Packet filtering and your pack's claims still need connected-client acceptance. Text exceeding 1,024 plain characters per line, or a compressed snapshot over 1 MiB, is skipped with a throttled incomplete-history warning. Logging failures do not cancel gameplay.
+
+Sign-text history is **read-only for recovery**: public rollback/restore excludes sign-edit rows and refuses `c:sign`. Ordinary sign placement/break rows keep their existing block behavior. Protected, confirmed block-history purge includes old sign-edit rows and accepts their block IDs. Schema 23 is an empty compatibility marker for the new cause; existing payloads are unchanged. Config version 17 adds the disabled setting. Back up before upgrading; older builds refuse the new schema.
 
 ## Purge old history
 

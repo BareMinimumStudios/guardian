@@ -241,7 +241,7 @@ object GuardianCommands {
     }
 
     private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
-        runCatching { permissions.has(source, permission, fallback) }.getOrDefault(false)
+        runCatching { permissions.has(source.player?.createCommandSourceStack() ?: source, permission, fallback) }.getOrDefault(false)
 
     private fun resolvedSearch(source: CommandSourceStack, filter: BlockCommandFilter) =
         filter.search.resolve(source.server.playerList.players.associate { it.gameProfile.name to it.uuid })
@@ -588,6 +588,9 @@ object GuardianCommands {
         if(filter.movementId!=null || filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.PISTON || it==com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY }) {
             source.sendFailure(Component.literal("Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
+        if(com.bareminimumstudios.guardian.domain.ChangeCause.SIGN_TEXT in filter.causes) {
+            source.sendFailure(Component.literal("Guardian sign-text history is read-only; sign rollback/restore is unavailable."));return 0
+        }
         val query = BlockLookupQuery(
             dimension = scope.dimension,
             position = center,
@@ -595,7 +598,7 @@ object GuardianCommands {
             radius = radius,
             search = resolvedSearch(source, filter),
             actions = filter.actions,
-            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY,com.bareminimumstudios.guardian.domain.ChangeCause.PISTON,com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY),
+            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY,com.bareminimumstudios.guardian.domain.ChangeCause.PISTON,com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY,com.bareminimumstudios.guardian.domain.ChangeCause.SIGN_TEXT),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,
             limit = (config.rollback.maxRecords.get() + 1).coerceAtMost(10_000)

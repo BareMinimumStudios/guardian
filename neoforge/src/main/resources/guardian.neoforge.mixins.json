@@ -77,7 +77,8 @@
     "BoneMealGrowthHistoryMixin",
     "NeoForgeEnvironmentalItemHistoryMixin",
     "PistonMovementHistoryMixin",
-    "FallingBlockMovementHistoryMixin"
+    "FallingBlockMovementHistoryMixin",
+    "SignTextHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -143,7 +143,7 @@ class AuditPurgeTest {
                 statement.executeUpdate("DROP TABLE ex_entity");statement.executeUpdate("DROP TABLE IF EXISTS ex_fluid");statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=14")
                 com.bareminimumstudios.guardian.storage.jdbc.LegacyMovementSchema.strip(statement);statement.executeUpdate("UPDATE ex_meta SET meta_value='13' WHERE meta_key='schema_version'")
             } }
-            db().use { store->store.open();assertEquals(22,store.health().schemaVersion)
+            db().use { store->store.open();assertEquals(23,store.health().schemaVersion)
                 assertEquals(audit,store.lookupBlocks(BlockLookupQuery()).single().snapshot)
                 val item=store.lookupContainers(ContainerLookupQuery()).single();assertEquals(old.transactionId,item.transactionId);assertEquals(old.changes,item.changes)
                 assertEquals(listOf(chat),store.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))))

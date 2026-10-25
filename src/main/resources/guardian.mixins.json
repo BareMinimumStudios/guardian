@@ -73,7 +73,8 @@
     "SaplingGrowthHistoryMixin",
     "BoneMealGrowthHistoryMixin",
     "PistonMovementHistoryMixin",
-    "FallingBlockMovementHistoryMixin"
+    "FallingBlockMovementHistoryMixin",
+    "SignTextHistoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

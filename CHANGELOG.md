@@ -33,6 +33,22 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.81+1.21.1] - 2026-10-24
+
+### Fixed
+
+- Recheck current player permissions before returning cached filter completions after operator removal.
+
+### Added
+
+- Opt-in accepted player sign-text history for both sides of supported standing, wall and hanging signs, using immutable before/after block snapshots.
+- `c:sign` lookup filtering and left-click inspection summaries with literal, filtered before/after text on hover.
+
+### Changed
+
+- Schema 23 marks the new cause without rewriting stored payloads; config version 17 adds disabled `logging.signTextChanges`.
+- Sign-edit recovery remains read-only; existing confirmed protected block-history purge includes these rows. No-op, waxed, wrong-editor and oversized observations do not invent successful edits.
+
 ## [0.4.0-alpha.80+1.21.1] - 2026-10-24
 
 ### Added

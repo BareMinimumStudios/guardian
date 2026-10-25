@@ -1,10 +1,10 @@
 # Release validation
 
-Alpha.80 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
+Alpha.81 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
 ## Completed checks
 
-- Alpha.80 passed 713 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
+- Alpha.81 passed 720 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
 - Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
@@ -211,6 +211,16 @@ Alpha.79 passed GitHub CI. The owner selected multiple-user and block-type filte
 Both loaders passed 31 runtime cases each using synthetic immutable audit rows and independent actual-world/SQLite checks. Multiple-user rollback and redo replayed in the correct direction. Preview left world/journal unchanged; excluded users and resources were retained; a filtered gap stopped at mismatch; unsupported and unloaded targets were refused. Redo survived a clean restart, and SQLite integrity passed. Actual LuckPerms/operator fallback passed 2492 checks, including cached block/user exclusion completion and queued preview/apply permission revocation. Every final core hash matches all three runtime/permission copies; SQLite remains the only nested dependency. [Evidence/checksums](validation/recovery-filters-alpha80.json).
 
 All owned servers stopped and supplied databases/worlds were untouched. Fixtures do not certify connected-client rendering, arbitrary claim packs or abrupt-save durability. Filters select history rows and can leave gaps; state checks do not imply a complete selected chain. Preview reserves nothing. Existing R3/final sign-off remain pending; alpha.80 remote CI awaits the owner's push.
+
+## Sign-text history, 2026-10-24
+
+Alpha.80 passed GitHub CI. The owner selected sign-text history. Alpha.81 adds disabled `logging.signTextChanges`, accepted front/back player edits through the shared sign editing method, `c:sign`, left-click block inspection and literal filtered before/after hover details. Existing immutable block snapshots retain raw/filtered sign components. Schema 23 is an empty cause marker; config version 17 preserves existing settings. Sign-text recovery is explicitly read-only; old sign rows participate in protected block purge.
+
+720 tests passed, including seven new cross-backend/filter/purge/upgrade and safe sign-formatting tests. Schema assertions track the new marker; pre-movement fixtures remove later markers before replay. Source/bytecode inspection pinned both loader APIs, the actual packet-to-edit path, SignText codec and WrapMethod contract. New capture/details/mixin inspections and clean/build/cache-reuse/WorldEdit builds passed.
+
+Both isolated loaders executed actual sign editing calls with a synthetic ServerPlayer. Each stored exactly seven accepted rows: five front/back/filtered changes at the standing sign, one hanging sign edit and one wall-back edit. Disabled capture/master switches, no-ops, waxed/wrong-editor attempts and an oversized edit added no row. Both final jars passed eight query/refusal/restart cases each; default recovery left sign rows active, explicit sign recovery refused, and SQLite integrity passed. The operator-removal fixture exposed stale cached completion authority. The shared filter completer now checks the player's current command stack before enumerating results. Current actual LuckPerms/operator checks passed 2508 assertions, including cached c:sign suggestions. Final core hashes match all three final runtime/permission copies. Standard jars nest only SQLite. [Evidence/checksums](validation/signs-alpha81.json).
+
+All owned servers stopped; supplied data was untouched. Tests call the actual editing method and do not certify packet filtering or arbitrary claim packs. The formatter displays literal filtered text; snapshots retain raw and filtered components and backups need the same access controls as the database. No connected client was used. Existing R3/final sign-off remain pending; alpha.81 remote CI awaits the owner's push.
 
 ## Pending acceptance
 

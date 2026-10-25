@@ -17,6 +17,7 @@ object BlockHistoryFormatter {
             rows.forEach { row ->
                 val line=Component.literal(formatRow(row,nowEpochMillis))
                 row.snapshot.movementId?.let { id -> line.withStyle { it.withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,Component.literal("Movement: $id\nPhase: ${row.snapshot.movementPhase}\nSearch this movement with m:$id"))).withClickEvent(net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,"/guardian lookup m:$id")) } }
+                if(row.snapshot.cause==ChangeCause.SIGN_TEXT)line.withStyle { it.withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,Component.literal(SignHistoryDetails.hover(row.snapshot)))) }
                 add(line)
             }
         }
@@ -31,7 +32,7 @@ object BlockHistoryFormatter {
             ActorIdentity.Unknown -> "unknown"
         }
         val fireIds=setOf("minecraft:fire","minecraft:soul_fire")
-        val change = if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
+        val change = if(s.cause==ChangeCause.SIGN_TEXT) SignHistoryDetails.summary(s) else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
         else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_LAND) "falling block landed: ${s.after.blockId}"
         else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.PISTON) "piston changed ${s.before.blockId} -> ${s.after.blockId}"
         else if(s.cause==ChangeCause.FIRE) when {
@@ -56,7 +57,7 @@ object BlockHistoryFormatter {
         }
         val cause = when (s.cause) {
             ChangeCause.WORLD_EDIT -> " via WorldEdit"
-            ChangeCause.PLAYER -> ""
+            ChangeCause.PLAYER, ChangeCause.SIGN_TEXT -> ""
             else -> " via ${s.cause.name.lowercase()}"
         }
         val journal = when (row.rollbackState) {

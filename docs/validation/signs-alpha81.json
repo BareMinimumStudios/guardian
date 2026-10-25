@@ -1,0 +1,361 @@
+{
+  "version": "0.4.0-alpha.81+1.21.1",
+  "date": "2026-10-24",
+  "schema": 23,
+  "configVersion": 17,
+  "tests": {
+    "common": {
+      "tests": 647,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 73,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "permissionChecks": 2508,
+  "runtime": [
+    {
+      "loader": "Fabric",
+      "cases": [
+        {
+          "command": "guardian lookup c:sign u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "edited back sign text",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: Guardian: searching block history...",
+            "[19:08:17] [Server thread/INFO]: Guardian block history (7 results):",
+            "[19:08:17] [Server thread/INFO]: #7 0s ago: GuardianFixture edited back sign text @ 8,300,0",
+            "[19:08:17] [Server thread/INFO]: #6 0s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:08:17] [Server thread/INFO]: #5 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:17] [Server thread/INFO]: #4 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:17] [Server thread/INFO]: #3 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:17] [Server thread/INFO]: #2 0s ago: GuardianFixture edited back sign text @ 2,300,0",
+            "[19:08:17] [Server thread/INFO]: #1 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:17] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897786513000"
+          ]
+        },
+        {
+          "command": "co lookup c:sign i:minecraft:oak_hanging_sign t:1h",
+          "expected": "edited front sign text",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: Guardian: searching block history...",
+            "[19:08:17] [Server thread/INFO]: Guardian block history (1 result):",
+            "[19:08:17] [Server thread/INFO]: #6 0s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:08:17] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897831133700"
+          ]
+        },
+        {
+          "command": "guardian rollback c:sign t:1h",
+          "expected": "sign-text history is read-only",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: Guardian sign-text history is read-only; sign rollback/restore is unavailable.",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897854294800"
+          ]
+        },
+        {
+          "command": "guardian restore preview c:sign t:1h",
+          "expected": "sign-text history is read-only",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: Guardian sign-text history is read-only; sign rollback/restore is unavailable.",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897858304200"
+          ]
+        },
+        {
+          "command": "guardian rollback u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: Guardian: planning block rollback…",
+            "[19:08:17] [Server thread/INFO]: Guardian: no matching rollback block changes were found.",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897875680000"
+          ]
+        },
+        {
+          "command": "execute if block 2 300 0 minecraft:oak_sign run say SIGN_WORLD_PRESERVED",
+          "expected": "SIGN_WORLD_PRESERVED",
+          "output": [
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] SIGN_WORLD_PRESERVED",
+            "[19:08:17] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886897907916700"
+          ]
+        },
+        {
+          "command": "guardian lookup c:sign u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "edited front sign text",
+          "output": [
+            "[19:08:31] [Server thread/INFO]: Guardian: searching block history...",
+            "[19:08:31] [Server thread/INFO]: Guardian block history (7 results):",
+            "[19:08:31] [Server thread/INFO]: #7 14s ago: GuardianFixture edited back sign text @ 8,300,0",
+            "[19:08:31] [Server thread/INFO]: #6 14s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:08:31] [Server thread/INFO]: #5 14s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:31] [Server thread/INFO]: #4 14s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:31] [Server thread/INFO]: #3 14s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:31] [Server thread/INFO]: #2 14s ago: GuardianFixture edited back sign text @ 2,300,0",
+            "[19:08:31] [Server thread/INFO]: #1 14s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:31] [Server thread/INFO]:   Page 1    [Newest first]",
+            "[19:08:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886911618617600"
+          ]
+        },
+        {
+          "command": "guardian status",
+          "expected": "schema=23",
+          "output": [
+            "[19:08:31] [Server thread/INFO]: Guardian sqlite schema=23 itemRecovery=0 | writer=RUNNING queued=0 accepted=0 persisted=0 backpressure=0 failures=0",
+            "[19:08:31] [Server thread/INFO]: Item/container audit: submitted=0 failures=0 backpressure=0",
+            "[19:08:31] [Server thread/INFO]: Hopper audit: submitted=0 failures=0 backpressure=0",
+            "[19:08:31] [Server thread/INFO]: Bulk audit: reserved=0 queuedOps=0 queuedEntries=0 chunks=0 submitted=0 retries=0 rejected=0 failed=false",
+            "[19:08:31] [Server thread/INFO]: [Not Secure] [Server] GTEST_1792886911699729800"
+          ]
+        }
+      ],
+      "acceptedSignRows": 7,
+      "frontBackAndHangingWall": true,
+      "defaultAndMasterSwitches": true,
+      "noOpWaxedWrongEditorAndOversizedAbsent": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "fixture": "Actual editing method with synthetic ServerPlayer; packet filtering and arbitrary claim packs are not certified."
+    },
+    {
+      "loader": "Neoforge",
+      "cases": [
+        {
+          "command": "guardian lookup c:sign u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "edited back sign text",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (7 results):",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #7 0s ago: GuardianFixture edited back sign text @ 8,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #6 0s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #5 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #4 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #3 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #2 0s ago: GuardianFixture edited back sign text @ 2,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #1 0s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931620083400"
+          ]
+        },
+        {
+          "command": "co lookup c:sign i:minecraft:oak_hanging_sign t:1h",
+          "expected": "edited front sign text",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (1 result):",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: #6 0s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931643688800"
+          ]
+        },
+        {
+          "command": "guardian rollback c:sign t:1h",
+          "expected": "sign-text history is read-only",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian sign-text history is read-only; sign rollback/restore is unavailable.",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931668290100"
+          ]
+        },
+        {
+          "command": "guardian restore preview c:sign t:1h",
+          "expected": "sign-text history is read-only",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian sign-text history is read-only; sign rollback/restore is unavailable.",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931674412700"
+          ]
+        },
+        {
+          "command": "guardian rollback u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "no matching rollback block changes",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: planning block rollback…",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: no matching rollback block changes were found.",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931682028100"
+          ]
+        },
+        {
+          "command": "execute if block 2 300 0 minecraft:oak_sign run say SIGN_WORLD_PRESERVED",
+          "expected": "SIGN_WORLD_PRESERVED",
+          "output": [
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] SIGN_WORLD_PRESERVED",
+            "[19:08:51] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886931687056500"
+          ]
+        },
+        {
+          "command": "guardian lookup c:sign u:GuardianFixture t:1h r:20 x:0 y:300 z:0",
+          "expected": "edited front sign text",
+          "output": [
+            "[19:09:04] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler",
+            "[19:09:04] [Server thread/INFO] [Guardian/]: Guardian storage ready: backend=sqlite, schema=23",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian: searching block history...",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian block history (7 results):",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #7 13s ago: GuardianFixture edited back sign text @ 8,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #6 13s ago: GuardianFixture edited front sign text @ 6,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #5 13s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #4 13s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #3 13s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #2 13s ago: GuardianFixture edited back sign text @ 2,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: #1 13s ago: GuardianFixture edited front sign text @ 2,300,0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]:   Page 1    [Newest first]",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886944622842900"
+          ]
+        },
+        {
+          "command": "guardian status",
+          "expected": "schema=23",
+          "output": [
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian sqlite schema=23 itemRecovery=0 | writer=RUNNING queued=0 accepted=0 persisted=0 backpressure=0 failures=0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Item/container audit: submitted=0 failures=0 backpressure=0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Hopper audit: submitted=0 failures=0 backpressure=0",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: Bulk audit: reserved=0 queuedOps=0 queuedEntries=0 chunks=0 submitted=0 retries=0 rejected=0 failed=false",
+            "[19:09:04] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] [Server] GTEST_1792886944652654400"
+          ]
+        }
+      ],
+      "acceptedSignRows": 7,
+      "frontBackAndHangingWall": true,
+      "defaultAndMasterSwitches": true,
+      "noOpWaxedWrongEditorAndOversizedAbsent": true,
+      "restartPersisted": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0,
+      "fixture": "Actual editing method with synthetic ServerPlayer; packet filtering and arbitrary claim packs are not certified."
+    }
+  ],
+  "realLuckPerms": [
+    {
+      "loader": "Fabric",
+      "checks": 843,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 844,
+      "cases": [
+        "real_provider_command_nodes_including_chat_sessions",
+        "grants_denials_operator_override_and_removal",
+        "cached_suggestions_after_revocation",
+        "activity_success_failure_callbacks_both_aliases",
+        "preview_revoked_during_planning_before_tick_and_between_ticks",
+        "preview_lookup_failure_after_revocation",
+        "authorized_preview_and_failure_output",
+        "101_world_states_and_journal_flags_unchanged"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "operatorFallback": [
+    {
+      "loader": "Fabric",
+      "checks": 410,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "cachedSignSuggestionsAfterOperatorRemoval": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "checks": 411,
+      "cases": [
+        "actual_operator_entries_levels_0_through_4",
+        "chat_sessions_require_level_3",
+        "both_aliases",
+        "operator_entry_removal_denies_access"
+      ],
+      "synthetic_player": true,
+      "explicit_provider_simulated": false,
+      "real_luckperms_tested": false,
+      "cachedSignSuggestionsAfterOperatorRemoval": true,
+      "connected_clients": 0,
+      "bytecode_transformed": false,
+      "sqlite_integrity": "ok"
+    }
+  ],
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.81+1.21.1.jar",
+      "bytes": 13257204,
+      "sha256": "53b255193a341c7aa748572a25af4c6a36e5ff97f45430699e42fdf2203ed14e"
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.81+1.21.1.jar",
+      "bytes": 13233462,
+      "sha256": "86407112e8f87d597414f431c84c845386029e217722c6a8f31a363ca82a50e4"
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.81+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "6c2711266e69269424ea49724097b07db5a8c1c73a3ca94aa651eda34082d4d7"
+    }
+  ],
+  "builds": {
+    "clean": "passed through IDEA; final clean passed in 10s using verified cached test outputs",
+    "freshTests": "720 passed; fresh common/formatting tests before final clean",
+    "build": "passed; configuration cache reused",
+    "worldedit": "passed separate adapter build"
+  },
+  "previousCI": {
+    "sha": "b201acda3135392918f8fdfbc21cbd5b4418a7fb",
+    "result": "success",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40143837184"
+  },
+  "sourceChecks": "MixinMCP inspected updateSignText/setMessages and exact invocation bytecode on Fabric and NeoForge, SignText DIRECT_CODEC, packet-to-editor call and MixinExtras WrapMethod contract. New mixin/capture/details passed errors-only inspection.",
+  "suppliedDatabasesUsed": false,
+  "connectedClients": 0,
+  "allOwnedServersStopped": true,
+  "coverage": [
+    "front/back accepted player edits using real sign method and immutable existing NBT snapshots",
+    "standing, wall and hanging sign rows with exact expected per-position counts",
+    "default-off, sign switch, logging master and general switch behavior",
+    "no-op, wrong editor, waxed and oversized changes absent from audit",
+    "raw/filtered sign components survive immutable queue/persistence; literal filtered hover rendering has no inherited click actions",
+    "cause/user/block filtering before paging and restart",
+    "public explicit sign recovery refusal and default recovery exclusion",
+    "protected existing block-history purge and schema22-to23 upgrade; optional DuckDB and memory parity",
+    "actual LuckPerms/operator lookup/inspection/recovery boundaries and cached sign completion revocation",
+    "SQLite integrity; final jars match runtime and permission copies"
+  ],
+  "limits": [
+    "Only accepted changes through the supported player editing method; not general NBT, command or arbitrary custom sign capture.",
+    "No dye/glow/wax-only history; 1024 plain characters per line and 1MiB compressed snapshots are capture bounds.",
+    "Hover uses literal filtered text with a 256-character per-line display limit; raw/filtered components remain in sensitive database snapshots.",
+    "Sign-text recovery remains unavailable; old sign rows use existing confirmed protected block purge.",
+    "Synthetic players/direct real editing calls do not certify packet filtering, rendered clients or arbitrary claims. Existing R3/final sign-off remain pending."
+  ]
+}
