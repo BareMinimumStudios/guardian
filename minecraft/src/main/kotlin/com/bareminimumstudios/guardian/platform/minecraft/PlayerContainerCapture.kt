@@ -167,8 +167,9 @@ object PlayerContainerCapture {
         if (includeContainers) {
             var hasBlockContainer = false
             for (slot in menu.slots) {
+                if(slot.container is net.minecraft.world.entity.vehicle.AbstractMinecartContainer && (slot.container as net.minecraft.world.entity.vehicle.AbstractMinecartContainer).lootTable!=null)return null
                 val address = address(slot.container, slot.containerSlot, player) ?: return null
-                if (address.owner is ItemSlotOwner.BlockContainer) hasBlockContainer = true
+                if (address.owner is ItemSlotOwner.BlockContainer || address.owner is ItemSlotOwner.EntityContainer) hasBlockContainer = true
                 if (address.owner is ItemSlotOwner.PlayerInventory) continue
                 require(address !in slots) { "Menu aliases a logical inventory slot" }
                 slots[address] = MinecraftItemSnapshotter.capture(slot.item, player.registryAccess())
@@ -187,6 +188,7 @@ object PlayerContainerCapture {
             if (index < first.containerSize) address(first, index, player)
             else address(parts.`guardian$second`(), index - first.containerSize, player)
         }
+        container is net.minecraft.world.entity.vehicle.AbstractMinecartContainer -> MinecartInventorySnapshotter.owner(container,player.serverLevel())?.let { ItemSlotAddress(it,index) }
         container is BlockEntity && container.level === player.serverLevel() -> {
             val pos = container.blockPos
             ItemSlotAddress(ItemSlotOwner.BlockContainer(ResourceId.parse(player.serverLevel().dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z)), index)

@@ -1,11 +1,41 @@
-# Online item rollback
+# Item rollback
 
-Alpha.84 implements the bounded online ownership and command milestone explicitly requested
-on 2026-10-24. Maintenance-only operation does not satisfy that request. See the README for
-commands and operational limits. Alpha.85 adds [confirmed maintenance recovery](ITEM_RECOVERY.md)
-for protected partial operations while gameplay is stopped.
+Item rollback reverses a recorded transfer between supported inventories.
+It does not restore a full past inventory or recreate items that have since been
+used, crafted or moved through an unsupported action.
 
-## Implemented contract
+## Start with a small transfer
+
+1. Keep a backup of your world and Guardian database.
+2. Have the player shift-click items into a nearby vanilla chest or barrel, then close it.
+3. Keep that player online with menus closed, cursor empty and crafting grid empty.
+   Keep both inventories inside the selected region and all containers loaded.
+4. Stand near the container and run these with the player's real name:
+
+```text
+/guardian rollback-items preview u:Alex t:10m r:5
+/guardian rollback-items apply u:Alex t:10m r:5
+/guardian rollback-items confirm <token shown by apply>
+```
+
+Preview changes nothing. Apply also changes nothing: it selects the transfer and gives
+you a token. Confirm it within 30 seconds. Guardian checks the inventories again before
+changing items. If preview says zero eligible, read its specific Player/Container detail
+before continuing.
+
+Supported targets are ordinary online player inventories and vanilla chests, barrels,
+hoppers, dispensers, droppers, furnaces, blast furnaces and smokers. Minecarts, direct
+item displays, lectern book actions, cursor/crafting transfers and custom storage are
+excluded. A completed shift-click transfer is the simplest test.
+
+Use one included player. Item rollback does not accept multi-user or item-type filters.
+There is no item redo. During apply/save checks, inventory interactions and automation
+may briefly pause. Item components are preserved for supported records.
+
+If interrupted, follow [targeted recovery](ITEM_RECOVERY.md). Do not delete journal
+claims or mix a newer database with older world/player saves to bypass a refusal.
+
+## Technical limits
 
 - Reverse complete recorded conserving transfer chains, at most 50 source transactions,
   8 owners, 64 changed final slots and 2 MiB of full original/expected images.

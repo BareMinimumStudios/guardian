@@ -31,4 +31,12 @@ public abstract class HopperTransferMixin {
             return result;
         }
     }
+    @WrapMethod(method = "addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z")
+    private static boolean guardian$captureCollection(net.minecraft.world.Container container, net.minecraft.world.entity.item.ItemEntity item, Operation<Boolean> original) {
+        try (var pending=HopperTransferCapture.beginCollection(container,item)) {
+            boolean result=original.call(container,item);
+            HopperTransferCapture.finishCollection(pending);
+            return result;
+        }
+    }
 }

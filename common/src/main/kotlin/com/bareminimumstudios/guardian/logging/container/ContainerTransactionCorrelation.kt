@@ -27,7 +27,7 @@ class ContainerTransactionCorrelation(
         }
         return if (changes.isEmpty()) null else ContainerTransactionSnapshot(
             transactionId, timestampEpochMillis, actor, menuId, if (crafted) ContainerAction.CRAFT else action, changes,
-            (contexts + before.slots.keys.mapNotNull { it.owner as? ItemSlotOwner.BlockContainer }).distinct()
+            (contexts + before.slots.keys.mapNotNull { it.owner.auditLocation() }).distinct()
         )
     }
 }

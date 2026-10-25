@@ -34,6 +34,7 @@ internal object ExportRows {
     private fun block(s:BlockStateSnapshot)=mapOf("id" to s.blockId.toString(),"properties" to s.properties,"blockEntityBase64" to bytes(s.blockEntityData))
     private fun item(s:ItemStackSnapshot)=mapOf("id" to s.itemId?.toString(),"count" to s.count,"componentsBase64" to bytes(s.itemData))
     private fun owner(o:ItemSlotOwner):Map<String,Any?> = when(o) {
+        is ItemSlotOwner.EntityContainer->mapOf("type" to "entity_inventory","dimension" to o.dimension.toString(),"uuid" to o.entityUuid.toString(),"entityType" to o.entityType.toString(),"position" to pos(o.position))
         is ItemSlotOwner.BlockContainer->mapOf("type" to "container","dimension" to o.dimension.toString(),"position" to pos(o.position))
         is ItemSlotOwner.PlayerInventory->mapOf("type" to "player_inventory","uuid" to o.playerId.toString())
         is ItemSlotOwner.Cursor->mapOf("type" to "cursor","uuid" to o.playerId.toString())

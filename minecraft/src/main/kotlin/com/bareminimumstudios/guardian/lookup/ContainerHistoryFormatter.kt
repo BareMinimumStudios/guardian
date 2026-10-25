@@ -5,13 +5,13 @@ import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 
 object ContainerHistoryFormatter {
-    fun lines(transactions: List<ContainerTransactionSnapshot>, nowEpochMillis: Long = System.currentTimeMillis(), focus: ItemSlotOwner.BlockContainer? = null): List<Component> = buildList {
+    fun lines(transactions: List<ContainerTransactionSnapshot>, nowEpochMillis: Long = System.currentTimeMillis(), focus: ItemSlotOwner.BlockContainer? = null, entityFocus: java.util.UUID? = null): List<Component> = buildList {
         if (transactions.isEmpty()) add(Component.literal("Guardian: no item transactions found."))
         else add(Component.literal("Guardian item history (${transactions.size} ${if (transactions.size == 1) "transaction" else "transactions"}):").withStyle(ChatFormatting.GOLD))
         for (transaction in transactions) {
             val actor = when (val identity = transaction.actor) {
                 is ActorIdentity.Player -> identity.lastKnownName ?: identity.uuid.toString()
-                is ActorIdentity.System -> if (identity.source == "minecraft:hopper") "Hopper" else identity.source
+                is ActorIdentity.System -> when(identity.source) { "minecraft:hopper" -> "Hopper"; "minecraft:hopper_minecart" -> "Hopper minecart"; else -> identity.source }
                 is ActorIdentity.Entity -> identity.entityType.toString()
                 ActorIdentity.Unknown -> "unknown"
             }
@@ -24,13 +24,17 @@ object ContainerHistoryFormatter {
                 for ((identity, owners) in routes) {
                     val from = owners.filterValues { it < 0 }; val to = owners.filterValues { it > 0 }
                     if (focus != null && focus !in from && focus !in to) continue
+                    if(entityFocus!=null && owners.keys.none { it is ItemSlotOwner.EntityContainer && it.entityUuid==entityFocus })continue
                     fun positions(values: Map<ItemSlotOwner, Int>) = values.keys.joinToString(" + ") { target ->
-                        val block = target as ItemSlotOwner.BlockContainer
-                        "${block.position.x},${block.position.y},${block.position.z}"
+                        when(target) {
+                            is ItemSlotOwner.BlockContainer -> "${target.position.x},${target.position.y},${target.position.z}"
+                            is ItemSlotOwner.EntityContainer -> "${target.entityType.path.replace('_',' ')} ${target.entityUuid.toString().take(8)} @ ${target.position.x},${target.position.y},${target.position.z}"
+                            else -> "unsupported inventory"
+                        }
                     }
                     val id = requireNotNull(identity.first)
                     val name = id.path.replace('_', ' ') + if (id.namespace == "minecraft") "" else " (${id.namespace})"
-                    val line = Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: Hopper moved ${to.values.sum()} $name ").withStyle(ChatFormatting.GREEN)
+                    val line = Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor moved ${to.values.sum()} $name ").withStyle(ChatFormatting.GREEN)
                     line.append(Component.literal("[${positions(from)} → ${positions(to)}]").withStyle { it.withColor(ChatFormatting.AQUA).withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("${positions(from)} → ${positions(to)}"))) })
                     add(line)
                 }
@@ -54,11 +58,14 @@ object ContainerHistoryFormatter {
                 add(Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor crafted; $details$location").withStyle(ChatFormatting.GREEN))
                 continue
             }
-            val focusedChanges = transaction.changes.filter { focus == null || it.address.owner == focus }
+            val focusedChanges = transaction.changes.filter {
+                (focus == null || it.address.owner == focus) &&
+                    (entityFocus == null || (it.address.owner as? ItemSlotOwner.EntityContainer)?.entityUuid == entityFocus)
+            }
             // Container context also indexes inventory-only actions while a menu is open.
             // Do not infer a second chest half from an unchanged inspected block.
             val changes = if (focus != null && focusedChanges.isEmpty()) transaction.changes else focusedChanges
-            val blocks = changes.filter { it.address.owner is ItemSlotOwner.BlockContainer }
+            val blocks = changes.filter { it.address.owner is ItemSlotOwner.BlockContainer || it.address.owner is ItemSlotOwner.EntityContainer }
             val visible = if (blocks.isNotEmpty()) blocks else changes.filter { it.address.owner is ItemSlotOwner.PlayerInventory || it.address.owner is ItemSlotOwner.CraftingGrid }
             val groups = visible.groupBy { it.address.owner }
             var emitted = false
@@ -71,12 +78,13 @@ object ContainerHistoryFormatter {
                 }
                 val location = when (owner) {
                     is ItemSlotOwner.BlockContainer -> "container @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z}"
+                    is ItemSlotOwner.EntityContainer -> "${owner.entityType.path.replace('_', ' ')} @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z}"
                     is ItemSlotOwner.CraftingGrid -> "crafting grid"
                     is ItemSlotOwner.Cursor -> "cursor"
                     else -> "player inventory"
                 }
                 for ((item, count) in deltas) if (count != 0) {
-                    val verb = if (count > 0) "added" else "removed"
+                    val verb = if (transaction.action == ContainerAction.HOPPER_COLLECT && count > 0) "collected" else if (count > 0) "added" else "removed"
                     val direction = if (count > 0) "to" else "from"
                     val itemId = requireNotNull(item.first)
                     val componentChange = rows.any { it.before.itemId == itemId && it.after.itemId == itemId && it.before.itemData != it.after.itemData }

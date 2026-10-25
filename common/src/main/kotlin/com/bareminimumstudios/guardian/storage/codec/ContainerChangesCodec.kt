@@ -13,12 +13,16 @@ object ContainerChangesCodec {
         require(changes.size in 1..MAX_SLOTS)
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
-            output.writeInt(if (changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) 0x47435432 else 0x47435431); output.writeInt(changes.size)
+            output.writeInt(if(changes.any { it.address.owner is ItemSlotOwner.EntityContainer })0x47435433 else if (changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) 0x47435432 else 0x47435431); output.writeInt(changes.size)
             changes.forEach { change ->
                 when (val owner = change.address.owner) {
                     is ItemSlotOwner.PlayerInventory -> { output.writeByte(1); output.writeUTF(owner.playerId.toString()) }
                     is ItemSlotOwner.CraftingGrid -> { output.writeByte(4); output.writeUTF(owner.playerId.toString()); output.writeInt(owner.menuId) }
                     is ItemSlotOwner.Cursor -> { output.writeByte(2); output.writeUTF(owner.playerId.toString()) }
+                    is ItemSlotOwner.EntityContainer -> {
+                        output.writeByte(5);output.writeUTF(owner.dimension.toString());output.writeUTF(owner.entityUuid.toString());output.writeUTF(owner.entityType.toString())
+                        output.writeInt(owner.position.x);output.writeInt(owner.position.y);output.writeInt(owner.position.z)
+                    }
                     is ItemSlotOwner.BlockContainer -> {
                         output.writeByte(3); output.writeUTF(owner.dimension.toString())
                         output.writeInt(owner.position.x); output.writeInt(owner.position.y); output.writeInt(owner.position.z)
@@ -35,14 +39,15 @@ object ContainerChangesCodec {
         require(bytes.size <= MAX_BYTES)
         return DataInputStream(ByteArrayInputStream(bytes)).use { input ->
             val format = input.readInt()
-            require(format == 0x47435431 || format == 0x47435432) { "Unsupported container changes format" }
+            require(format == 0x47435431 || format == 0x47435432 || format == 0x47435433) { "Unsupported container changes format" }
             val size = input.readInt(); require(size in 1..MAX_SLOTS)
             val changes = List(size) {
                 val owner = when (input.readUnsignedByte()) {
                     1 -> ItemSlotOwner.PlayerInventory(UUID.fromString(input.readUTF()))
                     2 -> ItemSlotOwner.Cursor(UUID.fromString(input.readUTF()))
                     3 -> ItemSlotOwner.BlockContainer(ResourceId.parse(input.readUTF()), BlockPosition(input.readInt(), input.readInt(), input.readInt()))
-                    4 -> { require(format == 0x47435432); ItemSlotOwner.CraftingGrid(UUID.fromString(input.readUTF()), input.readInt()) }
+                    4 -> { require(format == 0x47435432 || format == 0x47435433); ItemSlotOwner.CraftingGrid(UUID.fromString(input.readUTF()), input.readInt()) }
+                    5 -> { require(format==0x47435433);ItemSlotOwner.EntityContainer(ResourceId.parse(input.readUTF()),UUID.fromString(input.readUTF()),ResourceId.parse(input.readUTF()),BlockPosition(input.readInt(),input.readInt(),input.readInt())) }
                     else -> throw IllegalArgumentException("Unknown slot owner")
                 }
                 ItemSlotChange(ItemSlotAddress(owner, input.readInt()), readItem(input), readItem(input))

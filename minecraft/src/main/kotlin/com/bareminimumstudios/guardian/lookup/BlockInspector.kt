@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object BlockInspector {
     private val enabledPlayers = ConcurrentHashMap.newKeySet<UUID>()
-    private data class Selection(val owner: ItemSlotOwner.BlockContainer, val items: Boolean, val oldestFirst: Boolean = false, val entityUuid: UUID? = null)
+    private data class Selection(val owner: ItemSlotOwner.BlockContainer, val items: Boolean, val oldestFirst: Boolean = false, val entityUuid: UUID? = null, val inventoryEntityUuid: UUID? = null)
     private data class Click(val pos: BlockPos, val right: Boolean, val tick: Long, val entityUuid: UUID? = null)
     private val lastClicks = ConcurrentHashMap<UUID, Click>()
     private val selections = ConcurrentHashMap<UUID, Selection>()
@@ -66,6 +66,20 @@ object BlockInspector {
         return true
     }
 
+    @JvmStatic fun interceptMinecart(player:ServerPlayer,cart:net.minecraft.world.entity.vehicle.AbstractMinecartContainer):Boolean {
+        if(!player.server.isSameThread || !isEnabled(player))return false
+        if(!authorized(player)) { set(player,false);player.sendSystemMessage(Component.literal("Guardian inspection disabled: permission was removed."));return true }
+        if(cart.level()!==player.serverLevel() || cart.isRemoved || !player.canInteractWithEntity(cart,1.0) ||
+            player.serverLevel().getEntity(cart.uuid)!==cart)return true
+        val pos=cart.blockPosition();val tick=player.serverLevel().gameTime;val last=lastClicks[player.uuid]
+        if(last!=null && last.entityUuid==cart.uuid && tick-last.tick in 0..2)return true
+        lastClicks[player.uuid]=Click(pos.immutable(),true,tick,cart.uuid)
+        val owner=ItemSlotOwner.BlockContainer(ResourceId.parse(cart.level().dimension().location().toString()),BlockPosition(pos.x,pos.y,pos.z))
+        selections[player.uuid]=Selection(owner,true,selections[player.uuid]?.oldestFirst ?: false,inventoryEntityUuid=cart.uuid)
+        showPage(player,1)
+        return true
+    }
+
     private fun authorized(player: ServerPlayer) = runCatching { permissions?.has(player.createCommandSourceStack(), "guardian.inspect", 2) == true }.getOrDefault(false)
 
     fun inspectInteraction(player: Player, world: Level, pos: BlockPos, rightClick: Boolean = false): InteractionResult {
@@ -89,8 +103,8 @@ object BlockInspector {
         }
         val history=historyProvider() ?: return
         val currentPermissions=permissions ?: return
-        ItemTransactionViewer.open(player,ContainerLookupQuery(selection.owner.dimension,selection.owner.position,
-            limit=(configProvider()?.lookup?.inspectorResults?.get() ?: 5).coerceIn(1,5),oldestFirst=selection.oldestFirst),history,currentPermissions) {
+        ItemTransactionViewer.open(player,ContainerLookupQuery(selection.owner.dimension,if(selection.inventoryEntityUuid==null)selection.owner.position else null,
+            limit=(configProvider()?.lookup?.inspectorResults?.get() ?: 5).coerceIn(1,5),oldestFirst=selection.oldestFirst,entityUuid=selection.inventoryEntityUuid),history,currentPermissions) {
             isEnabled(player) && authorized(player) && historyProvider()===history
         }
     }
@@ -113,10 +127,10 @@ object BlockInspector {
                 }
             },{ if(isEnabled(player) && authorized(player) && entityAuthorized(player) && selections[player.uuid]==selection) player.sendSystemMessage(Component.literal("Guardian frame lookup failed; see server log.")) })
         }
-        else if (selection.items) history.lookupContainers(ContainerLookupQuery(owner.dimension, owner.position, limit = limit,
-            offset = (page - 1) * limit, oldestFirst = selection.oldestFirst), { rows ->
+        else if (selection.items) history.lookupContainers(ContainerLookupQuery(owner.dimension, if(selection.inventoryEntityUuid==null)owner.position else null, limit = limit,
+            offset = (page - 1) * limit, oldestFirst = selection.oldestFirst, entityUuid=selection.inventoryEntityUuid), { rows ->
             if (isEnabled(player) && authorized(player) && selections[player.uuid] == selection) {
-                ContainerHistoryFormatter.lines(rows, focus = owner).forEach(player::sendSystemMessage)
+                ContainerHistoryFormatter.lines(rows, focus = if(selection.inventoryEntityUuid==null)owner else null,entityFocus=selection.inventoryEntityUuid).forEach(player::sendSystemMessage)
                 player.sendSystemMessage(ItemTransactionViewer.link("/guardian inspect ui"))
                 player.sendSystemMessage(footer(rows.size == limit))
             }

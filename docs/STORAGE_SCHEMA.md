@@ -1,6 +1,6 @@
 # Guardian storage schema
 
-Current schema: **19**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+Current schema: **25**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
 
 The `ex_` table prefix preserves the native ExProtect format lineage. It is not a CoreProtect `co_` schema or an automatic importer.
 
@@ -8,7 +8,7 @@ The `ex_` table prefix preserves the native ExProtect format lineage. It is not 
 - Mapping tables store dimensions, resources, block-state properties and actors.
 - Block history stores event identity, time, actor, position, before/after state and payload, action/cause and rollback state.
 - Container history stores correlated immutable slot changes with item counts and persistent component payloads. Logical owner indexes support checking history omitted by filters.
-- Item recovery tables retain operation records, entries, owner/transaction claims, unresolved protection and complete saved images/reconciliation decisions. These do not expose item apply.
+- Item recovery tables retain operation records, entries, owner/transaction claims, unresolved protection and complete saved images/reconciliation decisions. Online apply and confirmed maintenance recovery use these protected records.
 
 Block rollback state values are `0 ACTIVE`, `1 ROLLED_BACK`, `2 PENDING`, `3 RESTORE_PENDING`. Pending rows retain interrupted reconciliation work; queries excluding rolled-back rows still retain pending rows. Newly claimed untouched active rows can be released after permission revocation, while older pending recovery state is preserved.
 
@@ -53,3 +53,5 @@ Schema 19 adds nullable `frame_before` and `frame_after` BLOBs to `ex_entity`, w
 ## Direct displays and ground pickups (schema 24)
 
 Schema 24 is an empty compatibility-marker migration admitting `BLOCK_USE` and `GROUND_PICKUP` interaction names in `ex_container`. Both reuse the existing immutable component-aware slot payloads and owner/item/location indexes. No old rows are rewritten. Standard inventory contracts and explicit optional display adapters are read only on the server thread; pending live objects never enter the writer queue. Direct display rows include changed player slots and physical block slot ownership where available. Pickup rows describe the actual player inventory delta, not a reversible item-entity transfer. Both new actions are excluded by the rollback planner. Older builds reject schema 24 instead of encountering unknown action names.
+
+Schema 25 adds stable entity-inventory UUID indexing and GCT3 item-owner addresses. Existing GCT1/GCT2 records remain readable. Entity inventory and lectern audit records do not grant recovery support.

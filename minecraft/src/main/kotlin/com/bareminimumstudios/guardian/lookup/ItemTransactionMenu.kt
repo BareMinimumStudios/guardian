@@ -126,6 +126,7 @@ internal class ItemTransactionMenu(
     }
     private fun owner(owner: ItemSlotOwner)=when(owner) {
         is ItemSlotOwner.BlockContainer -> "Container @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z} (${owner.dimension})"
+        is ItemSlotOwner.EntityContainer -> "${owner.entityType} @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z} (${owner.dimension}); UUID ${owner.entityUuid}"
         is ItemSlotOwner.PlayerInventory -> "${playerLabel(owner.playerId)} inventory"
         is ItemSlotOwner.Cursor -> "${playerLabel(owner.playerId)} cursor"
         is ItemSlotOwner.CraftingGrid -> "${playerLabel(owner.playerId)} crafting grid"

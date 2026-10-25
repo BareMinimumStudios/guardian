@@ -18,6 +18,7 @@ public abstract class BlockInteractionMixin {
     private InteractionResult guardian$captureInteraction(ServerPlayer player, Level level, ItemStack stack, InteractionHand hand,
                                                           BlockHitResult hit, Operation<InteractionResult> original) {
         var customSignBefore = com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.beginCustom(player, hit.getBlockPos());
+        var lecternBefore = com.bareminimumstudios.guardian.platform.minecraft.LecternHistoryCapture.before(player, hit.getBlockPos());
         var signBefore = com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.beginInteraction(level, player, hit.getBlockPos());
         var state = level.getBlockState(hit.getBlockPos());
         net.minecraft.core.BlockPos other = null;
@@ -38,6 +39,7 @@ public abstract class BlockInteractionMixin {
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.finishBlockUse(player, itemsBefore, result.consumesAction());
         com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.finishCustom(player, customSignBefore, result.consumesAction());
         com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.finishInteraction(level, player, signBefore, result.consumesAction());
+        com.bareminimumstudios.guardian.platform.minecraft.LecternHistoryCapture.after(player, lecternBefore, result.consumesAction(), true);
         PlayerBlockCapture.finishInteraction(level, player, hit.getBlockPos(), before, result);
         if (other != null) PlayerBlockCapture.finishInteraction(level, player, other, otherBefore, result);
         return result;

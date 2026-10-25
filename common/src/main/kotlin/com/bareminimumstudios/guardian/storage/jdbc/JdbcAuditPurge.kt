@@ -68,7 +68,7 @@ internal class JdbcAuditPurge(private val connection: Connection) {
                     q.setLong(2,candidate.time);q.setLong(3,plan.cutoff);filter.bind(q,4);q.executeQuery().use { it.next() }
                 }
                 if(!allowed)continue
-                if(candidate.kind==PurgeKind.CONTAINER)for(child in listOf("ex_container_item","ex_container_owner","ex_container_location"))connection.prepareStatement("DELETE FROM $child WHERE transaction_uuid = ?").use { q ->q.setString(1,candidate.key);q.executeUpdate() }
+                if(candidate.kind==PurgeKind.CONTAINER)for(child in listOf("ex_container_entity","ex_container_item","ex_container_owner","ex_container_location"))connection.prepareStatement("DELETE FROM $child WHERE transaction_uuid = ?").use { q ->q.setString(1,candidate.key);q.executeUpdate() }
                 val table=source.table.substringBefore(' ');val key=source.key.substringAfter('.')
                 val deleted=connection.prepareStatement("DELETE FROM $table WHERE $key = ?").use { q ->if(candidate.kind==PurgeKind.BLOCK)q.setLong(1,candidate.key.toLong())else q.setString(1,candidate.key);q.executeUpdate() }
                 when(candidate.kind){PurgeKind.BLOCK->blocks+=deleted;PurgeKind.CONTAINER->containers+=deleted;PurgeKind.ACTIVITY->activity+=deleted;PurgeKind.ENTITY->entities+=deleted;PurgeKind.FLUID->fluids+=deleted}

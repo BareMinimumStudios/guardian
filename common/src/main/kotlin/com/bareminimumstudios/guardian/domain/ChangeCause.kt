@@ -11,6 +11,7 @@ enum class ChangeCause(val storageCode: Int) {
     DECAY(15),
     GRAVITY(16),
     SIGN_TEXT(17),
+    LECTERN(18),
     ENTITY(20),
     WORLD_GENERATION(30),
     SYSTEM(40),

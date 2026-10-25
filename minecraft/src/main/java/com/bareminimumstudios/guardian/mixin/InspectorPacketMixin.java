@@ -27,6 +27,9 @@ public abstract class InspectorPacketMixin {
     private void guardian$inspectFrame(ServerboundInteractPacket packet, CallbackInfo ci) {
         if(!player.server.isSameThread()) return;
         net.minecraft.world.entity.Entity entity=packet.getTarget(player.serverLevel());
+        if(entity instanceof net.minecraft.world.entity.vehicle.AbstractMinecartContainer cart && BlockInspector.interceptMinecart(player,cart)) {
+            player.inventoryMenu.sendAllDataToRemote();ci.cancel();return;
+        }
         if(!(entity instanceof net.minecraft.world.entity.decoration.ItemFrame frame) || !BlockInspector.interceptFrame(player,frame)) return;
         if(BlockInspector.canInspectFrame(player,frame)) {
             player.connection.send(new ClientboundSetEntityDataPacket(frame.getId(),java.util.List.of(

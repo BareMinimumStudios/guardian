@@ -59,4 +59,16 @@ class ContainerHistoryFormatterTest {
         val lines=ContainerHistoryFormatter.lines(listOf(tx),2000).map{it.string}
         assertTrue(lines.any{"added 1 coal to crafting grid" in it});assertTrue(lines.none{"crafted;" in it})
     }
+
+    @Test fun movingInventoriesAreNamedAndCollectionDoesNotInventATransfer() {
+        val cart=ItemSlotOwner.EntityContainer(owner.dimension,UUID.randomUUID(),ResourceId.parse("minecraft:hopper_minecart"),owner.position)
+        val row=ContainerTransactionSnapshot(UUID.randomUUID(),1000,ActorIdentity.System("minecraft:hopper_minecart"),0,ContainerAction.HOPPER_COLLECT,
+            listOf(ItemSlotChange(ItemSlotAddress(cart,0),ItemStackSnapshot.EMPTY,coal(1))))
+        val lines=ContainerHistoryFormatter.lines(listOf(row),2000,entityFocus=cart.entityUuid).map { it.string }
+        assertTrue(lines.any { "Hopper minecart collected 1 coal to hopper minecart @" in it })
+        assertTrue(lines.none { "player inventory" in it || "moved" in it })
+        val transfer=ContainerTransactionSnapshot(UUID.randomUUID(),1000,ActorIdentity.System("minecraft:hopper"),0,ContainerAction.HOPPER_TRANSFER,
+            listOf(ItemSlotChange(ItemSlotAddress(cart,0),coal(1),ItemStackSnapshot.EMPTY),ItemSlotChange(ItemSlotAddress(owner,0),ItemStackSnapshot.EMPTY,coal(1))))
+        assertTrue(ContainerHistoryFormatter.lines(listOf(transfer),2000).any { "Hopper moved 1 coal [hopper minecart" in it.string })
+    }
 }

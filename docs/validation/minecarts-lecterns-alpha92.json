@@ -1,0 +1,143 @@
+{
+  "version": "0.4.0-alpha.92+1.21.1",
+  "date": "2026-10-25",
+  "schemaVersion": 25,
+  "configVersion": 18,
+  "tests": {
+    "tests": 795,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.92+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.92+1.21.1.jar",
+      "bytes": 13520097,
+      "sha256": "fbb1d0ff10b14339e0b6c3c48cfcc6d22be272c470d20c9187555326b77b24eb",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.92+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.92+1.21.1.jar",
+      "bytes": 13490634,
+      "sha256": "7b8e0f54e8f570ebddbaa4306de062279f584675c411e802b4d242f6c493adc5",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.92+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.92+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "5ab33bb44cab7d33fc482d5f605997ad85c8c91a5509826243a45294efbb583d",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "native": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=38",
+      "items": [
+        [
+          "BLOCK_USE",
+          2
+        ],
+        [
+          "HOPPER_COLLECT",
+          1
+        ],
+        [
+          "HOPPER_TRANSFER",
+          4
+        ],
+        [
+          "QUICK_MOVE",
+          4
+        ]
+      ],
+      "lecterns": [
+        [
+          18,
+          5
+        ]
+      ],
+      "entityIndexes": [
+        [
+          "299c0703-b61e-4bf6-b6ef-e06bb3ca2d66",
+          5
+        ],
+        [
+          "46d9055e-7ce5-4d85-92a0-4461d4fbcabd",
+          5
+        ]
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=39",
+      "items": [
+        [
+          "BLOCK_USE",
+          2
+        ],
+        [
+          "HOPPER_COLLECT",
+          1
+        ],
+        [
+          "HOPPER_TRANSFER",
+          4
+        ],
+        [
+          "QUICK_MOVE",
+          4
+        ]
+      ],
+      "lecterns": [
+        [
+          18,
+          5
+        ]
+      ],
+      "entityIndexes": [
+        [
+          "d2bb40e5-01f7-41c7-b881-bbbb3cc980de",
+          5
+        ],
+        [
+          "fc7eabe0-02f1-4a13-a36e-a48df4f24dd9",
+          5
+        ]
+      ]
+    }
+  ],
+  "cases": [
+    "Native player click packets deposit/withdraw chest and hopper minecarts",
+    "Block hopper to cart, cart to block hopper, block to hopper minecart, cart to hopper minecart",
+    "Full destination push and full cart ground collection create no rows",
+    "Component-aware source/destination conservation; unchanged candidate carts excluded from entity index",
+    "Accepted ground item collection",
+    "Lectern book insertion, opening, forward/back page turns and take-book action; clamped page no-op omitted",
+    "UUID/location identity, old GCT1/GCT2 compatibility and GCT3 owner payload bounds",
+    "Isolated schema24 upgrade/restart, filtered paging, purge index cleanup and recovery exclusion tests"
+  ],
+  "connectedClients": 0,
+  "finalRuntimeJarHashesMatch": true,
+  "suppliedServersModified": false,
+  "limits": "Synthetic players; NeoForge lectern menu synchronization uses an in-memory Netty channel. Real client/pack acceptance remains pending. Entity inventory, direct lectern book actions and lectern block history remain excluded from recovery. Existing pack item rollback diagnosis still needs the owner alpha.90 detail.",
+  "ci": "Awaiting owner push"
+}

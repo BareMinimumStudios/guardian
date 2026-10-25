@@ -11,8 +11,9 @@ object DirectBlockItems {
     private val hangingDisplay = object : ClassValue<Boolean>() {
         override fun computeValue(type:Class<*>):Boolean = type.methods.any { it.name=="amendments\$getExtension" && it.parameterCount==0 }
     }
-    fun supported(block:BlockEntity):Boolean = block is Container || block is DisplayInventoryAccess || (block is HangingSignBlockEntity && hangingDisplay.get(block.javaClass))
+    fun supported(block:BlockEntity):Boolean = block is net.minecraft.world.level.block.entity.LecternBlockEntity || block is Container || block is DisplayInventoryAccess || (block is HangingSignBlockEntity && hangingDisplay.get(block.javaClass))
     fun items(block:BlockEntity):List<ItemStack> {
+        if(block is net.minecraft.world.level.block.entity.LecternBlockEntity)return listOf(block.book)
         if(block is Container) {
             require(block.containerSize in 1..256) { "Direct block inventory exceeds the slot bound" }
             return (0 until block.containerSize).map(block::getItem)

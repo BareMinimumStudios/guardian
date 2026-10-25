@@ -32,7 +32,7 @@ class SignHistoryStorageTest {
             val path=Files.createTempDirectory("sign-upgrade").resolve("audit.db");fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(path)else SqliteStorageBackend(path)
             val old=row(1).copy(cause=ChangeCause.PLAYER)
             db().use{it.open();it.append(listOf(old))}
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+path).use{c->c.createStatement().use{s->s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=23");s.executeUpdate("UPDATE ex_meta SET meta_value='22' WHERE meta_key='schema_version'")}}
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:"else "jdbc:sqlite:")+path).use{c->c.createStatement().use{s->s.executeUpdate("DROP TABLE ex_container_entity");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=23");s.executeUpdate("UPDATE ex_meta SET meta_value='22' WHERE meta_key='schema_version'")}}
             db().use{it.open();assertEquals(GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(listOf(old),it.lookupBlocks(BlockLookupQuery()).map{r->r.snapshot});it.append(listOf(row(2)))}
             db().use{it.open();assertEquals(listOf(2L),it.lookupBlocks(BlockLookupQuery(causes=setOf(ChangeCause.SIGN_TEXT))).map{r->r.snapshot.timestampEpochMillis})}
         }

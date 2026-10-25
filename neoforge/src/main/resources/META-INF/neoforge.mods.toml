@@ -10,7 +10,7 @@ displayName="Guardian"
 displayURL="https://github.com/BareMinimumStudios/guardian"
 logoFile="assets/guardian/icon.png"
 authors="Bare Minimum Studios"
-description="Server-side block auditing, inspection, and rollback."
+description="Find who changed blocks or moved items. Inspect history in-game and undo supported changes. Server-side for Fabric and NeoForge."
 displayTest="IGNORE_SERVER_VERSION"
 
 [[dependencies.guardian]]

@@ -1,7 +1,18 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.91+1.21.1**. Schema 24, config version 17.
+Current executable checkpoint: **0.4.0-alpha.92+1.21.1**. Schema 25, config version 18.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Minecart inventories and lecterns
+
+795 automated tests and the required clean/cache-reuse/WorldEdit builds pass. Native Fabric
+and NeoForge fixtures verify actual cart menu click packets, hopper/cart transfers, rejected
+full destinations, ground collection and lectern insertion/open/page/removal paths.
+The saved databases contain the expected event counts and pass integrity checks.
+Schema 24 upgrade/restart, UUID/spatial queries, purge and recovery exclusions have regression tests.
+The fixtures use synthetic players; NeoForge lectern synchronization uses an in-memory network
+channel. They do not certify real-client menus or the production pack.
+[Evidence](validation/minecarts-lecterns-alpha92.json).
 
 ## Plaque and copper capture
 
@@ -21,7 +32,7 @@ and components. No supplied server data was changed. The reported pack-specific 
 still needs its new detail line; no safety check was disabled.
 [Evidence](validation/item-preview-diagnostics-alpha90.json).
 Alpha.89 GitHub CI passed: [run](https://github.com/BareMinimumStudios/guardian/actions/runs/40206943947).
-Alpha.90 CI awaits the owner's push.
+Alpha.90 CI passed; alpha.91/alpha.92 await the owner's push.
 
 ## Sign and display acceptance corrections
 

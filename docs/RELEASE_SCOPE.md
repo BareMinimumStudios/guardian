@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-25 against `0.4.0-alpha.91+1.21.1`.
+Assessed: 2026-10-25 against `0.4.0-alpha.92+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
@@ -24,8 +24,8 @@ awaits the owner's new diagnostic line. [Evidence](validation/item-preview-diagn
 
 The owner identified Supplementaries Squared plaques and explicitly authorized copper
 surface capture, minecart inventories and lectern history. Alpha.91 completes plaque/copper
-capture. Minecart and lectern work remains a separate authorized milestone; it is not included
-in this checkpoint or claimed as accepted. [Evidence](validation/plaques-copper-alpha91.json).
+capture. Alpha.92 adds the separately authorized minecart and lectern audit paths;
+these records remain excluded from item/block recovery. [Evidence](validation/plaques-copper-alpha91.json).
 
 ## Current release
 
@@ -36,7 +36,7 @@ in this checkpoint or claimed as accepted. [Evidence](validation/plaques-copper-
   growth/decay, movement and sign-text history, with filtered lookup, inspection and export.
 - Read-only item transaction UI on both loaders, using plain vanilla menu icons and fully
   virtual slots. It does not decode historical component payloads or reconstruct full past
-  inventories. See the [README](../README.md#read-only-item-transaction-viewer).
+  inventories. See the [README](COMMANDS.md#inspector).
 - Supported filtered block rollback/restore and confirmed bounded online item rollback,
   including explicit targeted maintenance recovery for proven interrupted item operations.
   See [online item rollback](ONLINE_ITEM_ROLLBACK.md) and [item recovery](ITEM_RECOVERY.md).

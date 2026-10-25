@@ -257,6 +257,12 @@ abstract class JdbcStorageBackend(
             it.setString(5, transaction.action.name); it.setBytes(6, bytes); it.executeUpdate()
         }
         if (inserted == 0) return
+        conn.prepareStatement("INSERT INTO ex_container_entity(transaction_uuid,entity_uuid) VALUES (?,?) ON CONFLICT DO NOTHING").use { statement->
+            transaction.changes.mapNotNull { (it.address.owner as? ItemSlotOwner.EntityContainer)?.entityUuid }.distinct().forEach { uuid->
+                statement.setString(1,transaction.transactionId.toString());statement.setString(2,uuid.toString());statement.addBatch()
+            }
+            statement.executeBatch()
+        }
         ContainerItemIndex.insert(conn, transaction.transactionId.toString(), transaction.changes)
         ContainerOwnerIndex.insert(conn,transaction.transactionId.toString(),transaction.timestampEpochMillis,transaction.changes.map { ContainerOwnerIndex.key(it.address.owner) }.toSet())
         conn.prepareStatement("INSERT INTO ex_container_location(transaction_uuid, wid, x, y, z) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING").use { statement ->
@@ -275,6 +281,7 @@ abstract class JdbcStorageBackend(
         val actors = HistorySearchSql.actors(query.search, "a.uuid", "a.name", "a.kind = 1")
         val resources = HistorySearchSql.resources(query.search) { count -> "EXISTS (SELECT 1 FROM ex_container_item fi WHERE fi.transaction_uuid = c.transaction_uuid AND fi.resource IN (${List(count) { "?" }.joinToString(",")}))" }
         sql.append(actors.clause).append(resources.clause)
+        if(query.entityUuid!=null)sql.append(" AND c.transaction_uuid IN (SELECT entity.transaction_uuid FROM ex_container_entity entity WHERE entity.entity_uuid=?)")
         if (query.actorUuid != null) sql.append(" AND a.uuid = ?")
         if (query.actorName != null) sql.append(" AND LOWER(a.name) = LOWER(?)")
         if (query.dimension != null) {
@@ -293,6 +300,7 @@ abstract class JdbcStorageBackend(
             var index = 1
             actors.values.forEach { statement.setString(index++, it) }
             resources.values.forEach { statement.setString(index++, it) }
+            query.entityUuid?.let { statement.setString(index++,it.toString()) }
             query.actorUuid?.let { statement.setString(index++, it.toString()) }
             query.actorName?.let { statement.setString(index++, it) }
             query.dimension?.let { statement.setString(index++, it.toString()) }

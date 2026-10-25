@@ -20,6 +20,8 @@
     "CreativeInventoryMixin",
     "HopperTransferMixin",
     "BlockInteractionMixin",
+    "LecternMenuFactoryMixin",
+    "LecternMenuHistoryMixin",
     "InspectorPacketMixin",
     "CraftingMenuAccessor",
     "CraftingResultMixin",

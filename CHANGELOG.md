@@ -37,6 +37,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.92+1.21.1] - 2026-10-25
+
+### Added
+
+- Record chest and hopper minecart menu transfers with stable entity UUIDs and historical locations. Inspect a cart to follow its history after movement.
+- Extend opt-in hopper logging to observed cart endpoints and successful dropped-item collection. Keep actual native destination selection and exclude failed full-inventory attempts.
+- Record lectern book insertion/removal in item history, with separate opt-in book, opening and page history through `logging.lecternInteractions` and `c:lectern`.
+- Upgrade existing history to schema 25 for entity inventory payloads and their lookup index. Preserve old block, player and crafting payload formats.
+
+### Changed
+
+- Rewrite the public README around installation and common tasks; move command details to a separate guide and clarify both loader descriptions.
+- Config version 18 adds the lectern switch. Minecart, collection and lectern audit records remain excluded from recovery.
+
 ## [0.4.0-alpha.91+1.21.1] - 2026-10-25
 
 ### Fixed

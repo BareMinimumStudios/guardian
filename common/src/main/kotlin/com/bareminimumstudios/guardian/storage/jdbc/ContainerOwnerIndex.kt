@@ -8,6 +8,7 @@ import java.sql.Connection
 /** Persistent owner index includes temporary player-owned slots, which can block unsafe history gaps. */
 internal object ContainerOwnerIndex {
     fun key(owner: ItemSlotOwner): String = when(owner) {
+        is ItemSlotOwner.EntityContainer -> "e:"+owner.dimension+":"+owner.entityUuid
         is ItemSlotOwner.BlockContainer -> "b:${owner.dimension}:${owner.position.x}:${owner.position.y}:${owner.position.z}"
         is ItemSlotOwner.PlayerInventory -> "p:${owner.playerId}"
         is ItemSlotOwner.Cursor -> "p:${owner.playerId}"

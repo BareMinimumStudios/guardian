@@ -3,7 +3,7 @@
   "id": "guardian",
   "version": "${version}",
   "name": "Guardian",
-  "description": "Server-side block auditing, inspection, and rollback for Minecraft 1.21.1.",
+  "description": "Find who changed blocks or moved items. Inspect history in-game and undo supported changes. Server-side for Fabric and NeoForge.",
   "authors": [
     "Bare Minimum Studios"
   ],
