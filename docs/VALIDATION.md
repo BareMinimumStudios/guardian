@@ -2,10 +2,20 @@
 
 Alpha.82 is the current executable checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
 
+## Alpha.82 release-readiness review, 2026-10-24
+
+The current executable checkpoint is suitable for controlled alpha testing, with no additional features required by the fixed release checklist. GitHub CI for code commit `77c1f30` is passed; [run](https://github.com/BareMinimumStudios/guardian/actions/runs/40148145014). Local evidence remains 729 tests and 2704 current permission checks. This review changes documentation only; no jars, schema or configuration changed, so those tests were not repeated just for wording corrections.
+
+Reviewed all three final jars and both original checkpoint archives. Hashes match the runtime-tested export milestone. ZIP integrity, Java 21 class level, loader/server metadata, native SQLite-only nesting, exact source licenses and separate GPL adapter passed. Both core icons are 256x256/25,520 bytes; core jars are about 12.7 MiB. Internal test-package hashes and tracked-file hygiene passed. The pinned mc-publish workflow selects the correct artifacts and dated release notes in the offline preflight; no upload was attempted, and remote credentials/project IDs remain unverified.
+
+Corrected the README's stale schema and early recovery-filter wording, refreshed current permission evidence and added concise references to existing features within the same six-row client matrix. Historical milestone descriptions remain historical. [Review evidence and checksums](validation/readiness-alpha82.json).
+
+Remaining sign-off is the real connected-client/actual-pack matrix on both loaders, followed by owner selection/approval of the final artifacts. The user cannot join yet; this review neither asks for that now nor substitutes synthetic players. Item apply remains deferred. No feature expansion, new acceptance gate, production-data testing, push, tag or publication is part of this review.
+
 ## Completed checks
 
 - Alpha.82 passed 729 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Current fluid/entity/activity permissions passed 2116 actual-provider/operator checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
+- Alpha.82 passed 2704 actual-provider/operator checks for the current export/recovery/history paths; see [export evidence](validation/exports-alpha82.json). The broader fluid/entity/activity cohort previously passed 2116 checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
 - Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
 
 Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.

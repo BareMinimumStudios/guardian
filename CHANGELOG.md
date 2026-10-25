@@ -7,6 +7,10 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Fixed
+
+- Correct the README database schema and early recovery-filter restrictions. Refresh current validation references and the existing client acceptance matrix during the alpha.82 readiness review; executable jars are unchanged.
+
 ### Removed
 
 - Archive superseded milestone notes and historical fixture reports outside the repository. Retain current architecture, storage, release scope and validation contracts.

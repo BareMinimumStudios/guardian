@@ -22,7 +22,7 @@ Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge.
 
 ## Install or update
 
-Use Java 21 and install the jar matching your **server** loader. Each core jar is about 12 MiB and includes SQLite; no separate database mod or common-module jar is needed.
+Use Java 21 and install the jar matching your **server** loader. Each core jar is about 12.7 MiB and includes SQLite; no separate database mod or common-module jar is needed.
 
 | Server | Guardian jar | Required server dependencies |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ For optional **Fabric WorldEdit** capture, also install WorldEdit 7.3.8 and the 
 
 The default database is `<server directory>/guardian/guardian.sqlite`. Fzzy Config generates Guardian's settings under the `guardian` namespace in the server's configuration directory. Back up both along with your world.
 
-Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 22**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
+Stop the server before copying its database for a simple consistent backup. Startup upgrades existing supported databases to **schema 23**. Keep the pre-upgrade backup: an older Guardian build cannot open a schema newer than it supports. Changing database backends does not convert or move history. Old ExProtect files are not moved automatically.
 
 ## First investigation
 
@@ -106,7 +106,7 @@ Block/item include and exclude lists accept up to 64 exact IDs each. An omitted 
 
 A block record matches either its recorded **before or after** block ID. An item transaction matches any recorded nonempty before/after item stack. Including several IDs means any of them can match. Excluding an ID hides the **whole event or transaction**, even if another included item also occurs in it; Guardian does not manufacture a partial transaction for display.
 
-These filters run before result limits and pagination. Player lists work across block/item/chat/session history; resource filters work only for block/item history. Block rollback and read-only item previews still accept one included user and **refuse these extended history filters**.
+These filters run before result limits and pagination. Player lists also work in command, entity and fluid history. Resource IDs refer to block/item IDs in those histories, entity types in entity history, and fluid/host-block IDs in fluid history; activity history has no resource filter. Block rollback, restore/redo and their previews accept multi-user and block-type filters as described below. Read-only **item** previews still accept one included user and refuse extended history filters.
 
 On first schema-12 startup, Guardian builds an item-ID index from existing transaction payloads in batches. The original history and payload bytes are preserved. A large existing database may take longer to open for this one-time migration; back it up first.
 

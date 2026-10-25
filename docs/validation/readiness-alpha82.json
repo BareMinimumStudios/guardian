@@ -1,0 +1,122 @@
+{
+  "reviewedVersion": "0.4.0-alpha.82+1.21.1",
+  "date": "2026-10-24",
+  "baseCommit": "77c1f305ab50b58509d25891a52bcbbac568123a",
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 13312138,
+      "sha256": "027f88ab891fc35102f9c68453f9431972b442cc9c3725520cea3e6181f9ca9d",
+      "zipIntegrity": "passed",
+      "licenseMatchesSource": true,
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ],
+      "icon": {
+        "width": 256,
+        "height": 256,
+        "bytes": 25520
+      }
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 13286975,
+      "sha256": "60c026cc31618a95c1de6426adc45bd3ecdaad86ba7ec67a7abf0e33e4cdfe3d",
+      "zipIntegrity": "passed",
+      "licenseMatchesSource": true,
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ],
+      "icon": {
+        "width": 256,
+        "height": 256,
+        "bytes": 25520
+      }
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.82+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "82c116698ed37d0f919bbd62809f4c798d9fb22d8e77bd55e3cc9ccd18819f86",
+      "zipIntegrity": "passed",
+      "licenseMatchesSource": true,
+      "javaClassMajorMax": 65,
+      "nested": [],
+      "icon": null
+    }
+  ],
+  "archives": [
+    {
+      "file": "Guardian-1.21.1-alpha82-source.zip",
+      "sha256": "edfb9f16b32a3810ee310a456726b95c2c9d2abcbd45068d1c1cb283d9875a42",
+      "integrity": "passed"
+    },
+    {
+      "file": "Guardian-1.21.1-alpha82-test-package.zip",
+      "sha256": "6f7f9e6ec13c0876fbe53efe86dbf69061e409c189e4ad94391f26bd8eeea350",
+      "integrity": "passed"
+    }
+  ],
+  "localBaseline": {
+    "common": {
+      "tests": 656,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "minecraft": {
+      "tests": 73,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "currentPermissionChecks": 2704,
+  "offlinePublishPreflight": {
+    "datedChangelog": true,
+    "notesNonEmpty": true,
+    "versionTag": "v0.4.0-alpha.82+1.21.1",
+    "runtimeArtifactSelection": true,
+    "githubPrereleaseConfigured": true,
+    "mcPublishPinned": true,
+    "publicationAttempted": false,
+    "remoteTokensAndProjectIdsValidated": false
+  },
+  "repositoryHygiene": {
+    "agentInstructionsTracked": false,
+    "runtimeDataOrArchivesTracked": false
+  },
+  "findings": [
+    "README current database schema says 22 instead of 23",
+    "README early extended-filter paragraph contradicts alpha80 block rollback/restore support",
+    "existing six-row client matrix needs concise references to newer filters/sign/export checks within those same rows"
+  ],
+  "decision": "Suitable for controlled alpha testing; not signed off for a general release",
+  "remaining": [
+    "R3 connected-client and actual-pack/claim matrix on both loaders",
+    "R4 final artifact selection and owner release approval"
+  ],
+  "noNewFeaturesRequired": true,
+  "suppliedDatabasesUsed": false,
+  "connectedClientAcceptanceCompleted": false,
+  "executableCodeChanged": false,
+  "ci": {
+    "status": "completed",
+    "conclusion": "success",
+    "sha": "77c1f305ab50b58509d25891a52bcbbac568123a",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40148145014"
+  },
+  "fixedFindings": [
+    "Corrected schema 22 to 23 in backup instructions",
+    "Corrected the early multi-user/resource filter restriction; item previews remain read-only and restricted",
+    "Updated the current permission evidence reference to 2704 checks",
+    "Referenced newer filter/sign/purge/export checks within the same six client acceptance rows",
+    "Matched the core size estimate to the measured 12.7 MiB artifacts"
+  ],
+  "findingsResolved": true,
+  "publicationPreflightLimit": "Static artifact/note/workflow review only; no remote tokens, project IDs or actual upload validated"
+}
