@@ -1,15 +1,30 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.87+1.21.1**. Schema 23 and config version 17
+Current executable checkpoint: **0.4.0-alpha.88+1.21.1**. Schema 23 and config version 17
 are unchanged. The feature list is frozen; this pass contains optimization and release polish.
 
-## Current evidence
+## Login command-list correction
+
+During real Fabric client acceptance, the owner reported missing command/entity/fluid history
+nodes despite alpha.87, enabled capture and operator access. Console deop/op while connected
+restored them. Both vanilla and NeoForge `PlayerList.placeNewPlayer` send the initial command
+packet through `sendPlayerPermissionLevel` before `playersByUUID.put`. The command-node
+predicates incorrectly treated that visibility check as a history request from a connected player.
+
+Alpha.88 advertises nodes by current permission and keeps identity/permission validation on
+execution and deferred output. The native packet regression covers the pre-insertion state,
+operator thresholds and both aliases; baseline alpha.87 reproduces the missing nodes. It also
+checks pre-login query refusal, joined queries, disconnected-result suppression and revocation.
+See [login evidence](validation/login-commands-alpha88.json). No real-client acceptance is claimed
+for the replacement jar until the owner reconnects and confirms it. Feature scope is unchanged.
+
+## Optimization baseline evidence
 
 See [alpha.87 measurements, regressions and artifact hashes](validation/polish-alpha87.json).
 The required clean build, repeated build with configuration-cache reuse and separate WorldEdit
 build pass locally through IntelliJ's Java 21 / Gradle 9.8.0 configurations. 778 automated
-tests pass. Alpha.86 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40187646202);
-alpha.87 remote CI awaits the owner's push.
+tests pass. Alpha.87 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40190105399);
+alpha.88 remote CI awaits the owner's push.
 
 ### UI comparison
 

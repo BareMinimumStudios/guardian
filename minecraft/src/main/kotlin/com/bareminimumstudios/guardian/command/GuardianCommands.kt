@@ -68,7 +68,9 @@ object GuardianCommands {
             statusNode(permissions, runtimeProvider)
         )
 
-        root.then(Commands.literal("entities").requires { entityAuthorized(it,permissions) }
+        // Vanilla sends the login command tree before adding this player to playersByUUID.
+        // Advertise by current permission; execution and deferred results still require a live identity.
+        root.then(Commands.literal("entities").requires { authorized(it,permissions,"guardian.entities",2) }
             .executes { context -> executeEntities(context.source,"",runtimeProvider(),configProvider()) }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
                 .suggests { context,builder ->
@@ -85,7 +87,7 @@ object GuardianCommands {
                     }
                 }
                 .executes { context -> executeEntities(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
-        root.then(Commands.literal("fluids").requires { fluidAuthorized(it,permissions) }
+        root.then(Commands.literal("fluids").requires { authorized(it,permissions,"guardian.fluids",2) }
             .executes { context -> executeFluids(context.source,"",runtimeProvider(),configProvider()) }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
                 .suggests { context,builder ->
@@ -104,7 +106,7 @@ object GuardianCommands {
                 .executes { context -> executeFluids(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
         listOf("chat", "sessions", "commands").forEach { name ->
             val permission = "guardian.$name"
-            root.then(Commands.literal(name).requires { activityAuthorized(it, permissions, name) }
+            root.then(Commands.literal(name).requires { authorized(activitySource(it,name),permissions,permission,3) }
                 .executes { context -> executeActivity(context.source, "", name, runtimeProvider(), configProvider()) }
                 .then(Commands.argument("filters", StringArgumentType.greedyString())
                     .suggests { context, builder -> suggestFilters(activitySource(context.source,name), builder, permissions, activity = true, permission = permission, fallback = 3) }
@@ -388,6 +390,7 @@ object GuardianCommands {
 
     private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
+        if(!activityAuthorized(source,runtime.permissions,name))return 0
         val allowed = setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order")
         if (raw.split(Regex("\\s+")).any { it.isNotBlank() && it.substringBefore(':').lowercase() !in allowed }) {
             source.sendFailure(Component.literal("Guardian $name accepts user, time, limit, page and order filters only.")); return 0

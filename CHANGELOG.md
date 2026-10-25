@@ -37,6 +37,13 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.88+1.21.1] - 2026-10-25
+
+### Fixed
+
+- Include authorized command/entity/fluid history nodes in the initial login command packet. Minecraft sends that packet before inserting the joining player into its UUID map; requiring an already registered identity there incorrectly hid the nodes until a later permission refresh.
+- Keep current permissions and connected-player identity checks for history execution and deferred results. Gate command-history queries before dispatch as well as on completion. No capture setting, data format or permission requirement is relaxed.
+
 ## [0.4.0-alpha.87+1.21.1] - 2026-10-25
 
 ### Changed

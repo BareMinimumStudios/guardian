@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits and supported item transfers. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.87+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.88+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -626,6 +626,15 @@ Guardian captures player block placement/breaking, accepted supported block inte
 Registered modded blocks/items can appear in history when they use supported hooks. Arbitrary custom menus, extended crafting, capability-only storage and mod mutations that bypass those hooks are not universally supported. Fluid spread/automation, arbitrary entity-property changes, entity rollback, private-message logging, economy/faction storage and full CoreProtect parity are outside this release.
 
 ## Troubleshooting
+
+- **History commands missing after login:** alpha.88 fixes the login command-list check for
+  `commands`, `entities` and `fluids`. Install the updated server jar and reconnect. Capture
+  switches control new records, not command availability. Command history requires
+  `guardian.commands` / operator level 3; entities and fluids use their separate level-2
+  permissions. Explicit provider denials still apply. On alpha.87, console deop/op while the
+  player stays connected refreshes the list temporarily; restarting the old version repeats
+  the login problem. `verboseStartup` does not enable commands.
+
 
 - **No history:** verify `/guardian status`, logging switches, player name, time window and dimension. Make a fresh supported change after installation and query it. Changing databases starts separate history.
 - **No item transactions:** move an item, rather than just opening a menu. Test a vanilla barrel first. Enable hopper capture explicitly for automated movement.

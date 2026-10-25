@@ -1,0 +1,125 @@
+{
+  "version": "0.4.0-alpha.88+1.21.1",
+  "date": "2026-10-25",
+  "baseCommit": "23a1c34070f7bb6737b98c54dda4fc2e29220e8c",
+  "schemaVersion": 23,
+  "configVersion": 17,
+  "featureListFrozen": true,
+  "defect": "Authorized commands/entities/fluids omitted from initial login command packet before playersByUUID insertion. Real Fabric user confirmed console deop/op while connected restored them.",
+  "fix": "Command-node visibility uses current permission only. Execution and deferred results retain current connected identity checks; command history validates before query dispatch.",
+  "nativeSourceVerification": "Fabric and NeoForge PlayerList.placeNewPlayer call sendPlayerPermissionLevel, which invokes Commands.sendCommands, before playersByUUID.put.",
+  "tests": {
+    "tests": 778,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.88+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.88+1.21.1.jar",
+      "bytes": 13448990,
+      "sha256": "8a0ee9a6f008018874c665a38c9ca0dbbfa71b2b7a95269e0fbd8edcd7ce51e0",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.88+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.88+1.21.1.jar",
+      "bytes": 13420844,
+      "sha256": "5fc72d64298d5c59ce6225e91aa5926cb3bd42d3a89799a7bd9a2e0d77c002a9",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.88+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.88+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "20589993f9e47b6c944f8087efa11f1b5a4c54df75372c29b9af3fbbeeb7bf71",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "alpha87Ci": {
+    "status": "passed",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40190105399"
+  },
+  "alpha88Ci": "awaiting owner push",
+  "nativePacketBaseline": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=69",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=69",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    }
+  ],
+  "nativePacketFixed": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=101",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=101",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    }
+  ],
+  "packetSnapshots": {
+    "Fabric": {
+      "baseline": "beforeUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, chat, sessions, transactions, rollback-items, purge, export]\nafterUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]",
+      "fixed": "beforeUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]\nafterUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]"
+    },
+    "Neoforge": {
+      "baseline": "beforeUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, chat, sessions, transactions, rollback-items, purge, export]\nafterUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]",
+      "fixed": "beforeUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]\nafterUuidInsertion=[lookup, l, inspect, i, rollback, rb, restore, redo, status, entities, fluids, chat, sessions, commands, transactions, rollback-items, purge, export]"
+    }
+  },
+  "nativeCases": [
+    "Actual Commands.sendCommands queued ClientboundCommandsPacket before UUID insertion",
+    "Both guardian and co aliases, operator levels0/2/3/4 and separate history thresholds",
+    "Alpha87 missing-node baseline reproduced on both loaders",
+    "Pre-login execution refuses history requests despite node visibility",
+    "Joined current operator can request the three histories",
+    "Disconnected identity suppresses deferred results",
+    "Permission withdrawal suppresses deferred results and removes advertised nodes"
+  ],
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClientsInFixtures": 0,
+  "userAlpha87WorkaroundConfirmed": true,
+  "userAlpha88ReconnectConfirmation": "pending",
+  "suppliedServerDataTouched": false,
+  "limits": "Native packet/lifecycle-order regression with synthetic players and unconnected listeners; real reconnect still needs owner confirmation. No new features or saved-data migration."
+}
