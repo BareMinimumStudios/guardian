@@ -37,6 +37,36 @@ class ContainerStorageTest {
         }
         factory(path).use { backend -> backend.open(); assertEquals(value.changes, backend.lookupContainers(ContainerLookupQuery()).single().changes) }
     }
+    @Test fun exactAndBroadContainerQueriesMatchTheImmutableOracleAcrossPagesAndRestart() = backends { factory,path,_ ->
+        val otherActor=ActorIdentity.Player(UUID.randomUUID(),"OtherTester")
+        val otherWorld=ItemSlotOwner.BlockContainer(ResourceId.parse("minecraft:the_nether"),left.position)
+        val all=(0 until 12).map { i ->
+            val who=if(i%2==0)actor else otherActor
+            val blocks=when(i%3) { 0 -> listOf(left,right);1 -> listOf(right);else -> listOf(otherWorld,left) }
+            ContainerTransactionSnapshot(UUID(0,i+1L),100+i/2L,who,1,ContainerAction.QUICK_MOVE,
+                listOf(ItemSlotChange(ItemSlotAddress(blocks.first(),0),item,ItemStackSnapshot.EMPTY),
+                    ItemSlotChange(ItemSlotAddress(ItemSlotOwner.PlayerInventory(who.uuid),9),ItemStackSnapshot.EMPTY,item)),blocks)
+        }
+        val queries=listOf(
+            ContainerLookupQuery(dimension,left.position),ContainerLookupQuery(dimension,left.position,radius=0),
+            ContainerLookupQuery(dimension,right.position,actorName="tester"),
+            ContainerLookupQuery(dimension,left.position,afterEpochMillis=103,search=HistorySearchFilter(included=setOf(item.itemId!!))),
+            ContainerLookupQuery(dimension,left.position,search=HistorySearchFilter(excludedPlayers=listOf(HistoryPlayer("OtherTester")))),
+            ContainerLookupQuery(otherWorld.dimension,otherWorld.position),
+            ContainerLookupQuery(dimension,left.position,radius=2),
+            ContainerLookupQuery(dimension,bounds=BlockBounds(left.position,right.position)),ContainerLookupQuery(dimension))
+        for(reopen in 0..1)factory(path).use { db ->
+            db.open();if(reopen==0)db.append(all.map(::ContainerAuditEntry))
+            for(base in queries)for(oldest in listOf(false,true))for(offset in listOf(0,1,3)) {
+                val q=base.copy(limit=2,offset=offset,oldestFirst=oldest)
+                val ordered=all.filter(q::matches).sortedWith(compareBy<ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenBy { it.transactionId.toString() })
+                val expected=(if(oldest)ordered else ordered.reversed()).drop(offset).take(2)
+                val actual=db.lookupContainers(q)
+                assertEquals(expected.map { it.transactionId },actual.map { it.transactionId })
+                expected.zip(actual).forEach { (a,b) -> assertEquals(a.changes,b.changes);assertEquals(a.containers.toSet(),b.containers.toSet()) }
+            }
+        }
+    }
     @Test fun duplicateIdCannotAddDifferentLocations() = backends { factory, path, _ ->
         val value = transaction()
         factory(path).use { backend ->

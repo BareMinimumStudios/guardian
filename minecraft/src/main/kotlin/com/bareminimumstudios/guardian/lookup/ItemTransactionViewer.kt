@@ -17,7 +17,9 @@ object ItemTransactionViewer {
             available() && !player.isRemoved && player.server.playerList.getPlayer(player.uuid)===player &&
                 permissions.has(player.createCommandSourceStack(),"guardian.lookup",2) && MinecraftInventoryCoordination.allowsPlayerMutation(player)
         }.getOrDefault(false)
-        if(!allowed())return
+        if(!allowed()) {
+            player.sendSystemMessage(Component.literal("Guardian item UI unavailable: check lookup permission and whether inventory recovery is active."));return
+        }
         if(player.isSpectator) { player.sendSystemMessage(Component.literal("Guardian item UI requires a non-spectator player for menu navigation."));return }
         if(player.containerMenu!==player.inventoryMenu && player.containerMenu !is ItemTransactionMenu || !player.containerMenu.carried.isEmpty) {
             player.sendSystemMessage(Component.literal("Guardian: close your current menu and clear your cursor before opening item history."));return
@@ -26,7 +28,7 @@ object ItemTransactionViewer {
         lateinit var menu: ItemTransactionMenu
         fun load() {
             if(player.containerMenu!==menu || !menu.stillValid(player))return
-            menu.loading()
+            menu.loading(current.offset/current.limit+1)
             val requested=current
             history.lookupContainers(requested,{ rows ->
                 if(player.containerMenu===menu && menu.stillValid(player) && current===requested) {

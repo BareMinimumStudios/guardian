@@ -278,7 +278,12 @@ abstract class JdbcStorageBackend(
         if (query.actorUuid != null) sql.append(" AND a.uuid = ?")
         if (query.actorName != null) sql.append(" AND LOWER(a.name) = LOWER(?)")
         if (query.dimension != null) {
-            sql.append(" AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
+            // Exact-container searches can start at the existing location index instead of
+            // probing every newer transaction. Broad scopes retain the streaming time scan.
+            val exact=query.position!=null && (query.radius==null || query.radius==0)
+            sql.append(if(exact)
+                " AND c.transaction_uuid IN (SELECT l.transaction_uuid FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE w.world = ?"
+            else " AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
             if (query.position != null || query.bounds != null) sql.append(" AND l.x BETWEEN ? AND ? AND l.y BETWEEN ? AND ? AND l.z BETWEEN ? AND ?")
             sql.append(")")
         }

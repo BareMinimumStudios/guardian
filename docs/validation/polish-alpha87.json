@@ -1,0 +1,578 @@
+{
+  "version": "0.4.0-alpha.87+1.21.1",
+  "date": "2026-10-25",
+  "baseCommit": "d327d5a4b13753f85df47eec05f9175e956224be",
+  "featureListFrozen": true,
+  "newFeatures": [],
+  "schemaVersion": 23,
+  "configVersion": 17,
+  "tests": {
+    "tests": 778,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.87+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.87+1.21.1.jar",
+      "bytes": 13448966,
+      "sha256": "667faa20fb2d37279bf3a958c1095483d7a1efdc9420bb637d453dda7ec7fdfa",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.87+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.87+1.21.1.jar",
+      "bytes": 13420808,
+      "sha256": "ef4c95d001dd6187e7f5c335665141079fad76368c140d8afe1c8500e715bc6d",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.87+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.87+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "19b2a7d3429f9d6c84d8014d5e9640879618e4319788b889573242a0af3bcb64",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "alpha86Ci": {
+    "status": "passed",
+    "url": "https://github.com/BareMinimumStudios/guardian/actions/runs/40187646202"
+  },
+  "alpha87Ci": "awaiting owner push",
+  "uiComparisons": [
+    {
+      "loader": "Fabric",
+      "baselineVersion": "alpha.86",
+      "before": {
+        "loopsPerRound": 1000,
+        "rounds": 7,
+        "allocatedBytes": [
+          11856712,
+          11856096,
+          11857224,
+          11856024,
+          11856024,
+          11858136,
+          11856024
+        ],
+        "elapsedNanos": [
+          27776200,
+          21194900,
+          21816700,
+          20180200,
+          20250900,
+          21955500,
+          9878700
+        ],
+        "idleBottomSlotsReplaced": 36
+      },
+      "after": {
+        "loopsPerRound": 1000,
+        "rounds": 7,
+        "allocatedBytes": [
+          8401032,
+          8400096,
+          8401224,
+          8400024,
+          8400024,
+          8400024,
+          8400024
+        ],
+        "elapsedNanos": [
+          19782200,
+          17666100,
+          13513100,
+          8561300,
+          13559700,
+          8021500,
+          7631800
+        ],
+        "idleBottomSlotsReplaced": 0,
+        "bottomSlotsReplacedAfterOneCountChange": 1,
+        "ignoredClickRebuiltHistory": false,
+        "sameCountComponentChangeRefreshed": true
+      },
+      "medianAllocationReductionPercent": 29.15
+    },
+    {
+      "loader": "Neoforge",
+      "baselineVersion": "alpha.86",
+      "before": {
+        "loopsPerRound": 1000,
+        "rounds": 7,
+        "allocatedBytes": [
+          13760712,
+          13761344,
+          13760024,
+          13765216,
+          13760024,
+          13760024,
+          13654440
+        ],
+        "elapsedNanos": [
+          43365400,
+          26582500,
+          29680900,
+          21413200,
+          11154600,
+          13085500,
+          15673200
+        ],
+        "idleBottomSlotsReplaced": 36
+      },
+      "after": {
+        "loopsPerRound": 1000,
+        "rounds": 7,
+        "allocatedBytes": [
+          10304784,
+          10305344,
+          10304024,
+          10307888,
+          10305352,
+          10304024,
+          10266360
+        ],
+        "elapsedNanos": [
+          23128900,
+          17491500,
+          11547500,
+          8730300,
+          11074900,
+          5826300,
+          9683300
+        ],
+        "idleBottomSlotsReplaced": 0,
+        "bottomSlotsReplacedAfterOneCountChange": 1,
+        "ignoredClickRebuiltHistory": false,
+        "sameCountComponentChangeRefreshed": true
+      },
+      "medianAllocationReductionPercent": 25.11
+    }
+  ],
+  "uiRuntime": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=966",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=966",
+      "connectedClients": 0,
+      "isolated": true,
+      "nativePackets": 224,
+      "permissions": "actual operator grant/removal",
+      "virtualCarriedAndRealInventoryUnchanged": true
+    }
+  ],
+  "finalRuntimeJarHashesMatch": true,
+  "historyQueries": {
+    "rows": 100000,
+    "actors": 100,
+    "containerLocations": 1000,
+    "warmupQueriesPerShape": 5,
+    "samplesPerShape": 25,
+    "summary": {
+      "globalNewest": {
+        "before": {
+          "medianMs": 0.9782,
+          "p95Ms": 2.0948
+        },
+        "after": {
+          "medianMs": 0.6402,
+          "p95Ms": 1.8632
+        }
+      },
+      "userNewest": {
+        "before": {
+          "medianMs": 1.2196,
+          "p95Ms": 1.5714
+        },
+        "after": {
+          "medianMs": 0.9391,
+          "p95Ms": 2.018
+        }
+      },
+      "containerNewest": {
+        "before": {
+          "medianMs": 80.3088,
+          "p95Ms": 113.6926
+        },
+        "after": {
+          "medianMs": 0.5962,
+          "p95Ms": 0.7534
+        }
+      },
+      "itemNewest": {
+        "before": {
+          "medianMs": 0.3426,
+          "p95Ms": 0.491
+        },
+        "after": {
+          "medianMs": 0.3877,
+          "p95Ms": 1.2848
+        }
+      },
+      "globalOffset50000": {
+        "before": {
+          "medianMs": 40.5915,
+          "p95Ms": 47.2362
+        },
+        "after": {
+          "medianMs": 30.7498,
+          "p95Ms": 42.0187
+        }
+      }
+    },
+    "before": {
+      "rows": 100000,
+      "generationAndAppendNanos": 536900,
+      "queries": {
+        "globalNewest": [
+          1850600,
+          2708800,
+          2065200,
+          1249300,
+          1316000,
+          2094800,
+          1531800,
+          1095400,
+          1026400,
+          978200,
+          1053200,
+          1295500,
+          903900,
+          842900,
+          752600,
+          735200,
+          916100,
+          767700,
+          657600,
+          1297900,
+          646900,
+          667200,
+          723600,
+          648400,
+          643100
+        ],
+        "userNewest": [
+          846200,
+          892400,
+          833900,
+          1487300,
+          1847700,
+          1164400,
+          1233000,
+          1219600,
+          1342800,
+          1089100,
+          1146700,
+          1404900,
+          1348600,
+          1107700,
+          948700,
+          1356400,
+          1384200,
+          1414900,
+          1571400,
+          1498200,
+          1448900,
+          1199900,
+          993400,
+          853000,
+          928400
+        ],
+        "containerNewest": [
+          70940800,
+          64451700,
+          64549200,
+          69923700,
+          71969300,
+          107904500,
+          90506800,
+          85816100,
+          84880100,
+          79432500,
+          78759500,
+          68125400,
+          90380700,
+          96075700,
+          88729100,
+          97394700,
+          134999300,
+          113692600,
+          93456300,
+          80308800,
+          81180900,
+          70226700,
+          67957400,
+          73487400,
+          73681200
+        ],
+        "itemNewest": [
+          321000,
+          327400,
+          491000,
+          345700,
+          312500,
+          302000,
+          294400,
+          779300,
+          360000,
+          316500,
+          304800,
+          330500,
+          355600,
+          322400,
+          435300,
+          390100,
+          405600,
+          367800,
+          358300,
+          367600,
+          353600,
+          318000,
+          311600,
+          300200,
+          342600
+        ],
+        "globalOffset50000": [
+          50779500,
+          41649800,
+          41392700,
+          41065800,
+          38958000,
+          43635400,
+          40268800,
+          32941600,
+          40591500,
+          44740200,
+          39814800,
+          46036200,
+          39016300,
+          42727000,
+          32549700,
+          29740600,
+          34633700,
+          40623800,
+          33168300,
+          28137700,
+          32366200,
+          32920400,
+          43854400,
+          47236200,
+          45990900
+        ]
+      }
+    },
+    "after": {
+      "rows": 100000,
+      "generationAndAppendNanos": 517800,
+      "queries": {
+        "globalNewest": [
+          1288000,
+          1627400,
+          760100,
+          1023200,
+          1640000,
+          1500400,
+          739500,
+          2452200,
+          1863200,
+          1534400,
+          560000,
+          630300,
+          640200,
+          455200,
+          574700,
+          450500,
+          693400,
+          392300,
+          365100,
+          388400,
+          407700,
+          1043000,
+          413800,
+          374000,
+          368900
+        ],
+        "userNewest": [
+          835600,
+          815800,
+          929000,
+          2368100,
+          1726500,
+          1617900,
+          1863000,
+          1763300,
+          939100,
+          809600,
+          755600,
+          1660400,
+          1631700,
+          994400,
+          1201300,
+          1885200,
+          2018000,
+          976600,
+          846200,
+          763200,
+          738200,
+          795200,
+          876100,
+          764100,
+          761200
+        ],
+        "containerNewest": [
+          673000,
+          609600,
+          753400,
+          632900,
+          674400,
+          578400,
+          555200,
+          596900,
+          596200,
+          588300,
+          574400,
+          528100,
+          579900,
+          580200,
+          573800,
+          571600,
+          579300,
+          591400,
+          563500,
+          734700,
+          624100,
+          647300,
+          1017700,
+          689800,
+          665100
+        ],
+        "itemNewest": [
+          1284800,
+          938600,
+          503200,
+          368000,
+          345300,
+          321500,
+          334500,
+          360100,
+          391100,
+          410600,
+          853400,
+          1408100,
+          453400,
+          331300,
+          319400,
+          360300,
+          471900,
+          399100,
+          387700,
+          315800,
+          357000,
+          418400,
+          358800,
+          344100,
+          440600
+        ],
+        "globalOffset50000": [
+          28267600,
+          29177500,
+          28917600,
+          29432100,
+          31135600,
+          30213500,
+          29919500,
+          37672500,
+          41062100,
+          47082500,
+          35023100,
+          30749800,
+          33004100,
+          34986100,
+          40699400,
+          37812900,
+          42018700,
+          36953000,
+          34132200,
+          28894900,
+          27446300,
+          27434300,
+          27555200,
+          28376700,
+          28429600
+        ]
+      },
+      "planProbe": {
+        "sqlite": "3.53.4",
+        "old": [
+          "SCAN c USING INDEX ex_container_time_idx",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)",
+          "SEARCH l USING COVERING INDEX sqlite_autoindex_ex_container_location_1 (transaction_uuid=? AND wid=? AND x>? AND x<?)",
+          "SEARCH a USING COVERING INDEX sqlite_autoindex_ex_actor_map_1 (id=?)",
+          "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        ],
+        "new": [
+          "SEARCH c USING INDEX sqlite_autoindex_ex_container_1 (transaction_uuid=?)",
+          "LIST SUBQUERY 1",
+          "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)",
+          "SEARCH l USING INDEX ex_container_location_idx (wid=? AND x>? AND x<?)",
+          "SEARCH a USING COVERING INDEX sqlite_autoindex_ex_actor_map_1 (id=?)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "orderedIdsEqual": true
+      }
+    },
+    "finalJarHashMatches": true,
+    "scope": "Only exact point/radius-zero queries use indexed membership. Broad dimension/radius/box predicates and all binding/order/paging semantics remain unchanged. No new index, cache or migration."
+  },
+  "publishingArtifactPreflight": {
+    "status": "passed",
+    "uploads": false,
+    "files": [
+      "RELEASE-NOTES.md",
+      "guardian-0.4.0-alpha.87+1.21.1-fabric.jar",
+      "guardian-0.4.0-alpha.87+1.21.1-neoforge.jar",
+      "guardian-worldedit-0.4.0-alpha.87+1.21.1-fabric.jar"
+    ],
+    "workflow": "unchanged actual embedded artifact verification",
+    "secretsOrRemoteProjectConfigurationVerified": false
+  },
+  "regressions": [
+    "778 tests include exact/broad query oracle comparisons across ties/order/paging/actor/item/context and restart on SQLite and optional DuckDB",
+    "Both-loader native packet matrix remains read-only and corrects forged predictions",
+    "Count changes and same-count components refresh one independent display copy; no live alias",
+    "Ignored clicks preserve history cards; actual operator removal closes UI",
+    "Short owner labels retain UUIDs; loading hides stale cards; empty results are clear",
+    "Late denied/closed lookups, inspector navigation/withdrawal and DB row/journal immutability pass"
+  ],
+  "durability": "SQLite WAL/FULL, admission/baseline saves, actual-save verification and recovery claims are unchanged.",
+  "measurementLimits": "Isolated synthetic dataset and warm native menu calls on this host; allocation includes vanilla synchronization and fixture invocation. Timing is not a production TPS/capacity guarantee or connected-client/pack acceptance.",
+  "connectedClients": 0,
+  "connectedClientAcceptanceCompleted": false,
+  "productionPackCertified": false,
+  "suppliedServerDataTouched": false
+}

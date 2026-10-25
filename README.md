@@ -18,7 +18,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 
 Guardian is a server-side audit mod for Minecraft 1.21.1 on Fabric and NeoForge. It records supported block changes and item movements, with optional player activity and entity history, so staff can investigate incidents, inspect containers and roll back recorded block edits and supported item transfers. History is stored locally in SQLite.
 
-**Current version: 0.4.0-alpha.86+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
+**Current version: 0.4.0-alpha.87+1.21.1.** This is an alpha for testing in a backed-up world. Automated and server-side permission checks have passed; connected-client acceptance and final release sign-off remain pending. Players do not need Guardian or Fzzy Config on their clients.
 
 ## Install or update
 
@@ -384,7 +384,8 @@ per result page and the configured history maximum. Console users can use text h
 
 **Before is on the left; after is on the right.** Each aligned pair represents one recorded
 changed slot. Hover a card for the exact recorded count, item ID, owner and slot number.
-The book shows player/system, UTC timestamp, action and transaction UUID. All item cards are
+The book shows player/system, UTC timestamp, action and transaction UUID. Player-owned slots
+use short labels such as “Your inventory”; the full UUID remains in the tooltip. All item cards are
 plain display icons: historical names, lore, nested contents and custom components are not
 decoded or sent to the client. The history keeps those original component bytes, and the UI
 marks a saved-component change. Modded/unknown item IDs use paper icons with the recorded ID
@@ -392,7 +393,9 @@ and count in their tooltip. Icon stacks are display markers; read the named reco
 
 Left-click the bottom buttons for previous/next result page, transaction, or changed-slot
 page. Each changed-slot page shows 16 before/after pairs. Gray buttons mark unavailable
-directions; the barrier closes the viewer. **Every slot is read-only, including the shown
+directions; loading pages temporarily hide old results and disable navigation. An empty page
+says that no records match and still allows returning to the previous result page. The barrier
+closes the viewer. **Every slot is read-only, including the shown
 copy of your own inventory.** Close the viewer before rearranging your items. Shift-click,
 dragging, hotbar swaps, double-click, drops and creative clone clicks cannot move display items.
 There is no rollback button in this UI. These are transaction changes, not a complete

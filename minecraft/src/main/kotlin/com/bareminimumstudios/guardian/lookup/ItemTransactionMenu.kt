@@ -37,7 +37,7 @@ internal class ItemTransactionMenu(
         })
         render()
     }
-    fun loading() { loading=true;render() }
+    fun loading(page: Int) { resultPage=page;loading=true;render() }
     fun results(rows: List<ContainerTransactionSnapshot>, page: Int, hasPrevious: Boolean, hasNext: Boolean) {
         view=ItemTransactionView(rows);resultPage=page;previous=hasPrevious;next=hasNext;loading=false;render()
     }
@@ -58,18 +58,24 @@ internal class ItemTransactionMenu(
         if(loading)return
         when(index) {
             45 -> if(previous)requestPage(-1)
-            46 -> view.transaction(-1)
-            47 -> view.transaction(1)
-            48 -> view.changes(-1)
-            50 -> view.changes(1)
+            46 -> if(view.transaction>0) { view.transaction(-1);render() }
+            47 -> if(view.transaction+1<view.rows.size) { view.transaction(1);render() }
+            48 -> if(view.changePage>0) { view.changes(-1);render() }
+            50 -> if(view.changePage+1<view.changePages) { view.changes(1);render() }
             51 -> if(next)requestPage(1)
         }
-        render()
     }
     override fun broadcastChanges() {
-        if(viewer.containerMenu===this && !stillValid(viewer)) { viewer.closeContainer();return }
-        // Copies only; no Slot ever points at the viewer's real inventory.
-        for(i in 0 until 36)display.setItem(54+i,viewer.inventory.getItem(if(i<27)i+9 else i-27).copy())
+        if(viewer.containerMenu===this && !stillValid(viewer)) {
+            viewer.closeContainer()
+            viewer.sendSystemMessage(Component.literal("Guardian item history closed: access is no longer available."));return
+        }
+        // Compare against the independent display copy, never retain a live stack as a cache key.
+        // Count and component changes still refresh immediately; idle slots allocate nothing here.
+        for(i in 0 until 36) {
+            val source=viewer.inventory.getItem(if(i<27)i+9 else i-27)
+            if(!ItemStack.matches(source,display.getItem(54+i)))display.setItem(54+i,source.copy())
+        }
         // The packet handler installs client predictions after clicked(). Correct them afterwards.
         if(resync) { resync=false;super.broadcastFullState() } else super.broadcastChanges()
     }
@@ -78,30 +84,37 @@ internal class ItemTransactionMenu(
         display.setItem(2,card(Items.RED_STAINED_GLASS_PANE,"Before",listOf("Recorded changed slots only")))
         display.setItem(6,card(Items.LIME_STAINED_GLASS_PANE,"After",listOf("Recorded changed slots only")))
         display.setItem(53,card(Items.BARRIER,"Close",listOf("All slots, including your inventory, are read-only")))
-        val row=view.current
+        val row=if(loading)null else view.current
         val actor=when(val a=row?.actor) { is ActorIdentity.Player -> a.lastKnownName ?: a.uuid.toString();is ActorIdentity.System -> a.source;else -> "Unknown" }
-        val details=if(row==null)listOf(if(loading)"Loading history..." else "No transactions on this result page") else listOf(
+        val details=if(row==null)listOf(if(loading)"Searching recorded transactions..." else "No transactions match this search page.",
+            if(loading)"Navigation resumes when the search finishes." else "Use Previous results or adjust your search filters.") else listOf(
             "Player/system: $actor","Time: ${Instant.ofEpochMilli(row.timestampEpochMillis)}",
             "Action: ${row.action.name.lowercase().replace('_',' ')}","ID: ${row.transactionId}",
             "${row.changes.size} changed slots; not a complete inventory","Historical components are not executed or sent to clients")
-        display.setItem(4,card(Items.BOOK,if(loading)"Loading item history" else "Transaction ${if(row==null)0 else view.transaction+1}/${view.rows.size}",details))
-        view.changes().forEachIndexed { i,change ->
+        display.setItem(4,card(Items.BOOK,if(loading)"Loading results $resultPage..." else if(row==null)"No matches on page $resultPage" else "Transaction ${view.transaction+1}/${view.rows.size} | $actor",details))
+        (if(loading)emptyList() else view.changes()).forEachIndexed { i,change ->
             val left=9+(i/4)*9+i%4
             val location=owner(change.address.owner)+" | slot ${change.address.index}"
+            val identity=when(val o=change.address.owner) {
+                is ItemSlotOwner.PlayerInventory -> o.playerId
+                is ItemSlotOwner.Cursor -> o.playerId
+                is ItemSlotOwner.CraftingGrid -> o.playerId
+                else -> null
+            }?.let { "Player UUID: $it" }
             val changed=change.before.itemId==change.after.itemId && change.before.itemData!=change.after.itemData
-            display.setItem(left,item(change.before,"Before",location,changed))
-            display.setItem(left+5,item(change.after,"After",location,changed))
+            display.setItem(left,item(change.before,"Before",location,changed,identity))
+            display.setItem(left+5,item(change.after,"After",location,changed,identity))
         }
-        display.setItem(45,card(if(previous)Items.ARROW else Items.GRAY_DYE,"Previous results",listOf("Search result page ${resultPage-1}")))
-        display.setItem(46,card(if(view.transaction>0)Items.ARROW else Items.GRAY_DYE,"Previous transaction"))
-        display.setItem(47,card(if(view.transaction+1<view.rows.size)Items.ARROW else Items.GRAY_DYE,"Next transaction"))
-        display.setItem(48,card(if(view.changePage>0)Items.ARROW else Items.GRAY_DYE,"Previous changed slots"))
-        display.setItem(49,card(Items.PAPER,"Results $resultPage | slots ${if(row==null)0 else view.changePage+1}/${view.changePages}",listOf("Left-click buttons to navigate","Hover items for recorded counts, IDs and ownership","Read-only; close to use your inventory")))
-        display.setItem(50,card(if(view.changePage+1<view.changePages)Items.ARROW else Items.GRAY_DYE,"Next changed slots"))
-        display.setItem(51,card(if(next)Items.ARROW else Items.GRAY_DYE,"Next results",listOf("Search result page ${resultPage+1}")))
+        display.setItem(45,card(if(!loading && previous)Items.ARROW else Items.GRAY_DYE,"Previous results",listOf("Search result page ${resultPage-1}")))
+        display.setItem(46,card(if(!loading && view.transaction>0)Items.ARROW else Items.GRAY_DYE,"Previous transaction"))
+        display.setItem(47,card(if(!loading && view.transaction+1<view.rows.size)Items.ARROW else Items.GRAY_DYE,"Next transaction"))
+        display.setItem(48,card(if(!loading && view.changePage>0)Items.ARROW else Items.GRAY_DYE,"Previous changed slots"))
+        display.setItem(49,card(Items.PAPER,if(loading)"Loading results $resultPage..." else if(row==null)"Results $resultPage | no matches" else "Results $resultPage | slots ${view.changePage+1}/${view.changePages}",listOf("Left-click buttons to navigate","Hover items for recorded counts, IDs and ownership","Read-only; close to use your inventory")))
+        display.setItem(50,card(if(!loading && view.changePage+1<view.changePages)Items.ARROW else Items.GRAY_DYE,"Next changed slots"))
+        display.setItem(51,card(if(!loading && next)Items.ARROW else Items.GRAY_DYE,"Next results",listOf("Search result page ${resultPage+1}")))
         resync=true
     }
-    private fun item(snapshot: ItemStackSnapshot,side: String,location: String,componentsChanged: Boolean): ItemStack {
+    private fun item(snapshot: ItemStackSnapshot,side: String,location: String,componentsChanged: Boolean,identity: String?): ItemStack {
         val id=snapshot.itemId
         // Plain vanilla icons only. Never materialize a recorded mod component codec or nested item data.
         val icon=if(id?.namespace=="minecraft")BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(id.toString())).orElse(Items.PAPER) else Items.PAPER
@@ -109,13 +122,18 @@ internal class ItemTransactionMenu(
             "$side: ${if(snapshot.isEmpty)"empty" else "${snapshot.count} ${id!!.path.replace('_',' ')}"}",
             listOf(location,"Recorded item: ${id ?: "empty"}","Recorded count: ${snapshot.count}",
                 if(componentsChanged)"Saved components changed in this slot" else "Saved components retained in history",
-                "Plain icon; historical name/lore/components are not rendered"))
+                "Plain icon; historical name/lore/components are not rendered") + listOfNotNull(identity))
     }
     private fun owner(owner: ItemSlotOwner)=when(owner) {
-        is ItemSlotOwner.BlockContainer -> "${owner.dimension} @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z}"
-        is ItemSlotOwner.PlayerInventory -> "Player inventory ${owner.playerId}"
-        is ItemSlotOwner.Cursor -> "Player cursor ${owner.playerId}"
-        is ItemSlotOwner.CraftingGrid -> "Crafting grid ${owner.playerId}"
+        is ItemSlotOwner.BlockContainer -> "Container @ ${owner.position.x}, ${owner.position.y}, ${owner.position.z} (${owner.dimension})"
+        is ItemSlotOwner.PlayerInventory -> "${playerLabel(owner.playerId)} inventory"
+        is ItemSlotOwner.Cursor -> "${playerLabel(owner.playerId)} cursor"
+        is ItemSlotOwner.CraftingGrid -> "${playerLabel(owner.playerId)} crafting grid"
+    }
+    private fun playerLabel(id: java.util.UUID): String {
+        if(id==viewer.uuid)return "Your"
+        val actor=view.current?.actor as? ActorIdentity.Player
+        return if(actor?.uuid==id && !actor.lastKnownName.isNullOrBlank()) "${actor.lastKnownName}'s" else "Player $id"
     }
     private fun card(item: Item,title: String,lines: List<String> = emptyList()): ItemStack=ItemStack(item).also { stack ->
         stack.set(DataComponents.CUSTOM_NAME,text(title).withStyle(ChatFormatting.WHITE))

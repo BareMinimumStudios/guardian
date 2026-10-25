@@ -1,311 +1,71 @@
 # Release validation
 
-Alpha.86 is the current executable checkpoint.
-
-## Read-only item transaction UI, 2026-10-25
-
-Alpha.85 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976),
-including clean build/tests, actual configuration-cache reuse and WorldEdit. The owner then
-authorized the read-only item UI for both loaders. Alpha.86 implements the filtered command,
-dimension-stable inspector selection, generated before/after cards and asynchronous result
-paging with current authority and menu-identity checks.
-
-777 automated tests passed. New tests cover exact paired-slot paging, transaction bounds,
-immutable snapshots, empty results and record/change/byte limits. Isolated Fabric/NeoForge
-fixtures exercise the public command and alias, native container click packets with forged
-carried/changed-slot predictions, all seven click modes, DB paging, actual operator revocation
-and deferred result suppression. Real inventory counts/components remain unchanged. Extended
-fixtures cover modded placeholders, undecodable recorded payloads, late results after close,
-transaction navigation and inspector entry/withdrawal. See [evidence](validation/item-ui-alpha86.json).
-
-All menus use synthetic players with unconnected listeners. No real client, production pack
-or supplied database is used; visual/network client acceptance remains R3. No extra dependency,
-schema/config migration or item mutation is introduced. Alpha.86 remote CI awaits push.
-
-
-## Targeted partial item recovery, 2026-10-25
-
-Alpha.84 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380).
-The owner then authorized safe interrupted item recovery. Alpha.85 adds explicit maintenance
-preview/confirmation before gameplay, exact component-aware native file repair, checksummed
-before/after plans, atomic per-file replacement and durable completion acknowledgment.
-Online admissions now save and validate original owner images before any slot write.
-Protected unstarted admissions can be cancelled without inventory files.
-
-770 automated tests passed, including file-plan corruption/conflict/retry, native NBT,
-SQLite claim release and stalled/failed/mismatched baseline coverage. Both loaders passed
-preview without world-file changes, wrong-token and third-state refusal, exact repair,
-hard-process interruption during replacement, same-token retry and no-write receipt replay.
-Normal restarts verify saved player counts/components and container images through native
-decoders. All tests use isolated worlds/databases and synthetic players; no supplied server
-data or connected client was used. See [evidence](validation/item-recovery-alpha85.json) and
-[operator guide](ITEM_RECOVERY.md). Remote CI and existing client/final sign-off remain pending.
-
-
-## Alpha.84 online item ownership, 2026-10-24
-
-The explicitly requested bounded online item rollback milestone adds native backing-list
-handoff, requester-bound apply/confirm, actual-save completion and conservative retained
-reconciliation. It passed 747 automated tests, both-loader native ownership checks for all
-eight supported container types, interrupted apply/late-save recovery fixtures, internal and
-public command confirmation checks, public cancel/reconcile and clean protected-journal
-restart refusal. See [evidence](validation/online-items-alpha84.json) and the
-[support contract](ONLINE_ITEM_ROLLBACK.md).
-
-All worlds/databases are private fixtures; supplied server data was untouched. These checks
-use synthetic players with unconnected packet queues, not real clients. The new item grant
-and console behavior were exercised locally; older actual-provider cohorts below are
-historical evidence for their then-current command surface. Connected-client/production-pack
-acceptance and final release sign-off remain pending. Alpha.84 passed GitHub CI after push.
-Its original absence of offline repair is superseded by alpha.85 above.
-
-The sections below retain historical milestone evidence. Alpha.82 was the prior executable
-checkpoint. Alpha.62 cleanup changed documentation and build-file formatting. Alpha.63 fixes the shared journal shutdown completion ordering found by GitHub CI; it adds no gameplay features. [Release scope](RELEASE_SCOPE.md) is the fixed acceptance contract.
-
-## Alpha.82 release-readiness review, 2026-10-24
-
-The current executable checkpoint is suitable for controlled alpha testing, with no additional features required by the fixed release checklist. GitHub CI for code commit `77c1f30` is passed; [run](https://github.com/BareMinimumStudios/guardian/actions/runs/40148145014). Local evidence remains 729 tests and 2704 current permission checks. This review changes documentation only; no jars, schema or configuration changed, so those tests were not repeated just for wording corrections.
-
-Reviewed all three final jars and both original checkpoint archives. Hashes match the runtime-tested export milestone. ZIP integrity, Java 21 class level, loader/server metadata, native SQLite-only nesting, exact source licenses and separate GPL adapter passed. Both core icons are 256x256/25,520 bytes; core jars are about 12.7 MiB. Internal test-package hashes and tracked-file hygiene passed. The pinned mc-publish workflow selects the correct artifacts and dated release notes in the offline preflight; no upload was attempted, and remote credentials/project IDs remain unverified.
-
-Corrected the README's stale schema and early recovery-filter wording, refreshed current permission evidence and added concise references to existing features within the same six-row client matrix. Historical milestone descriptions remain historical. [Review evidence and checksums](validation/readiness-alpha82.json).
-
-Remaining sign-off is the real connected-client/actual-pack matrix on both loaders, followed by owner selection/approval of the final artifacts. The user cannot join yet; this review neither asks for that now nor substitutes synthetic players. Item apply was deferred in that alpha.82 assessment; alpha.84 now implements the bounded contract above. No feature expansion, new acceptance gate, production-data testing, push, tag or publication is part of this review.
-
-## Completed checks
-
-- Alpha.82 passed 729 automated tests with no failures/errors, clean and repeated configuration-cache builds, and the separate WorldEdit build. Entity/fluid/frame tests cover SQLite, optional DuckDB and memory; supplied server databases were never used.
-- Alpha.82 passed 2704 actual-provider/operator checks for the current export/recovery/history paths; see [export evidence](validation/exports-alpha82.json). The broader fluid/entity/activity cohort previously passed 2116 checks on both loaders. Prior expanded purge passed 442 checks. Prior frame/fluid/entity/activity permission acceptance passed 2,170 checks. Prior purge, restore, activity and preview checks remain historical evidence for those paths. Synthetic players do not certify network login or client presentation.
-- Both core jars pass archive/version/loader checks, include license material, contain only SQLite JDBC as a nested jar and stay below 16 MiB. The separate server-only Fabric adapter carries GPL license material and does not bundle WorldEdit.
-
-Detailed evidence: [permissions](validation/permissions-alpha62.json), [artifacts](validation/artifacts-alpha62.json), [prior durability baseline](validation/durability-alpha61.json). Artifact evidence includes exact sizes/checksums and previous runtime-tested hashes. Historical unsupported bypasses in durability evidence are limitations, not promises of item apply safety.
-
-## Source cleanup, 2026-10-11
-
-Archived and removed 75 superseded documents and historical reports. The README now provides end-user installation, commands, permissions, backup and troubleshooting instructions. Four current reference guides and three machine-readable evidence reports remain. Active recovery infrastructure, registered mixins and meaningful tests were retained. Only build-file whitespace changed; jar SHA-256 hashes are unchanged.
-
-Clean build (18s), build (8s), repeat with configuration-cache reuse (4s) and WorldEdit build (8s) passed with Java 21 and Gradle 9.8.0. All 522 cached test results passed with no failures/errors.
-
-## GitHub CI correction, 2026-10-11
-
-The [failed run](https://github.com/BareMinimumStudios/guardian/actions/runs/38115735874) failed at the multi-host drain assertion, not compilation or missing dependencies. Independent completion observers allowed the shared drain to finish before the retention observer reported completion. The aggregate now waits for that exact observer.
-
-The alpha.63 full clean build ran without build-cache reuse: 546 tests passed, including 25 schedules of the reported regression. Required repeat/configuration-cache and WorldEdit builds passed. [Evidence and artifact hashes](validation/ci-alpha63.json). Remote CI remains unverified until this local commit is pushed; no push or publish was performed. Alpha.62 provider runtime evidence remains historical evidence for unchanged permission paths.
-
-## Activity logging, 2026-10-17
-
-The owner authorized public chat and login/logout logging. Alpha.64 adds schema 11, immutable activity records, opt-in public chat, separately configurable session capture and separately permissioned paged searches. Commands and private-message types are excluded. Existing item apply exclusions remain.
-
-551 automated tests passed, including SQLite/DuckDB/memory filtering and idempotence, restart persistence, old-schema migration preservation and activity paging. Required clean/repeated-cache/WorldEdit builds passed. Both isolated loader servers resolved the new chat mixin and recorded exactly the expected public chat, login and logout fixture records; private-message types and disabled switches produced no records. SQLite integrity and restart persistence passed. [Evidence and hashes](validation/activity-alpha64.json).
-
-The broadcast test calls the actual Minecraft broadcast method. The synthetic session fixture calls shared capture directly and does not certify a network login/logout. Activity permissions under installed providers were pending at this checkpoint and subsequently passed in the alpha.66 acceptance section below. Connected-client chat display and actual pack cancellation behavior remain pending.
-
-## Extended history search, 2026-10-17
-
-The owner authorized multi-user searches, user exclusions, exact resource include/exclude lists and matching completion. Alpha.65 applies these filters before paging in SQLite, optional DuckDB and memory. Schema 12 backfills a derived item-ID index while preserving source payload bytes. Exclusions hide whole events/transactions; block records match before or after identity. Rollback and item preview explicitly refuse extended filters.
-
-561 automated tests passed, including aliases/malformed input, comma/negation completion, modded IDs, UUID resolution, unknown actors, exclusion precedence, pagination, restart and historical migration over the 128-record batch boundary. Clean, repeated configuration-cache and optional WorldEdit builds passed. Two isolated servers passed nine command cases each against a synthetic persisted audit prefix, including history paging, exclusions and rollback refusal, then restart. No rollback claims were created; SQLite integrity passed. Runtime core hashes match final artifacts. [Evidence and checksums](validation/filters-alpha65.json).
-
-These server tests do not certify actual client completion presentation, all modpack integrations or capture of arbitrary modded events. Activity permission/provider checks subsequently passed in the alpha.66 acceptance section below; connected-client acceptance remains pending.
-
-## Block rollback preview, 2026-10-18
-
-Alpha.66 adds `/guardian rollback preview` and `/guardian rb preview` using the existing single-user rollback limits and permissions. Preview simulates each position's history, reports conflicts, unloaded chunks and unsupported targets, and shows up to five examples. It writes neither blocks nor journal claims and does not load chunks. Apply remains a separate command with fresh checks; preview is not a reservation or guarantee.
-
-589 automated tests passed, including four preview-plan tests and 25 repetitions of the shutdown regression. The clean, repeated configuration-cache and optional WorldEdit builds passed. A reproduced shutdown race was fixed by requiring drained operation hosts to finish their terminal classification before backend closure.
-
-Both isolated loaders passed nine cases each with a synthetic audit prefix through the actual writer. World readback confirmed preview left stone unchanged and a separate apply restored air. All five preview journal flags stayed unchanged; after apply, exactly one record was rolled back. Unloaded targets, unsupported targets, blocked chains, extended-filter refusal and restart were checked. SQLite integrity passed, and tested core hashes match final artifacts. [Evidence and checksums](validation/block-preview-alpha66.json). The pushed alpha.65 GitHub build also passed. Permission-provider acceptance subsequently passed in the section below. Real connected-client acceptance remains pending; these fixtures do not certify arbitrary modpack behavior.
-
-## Activity and preview permission acceptance, 2026-10-18
-
-The unchanged alpha.66 jars passed 2,068 checks on four isolated servers: LuckPerms Fabric/NeoForge and provider-free operator fallback on each loader. Chat and session grants are independent of each other and ordinary lookup. Unset permission, explicit denial for an actual operator, grant removal and cached time/user suggestions were checked. Sixteen individual activity query cases per loader covered both aliases, success and controlled failure, with and without permission revocation before deferred output.
-
-Block preview was cancelled during planning, before its first tick and between ticks after 100 of 101 rows. Revoked success/failure callbacks emitted no results; authorized completion/failure still emitted results. All 101 actual stone blocks and all 101 ACTIVE journal rows remained unchanged on each provider server. Operator entries at levels zero through four confirmed level-three access for chat, sessions and block preview, then access removal. Real permission decisions were not mocked. [Evidence and artifact hashes](validation/acceptance-alpha66.json).
-
-The pushed executable [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/39099179448) passed. No executable files or jar hashes changed in this acceptance pass. R2 is complete for server-side activity/preview permissions; actual network login, client presentation and pack acceptance remain R3. Private agents and test servers are excluded from the source repository.
-
-## Block restore/redo, 2026-10-23
-
-The owner explicitly selected block restore/redo. Alpha.67 adds `/guardian restore`, `/guardian redo` and their read-only preview branches under both root aliases. The separate `guardian.restore` permission defaults to operator level three and is registered with NeoForge's actual PermissionAPI. Restore selects ROLLED_BACK/RESTORE_PENDING rows oldest first, inverts source/target only for replay, and returns successful original rows to ACTIVE. Schema 13 protects the new pending-state interpretation from older builds. History and payloads are preserved.
-
-597 automated tests passed, including eight new tests for forward simulation, blocked chains, unsupported/unavailable targets, matching-target reconciliation, state predicates before paging across memory/SQLite/DuckDB, repeated state cycles and schema-12 upgrade/restart. Historical migration fixtures were corrected to remove all newer migration markers when reconstructing old schemas. Clean, repeated-cache and WorldEdit builds passed. No mixins changed.
-
-Final core jars passed 28 command/world/database checks per loader, including rollback/restore/rollback, both preview aliases, no preview mutation, repeated restore with no work, conflicts, unsupported targets, unloaded chunks, pending target reconciliation, unresolved pending preservation and restart replay without duplicate audit records. Actual LuckPerms and provider-free operator fixtures passed 2,420 checks, including preview revocation boundaries and seven apply stages: planning, before claim, during claim, before apply, preservation of older pending work, authorized apply, and permission loss after mutation before final journal completion. Tested hashes equal final artifacts. [Evidence and checksums](validation/restore-alpha67.json).
-
-Pending-state fixtures are synthetic; this does not certify atomic persistence between SQLite and Minecraft chunk saves or a new process-kill recovery guarantee. Connected-client/claim/pack acceptance, including the new restore command, remains R3. No item apply or purge was added. The owner pushed alpha.67; its [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580) passed.
-
-## Alpha.67 artifact review, 2026-10-23
-
-The owner pushed executable commit `e0f6a99`. Its [GitHub run](https://github.com/BareMinimumStudios/guardian/actions/runs/40058349580) passed. All three local jars still match the hashes from the completed restore/runtime milestone. Metadata confirms version, server-only loader/dependency declarations, SQLite-only standard packaging, separate adapter licensing and a 256×256 core icon. Core sizes are 12.36 MiB (Fabric) and 12.33 MiB (NeoForge); the separate Fabric WorldEdit adapter is about 0.02 MiB. ZIP integrity and nested-jar metadata passed. No executable or dependency changes were made, so the existing 597-test, 56-case restore and 2,420-check permission baseline was retained rather than rerun. [Artifact evidence](validation/artifacts-alpha67.json).
-
-A private test ZIP contains separate loader cores and the optional Fabric adapter, license notices, SHA-256 checksums, installation/upgrade instructions and a blank six-row client acceptance sheet. It contains no server worlds, databases, private agent sources or machine-specific configuration. Installation instructions call out schema 13, separate restore permission and original-event time filters. This is an acceptance package, not a published release. R3 client results and final owner sign-off remain pending.
-
-## Confirmed history purge, 2026-10-24
-
-The owner explicitly approved old block/item/chat/session purge with preview, confirmation, a 1,000-record cap and recovery protection, and restricted destructive tests to isolated databases. Alpha.68 implements a global, age-only fixed-key batch, a requester-bound single-use token with 60-second expiry, cancellation and a separate `guardian.purge` permission (operator level 4). It retains pending block positions and conservatively retains block/container history while any item journal/protection data exists. No journals, maps or sequences are deleted. Schema 14 stores a monotonic completeness cutoff when block/item history is removed; old retained/reinserted transactions cannot pass item-history safety checks as complete.
-
-611 tests passed, including fourteen new purge contracts covering strict cutoff, all categories, late inserts, pending chains, protection changes after preview, the 1,000-record cap, requester/expiry/single-use/immutability, cancellation during a batch and just before commit, index/journal retention, persistent completeness guards and schema-13 upgrade without history deletion. Clean, repeated-cache and optional WorldEdit builds passed. No mixins changed.
-
-Both isolated loader servers passed fifteen command/database cases each: preview/no-op, age/filter rejection, cancellation, exact 1,000-record confirmation, late insert exclusion, single-use confirmation, subsequent batches, journal protection, index integrity and restart persistence. Current final jar hashes match all runtime fixtures. Actual LuckPerms checks passed 95/96 cases on Fabric/NeoForge; operator fallback passed 113/114. These include independent grants, explicit operator denial, levels zero through four, cached suggestions, queued permission revocation and stop, rollback/purge mutual exclusion, busy-confirm ticket preservation and authorized deletion. [Evidence and artifact checksums](validation/purge-alpha68.json).
-
-All writes and purges used fresh private databases or temporary unit-test databases. Supplied server databases/worlds were untouched. The first private NeoForge fixture signalled before runtime installation; adding a main-thread status barrier corrected the fixture and both final runs passed. Connected-client acceptance remains pending, and cannot be replaced by these synthetic-player fixtures. Remote alpha.68 CI awaits the owner's push. A committed purge cannot be undone, and the operation makes no immediate file-shrink promise.
-
-## Opt-in command logging, 2026-10-24
-
-After alpha.68 passed GitHub CI, the owner selected bounded opt-in command logging. Alpha.69 adds independent `activity.commands`, optional `activity.commandArguments` and extra excluded roots, all with root-only capture off by default. Common authentication/private/Guardian roots are always excluded; nested wrappers retain roots only. Schema 15 adds COMMAND activity without rewriting old records. `/guardian commands` and `/co commands` use separate level-three `guardian.commands` access, current operator state, standard user/time filters and navigation.
-
-624 automated tests passed, including thirteen new contracts for defaults, argument opt-in, namespaced sensitive roots, opaque wrappers, custom/invalid exclusions, bounds, control/bidirectional text, navigation, activity separation/filtering/paging/idempotence, persistence, isolated activity purge and schema-14 upgrade. MixinMCP source and bytecode checks verified the same finishParsing invocation on both loaders. The require-one WrapOperation is registered in both JSONs; changed mixin and command files have no IDE errors. Full clean, repeated-cache and WorldEdit builds passed.
-
-Both dedicated isolated servers exercised actual Commands.performCommand with a synthetic operator player source. They persisted exactly five expected command records, including only-root defaults, an explicitly enabled argument example and an opaque execute root without nested secret text. Unknown/incomplete commands, disabled switches, private/auth/Guardian roots, custom exclusions, invalid exclusion configuration and console sources produced no extra records. Actual NeoForge CommandEvent cancellation prevented capture. Eight console history cases per loader checked paging, exclusions, separation, rejected spatial filters and restart persistence. Final core hashes match the runtime jars. [Evidence and checksums](validation/commands-alpha69.json).
-
-Real LuckPerms passed 449/450 checks on Fabric/NeoForge, including independent command grants, explicit denial to an actual operator, cached time/user suggestions and 24 individual activity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator entries passed 368/369 checks, including cached-source suggestion revocation after operator removal. No permission decisions were mocked.
-
-These are dispatcher/player-source tests, not actual network command packets, rendered client UI or universal pack cancellation acceptance. The first private fixture used broad reflection on a Fzzy field and linked an unused client widget signature; using its Supplier interface fixed the fixture. The first NeoForge cancellation fixture selected a wrong overload; an exact IEventBus signature fixed it. All final runs passed; no client dependency was added to Guardian. All private servers stopped, and supplied databases/worlds were untouched. Remote alpha.69 CI awaits the owner's push; alpha.68 CI already passed.
-
-## Entity history, 2026-10-24
-
-The owner selected entity deaths and changes after pushing alpha.69; that preceding commit passed GitHub CI. Alpha.70 adds independently opt-in living/player death and tracked plain custom-name capture, schema 16 and config version 9. `/guardian entities` and `/co entities` have separate level-two permission, actor/time/spatial/type/target filters, tab completion, hover identity and navigation. Entity history is read-only and outside existing purge categories.
-
-635 tests passed with no failures, errors or skipped tests. Eleven new tests cover three-backend event identity, duplicate suppression, actor/type/UUID/time/spatial filters before pagination, unknown/entity actors, immutable event bounds, parser validation, schema-15 upgrade, restart, existing purge separation and readable literal presentation. Simulated old-schema fixtures now drop the newer entity table before replaying its migration. Clean, configuration-cache reuse and separate WorldEdit builds passed through IDEA on Java 21/Gradle 9.8.0.
-
-MixinMCP source/bytecode checks verified both loader variants. All four new mixins passed IDEA inspections. Actual private dedicated servers persisted exactly five expected records each: a tracked setter rename, an attributed real name-tag rename, a player-attributed mob death, an environmental death and a server-player death. Initial loaded names, identical names, disabled capture/master switches and a repeated mob death created no extra records. An actual NeoForge LivingDeathEvent cancellation created no death row. Ten query/restart cases per loader checked aliases, pages, action/actor/type/UUID filters, invalid action rejection and restart persistence with SQLite integrity checks. A forced-chunk readiness wait and a fresh synthetic operator source fixed private fixture setup issues; no product bypass was added.
-
-Real LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 activity/entity callbacks per loader covering both aliases, success/failure and revocation. Provider-free actual operator levels zero through four passed 404/405 checks, including cached entity suggestions after operator removal. Permissions were not mocked. All runtime-tested core hashes match the delivered jars. [Evidence and checksums](validation/entities-alpha70.json).
-
-These fixtures use synthetic players and unconnected listeners, not connected-client acceptance or universal modpack certification. Entity-property tracking, entity rollback, entity purge and production mob-farm capacity are not claimed. All owned servers stopped; no supplied server world or database was used. Remote alpha.70 CI awaits the owner's push; alpha.69 CI passed.
-
-## Taming and breeding, 2026-10-24
-
-After pushing alpha.70, the owner selected taming and breeding and confirmed that work should continue. The previous alpha.70 commit passed GitHub CI. Alpha.71 adds separate off-by-default `entities.taming` and `entities.breeding` switches, `a:tame`/`a:breed`, completed-event summaries and parent identities on hover. It uses the existing entity permission and stable filtering/navigation. Schema 17 adds nullable parent fields; configuration version 10 preserves existing switches. Entity history remains read-only and excluded from purge.
-
-642 automated tests passed with no failures, errors or skipped tests. Seven new contracts cover three-backend identity/kind/filter/paging/duplicate behavior, unknown breeding credit, invalid parent/owner/damage shapes, action parsing, schema-16 upgrade/restart and tame/birth presentation. The optional DuckDB simulation initially tried dropping columns with dependent indexes; rebuilding those test-only indexes fixed the fixture. The production upgrade only adds nullable columns and passed on both JDBC backends. Clean build, repeated build with configuration-cache reuse and WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
-
-MixinMCP checked tame/horse methods and both loader child-insertion bytecode. Three new mixins and shared capture code passed IDEA error inspections. Each isolated dedicated server persisted exactly two tames (wolf and horse) and three pig births with exact parent IDs: primary-parent credit, unknown credit and partner-parent credit. Repeated tame calls, already-tamed animals enabled later, disabled defaults and the master switch produced no extra records. NeoForge's actual BabyEntitySpawnEvent cancellation, EntityJoinLevelEvent child refusal and AnimalTameEvent cancellation during a bone interaction created no capture rows. Eight history/restart cases per loader verified kinds, both aliases, actor inclusion/exclusion, type filters, paging, separation and restart persistence; SQLite integrity passed.
-
-The unchanged real-provider acceptance fixture was rerun against alpha.71: LuckPerms passed 531/532 checks on Fabric/NeoForge, including independent entity grants, explicit operator denial, revoked cached suggestions and 32 success/failure/revocation callbacks per loader. Provider-free actual operator levels passed 404/405 checks, including cached entity suggestions after removal. Both loaders also reran prior death/name capture and twenty query/restart cases, preserving exactly the five expected rows each, including name-tag attribution and actual NeoForge death cancellation. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/taming-breeding-alpha71.json).
-
-Fixtures use synthetic players with unconnected real listeners and direct standard game methods. The player temporarily joined the private level's player list so vanilla breeding-credit lookup could resolve it, then was removed. Natural breeding AI, connected-client feeding/riding/presentation, egg/pregnancy paths and arbitrary pack overrides remain outside this evidence. All owned servers stopped and supplied worlds/databases were untouched. Remote alpha.71 CI awaits the owner's push; alpha.70 CI passed.
-
-## Player bucket fluid history, 2026-10-24
-
-After alpha.71 was pushed, the owner selected fluid placement/removal history. Alpha.71 then passed GitHub CI. Alpha.72 adds `fluids.bucketChanges`, off by default, with independent level-two `guardian.fluids`, filtered `/guardian fluids` and `/co fluids`, fluid resource completion, pagination and hover context. Separate immutable records in schema 18 preserve fluid/source/host identities; config version 11 preserves existing settings. Fluid capture does not expand rollback or purge.
-
-651 automated tests passed with no failures, errors or skipped tests. Nine new tests cover three-backend event identity/duplicate handling/paging/separation, actor/resource/kind/time/spatial filters before pagination, waterlogged/mod-fluid identities, no-op/invalid payload rejection, action parsing, schema-17 upgrade/restart, existing purge separation and clear placement/collection wording. Old-schema simulations drop the new table and later markers before replaying migrations; a retained schema-18 marker initially exposed a fixture gap and was corrected. Clean build, repeated configuration-cache reuse and WorldEdit adapter build passed through IDEA with Java 21 and Gradle 9.8.0.
-
-MixinMCP verified the exact shared pickup invocation and loader-specific placement overloads, including adjacent recursion. All three appropriate mixins and the changed command/capture files passed IDEA inspections. Actual isolated Fabric/NeoForge servers persisted exactly seven bucket records each: water placement/collection, lava placement/collection, slab waterlogging/collection and one adjacent fallback at the actual destination. Successful unchanged placement, repeated empty pickup, blocked placement, disabled defaults/master switch, null-player placement and Nether water vaporization created no extra records. Twenty command/restart cases checked both aliases, action/actor/resource/coordinate filters, exclusions, paging, invalid-action rejection and restart persistence. SQLite integrity checks passed.
-
-Real LuckPerms passed 617/618 checks on Fabric/NeoForge, including independent fluid grants, explicit operator denial, cached fluid time/user/action/resource suggestions after revocation and forty activity/entity/fluid success/error callbacks per loader. Actual provider-free operator levels passed 440/441 checks, including cached fluid suggestions after operator removal. These 2,116 permission decisions were not mocked. Core hashes match all runtime-tested jars. [Evidence and checksums](validation/fluids-alpha72.json).
-
-Fixtures use synthetic players with unconnected real listeners, direct placement methods and actual bucket-use raycasts for pickup. Connected-client packet flow, protection mods, prediction and custom fluid containers remain unverified. No natural fluid spread or automation is claimed. All owned servers stopped; supplied worlds/databases were untouched. Remote alpha.72 CI awaits the owner's push; alpha.71 CI passed.
-
-## Item frames and inspection, 2026-10-24
-
-After pushing alpha.72, the owner reported missing item-frame detection. That category had been outside the block/container hooks. The owner paused for a restart, then explicitly resumed frame work. Alpha.73 adds off-by-default `entities.itemFrames`, normal/glow frame placement, supported display/rotation changes and destructive removal, with immutable persistent item components. `a:frame` and its place/remove/change variants reuse entity filters and permission. Frame inspection requires both `guardian.inspect` and `guardian.entities`, selects exact UUIDs and consumes entity packets without gameplay mutation. Schema 19 adds nullable before/after frame BLOBs; config version 12 preserves existing settings. No frame/item restoration or entity purge is enabled.
-
-662 tests passed with no failures, errors or skipped tests. Eleven new tests cover bounded frame codec/component round trips, malformed/oversized payload refusal, event shape invariants, three-backend identity/kind/target/paging separation, schema-18 upgrade/restart, existing purge separation and clear item-pop/rotation/frame-break presentation. Earlier schema simulations reconstruct the older entity columns and markers before replay. Full clean build, configuration-cache reuse and separate WorldEdit build passed through IDEA with Java 21/Gradle 9.8.0. A comment-only rebuild left core binary hashes unchanged.
-
-MixinMCP verified source/bytecode targets on both loader variants and inspected all five affected mixin/accessor files plus capture/inspector Kotlin. Both isolated dedicated servers persisted exactly nine expected frame records: normal frame placement, named/custom-data diamond insertion, rotation, item pop and frame break; glow placement/insertion and destructive removal retaining the display; and a fixed frame placement. The captured immutable item snapshot equalled the original component-aware snapshot. Empty interactions, fixed-frame refusals, repeated damage and unload removal produced no extra records. An actual NeoForge EntityJoinLevelEvent cancellation prevented a frame placement record. Nine query/restart cases per loader verified frame action groups, actor/type/position filters, paging and persistence, with SQLite integrity checks.
-
-Actual attack and interaction packet objects passed through the real server listener and inspector mixin. Display/rotation stayed unchanged, exact frame UUID selection and reach refusal passed, and explicit empty/default metadata synchronization succeeded without consuming entity dirty flags. These are unconnected-listener tests, not a rendered client or arbitrary protection-pack certification.
-
-LuckPerms passed 644/645 checks on Fabric/NeoForge, including independent entity access, ordinary cached suggestions and forty activity/entity/fluid callbacks per loader. Additional frame inspector checks confirmed either grant alone is insufficient, eight deferred frame success/error cases suppress output after partial/full revocation, and cached pages stop after revocation. Provider-free operator levels passed 440/441 checks. The total is 2,170 actual-provider/operator checks; permission decisions were not mocked. [Evidence and artifact checksums](validation/item-frames-alpha73.json).
-
-All final core hashes match every runtime-tested jar. All private servers stopped; supplied worlds/databases were untouched. Alpha.72 passed GitHub CI; alpha.73 CI awaits the owner's push. Frame capture does not backfill missing earlier records and does not certify arbitrary direct state edits. Connected-client prediction, packet serialization and claim-mod behavior remain in the existing R3 gate.
-
-## Entity/fluid history purge, 2026-10-24
-
-Alpha.73 passed GitHub CI. The owner then selected entity/fluid purge with existing safeguards. Alpha.74 adds entity/frame and fluid counts to preview/completion and includes those records in the same fixed global batch of at most 1,000 keys. Minimum age, requester-bound 60-second single-use confirmation, current permission, cancellation and maintenance exclusion remain unchanged. Recovery journals protect block/item history as before. Activity/entity/fluid-only deletion does not advance the item completeness marker. Installing this version alone deletes nothing; schema 19 and config version 12 are unchanged.
-
-670 tests passed, including eight new cross-backend regression tests for all entity kinds/frame BLOBs, strict cutoff, shared mixed-category cap, same UUIDs in different tables, late inserts, retimed records, cancellation rollback, journal preservation, restart and unchanged item completeness floor. SQLite, optional DuckDB and memory were exercised where applicable. Clean build, repeated configuration-cache reuse and the separate WorldEdit build passed through IDEA using Java 21/Gradle 9.8.0.
-
-Both isolated dedicated servers passed preview/cancel, confirmed mixed 1,000-record deletion, fixed late-insert exclusion, token replay refusal, recovery-protected second deletion, restart and SQLite integrity checks. Actual LuckPerms and operator fallback passed 442 purge permission checks, including independent level-four access, both aliases, cached suggestions, token revocation, queued authorization withdrawal, stop cancellation and maintenance exclusion. No supplied databases were opened for these tests. All owned servers stopped. Final jars match the runtime-tested hashes and bundle SQLite only. [Evidence and checksums](validation/entity-fluid-purge-alpha74.json).
-
-Connected-client presentation remains R3; these fixtures do not certify a rendered client. Alpha.74 remote CI awaits the owner's push.
-
-## Natural fluid flow history, 2026-10-24
-
-Alpha.74 passed GitHub CI. The owner then selected natural flow/source attribution. Alpha.75 adds separately opt-in `fluids.naturalFlow`, FLOW/FORM records, fluid amounts and block-resource filtering. Schema 20 transactionally preserves older rows with null historical amounts and permits unknown actor references; config version 13 adds the default-off setting. Source traces are bounded temporary runtime state, with conservative unknown attribution, source replacement/expiry and chunk-unload invalidation. There is no fluid restoration or restart backfill.
-
-677 tests passed, including seven new storage/presentation tests covering SQLite, optional DuckDB and memory, schema-19 upgrade/restart, old payload preservation, unknown actor filters, levels, formations, purge participation and clear wording. Older upgrade fixtures now reconstruct their actual old column/index layouts. Required clean/build/repeated-cache/WorldEdit builds passed through IDEA. MixinMCP source/bytecode checks and final mixin/capture inspections passed after sync.
-
-Both isolated dedicated servers passed actual flow/recession/formation paths, x15/x16 spread and attribution, competing/untracked roots, source replacement, expiry by advancing actual world time, chunk trace invalidation, blocked stone destinations, five queries/restart checks and SQLite integrity. Normal/glow frame work is unchanged. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and forty deferred activity/entity/fluid callbacks per loader. All final core hashes match runtime-tested jars; SQLite remains the only nested dependency. [Evidence and checksums](validation/fluid-flow-alpha75.json).
-
-All owned servers stopped and supplied worlds/databases were untouched. Synthetic players do not close connected-client R3. The unload target is inspected/loaded and its invalidation function is exercised directly; this is not a claim of a real network unload/reload acceptance pass. Alpha.75 remote CI awaits the owner's push.
-
-## Fire and explosion history, 2026-10-24
-
-Alpha.75 passed GitHub CI. The owner selected fire/explosion history. Alpha.76 adds independent default-off environmental settings, supported ignition/natural burning/extinguishing and actual standard explosion block mutations, using existing cause codes 11/10. Config version 14 preserves existing settings; schema 20 is unchanged. Block cause filters apply before pagination, reuse existing lookup/inspection permissions and reject non-block history commands. Fire rows distinguish ignition, burning and extinguishing. New environmental causes are excluded from public rollback/restore pending separate recovery validation; lookup and confirmed purge remain available.
-
-683 tests passed. Six new cross-backend/storage/presentation tests cover cause/actor separation, pre-pagination filtering, existing flags/purge, restart, parser/refusal/suggestions and readable fire/explosion summaries. Full clean/build/repeated-cache/WorldEdit builds passed through IDEA, and final mixin/capture/command inspections passed. Existing schema upgrades and the prior fluid/frame tests remain green.
-
-Both isolated dedicated servers exercised real ignition items, a deterministic actual fire tick, owned TNT, unknown-source and creeper explosions, disabled mob griefing, blocked/repeated ignition and extinguishing. Invalid fire with no net change produced no row. Actual Nether portal creation was verified and excluded from burning. Eight lookup/refusal/restart cases per loader verified filtered history, default environmental rollback exclusion and explicit fire/explosion rollback/restore refusal. SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime-tested jar; standard jars bundle SQLite only. [Evidence/checksums](validation/fire-explosions-alpha76.json).
-
-All owned servers stopped; supplied worlds/databases were untouched. Synthetic fixtures do not certify rendered clients or arbitrary protection mods, so R3 remains pending. Alpha.76 remote CI awaits the owner's push.
-
-## Growth/decay and accepted environmental item use, 2026-10-24
-
-Alpha.76 passed GitHub CI. The owner selected natural block growth/decay. Alpha.77 adds disabled growth/leaf-decay settings, GROWTH/DECAY causes, standard crop/sapling/leaf hooks and supported player bone-meal capture. Schema 21 is a cause-code compatibility marker without payload changes; config version 15 preserves settings. Natural events remain unknown, while direct bone meal retains the player through nested tree calls. Whole-operation buffering records final net changes, excluding failed tree attempts and no-ops. Public recovery excludes these new causes; existing block-history purge applies.
-
-689 tests passed, including six new cross-backend/storage/presentation tests for cause/actor separation before paging, purge, schema-20 upgrade/restart, distinct storage codes/parser/suggestions, crop age summaries and leaf decay wording. Clean/build/repeated-cache/WorldEdit builds passed through IDEA. MixinMCP source/bytecode/inspection checks cover the new paths and shared capture.
-
-Both isolated dedicated servers passed actual crop ticks, accepted player bone meal, sapling stage/tree advancement, failed tree net no-op, actual leaf decay, persistent/disabled leaves, master/per-category disable, eight lookup/refusal/restart cases and SQLite integrity. NeoForge tests use the real CommonHooks item-use path and actual EntityPlaceEvent cancellation: denied single-block crop growth, denied multi-block tree growth and denied ignition all restore the world without audit rows; accepted staged ignition still records the player. This closes an alpha.76 fire-capture gap where useOn could be observed before final placement acceptance. Current actual LuckPerms/operator acceptance passed 2116 checks, including cached suggestions and deferred history callbacks. Final core hashes match every final runtime jar; SQLite remains the only nested dependency. [Evidence/checksums](validation/growth-decay-alpha77.json).
-
-All owned servers stopped and supplied worlds/databases were untouched. These fixtures do not certify a rendered client or every claim mod, so R3 remains pending. Alpha.77 remote CI awaits the owner's push.
-
-## Piston and falling-block history, 2026-10-24
-
-Alpha.77 passed GitHub CI. The owner selected piston/falling history. Alpha.78 adds disabled piston/falling settings, verified settled piston endpoints and falling departure/landing phases with UUID correlation. Schema 22 preserves old snapshots with nullable movement metadata; config version 16 preserves settings. Exact movement searches, hover/click navigation and cause filters reuse block-history permission and paging. Public movement recovery is excluded; confirmed block-history purge can remove old endpoints independently.
-
-696 tests passed, including seven new cross-backend/storage/presentation tests for correlated endpoint round trips, filters before paging, metadata/placeholder validation, schema-21 upgrade/restart, partial purge, strict UUID parsing, phase wording and hover/click search. Legacy schema fixtures reconstruct the older block columns/indexes before replay so retained journals/history remain verifiable. Required clean/build/repeated-cache/WorldEdit checks passed through IDEA. MixinMCP source/bytecode targets and final mixin/capture inspections passed.
-
-Both isolated servers used real scheduled piston animations and falling physics. Normal pushes, sticky pulls, destroyed torch targets, slime branches and chunk-boundary moves settled to the independently asserted world states. Blocked obsidian, 13-block over-limit pushes and empty strokes produced no movement row. Correlated rows contained no moving-piston placeholder. Sand departure/landing shared an entity UUID; gravel breaking on a torch had no false landing. Actual NeoForge piston-pre and entity-spawn cancellation produced no movement record. Eight world/query/refusal/restart cases per loader and SQLite integrity passed. Current actual LuckPerms/operator acceptance passed 2116 checks. Final core hashes match all final runtime-tested jars; SQLite remains the only nested dependency. [Evidence/checksums](validation/movement-alpha78.json).
-
-All owned servers stopped and supplied worlds/databases were untouched. Correlation is observational, not atomic/guaranteed complete. Interference, unload, timeout or rejected queue rows can leave incomplete history; no animation or chunks are forced. Custom physics, waterlogged/state-changing plans, hydrated concrete and rendered-client behavior remain outside certification. Existing R3 stays pending; alpha.78 remote CI awaits the owner's push.
-
-## Scoped history purge, 2026-10-24
-
-Alpha.78 passed GitHub CI. The owner selected exact world and block/item purge filters. Alpha.79 adds `w:`/`world:`, `i:`/`include:` and `e:`/`exclude:`, immutable scope in the fixed confirmation plan, token-aware completion and explicit retained-category/whole-transaction wording. Schema 22 and config version 16 are unchanged; upgrading deletes nothing.
-
-707 tests passed, including 11 new tests across SQLite, optional DuckDB and memory for scoped selection, before/after matching, exclusion precedence, cross-world whole transactions, pending protection, immutable scope, fixed late-insert exclusion, shared cap, cancellation, malformed filters and canonical suggestions. SQLite-specific cases recheck changed world/resource indexes at confirmation and verify atomic child-index cleanup/completeness-floor updates. Required clean/build/configuration-cache/WorldEdit builds passed through IDEA. Changed parser/scope/SQL/command/service files passed errors-only inspection. The server fixture caught a second filtering pass hiding canonical shorthand completions; the final jars pass the corrected path.
-
-Both final loader jars passed 27 global/filtered-preview cases and 11 scoped-deletion/restart cases per loader on fresh isolated databases. Scoped block/item deletion retained activity and other categories; world-only entity/fluid deletion preserved the item floor; journals still protected block/item history. Late inserts, the shared 1,000-record cap, cancellation, child indexes and SQLite integrity passed. Actual LuckPerms and operator fallback passed 490 checks, including cached age/world/include/exclude suggestions, permission revocation, ticket invalidation and queued cancellation. Every final core hash matches all four final runtime/permission copies. Standard jars still nest only SQLite. [Evidence/checksums](validation/scoped-purge-alpha79.json).
-
-All owned servers stopped. Supplied databases/worlds were untouched. A self-contained private server wrapper enforces the private test-directory boundary; the older shared pressure harness is not used. No connected client was used; existing R3 and final release sign-off remain pending. Alpha.79 remote CI awaits the owner's push.
-
-## Block recovery filters, 2026-10-24
-
-Alpha.79 passed GitHub CI. The owner selected multiple-user and block-type filters for rollback and restore/redo. Alpha.80 forwards the existing resolved history search to the recovery query for preview and apply, and adds recovery-specific token-aware completion. Schema 22/config 16 and the claim/apply lifecycle are unchanged.
-
-713 tests passed, including six new tests across memory, SQLite and optional DuckDB for filtering before caps, original block-state matching, exclusion precedence, online UUID/offline name behavior, restore order, filtered gaps and completion. The required clean/build/cache-reuse/WorldEdit builds passed through IDEA. Changed command/completion files passed errors-only inspection.
-
-Both loaders passed 31 runtime cases each using synthetic immutable audit rows and independent actual-world/SQLite checks. Multiple-user rollback and redo replayed in the correct direction. Preview left world/journal unchanged; excluded users and resources were retained; a filtered gap stopped at mismatch; unsupported and unloaded targets were refused. Redo survived a clean restart, and SQLite integrity passed. Actual LuckPerms/operator fallback passed 2492 checks, including cached block/user exclusion completion and queued preview/apply permission revocation. Every final core hash matches all three runtime/permission copies; SQLite remains the only nested dependency. [Evidence/checksums](validation/recovery-filters-alpha80.json).
-
-All owned servers stopped and supplied databases/worlds were untouched. Fixtures do not certify connected-client rendering, arbitrary claim packs or abrupt-save durability. Filters select history rows and can leave gaps; state checks do not imply a complete selected chain. Preview reserves nothing. Existing R3/final sign-off remain pending; alpha.80 remote CI awaits the owner's push.
-
-## Sign-text history, 2026-10-24
-
-Alpha.80 passed GitHub CI. The owner selected sign-text history. Alpha.81 adds disabled `logging.signTextChanges`, accepted front/back player edits through the shared sign editing method, `c:sign`, left-click block inspection and literal filtered before/after hover details. Existing immutable block snapshots retain raw/filtered sign components. Schema 23 is an empty cause marker; config version 17 preserves existing settings. Sign-text recovery is explicitly read-only; old sign rows participate in protected block purge.
-
-720 tests passed, including seven new cross-backend/filter/purge/upgrade and safe sign-formatting tests. Schema assertions track the new marker; pre-movement fixtures remove later markers before replay. Source/bytecode inspection pinned both loader APIs, the actual packet-to-edit path, SignText codec and WrapMethod contract. New capture/details/mixin inspections and clean/build/cache-reuse/WorldEdit builds passed.
-
-Both isolated loaders executed actual sign editing calls with a synthetic ServerPlayer. Each stored exactly seven accepted rows: five front/back/filtered changes at the standing sign, one hanging sign edit and one wall-back edit. Disabled capture/master switches, no-ops, waxed/wrong-editor attempts and an oversized edit added no row. Both final jars passed eight query/refusal/restart cases each; default recovery left sign rows active, explicit sign recovery refused, and SQLite integrity passed. The operator-removal fixture exposed stale cached completion authority. The shared filter completer now checks the player's current command stack before enumerating results. Current actual LuckPerms/operator checks passed 2508 assertions, including cached c:sign suggestions. Final core hashes match all three final runtime/permission copies. Standard jars nest only SQLite. [Evidence/checksums](validation/signs-alpha81.json).
-
-All owned servers stopped; supplied data was untouched. Tests call the actual editing method and do not certify packet filtering or arbitrary claim packs. The formatter displays literal filtered text; snapshots retain raw and filtered components and backups need the same access controls as the database. No connected client was used. Existing R3/final sign-off remain pending; alpha.81 remote CI awaits the owner's push.
-
-## Filtered file export, 2026-10-24
-
-Alpha.81 passed GitHub CI. The owner selected filtered history export. Alpha.82 adds server-local format-version-1 JSONL for blocks, items, chat, sessions, commands, entities and fluids. Native immutable snapshots remain Base64; no Minecraft object is decoded on the file worker. Query and file work use the existing draining history executor, with main-thread authority checked again between read and write and an atomic cancellation permit during writing. Schema 23/config 17 are unchanged.
-
-729 tests passed, including nine new tests for JSON escaping, binary preservation, read-only filtered queries, malformed/unsupported filters, quotas, byte/snapshot bounds and cancellation cleanup. Independent Python JSON parsing accepted the writer's Unicode control escapes; a unit expectation for short escapes was corrected. Required clean/build/cache-reuse/WorldEdit checks and errors-only export inspections passed. Deprecated sign chunk checks were replaced with the exact non-loading coordinate equivalent verified in MixinMCP source.
-
-Both loaders passed 14 export/query/refusal/restart cases each. Files for all seven categories parsed independently; control/Unicode text and native component bytes round-tripped; inventory-only items and located transaction scope behaved as documented. Row counts/journal state were unchanged and SQLite integrity passed. Limit metadata remained honest, empty selections produced metadata only, and no partial files remained. Actual LuckPerms/operator acceptance passed 2704 checks, including independent export/category grants, cached completions, the level-four gate and paused-query revoke/cancel/stop/success cases. Foreign cancellation refused; completed files remained after permission loss. Final core hashes match all three runtime/permission copies; SQLite remains the only nested dependency. [Evidence/checksums](validation/exports-alpha82.json).
-
-All owned servers stopped. Supplied databases/worlds were untouched. Files remain sensitive server-local extracts, not public downloads or consistent multi-file backups. Encoded/snapshot/directory limits fail without publishing truncated output. Completed files need manual management; abrupt crash durability and remote filesystem behavior are not certified. Existing R3/final sign-off remain pending; alpha.82 remote CI awaits the owner's push.
-
-## Pending acceptance
-
-Connected-client acceptance remains pending on Fabric and NeoForge. Run the six rows in release scope when a tester is available, including actual pack/claim behavior. Final release sign-off follows those results. No publish or push has been performed. Idle startup, synthetic inventories and packet queues do not close client acceptance or certify production load capacity.
-
-## Artifact use
-
-The private acceptance package separates Fabric and NeoForge core jars and the optional Fabric WorldEdit adapter. It includes installation notes, a blank client test sheet, licenses and SHA-256 checksums. Install only the matching loader core. Fzzy Config, loader Kotlin support, Fabric API where required and optional WorldEdit remain external server dependencies.
+Current executable checkpoint: **0.4.0-alpha.87+1.21.1**. Schema 23 and config version 17
+are unchanged. The feature list is frozen; this pass contains optimization and release polish.
+
+## Current evidence
+
+See [alpha.87 measurements, regressions and artifact hashes](validation/polish-alpha87.json).
+The required clean build, repeated build with configuration-cache reuse and separate WorldEdit
+build pass locally through IntelliJ's Java 21 / Gradle 9.8.0 configurations. 778 automated
+tests pass. Alpha.86 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40187646202);
+alpha.87 remote CI awaits the owner's push.
+
+### UI comparison
+
+Private Fabric/NeoForge servers compare alpha.86 with alpha.87 using the same 36 populated
+inventory slots, warm-up and seven rounds of 1,000 native menu updates. Thread allocation
+measurements cover those calls, including vanilla synchronization and fixture invocation;
+they are not whole-server heap/TPS measurements. Idle bottom-slot replacement falls from
+36 to zero. A single count change updates one display copy, and same-count component changes
+still refresh. Display copies never alias mutable live stacks. Ignored clicks preserve the
+history cards while authoritative ghost correction remains enabled.
+
+Both loaders repeat native packet tests for all seven click modes, forged client predictions,
+bottom/outside slots, transaction/result/changed-slot navigation, actual operator revocation,
+closed/deferred result suppression and inspector withdrawal. Real player counts/components,
+the three seeded audit rows and zero rollback journals remain unchanged. These use synthetic
+players with unconnected listeners; they do not certify client presentation.
+
+### History queries
+
+An isolated SQLite database contains 100,000 synthetic transfers across 100 actors and
+1,000 container locations. Benchmarks call Guardian's actual JDBC lookup implementation,
+with warm-up and 25 samples per query shape. Exact-container lookups previously scanned the
+time index and performed a correlated location lookup for each candidate. The equivalent
+membership query now starts from the existing location index. Only exact positions, including
+radius zero, use that shape; broad world/radius/box queries are unchanged.
+
+Cross-backend tests compare exact and broad results to immutable query semantics across
+ordering, pagination, tied times, user/item filters, multiple container contexts and restart.
+No cache, new index, schema migration or weaker SQLite save setting is introduced. Results
+and query plans are recorded in the current evidence. Timings describe this fixture, not
+production throughput or arbitrary pack behavior.
+
+## Prior checkpoints
+
+Historical JSON reports retain their original version-specific results and limitations.
+Their old pending statuses do not override newer CI results or the current release contract.
+
+| Checkpoint | Coverage | Evidence |
+| --- | --- | --- |
+| Alpha.86 | Read-only item UI, native packets, paging and operator withdrawal | [Report](validation/item-ui-alpha86.json), [passed CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40187646202) |
+| Alpha.85 | Targeted partial item recovery, process interruption/retry and restart | [Report](validation/item-recovery-alpha85.json), [passed CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976) |
+| Alpha.84 | Online item ownership, actual saves, commands and conservative recovery | [Report](validation/online-items-alpha84.json), [passed CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380) |
+| Alpha.82 | Filtered export and actual permission-provider baseline | [Report](validation/exports-alpha82.json) |
+| Alpha.81 | Sign capture and current permission checks | [Report](validation/signs-alpha81.json) |
+| Alpha.78–80 | Movement, scoped purge and block recovery filters | [Movement](validation/movement-alpha78.json), [purge](validation/scoped-purge-alpha79.json), [filters](validation/recovery-filters-alpha80.json) |
+| Alpha.67–77 | Block restore, administration and optional capture milestones | Earlier JSON reports in `docs/validation/` |
+
+## Remaining acceptance
+
+The six connected-client rows in [release scope](RELEASE_SCOPE.md) remain pending on both
+loaders. Verify actual UI rendering, claims, network-issued commands, item counts/components,
+rollback/restart and administration against the intended pack when a tester is available.
+Synthetic players, idle startup and isolated query benchmarks do not close that gate.
+Final release sign-off follows those results and review of the selected artifacts.
+
+Tests never open the supplied production databases or worlds. All owned test servers stop
+after their fixtures. Source/test archives include checksums; core jars remain server-only,
+Java 21, BML licensed and SQLite-only, with the optional Fabric WorldEdit adapter separately
+GPL licensed. No push, tag or publication is performed by local validation.

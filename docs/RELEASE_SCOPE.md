@@ -1,89 +1,45 @@
 # Release scope and acceptance
 
-## Newly authorized item transaction UI
+Assessed: 2026-10-25 against `0.4.0-alpha.87+1.21.1`.
 
-On 2026-10-25 the owner requested a read-only item transaction UI on Fabric and NeoForge.
-Alpha.86 adds shared vanilla-protocol menus, filtered result/transaction/changed-slot paging,
-safe generated item cards and inspector entry under current lookup/inspect authority. All slots
-are virtual; no historical component codec executes and no inventory is edited. InventoryEx
-provided a layout reference, not a bundled dependency. Real connected-client acceptance remains
-in the existing R3 gate; no new release gate or item mutation scope is introduced.
+**The feature list is frozen.** The owner authorized this optimization and release-polish
+pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
+dependency is part of this pass. Fix reproducible defects within the existing contract;
+historical future-work lists do not add release requirements.
 
-## Newly authorized online item rollback
+## Current release
 
-On 2026-10-24 the owner requested online item transaction rollback. Alpha.84 implements the bounded live handoff, confirmed apply and conservative interruption/restart behavior described in [online item rollback](ONLINE_ITEM_ROLLBACK.md). This supersedes historical milestone decisions below that deferred item implementation. Alpha.84 passed [GitHub CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40180697380). On 2026-10-25 the owner authorized safe partial-item recovery. Alpha.85 adds explicit confirmed stopped-gameplay repair and original baseline saves; see [recovery](ITEM_RECOVERY.md). Item redo and automatic replay remain excluded. Connected-client acceptance and final sign-off remain pending.
+- Server-only Minecraft 1.21.1 on Fabric and NeoForge, Java 21, official Mojang mappings,
+  Gradle 9.8.0. Standard jars bundle SQLite only. The Fabric WorldEdit adapter is optional
+  and separately GPL licensed; the core remains BML licensed.
+- Existing block/item history and opt-in activity, entity/frame, fluid, environmental,
+  growth/decay, movement and sign-text history, with filtered lookup, inspection and export.
+- Read-only item transaction UI on both loaders, using plain vanilla menu icons and fully
+  virtual slots. It does not decode historical component payloads or reconstruct full past
+  inventories. See the [README](../README.md#read-only-item-transaction-viewer).
+- Supported filtered block rollback/restore and confirmed bounded online item rollback,
+  including explicit targeted maintenance recovery for proven interrupted item operations.
+  See [online item rollback](ONLINE_ITEM_ROLLBACK.md) and [item recovery](ITEM_RECOVERY.md).
+- Confirmed, bounded old-history purge with recovery protection. Tests use isolated data;
+  development does not delete supplied server history.
 
-Assessed: 2026-10-25 against `0.4.0-alpha.86+1.21.1`.
+Alpha.87 reduces idle UI copies and redundant renders, improves labels/states, and makes
+exact-container searches use the existing location index. It keeps the same filters, ordering,
+whole-transaction results, saved-data formats and durability guarantees. Broader scopes keep
+their existing query shape. No schema/config migration or new index is required.
 
-This is the current release checklist. Earlier milestone notes describe implementation history; their lists of possible future work do not add requirements to this release. New work enters this checklist only when it fixes a reproducible defect in the scope below or the project owner explicitly changes the scope.
+## Fixed release gates
 
-## Authorized item-frame milestone
+| Gate | Current status | Evidence / remaining action |
+| --- | --- | --- |
+| R1: automated baseline | Alpha.87 passes 778 local tests and required builds; alpha.86 passed GitHub CI | [Current evidence](validation/polish-alpha87.json), [alpha.86 CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40187646202). Check alpha.87 CI after the owner's push. |
+| R2: server permissions | Recorded server-side checks pass within the tested contracts | [Actual-provider baseline](validation/exports-alpha82.json), [native UI authority checks](validation/item-ui-alpha86.json), [current regressions](validation/polish-alpha87.json). Synthetic requests are not connected-client acceptance. |
+| R3: connected-client / pack acceptance | Pending | Run the six existing rows below on both loaders when a tester is available, including actual claim/mod behavior and UI visuals. The owner cannot join yet; do not repeatedly request it or replace it with synthetic evidence. |
+| R4: release package and approval | Local artifact checks/package prepared; final sign-off pending | Review the final selected jars, instructions, licenses and publishing metadata; confirm platform project configuration, then obtain the owner's release approval. No push, tag or publication is authorized by this document. |
 
-After alpha.72 was pushed, the owner reported missing item-frame detection and explicitly resumed that work after a restart. Alpha.73 adds opt-in normal/glow frame placement, supported display/rotation changes and destructive removal, immutable item components, entity-history filters and read-only frame inspection. Inspection requires both inspector and entity-history grants. It excludes frame/item restoration, frame purge, arbitrary direct entity-state edits and universal pack certification. All testing uses private worlds/databases; connected-client and claim behavior remain within R3.
-
-## Authorized bucket fluid milestone
-
-After alpha.71 was pushed, the owner selected fluid placement/removal history. Alpha.72 adds off-by-default, read-only standard player bucket capture, supported waterlogging, independent history permission and bounded filtered queries. It excludes natural spread, automation, cauldrons/powder snow, custom fluid storage, fluid rollback and fluid purge. All tests use private worlds and databases. Fluid presentation and pack claim behavior join existing R3 without adding a new release gate.
-
-## Authorized taming and breeding milestone
-
-After alpha.70 was pushed, the owner selected taming and breeding. Alpha.71 adds independently opt-in standard tameable-animal/horse ownership transitions and accepted standard animal offspring births, with parent identities and available vanilla breeding credit. It reuses entity history permission and filters. It excludes ownership-transfer tracking, arbitrary reproduction, eggs/pregnancy, entity rollback and entity purge. All tests use isolated worlds and databases; existing connected-client acceptance remains R3.
-
-## Authorized entity history milestone
-
-After alpha.69 was pushed, the owner selected entity deaths and changes. Alpha.70 adds opt-in living-entity/player deaths and tracked plain custom-name changes, separate history permissions and bounded filtered searches on both loaders. It excludes arbitrary entity properties, spawning/despawning, taming, entity inventories, entity rollback and new purge categories. All runtime tests use private worlds and databases. Connected-client entity presentation joins the existing R3 investigation row; this does not create another release gate.
-
-## Authorized command logging milestone
-
-On 2026-10-24, after alpha.68 passed CI, the owner selected bounded opt-in command logging. This includes independent command capture/history permissions, root-only capture by default, optional permitted arguments, sensitive/custom-root exclusions, and a shared post-parse hook on both loaders. It records admission rather than success, and does not add console/function tracing, private-message capture or universal pack-cancellation guarantees. Existing item-apply exclusions stand. No supplied server database is modified for development tests.
-
-## Authorized piston/falling-block history extension
-
-After alpha.77 was pushed, the owner selected piston and falling-block history. Alpha.78 adds separately disabled capture settings, bounded settled-piston verification, actual falling departure/landing phases and persisted correlation metadata. Unknown actors are not guessed from previous placement/power. Block lookup/inspection/purge are supported; public movement recovery, custom moving block entities, hydrated concrete and universal mod mechanics are excluded. Tests use isolated worlds/databases. Movement presentation and claim behavior join existing R3 rather than adding a new release gate.
-
-## Authorized growth/decay history extension
-
-After alpha.76 passed CI, the owner selected natural block history: growth and decay. Alpha.77 adds bounded standard crop/sapling/leaf paths and supported player bone-meal use, with independent disabled settings, net-change observation and distinct causes. It also fixes NeoForge staged environmental item history to wait for final acceptance, including ignition. Arbitrary passive plants/mod growth, planting ownership and public growth/decay recovery are excluded. Tests use isolated worlds/databases. These checks join existing R3 rather than creating a new release gate.
-
-## Authorized fire/explosion history extension
-
-The owner selected fire and explosion history after the natural flow milestone. Alpha.76 adds independent default-off settings, actual block mutation capture and block cause filters. Reliable direct ignition/explosion ownership is recorded; later untracked fire changes use unknown attribution. This is a logging-only checkpoint: public rollback/restore excludes FIRE/EXPLOSION causes pending separate recovery validation. Entity/drop restoration, perpetual fire ownership and arbitrary mod explosion implementations are excluded. Tests use isolated worlds/databases; existing client/claim acceptance remains R3.
-
-## Authorized natural fluid history extension
-
-After alpha.74, the owner selected natural fluid flow logging with reliable source attribution. Alpha.75 adds separately opt-in scheduled spread/recession/level history and supported standard fluid-formed blocks, with bounded temporary attribution and unknown results when provenance cannot be established. No fluid restoration, perpetual source tracking or arbitrary mod fluid simulation is promised. This addition joins existing R3 presentation/claim checks and creates no new release gate. Tests use isolated worlds/databases.
-
-## Authorized entity/fluid purge extension
-
-After alpha.73 passed CI, the owner selected entity/fluid history purge with the existing safeguards. Alpha.74 includes entity/frame and fluid rows in the same global 1,000-record batch, separate preview/completion counts and fixed expiring confirmation. These categories do not participate in recovery, so their deletion leaves recovery journals and the item completeness marker unchanged. Existing block/item protection remains in force. No schema/config migration, automatic retention or entity/fluid restoration is added. All deletion tests use isolated databases.
-
-## Authorized purge milestone
-
-On 2026-10-24 the owner explicitly approved purge for old block, item, chat and session history, with preview, confirmation, a 1,000-record limit and recovery protection. All development purge tests use isolated databases. This milestone includes fixed-key batches, a requester-bound expiring token, current permission checks, conservative journal retention and a durable history-gap marker. No actual supplied server data is purged. Item apply, automatic retention jobs and new capture categories remain outside scope.
-
-## Authorized block restore/redo milestone
-
-On 2026-10-23 the owner explicitly selected block restore/redo next. This addition includes filtered chronological replay of previously rolled-back block records, a read-only preview, a separate restore permission and directional pending journal state. It reuses the bounded block executor and does not enable item apply, purge or additional logging categories. Restore refers to original history filters, not a last-command undo token. Network/client acceptance joins the existing R3 block row.
-
-## Authorized block-preview milestone
-
-After pushing the history-filter milestone, the owner asked to continue the recommended sequence. This pass adds bounded read-only block rollback preview with the same single-user apply filters. No claims or world changes occur during preview. Separate apply re-queries and revalidates; preview is not an exclusive snapshot, reservation or guarantee. General restore/redo, purge and item apply are outside this pass.
-
-## Authorized history-filter milestone
-
-The owner explicitly chose richer history search after the activity milestone: multi-user inclusion/exclusion, block/item resource inclusion/exclusion and matching tab completion. This is read-only search work. Rollback and item preview refuse the extended filters and retain their earlier single-user contract. Purge, rollback preview/redo and item application were not authorized in this pass.
-
-## Authorized activity milestone
-
-The owner explicitly added public chat and login/logout logging on 2026-10-17. This bounded addition includes opt-in public chat, separately configurable session events and separately permissioned, paged user/time searches. It excludes command/private-message logging and session replay. Existing item-apply exclusions stand. Actual network session/chat and pack cancellation behavior join the existing connected-client acceptance; synthetic checks do not certify those paths.
-
-## What this release includes
-
-Guardian is a server-only Minecraft 1.21.1 alpha for Fabric and NeoForge, using Java 21 and SQLite. Existing block lookup, inspection, bounded block rollback/restore, bounded confirmed history purge, correlated item history, supported vanilla crafting capture and opt-in block-hopper capture are in scope. Separately configured player activity, bounded entity death/name/tame/birth/frame history and standard player bucket fluid history are also included. The optional Fabric WorldEdit 7.3.8 adapter retains its separate GPL boundary. Players do not need Guardian or Fzzy Config on their client.
-
-Item preview/recovery/saved checks remain read-only. Confirmed online apply is available for the bounded native ownership contract, with separate item permission, actual save verification and persistent source claims. Cancellation never undoes started writes. Reconciliation releases only an already complete live/saved outcome; partial/conflicting operations stay protected and block normal gameplay startup. Explicit maintenance recovery can finish exact recorded partial images; conflicting images remain protected.
-
-Capture support does not imply rollback support. Block-backed menu capture follows the documented backing-slot rules; unknown or extended menu/storage models are skipped. Hopper records describe observed balanced source/destination changes, not a promise of delivery beyond the recorded endpoints. Missing captures and backpressure/failure counters must remain visible; this alpha does not promise every mutation from every mod is logged.
+The isolated UI/query measurements are comparison fixtures, not a production TPS guarantee.
+Record representative pack behavior during R3 and avoid unmeasured capacity claims. No extra
+feature or fixed number of development passes is required to close these gates.
 
 ## Support boundaries
 
@@ -94,57 +50,13 @@ Capture support does not imply rollback support. Block-backed menu capture follo
 | Read-only item checks | Existing eligibility, history and identity checks apply. Unloaded, missing, sealed-loot, busy or unsupported endpoints are skipped/refused without loading chunks or unpacking loot. |
 | Internal bound inventories | Exact barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker classes with expected sizes; exact 41-slot player inventory with current online player and idle ordinary menu. Subclasses and custom inventories are refused. Bindings alone do not authorize item apply; the online adapter must install detached native ownership. |
 | Item rollback writes | Confirmed supported conserving transfers only, at most 50 source transactions, 8 inventories, 64 final changed slots and 2 MiB of full images. Confirmed targeted maintenance recovery for exact partial images; no automatic replay, force overwrite or item redo. See online/recovery contracts. |
-| Permissions | Vanilla operator fallback and optional provider integration exist. Server-side actual-provider and revocation acceptance passed in alpha.62. Network/client acceptance remains R3; simulated permissions are not evidence of a tested provider. |
+| Permissions | Vanilla operator fallback and optional provider integration exist. Actual-provider acceptance through alpha.82 and native UI operator/revocation checks through alpha.87 are recorded separately. Network/client acceptance remains R3; simulated permissions are not evidence of a tested provider. |
 | Entity history | Opt-in standard living/player deaths, tracked custom names, verified animal/horse tame transitions, inserted standard animal offspring with parent IDs, and normal/glow frame placement/display/rotation/removal history. Read-only world history, with separate query permission; confirmed old-history purge is supported, restoration is excluded. |
 | Fluid history | Opt-in persistent standard player bucket placement/collection and supported waterlogging. Read-only and separately permissioned; opt-in supported scheduled flow/levels/recession and liquid-formed blocks; no arbitrary automation, cauldron/custom storage or rollback. Confirmed old-history purge is supported. |
 | Fire/explosion history | Opt-in supported ignition, natural burning/extinguishing and standard explosion block changes, with known actors or unknown. Cause-filtered lookup/inspection and purge; public rollback/restore excluded for these causes. |
 | Growth/decay history | Opt-in standard crop ticks, sapling/tree advancement, supported player bone meal and natural leaf decay. Unknown natural actors, direct bone-meal player attribution, cause-filtered history/purge; public recovery excluded. |
 | Movement history | Opt-in verified settled piston plans and actual falling source/landing facts, correlated by UUID with block-history permission/purge. Read-only recovery; no guaranteed-complete group, forced animation or missing-chunk loads. |
 | Other features | Arbitrary fluid automation/custom simulation, arbitrary entity-property tracking, economy/faction storage, other automation and universal CoreProtect parity are outside this release. |
-
-## Design assessment
-
-The current live apply design does not yet meet its exclusive-inventory contract. Reservations pin identities and observe changes, but `ItemStack.setCount` can mutate a live container stack during retention. Stack component maps and direct chunk/block-entity mutation also bypass parts of the caller contract. A whitelist of vanilla container classes does not remove this problem.
-
-The alpha.60 and alpha.61 combined fixtures reproduce the count bypass, then restore the synthetic test data. Individual guarded callers can refuse safely before their own effects; this does not establish exclusive access for arbitrary callers or undo earlier effects in a larger operation. Cancelling a void decrement in isolation can let its caller complete a transfer without paying its source cost.
-
-Decision: do not enable item apply in this release. Stop treating additional generic mutation guards as a release checklist. Saved-state and journal infrastructure remain internal. A later item-apply milestone needs an explicit enforceable ownership design and a bounded acceptance contract before implementation is resumed. It must preserve complete counts/components, refuse unsupported callers before effects, and reconcile actual saves and crash outcomes. This is a separate design decision, not an estimate of a few remaining patches.
-
-## Authorized scoped-purge extension
-
-After alpha.78 passed CI, the owner selected world and block/item purge filters. Alpha.79 adds exact dimension/include/exclude scope, immutable fixed-batch confirmation and token-aware completion. World scope retains activity/unlocated inventory history; any type filter selects only block/item history. Matching transactions are deleted whole, including other endpoints/worlds. Existing recovery protection, expiring confirmation, global 1,000-record cap and conservative completeness marker remain. No supplied database is used. This extends existing purge acceptance and R3 presentation without adding a release gate.
-
-## Authorized block recovery-filter extension
-
-After alpha.79 was pushed, the owner selected multiple-user and block-type rollback/restore filters. Alpha.80 forwards the existing resolved history search to rollback, restore/redo and read-only preview, with recovery-specific completion. Include/exclude semantics match history lookup and run before the cap; rollback/restore still own their newest/oldest ordering. Existing live-state checks can block a selected chain when filters omit intervening changes. Item apply and public environmental recovery remain excluded. Tests use private worlds/databases. This extends existing R1/R2/R3 checks without adding a release gate.
-
-## Authorized sign-text history extension
-
-After alpha.80 was pushed, the owner selected sign-text history. Alpha.81 observes accepted supported player editing methods on either side, with bounded immutable block snapshots, default-off capture, `c:sign` and literal filtered hover details under existing lookup/inspect permissions. It excludes dye/glow/wax-only changes, direct command/NBT edits, universal claim/mod compatibility and public sign-edit recovery. Existing protected block purge includes these rows. Tests use private worlds/databases; actual client editing/filtering/claim presentation joins existing R3 without adding a release gate.
-
-## Authorized filtered export extension
-
-After alpha.81 was pushed, the owner selected filtered file export. Alpha.82 adds one-category server-side JSONL extracts under the storage root, at most 500 rows/16 MiB per file, with native snapshot budgets and a 64-entry directory bound. Export requires its own level-four grant and the category grant, checks current authority, and cancels unpublished work on revocation/shutdown. Query and file work share the draining history executor. No import, public download, automatic deletion, database mutation or consistent multi-category backup is added. Tests use isolated data; export permissions/file contents join existing acceptance without a new release gate.
-
-## Alpha.84 local extension evidence
-
-The online ownership milestone passed 747 automated tests and both-loader isolated native
-handoff, saved-state, command, cancellation/reconciliation and restart-refusal checks. See
-[alpha.84 evidence](validation/online-items-alpha84.json). These are synthetic server fixtures,
-not connected-client or universal modpack acceptance. Alpha.84 subsequently passed GitHub CI.
-Alpha.85 passed 770 automated tests and both-loader targeted recovery/interruption/restart
-fixtures; see [evidence](validation/item-recovery-alpha85.json). Its [remote CI passed](https://github.com/BareMinimumStudios/guardian/actions/runs/40185828976). Alpha.86 UI validation is tracked in [item UI evidence](validation/item-ui-alpha86.json).
-
-## Fixed release gates
-
-| Gate | Status | Completion evidence |
-| --- | --- | --- |
-| R1: automated baseline | Complete locally and in GitHub CI for alpha.82 | 729 tests, both-loader filtered export and 2704 current permission checks; see [export evidence](validation/exports-alpha82.json). Prior 720 tests, both-loader sign capture and 2508 current permission checks; see [sign evidence](validation/signs-alpha81.json). Prior 713 tests, both-loader recovery filters and 2492 current recovery permission checks; see [recovery filter evidence](validation/recovery-filters-alpha80.json). Prior 707 tests, both-loader scoped/global purge and 490 current purge permission checks; see [scoped purge evidence](validation/scoped-purge-alpha79.json). Prior 696 tests, both-loader piston/falling history and 2116 current permission checks; see [movement evidence](validation/movement-alpha78.json). Prior 689 tests, both-loader growth/decay and accepted NeoForge item history, plus 2116 current permission checks; see [growth evidence](validation/growth-decay-alpha77.json). Prior 683 tests, both-loader fire/explosion history and 2116 current permission checks; see [environment evidence](validation/fire-explosions-alpha76.json). Prior 677 tests, both-loader natural flow/formation and 2116 current permission checks; see [flow evidence](validation/fluid-flow-alpha75.json). Prior 670 tests, both-loader expanded purge and 442 purge permission checks; see [purge extension evidence](validation/entity-fluid-purge-alpha74.json). Prior 662 tests, both-loader frame capture/inspection/query/restart and 2,170 provider/operator checks; see [frame evidence](validation/item-frames-alpha73.json). Prior 651 tests, both-loader bucket capture/query/restart and 2,116 provider/operator checks; see [fluid evidence](validation/fluids-alpha72.json). Prior 642 tests, both-loader taming/breeding capture/query/restart and 1,872 provider/operator checks; see [taming/breeding evidence](validation/taming-breeding-alpha71.json). Prior 635 tests, both-loader entity capture/query/restart and 1,872 provider/operator checks; see [entity evidence](validation/entities-alpha70.json). Prior 624 tests, both-loader command capture/query/restart and 1,636 actual-provider/operator checks; see [command evidence](validation/commands-alpha69.json). Prior 611 tests, 30 isolated purge cases and 418 actual-provider/operator checks; see [purge evidence](validation/purge-alpha68.json). Prior 597 tests, 56 restore cases and actual-provider/operator acceptance; see [restore evidence](validation/restore-alpha67.json). Prior 589 tests and 18 preview/apply runtime cases; see [preview evidence](validation/block-preview-alpha66.json). Prior 561 tests and 18 isolated history command cases; see [filter evidence](validation/filters-alpha65.json). Prior 551 tests and both-loader activity fixtures; see [activity evidence](validation/activity-alpha64.json). Prior 546 fresh tests and required clean/repeated-cache/WorldEdit builds; see [CI correction](validation/ci-alpha63.json). Prior both-loader permissions/runtime evidence and package checks. The prior 2,912 combined alpha.61 fixture checks remain historical baseline evidence, including unsupported bypasses. See [alpha.62 evidence](validation/permissions-alpha62.json) and [alpha.61 evidence](validation/durability-alpha61.json). Re-run relevant checks if executable code changes. |
-| R2: real permissions acceptance | Server-side checks complete through alpha.82; network/client acceptance remains R3 | Current permissions passed 2704 checks on alpha.82; see [evidence](validation/exports-alpha82.json). Prior permissions passed 2508 checks on alpha.81; see [evidence](validation/signs-alpha81.json). Prior recovery permissions passed 2492 checks on alpha.80; see [evidence](validation/recovery-filters-alpha80.json). Prior purge permissions passed 490 checks on alpha.79; see [evidence](validation/scoped-purge-alpha79.json). Prior history permissions passed 2116 checks on alpha.78; see [evidence](validation/movement-alpha78.json). Prior history permissions passed 2116 checks on alpha.77; see [evidence](validation/growth-decay-alpha77.json). Prior history permissions passed 2116 checks on alpha.76; see [evidence](validation/fire-explosions-alpha76.json). Prior fluid permissions passed 2116 checks on alpha.75; see [evidence](validation/fluid-flow-alpha75.json). Prior expanded purge permissions passed 442 checks on alpha.74; see [evidence](validation/entity-fluid-purge-alpha74.json). Prior frame permissions passed 2,170 checks on alpha.73; see [frame evidence](validation/item-frames-alpha73.json). Prior fluid permissions passed 2,116 checks on alpha.72; see [fluid evidence](validation/fluids-alpha72.json). Prior entity permissions passed 1,872 checks on alpha.71; see [taming/breeding evidence](validation/taming-breeding-alpha71.json). Prior entity permissions passed 1,872 checks; see [entity evidence](validation/entities-alpha70.json). Prior command permissions passed 1,636 actual-provider/operator checks; see [command evidence](validation/commands-alpha69.json). Prior purge permissions passed 418 actual-provider/operator checks; see [purge evidence](validation/purge-alpha68.json). Prior restore preview/apply permissions passed 2,420 actual-provider/operator checks; see [restore evidence](validation/restore-alpha67.json). Prior activity/preview permissions passed 2,068 actual-provider/operator checks; see [alpha.66 acceptance](validation/acceptance-alpha66.json). Prior real LuckPerms grant, deny and revocation on both loaders, queued lookup/inspector output, username/time/UUID suggestions, read-only item checks, persistent block rollback boundaries and provider-free actual operator entries passed 1,150 checks. Synthetic players and packet queues do not certify client presentation or network login; those remain R3. See [evidence and limits](validation/permissions-alpha62.json). |
-| R3: connected-client acceptance | Pending | Run the bounded matrix below on both loaders. Record server/client versions and actual pack/claim mods. The user cannot join yet; this gate waits for that opportunity. Synthetic players and idle-server startup do not close it. |
-| R4: release artifact review | Prepared; final sign-off pending | Alpha.82 readiness artifact review passed; see [review](validation/readiness-alpha82.json). prior alpha.67 installation/test-package review passed; see [package evidence](validation/artifacts-alpha67.json); see [artifact review](VALIDATION.md). Final sign-off still waits for connected-client results and the owner’s release decision. No publish/push is authorized by this document. Repeat package validation for the final selected artifact. |
-
-Server-side permissions acceptance for activity, preview, restore, purge, command, entity, taming/breeding, fluid and frame additions is complete within R2. R3 connected-client acceptance and final R4 sign-off remain pending. These are checks of the added feature, not new feature requirements. Purge client presentation joins R3 on an isolated database; it does not authorize deletion of supplied server history during development. The bounded alpha.84 item apply milestone extends the existing automated, permissions, client and artifact gates; it does not create unrelated feature requirements. A defect found during acceptance is fixed within its existing gate; it does not create a new feature requirement. Production load capacity is not certified by the controlled hopper fixtures and must not be advertised as such.
 
 ## Connected-client matrix
 
