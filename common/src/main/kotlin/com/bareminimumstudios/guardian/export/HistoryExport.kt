@@ -5,7 +5,7 @@ import com.bareminimumstudios.guardian.storage.QueryableStorageBackend
 import com.bareminimumstudios.guardian.storage.query.*
 
 enum class ExportKind(val permission:String,val fallback:Int) {
-    BLOCKS("guardian.lookup",2), ITEMS("guardian.lookup",2), CHAT("guardian.chat",3), SESSIONS("guardian.sessions",3), COMMANDS("guardian.commands",3), ENTITIES("guardian.entities",2), FLUIDS("guardian.fluids",2)
+    BLOCKS("guardian.lookup",2), ITEMS("guardian.lookup",2), CHAT("guardian.chat",3), SESSIONS("guardian.sessions",3), COMMANDS("guardian.commands",3), WHISPERS("guardian.whispers",3), ENTITIES("guardian.entities",2), FLUIDS("guardian.fluids",2)
 }
 sealed interface ExportQuery {
     val kind:ExportKind
@@ -14,7 +14,7 @@ sealed interface ExportQuery {
     data class Blocks(val query:BlockLookupQuery):ExportQuery { override val kind=ExportKind.BLOCKS;override val limit get()=query.limit;override fun read(storage:QueryableStorageBackend)=storage.lookupBlocks(query) }
     data class Items(val query:ContainerLookupQuery):ExportQuery { override val kind=ExportKind.ITEMS;override val limit get()=query.limit;override fun read(storage:QueryableStorageBackend)=storage.lookupContainers(query) }
     data class Activity(override val kind:ExportKind,val query:PlayerActivityQuery):ExportQuery {
-        init { require(query.kinds==when(kind){ExportKind.CHAT->setOf(PlayerActivityKind.CHAT);ExportKind.SESSIONS->setOf(PlayerActivityKind.LOGIN,PlayerActivityKind.LOGOUT);ExportKind.COMMANDS->setOf(PlayerActivityKind.COMMAND);else->error("Not activity history")}) }
+        init { require(query.kinds==when(kind){ExportKind.CHAT->setOf(PlayerActivityKind.CHAT);ExportKind.SESSIONS->setOf(PlayerActivityKind.LOGIN,PlayerActivityKind.LOGOUT);ExportKind.COMMANDS->setOf(PlayerActivityKind.COMMAND);ExportKind.WHISPERS->setOf(PlayerActivityKind.WHISPER);else->error("Not activity history")}) }
         override val limit get()=query.limit;override fun read(storage:QueryableStorageBackend)=storage.lookupActivity(query)
     }
     data class Entities(val query:EntityLookupQuery):ExportQuery { override val kind=ExportKind.ENTITIES;override val limit get()=query.limit;override fun read(storage:QueryableStorageBackend)=storage.lookupEntities(query) }
@@ -52,7 +52,7 @@ internal object ExportRows {
     fun value(row:Any):Map<String,Any?> = when(row) {
         is StoredBlockChange->row.snapshot.let { s->mapOf("recordType" to "block","rowId" to row.rowId,"eventUuid" to s.eventId.toString(),"time" to s.timestampEpochMillis,"actor" to actor(s.actor),"dimension" to s.dimension.toString(),"position" to pos(s.position),"action" to s.action.name,"cause" to s.cause.name,"journalState" to row.rollbackState.name,"movementUuid" to s.movementId?.toString(),"movementPhase" to s.movementPhase?.name,"before" to block(s.before),"after" to block(s.after)) }
         is ContainerTransactionSnapshot->mapOf("recordType" to "item_transaction","uuid" to row.transactionId.toString(),"time" to row.timestampEpochMillis,"actor" to actor(row.actor),"action" to row.action.name,"menuId" to row.menuId,"containers" to row.containers.map(::owner),"changes" to row.changes.map { mapOf("owner" to owner(it.address.owner),"slot" to it.address.index,"before" to item(it.before),"after" to item(it.after)) })
-        is PlayerActivity->mapOf("recordType" to "activity","uuid" to row.eventId.toString(),"time" to row.timestampEpochMillis,"actor" to actor(row.actor),"kind" to row.kind.name,"text" to row.text)
+        is PlayerActivity->mapOf("recordType" to "activity","uuid" to row.eventId.toString(),"time" to row.timestampEpochMillis,"actor" to actor(row.actor),"kind" to row.kind.name,"text" to row.text,"recipientUuid" to row.recipientUuid?.toString(),"recipientName" to row.recipientName)
         is EntityAuditEvent->mapOf("recordType" to "entity","uuid" to row.eventId.toString(),"time" to row.timestampEpochMillis,"actor" to actor(row.actor),"dimension" to row.dimension.toString(),"position" to pos(row.position),"targetUuid" to row.targetUuid.toString(),"targetType" to row.targetType.toString(),"kind" to row.kind.name,"beforeName" to row.beforeName,"afterName" to row.afterName,"damageType" to row.damageType?.toString(),"parentUuid" to row.parentUuid?.toString(),"partnerUuid" to row.partnerUuid?.toString(),"frameBefore" to frame(row.frameBefore),"frameAfter" to frame(row.frameAfter))
         is FluidAuditEvent->mapOf("recordType" to "fluid","uuid" to row.eventId.toString(),"time" to row.timestampEpochMillis,"actor" to actor(row.actor),"dimension" to row.dimension.toString(),"position" to pos(row.position),"kind" to row.kind.name,"before" to fluid(row.before),"after" to fluid(row.after))
         else->error("Unsupported export record")

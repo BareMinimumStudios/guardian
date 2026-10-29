@@ -14,7 +14,7 @@ data class ExportFilters(val common:BlockCommandFilter,val entityKinds:Set<Entit
                 else->ExportFilters(BlockCommandFilterParser.parse(raw).getOrThrow())
             }
             require(result.common.lookbackMillis!=null) { "Export requires t:<time>, for example t:1h" }
-            if(kind in setOf(ExportKind.CHAT,ExportKind.SESSIONS,ExportKind.COMMANDS))require(keys.all { it in setOf("u","user","t","time","l","limit","o","order") }) { "Activity export accepts only u:, t:, l: and o:" }
+            if(kind in setOf(ExportKind.CHAT,ExportKind.SESSIONS,ExportKind.COMMANDS,ExportKind.WHISPERS))require(keys.all { it in setOf("u","user","t","time","l","limit","o","order") }) { "Activity export accepts only u:, t:, l: and o:" }
             if(kind==ExportKind.ITEMS)require(keys.none { it in setOf("a","action","c","cause","m","movement") }) { "Item export does not accept block action/cause/movement filters" }
             require((result.common.limit ?: 100) in 1..500) { "Export limit must be 1..500" }
             result

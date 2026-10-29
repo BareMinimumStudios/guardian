@@ -8,7 +8,7 @@ class HistoryPageCommandsTest {
         assertEquals(5, parsed.limit); assertEquals(2, parsed.page); assertTrue(parsed.oldestFirst)
     }
     @Test fun activityNavigationRetainsUserTimeAndLimit() {
-        for (name in listOf("chat", "sessions")) {
+        for (name in listOf("chat", "sessions", "commands", "whispers")) {
             assertEquals("/guardian $name u:Alex t:1d l:5 p:2 o:oldest", HistoryPageCommands.command(name, "u:Alex t:1d l:5 p:1 o:newest", 2, true))
         }
     }

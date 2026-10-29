@@ -19,6 +19,7 @@ enum class ActionType(val storageCode: Int) {
     PLAYER_SESSION(40),
     CHAT(50),
     COMMAND(51),
+    WHISPER(52),
     FRAME_PLACE(60),
     FRAME_REMOVE(61),
     FRAME_CHANGE(62);

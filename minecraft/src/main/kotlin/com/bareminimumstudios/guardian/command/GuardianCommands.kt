@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, sessions, commands, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, whispers, sessions, commands, spy, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items preview, or status."))
                 1
             }
 
@@ -104,7 +104,7 @@ object GuardianCommands {
                     }
                 }
                 .executes { context -> executeFluids(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
-        listOf("chat", "sessions", "commands").forEach { name ->
+        listOf("chat", "sessions", "commands", "whispers").forEach { name ->
             val permission = "guardian.$name"
             root.then(Commands.literal(name).requires { authorized(activitySource(it,name),permissions,permission,3) }
                 .executes { context -> executeActivity(context.source, "", name, runtimeProvider(), configProvider()) }
@@ -112,6 +112,21 @@ object GuardianCommands {
                     .suggests { context, builder -> suggestFilters(activitySource(context.source,name), builder, permissions, activity = true, permission = permission, fallback = 3) }
                     .executes { context -> executeActivity(context.source, StringArgumentType.getString(context, "filters"), name, runtimeProvider(), configProvider()) }))
         }
+        val spy=Commands.literal("spy").requires { authorized(activitySource(it,"commands"),permissions,"guardian.spy",3) }
+            .executes { context->context.source.sendSystemMessage(Component.literal("Use /guardian spy whispers on|off or /guardian spy commands on|off. Requires activity.liveSpy and the matching capture setting."));1 }
+        for(channel in listOf("whispers","commands")) {
+            val kind=if(channel=="whispers")com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER else com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND
+            val node=Commands.literal(channel).requires { authorized(activitySource(it,channel),permissions,"guardian.$channel",3) }
+            for(on in listOf(true,false))node.then(Commands.literal(if(on)"on" else "off").executes { context->
+                val player=context.source.player
+                if(player==null) { context.source.sendFailure(Component.literal("Guardian live spy requires an online player; use history from console."));0 }
+                else if(com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.set(player,kind,on)) {
+                    player.sendSystemMessage(Component.literal("Guardian $channel spy "+if(on)"enabled for this session." else "disabled."));1
+                } else { context.source.sendFailure(Component.literal("Guardian spy unavailable: enable activity.liveSpy and this capture category, and check guardian.spy plus guardian.$channel."));0 }
+            })
+            spy.then(node)
+        }
+        root.then(spy)
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
             .then(Commands.argument("position", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos()).executes { context ->
                 val history = runtimeProvider()?.history()
@@ -216,7 +231,7 @@ object GuardianCommands {
                 .executes { context -> if(runtimeProvider()?.purge()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("cancel").executes { context -> if(runtimeProvider()?.purge()?.cancel(context.source)==true)1 else 0 }))
         val exportNode=Commands.literal("export").requires { authorized(it,permissions,"guardian.export",4) }
-            .executes { context->context.source.sendSystemMessage(Component.literal("Usage: /guardian export <blocks|items|chat|sessions|commands|entities|fluids> t:1h [filters] [l:100] | cancel. Server-side JSONL, at most 500 records."));0 }
+            .executes { context->context.source.sendSystemMessage(Component.literal("Usage: /guardian export <blocks|items|chat|sessions|commands|whispers|entities|fluids> t:1h [filters] [l:100] | cancel. Server-side JSONL, at most 500 records."));0 }
             .then(Commands.literal("cancel").executes { context->if(runtimeProvider()?.export()?.cancel(context.source)==true)1 else 0 })
         for(kind in com.bareminimumstudios.guardian.export.ExportKind.entries)exportNode.then(Commands.literal(kind.name.lowercase())
             .requires { exportAllowed(it,permissions,kind) }
@@ -233,7 +248,7 @@ object GuardianCommands {
                             else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },kind!=com.bareminimumstudios.guardian.export.ExportKind.BLOCKS,resources)
                         }
                         val target=builder.createOffset(start)
-                        choices.filter { it.substringBefore(':').lowercase() !in setOf("p","page") && (kind !in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS) || it.substringBefore(':').lowercase() in setOf("u","user","t","time","l","limit","o","order")) }.take(100).forEach(target::suggest)
+                        choices.filter { it.substringBefore(':').lowercase() !in setOf("p","page") && (kind !in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS,com.bareminimumstudios.guardian.export.ExportKind.WHISPERS) || it.substringBefore(':').lowercase() in setOf("u","user","t","time","l","limit","o","order")) }.take(100).forEach(target::suggest)
                         target.buildFuture()
                     }
                 }
@@ -250,7 +265,7 @@ object GuardianCommands {
         val parsed=com.bareminimumstudios.guardian.command.ExportFilters.parse(kind,raw).getOrElse { source.sendFailure(Component.literal("Guardian export: ${it.message}"));return 0 }
         val f=parsed.common;val limit=f.limit ?: 100
         if(limit>config.lookup.maxResults.get()){source.sendFailure(Component.literal("Guardian export exceeds the configured history result limit."));return 0}
-        val activity=kind in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS)
+        val activity=kind in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS,com.bareminimumstudios.guardian.export.ExportKind.WHISPERS)
         val scope=if(activity)null else (resolveScope(source,f) ?: return 0)
         val radius=f.radius
         if(radius!=null && radius>config.lookup.maxRadius.get()){source.sendFailure(Component.literal("Guardian export radius exceeds the configured maximum."));return 0}
@@ -263,7 +278,7 @@ object GuardianCommands {
             com.bareminimumstudios.guardian.export.ExportKind.ITEMS -> com.bareminimumstudios.guardian.export.ExportQuery.Items(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=dimension,position=position,bounds=scope!!.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
             com.bareminimumstudios.guardian.export.ExportKind.ENTITIES -> com.bareminimumstudios.guardian.export.ExportQuery.Entities(com.bareminimumstudios.guardian.storage.query.EntityLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.entityKinds,targetUuid=parsed.entityId))
             com.bareminimumstudios.guardian.export.ExportKind.FLUIDS -> com.bareminimumstudios.guardian.export.ExportQuery.Fluids(com.bareminimumstudios.guardian.storage.query.FluidLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.fluidKinds))
-            else -> com.bareminimumstudios.guardian.export.ExportQuery.Activity(kind,com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(when(kind){com.bareminimumstudios.guardian.export.ExportKind.CHAT->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT);com.bareminimumstudios.guardian.export.ExportKind.COMMANDS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND);else->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN,com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)},search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+            else -> com.bareminimumstudios.guardian.export.ExportQuery.Activity(kind,com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(when(kind){com.bareminimumstudios.guardian.export.ExportKind.CHAT->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT);com.bareminimumstudios.guardian.export.ExportKind.COMMANDS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND);com.bareminimumstudios.guardian.export.ExportKind.WHISPERS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER);else->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN,com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)},search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
         }
         val metadata=mapOf<String,Any?>("dimension" to dimension?.toString(),"position" to position?.let { listOf(it.x,it.y,it.z) },"radius" to radius,"bounds" to scope?.bounds?.let { listOf(it.min.x,it.min.y,it.min.z,it.max.x,it.max.y,it.max.z) },"afterEpochMillis" to after,"oldestFirst" to f.oldestFirst,"includedPlayers" to search.players.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) },"excludedPlayers" to search.excludedPlayers.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) })
         return if(service.request(source,query,raw,metadata))1 else 0
@@ -319,10 +334,10 @@ object GuardianCommands {
         filter.search.resolve(source.server.playerList.players.associate { it.gameProfile.name to it.uuid })
 
     private fun activitySource(source: CommandSourceStack, name: String): CommandSourceStack =
-        if(name == "commands") source.player?.createCommandSourceStack() ?: source else source
+        if(name in setOf("commands","whispers")) source.player?.createCommandSourceStack() ?: source else source
 
     private fun activityAuthorized(source: CommandSourceStack, permissions: PermissionService, name: String): Boolean {
-        if(name == "commands" && source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true)return false
+        if(name in setOf("commands","whispers") && source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } == true)return false
         return authorized(activitySource(source,name),permissions,"guardian.$name",3)
     }
 
@@ -401,6 +416,7 @@ object GuardianCommands {
         val kinds = when(name) {
             "chat" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT)
             "commands" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND)
+            "whispers" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER)
             else -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
         }
         val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, search = resolvedSearch(source, filter),
@@ -409,7 +425,7 @@ object GuardianCommands {
             if (!activityAuthorized(source, runtime.permissions, name)) return@lookupActivity
             source.sendSystemMessage(Component.literal("Guardian $name history: ${rows.size} records (page ${filter.page ?: 1})."))
             rows.forEach { row ->
-                val details = when (row.kind) { com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN -> "logged in"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT -> "logged out"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND -> "issued ${row.text}"; else -> "said: ${row.text}" }
+                val details = when (row.kind) { com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN -> "logged in"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT -> "logged out"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND -> "issued ${row.text}"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER -> "whispered to ${row.recipientName}: ${row.text}"; else -> "said: ${row.text}" }
                 val plain = "${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)} ${row.actor.lastKnownName} $details".filter { !it.isISOControl() }.replace('\u00a7', '?')
                 source.sendSystemMessage(Component.literal(plain))
             }

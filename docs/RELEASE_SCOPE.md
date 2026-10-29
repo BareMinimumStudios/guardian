@@ -1,11 +1,19 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-29 against `0.4.0-alpha.93+1.21.1`.
+Assessed: 2026-10-29 against `0.4.0-alpha.94+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
 dependency is part of this pass. Fix reproducible defects within the existing contract;
 historical future-work lists do not add release requirements.
+
+The owner explicitly authorized alpha.94 whisper history and staff live spy after the freeze.
+This bounded addition covers vanilla `/msg`, `/tell` and `/w`, separate private-history access,
+opt-in per-staff command/whisper spy and existing export/purge paths. It does not authorize
+other private-channel integrations or additional recovery targets. Both new switches default
+off. Connected-client checks must verify sender/recipient searches, separate permissions,
+permission revocation, spy off/logout and command argument/authentication exclusions.
+[Evidence](validation/whispers-spy-alpha94.json).
 
 Alpha.88 fixes a reproduced R3 client-login defect: authorized command/entity/fluid history
 nodes were omitted from the initial command list. Node visibility now checks current permission
@@ -91,7 +99,7 @@ belongs to the existing lookup/permission row below.
 
 Use a backed-up isolated world. This is acceptance of the existing release scope, not a request to add features.
 
-1. **Lookup and presentation:** place/break vanilla and representative pack blocks; filter by user/time/action, tab-complete parameters, page/order history, and confirm Guardian usage examples and clear hopper source/destination wording. Send public chat, join/leave and verify the separately permissioned chat/session histories, paging and permission revocation; private messages and disabled capture must stay absent. For command logging, verify root-only defaults, argument opt-in, private/authentication exclusions, custom exclusions, no console records, separate command-history permission and network-issued command presentation. For enabled entity capture, check death/rename/tame/birth summaries, parent identities, target UUID hover/search, actor filtering and permission revocation; disabling capture must leave existing history searchable. For enabled bucket capture, check water/lava placement and collection, waterlogging, no-op/blocked targets, Nether vaporization, action/type filters, hover details and independent permission revocation.
+1. **Lookup and presentation:** place/break vanilla and representative pack blocks; filter by user/time/action, tab-complete parameters, page/order history, and confirm Guardian usage examples and clear hopper source/destination wording. Send public chat, join/leave and verify the separately permissioned chat/session histories, paging and permission revocation; private messages must stay out of public chat and ordinary command history, and disabled capture must stay absent. For command logging, verify root-only defaults, argument opt-in, private/authentication exclusions, custom exclusions, no console records, separate command-history permission and network-issued command presentation. For enabled entity capture, check death/rename/tame/birth summaries, parent identities, target UUID hover/search, actor filtering and permission revocation; disabling capture must leave existing history searchable. For enabled bucket capture, check water/lava placement and collection, waterlogging, no-op/blocked targets, Nether vaporization, action/type filters, hover details and independent permission revocation.
 With environmental capture enabled, also check ignition/burning/extinguishing wording, repeated/blocked ignition, owned TNT versus creeper/unknown explosions, mob-griefing denial, `c:fire`/`c:explosion` filtering, restart persistence and explicit public recovery refusal. Portal creation must not appear as burning. These checks remain within the existing lookup/presentation row.
 
 With growth/decay enabled, check crop age summaries, natural unknown actors versus direct bone-meal actors, sapling stage/tree placement, failed trees, persistent versus decaying leaves and restart. On NeoForge, deny both single-block bone meal and multi-block tree placement and verify restored world state with no false history; repeat ignition denial. These remain part of the existing presentation/claim row.

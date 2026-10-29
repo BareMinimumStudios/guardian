@@ -219,10 +219,10 @@ abstract class JdbcStorageBackend(
     }
 
     private fun insertActivity(conn: Connection, entry: com.bareminimumstudios.guardian.domain.PlayerActivity) {
-        conn.prepareStatement("INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING").use {
+        conn.prepareStatement("INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text, recipient_uuid, recipient_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING").use {
             it.setString(1, entry.eventId.toString()); it.setLong(2, entry.timestampEpochMillis)
             it.setString(3, entry.actor.uuid.toString()); it.setString(4, entry.actor.lastKnownName)
-            it.setString(5, entry.kind.name); it.setString(6, entry.text); it.executeUpdate()
+            it.setString(5, entry.kind.name); it.setString(6, entry.text); it.setString(7,entry.recipientUuid?.toString());it.setString(8,entry.recipientName);it.executeUpdate()
         }
     }
 
@@ -230,21 +230,21 @@ abstract class JdbcStorageBackend(
         val params = mutableListOf<Any>()
         val where = mutableListOf("kind IN (${query.kinds.joinToString(",") { "?" }})")
         query.kinds.forEach { params.add(it.name) }
-        val actors = HistorySearchSql.actors(query.search, "player_uuid", "player_name")
+        val actors = HistorySearchSql.activityActors(query)
         if (actors.clause.isNotEmpty()) where.add(actors.clause.removePrefix(" AND "))
         params.addAll(actors.values)
-        query.playerUuid?.let { where.add("player_uuid = ?"); params.add(it.toString()) }
-        query.playerName?.let { where.add("LOWER(player_name) = LOWER(?)"); params.add(it) }
+        query.playerUuid?.let { where.add("(player_uuid = ? OR recipient_uuid = ?)"); params.add(it.toString());params.add(it.toString()) }
+        query.playerName?.let { where.add("(LOWER(player_name) = LOWER(?) OR LOWER(recipient_name) = LOWER(?))"); params.add(it);params.add(it) }
         query.afterEpochMillis?.let { where.add("time >= ?"); params.add(it) }
         val direction = if (query.oldestFirst) "ASC" else "DESC"
-        requireConnection().prepareStatement("SELECT event_uuid,time,player_uuid,player_name,kind,text FROM ex_player_activity WHERE ${where.joinToString(" AND ")} ORDER BY time $direction, event_uuid $direction LIMIT ? OFFSET ?").use { statement ->
+        requireConnection().prepareStatement("SELECT event_uuid,time,player_uuid,player_name,kind,text,recipient_uuid,recipient_name FROM ex_player_activity WHERE ${where.joinToString(" AND ")} ORDER BY time $direction, event_uuid $direction LIMIT ? OFFSET ?").use { statement ->
             params.add(query.limit); params.add(query.offset)
             params.forEachIndexed { index, value -> statement.setObject(index + 1, value) }
             statement.executeQuery().use { rows -> buildList {
                 while (rows.next()) add(com.bareminimumstudios.guardian.domain.PlayerActivity(
                     java.util.UUID.fromString(rows.getString(1)), rows.getLong(2),
                     ActorIdentity.Player(java.util.UUID.fromString(rows.getString(3)), rows.getString(4)),
-                    com.bareminimumstudios.guardian.domain.PlayerActivityKind.valueOf(rows.getString(5)), rows.getString(6)))
+                    com.bareminimumstudios.guardian.domain.PlayerActivityKind.valueOf(rows.getString(5)), rows.getString(6),rows.getString(7)?.let(UUID::fromString),rows.getString(8)))
             } }
         }
     }

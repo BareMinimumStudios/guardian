@@ -21,7 +21,7 @@ player and time, and undo supported changes.
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.93** (testing release).
+Players do not need to install anything. Current build: **alpha.94** (testing release).
 
 ## Install
 
@@ -128,6 +128,8 @@ and restart the server.
 | Lectern books, opening and page turns | `logging.lecternInteractions` |
 | Public chat | `activity.chat` |
 | Player commands | `activity.commands` |
+| Vanilla `/msg`, `/tell` and `/w` | `activity.whispers` |
+| Staff live spy (also needs the matching logging switch) | `activity.liveSpy` |
 | Entity deaths, names, taming, breeding or item frames | The matching switch under `entities` |
 | Bucket changes or natural fluid flow | The matching switch under `fluids` |
 | Fire, explosions, growth, decay, pistons or falling blocks | The matching switch under `environment` |
@@ -139,6 +141,31 @@ does not mean that category supports rollback.
 
 Modded blocks and items are recorded when they use supported interaction and inventory paths.
 Custom storage and menus may need compatibility work.
+
+## Whisper history and live spy
+
+These are **off by default**. Enable `activity.whispers` in the server config and restart:
+
+```text
+/guardian whispers u:Alex t:1h
+```
+
+This finds whispers sent **or received** by Alex through vanilla `/msg`, `/tell` and `/w`.
+Public chat history stays separate. To watch new messages, also enable `activity.liveSpy`:
+
+```text
+/guardian spy whispers on
+/guardian spy whispers off
+```
+
+For ordinary commands, enable `activity.commands` and use `/guardian spy commands on`.
+Arguments stay hidden unless `activity.commandArguments` is enabled. Authentication commands
+are excluded. Spy subscriptions end on logout/restart and require the matching history permission
+plus `guardian.spy` (operator level 3 by default).
+
+Tell players in your server rules what is recorded. Restrict staff access and protect database
+backups and exports. See the [command guide](docs/COMMANDS.md#whispers-and-live-spy) for limits.
+Back up before updating: alpha.94 upgrades the database to schema 26; older jars cannot open it.
 
 ## More help
 

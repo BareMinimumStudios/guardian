@@ -61,9 +61,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     }
 
     override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.read {
-        activity.filter { query.search.matchesActor(it.actor) && it.kind in query.kinds && (query.playerUuid == null || it.actor.uuid == query.playerUuid) &&
-            (query.playerName == null || it.actor.lastKnownName.equals(query.playerName, ignoreCase = true)) &&
-            (query.afterEpochMillis == null || it.timestampEpochMillis >= query.afterEpochMillis) }
+        activity.filter(query::matches)
             .sortedWith(compareBy<com.bareminimumstudios.guardian.domain.PlayerActivity> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() })
             .drop(query.offset).take(query.limit)
     }

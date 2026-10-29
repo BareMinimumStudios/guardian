@@ -5,6 +5,14 @@ All notable changes to Guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Guardian uses semantic versions with a Minecraft version suffix while it is in alpha.
 
+## [0.4.0-alpha.94+1.21.1] - 2026-10-29
+
+### Added
+
+- Opt-in vanilla `/msg`, `/tell` and `/w` history. `/guardian whispers` searches sent and received messages with separate staff permission, paging and bounded export.
+- Opt-in `/guardian spy whispers on|off` and `/guardian spy commands on|off`. Subscriptions last for the session, recheck permissions and limit live output. Command arguments remain separately opt-in; authentication commands remain excluded.
+- Schema 26 recipient fields preserve older history. Global old-history purge includes whispers; scoped world/type purges retain them. Back up before upgrading; older jars cannot open schema 26.
+
 ## [Unreleased]
 
 ### Fixed

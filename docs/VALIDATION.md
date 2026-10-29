@@ -1,7 +1,15 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.93+1.21.1**. Schema 25, config version 18.
+Current executable checkpoint: **0.4.0-alpha.94+1.21.1**. Schema 26, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Whisper history and live spy
+
+808 automated tests pass, including participant filters, schema-25 upgrade/restart,
+private export and purge. Isolated native Fabric and NeoForge fixtures exercise vanilla
+`/msg`, `/tell` and `/w`, disabled capture, filtering, permissions and bounded live spy.
+[Evidence](validation/whispers-spy-alpha94.json) identifies the final builds and jars.
+These use synthetic players and in-memory network channels; real-client acceptance remains open.
 
 ## Bug review: sealed loot and lookup boundaries
 

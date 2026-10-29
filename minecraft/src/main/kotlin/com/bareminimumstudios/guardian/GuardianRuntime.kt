@@ -105,6 +105,7 @@ class GuardianRuntime(
         com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ pipeline }, { config })
+        com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.install(server,config,permissions)
         GuardianIntegrationApi.attach(config, selectedBulk)
         com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get()
@@ -123,6 +124,7 @@ class GuardianRuntime(
         com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.ItemFrameHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EntityHistoryCapture.install({ null }, { null })
+        com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.clear()
         export?.stop()
         export=null
         purge?.stop()

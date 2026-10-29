@@ -1,0 +1,131 @@
+{
+  "version": "0.4.0-alpha.94+1.21.1",
+  "date": "2026-10-29",
+  "schemaVersion": 26,
+  "configVersion": 19,
+  "tests": {
+    "tests": 808,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.94+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.94+1.21.1.jar",
+      "bytes": 13539415,
+      "sha256": "b2701ac1a1c4dbfeea528863de0f30bd1b7ee389a84db686d65604662944effa",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.94+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.94+1.21.1.jar",
+      "bytes": 13509611,
+      "sha256": "a5f9b1aefca43b2badf8f6abbe677891a8ae8ea489beaf0375c313c5d8f64f08",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.94+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.94+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "e23191b489dc9c5bca0872f55d071faaa2bb14aa7608a71983ced1a8508967d5",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "nativeWhispersAndSpy": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=24",
+      "activity": [
+        [
+          "COMMAND",
+          3
+        ],
+        [
+          "WHISPER",
+          36
+        ]
+      ],
+      "publicAliases": true,
+      "privateFilterMask": true,
+      "liveSpyPermissionsAndCap": true,
+      "sqliteIntegrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=25",
+      "activity": [
+        [
+          "COMMAND",
+          3
+        ],
+        [
+          "WHISPER",
+          36
+        ]
+      ],
+      "publicAliases": true,
+      "privateFilterMask": true,
+      "liveSpyPermissionsAndCap": true,
+      "sqliteIntegrity": "ok"
+    }
+  ],
+  "onlineItemRollbackRegression": [
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.class_1707)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Fabric",
+      "fixture": "OK checks=610",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.world.inventory.ChestMenu)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Neoforge",
+      "fixture": "OK checks=601",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "coverage": [
+    "Actual vanilla msg/tell/w dispatcher aliases reach shared native hook; failed target records nothing.",
+    "Whispers and live spy default off. Enabling history does not subscribe staff.",
+    "Spy uses explicit per-channel subscriptions; current history permission revocation stops output and requires resubscription.",
+    "Command argument defaults, explicit argument opt-in, authentication/raw-whisper exclusions and explicit off.",
+    "Fully filtered messages and hidden recipients absent; partial filter mask preserved.",
+    "Twenty updates per viewer per tick and one suppression notice; accepted history persists.",
+    "Sent/received participant predicates, exclusion precedence and paging on memory, SQLite and optional DuckDB.",
+    "Schema-25 upgrade and restart preserve prior rows on both JDBC backends.",
+    "Private export category checks, global activity purge and ordinary chat/command separation.",
+    "Public whisper history footer completes without server errors on both loaders."
+  ],
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "suppliedOrRemoteServersModified": false,
+  "limits": "Native fixtures use synthetic players and in-memory network channels. Actual client/production-pack acceptance remains pending. Vanilla player-source whisper dispatch only; no arbitrary mod channels, console messages or read-receipt guarantee. Live spy reports audit-queue acceptance, not a separate durable write receipt.",
+  "ci": "Awaiting owner push"
+}

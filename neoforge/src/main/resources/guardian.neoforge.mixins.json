@@ -57,6 +57,8 @@
     "ChunkMapSaveInvoker",
     "PlayerListSaveInvoker",
     "PlayerChatAuditMixin",
+    "WhisperRecipientInvoker",
+    "WhisperAuditMixin",
     "PlayerCommandAuditMixin",
     "LivingEntityHistoryMixin",
     "PlayerEntityHistoryMixin",

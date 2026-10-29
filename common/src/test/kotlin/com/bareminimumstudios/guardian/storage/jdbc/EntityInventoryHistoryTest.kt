@@ -61,9 +61,9 @@ class EntityInventoryHistoryTest {
             fun db():QueryableStorageBackend=if(duck)DuckDbStorageBackend(path)else SqliteStorageBackend(path)
             val old=ContainerTransactionSnapshot(UUID.randomUUID(),1,player,1,ContainerAction.BLOCK_USE,listOf(ItemSlotChange(ItemSlotAddress(block,0),item(0),item(1))))
             db().use { it.open();it.append(listOf(ContainerAuditEntry(old))) }
-            DriverManager.getConnection((if(duck)"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c->c.createStatement().use { s->s.executeUpdate("DROP TABLE ex_container_entity");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=25");s.executeUpdate("UPDATE ex_meta SET meta_value='24' WHERE meta_key='schema_version'") } }
+            DriverManager.getConnection((if(duck)"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c->c.createStatement().use { s->LegacyMovementSchema.stripPrivateActivity(s);s.executeUpdate("DROP TABLE ex_container_entity");s.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=25");s.executeUpdate("UPDATE ex_meta SET meta_value='24' WHERE meta_key='schema_version'") } }
             val fresh=row(2)
-            db().use { it.open();assertEquals(25,it.health().schemaVersion);assertEquals(old.transactionId,it.lookupContainers(ContainerLookupQuery()).single().transactionId);it.append(listOf(ContainerAuditEntry(fresh))) }
+            db().use { it.open();assertEquals(GuardianSchema.CURRENT_VERSION,it.health().schemaVersion);assertEquals(old.transactionId,it.lookupContainers(ContainerLookupQuery()).single().transactionId);it.append(listOf(ContainerAuditEntry(fresh))) }
             db().use { it.open();assertEquals(fresh.changes,it.lookupContainers(ContainerLookupQuery(entityUuid=cart.entityUuid)).single().changes) }
         }
     }

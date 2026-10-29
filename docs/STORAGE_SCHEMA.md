@@ -1,6 +1,14 @@
 # Guardian storage schema
 
-Current schema: **25**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+Current schema: **26**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+
+Schema 26 adds nullable `recipient_uuid` and `recipient_name` columns and a recipient/time
+index to `ex_player_activity`. WHISPER (action 52) requires sender, recipient and bounded plain
+text. Existing activity rows retain null recipients and keep their meaning. Sender/recipient
+user predicates run before paging; public CHAT/COMMAND lookups cannot select whispers.
+Whispers share the activity writer, bounded export and global purge, and do not participate
+in rollback. Config version 19 adds disabled-by-default `activity.whispers` and `activity.liveSpy`.
+Upgrading does not enable capture. Retain a stopped-server backup: older builds refuse schema 26.
 
 The `ex_` table prefix preserves the native ExProtect format lineage. It is not a CoreProtect `co_` schema or an automatic importer.
 

@@ -15,6 +15,7 @@ The short forms `l`, `i` and `rb` mean lookup, inspect and block rollback.
 | Public chat | `/guardian chat u:Alex t:1d` |
 | Login/logout events | `/guardian sessions u:Alex t:7d` |
 | Player commands | `/guardian commands u:Alex t:1h` |
+| Sent and received whispers | `/guardian whispers u:Alex t:1h` |
 | Entity deaths | `/guardian entities a:death t:1h r:25` |
 | Taming or breeding | `/guardian entities a:tame u:Alex t:1d`; use `a:breed` for births |
 | Item frames | `/guardian entities a:frame t:1h r:5` |
@@ -36,6 +37,47 @@ does not mean it also reached the barrel below it.
 Player command logging omits arguments by default. `activity.commandArguments` is a
 separate opt-in, with sensitive command roots excluded. Public chat logging does not
 include private messages. Set staff permissions and tell players what your server logs.
+
+## Whispers and live spy
+
+Enable `activity.whispers` in the server config and restart before sending a test message.
+Vanilla `/msg`, `/tell` and `/w` are supported. Other mods' private channels and console-sent
+messages are not covered. History records native dispatch, not proof that a player read it.
+
+```text
+/guardian whispers u:Alex t:1h
+/guardian whispers u:Alex p:2
+```
+
+User filters match either the sender or recipient. Excluding a user excludes either side.
+One row is recorded per recipient. Private messages stay out of public chat and ordinary
+command history, even when command arguments are enabled. Filtered text is respected;
+fully filtered messages and recipients with hidden chat are skipped.
+
+To watch new activity, enable `activity.liveSpy` **and** the matching capture switch:
+
+```text
+/guardian spy whispers on
+/guardian spy commands on
+/guardian spy whispers off
+/guardian spy commands off
+```
+
+Each channel needs `guardian.spy` plus `guardian.whispers` or `guardian.commands`.
+Subscriptions are personal and last until logout/restart or an observed permission removal.
+Permissions are checked again before every delivery. Spy shows at most 20 updates per viewer
+per server tick, then one suppression notice; accepted history is still saved. At most 256
+staff subscriptions are active at once. Use history searches to catch up.
+
+Command spy follows `activity.commandArguments` and `activity.commandExcludedRoots`.
+Arguments are off by default. Authentication/password commands stay excluded; add any custom
+sensitive command aliases to the exclusions before enabling arguments. Spy is a view of
+accepted records, not a way to bypass disabled logging or exclusions.
+
+`/guardian export whispers u:Alex t:1h` writes bounded private-message history and requires
+`guardian.export` plus `guardian.whispers`. Global old-history purge includes whispers;
+world/type-scoped purge retains them. Tell players what your server records, restrict these
+permissions, and protect the database and exported files. Logging is not retroactive.
 
 ## Search filters
 
@@ -60,7 +102,7 @@ Use exact registry IDs; an omitted namespace means `minecraft:`. Display names, 
 wildcards are not accepted. Item filters select whole transactions, including their other items.
 
 Block, entity and fluid searches use your current dimension. Item searches without
-a location can cover all dimensions. Chat, sessions and commands are server-wide and
+a location can cover all dimensions. Chat, sessions, commands and whispers are server-wide and
 accept user, time, page, limit and order filters; they have no position or item filter.
 
 With the optional Fabric WorldEdit adapter, `r:#we` uses your cuboid selection.
@@ -143,7 +185,7 @@ The minimum retained age is one day.
 
 To narrow the scope, add `w:minecraft:overworld` for one dimension, or `i:stone,coal`
 and `e:example:protected_item` for block/item types. A world filter retains chat,
-session and command records; adding type filters limits deletion to block/item history.
+session, command and whisper records; adding type filters limits deletion to block/item history.
 A matching item transaction is deleted as a whole.
 
 Recovery-protected history is retained. Old item rollback checks can refuse history
@@ -163,6 +205,8 @@ explicitly denies a node, operator status does not override that denial.
 | `guardian.chat` | Public chat history | 3 |
 | `guardian.sessions` | Login/logout history | 3 |
 | `guardian.commands` | Parsed player command history | 3 |
+| `guardian.whispers` | Private-message history | 3 |
+| `guardian.spy` | Live spy; also needs the channel history grant | 3 |
 | `guardian.entities` | Entity and frame history; also required for frame inspection | 2 |
 | `guardian.fluids` | Player bucket fluid history | 2 |
 | `guardian.status` | Storage/capture status | 2 |

@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 25
+    const val CURRENT_VERSION = 26
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -161,6 +161,11 @@ internal object GuardianSchema {
         SchemaMigration(25,"Entity inventory addresses and hopper collection",listOf(
             "CREATE TABLE ex_container_entity (transaction_uuid VARCHAR NOT NULL,entity_uuid VARCHAR NOT NULL,PRIMARY KEY(transaction_uuid,entity_uuid))",
             "CREATE INDEX ex_container_entity_lookup_idx ON ex_container_entity(entity_uuid,transaction_uuid)"
+        )),
+        SchemaMigration(26,"Opt-in whisper history participants",listOf(
+            "ALTER TABLE ex_player_activity ADD COLUMN recipient_uuid VARCHAR",
+            "ALTER TABLE ex_player_activity ADD COLUMN recipient_name VARCHAR",
+            "CREATE INDEX ex_activity_recipient_idx ON ex_player_activity(recipient_uuid,time,event_uuid)"
         ))
     )
 }

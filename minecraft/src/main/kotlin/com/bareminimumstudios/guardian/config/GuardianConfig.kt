@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 
-@Version(18)
+@Version(19)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -84,6 +84,10 @@ class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianCons
     class Activity : ConfigSection() {
         /** Public chat only; off until the server owner opts in. */
         var chat = ValidatedBoolean(false)
+        /** Private vanilla message dispatches. Separate permission and explicit server disclosure required. */
+        var whispers = ValidatedBoolean(false)
+        /** Staff must also opt in with /guardian spy and retain category/spy permissions. */
+        var liveSpy = ValidatedBoolean(false)
         var sessions = ValidatedBoolean(true)
         /** Parsed player-source commands only. Argument capture requires a separate opt-in. */
         var commands = ValidatedBoolean(false)
