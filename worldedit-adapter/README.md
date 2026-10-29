@@ -1,6 +1,8 @@
 # Guardian WorldEdit Adapter
 
-This optional server-side Fabric 1.21.1 module logs WorldEdit changes through Guardian's integration API. Install it alongside Guardian and WorldEdit 7.3.8.
+**Fabric only, Minecraft 1.21.1. Do not install this adapter on NeoForge.**
+
+Install this optional server mod alongside Guardian and WorldEdit 7.3.8 to record WorldEdit changes.
 
 The adapter captures immutable block snapshots around WorldEdit mutations and submits bounded bulk operations to Guardian's writer. It also supplies WorldEdit selection filters for lookup, rollback and block restore/redo.
 

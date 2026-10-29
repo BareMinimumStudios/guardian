@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-25 against `0.4.0-alpha.92+1.21.1`.
+Assessed: 2026-10-29 against `0.4.0-alpha.93+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
@@ -26,6 +26,11 @@ The owner identified Supplementaries Squared plaques and explicitly authorized c
 surface capture, minecart inventories and lectern history. Alpha.91 completes plaque/copper
 capture. Alpha.92 adds the separately authorized minecart and lectern audit paths;
 these records remain excluded from item/block recovery. [Evidence](validation/plaques-copper-alpha91.json).
+
+Alpha.93 is a bug-review checkpoint, not additional feature scope. It prevents observation
+from generating sealed loot, corrects extreme-coordinate block/item lookup arithmetic, and
+omits misleading zero-quantity hopper routes. Existing recovery checks remain in place.
+[Evidence](validation/bug-review-alpha93.json).
 
 ## Current release
 

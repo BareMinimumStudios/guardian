@@ -1,7 +1,16 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.92+1.21.1**. Schema 25, config version 18.
+Current executable checkpoint: **0.4.0-alpha.93+1.21.1**. Schema 25, config version 18.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Bug review: sealed loot and lookup boundaries
+
+801 automated tests pass. The sealed-loot spectator issue was reproduced with unchanged
+alpha.92 jars on isolated Fabric and NeoForge servers. Patched native tests retain the
+unopened loot table and refuse the spectator menu, while ordinary minecart, hopper and
+lectern capture still produces the expected saved rows.
+[Review evidence](validation/bug-review-alpha93.json) records the exact builds and runtime
+checks. Real-client and production-pack acceptance remain pending.
 
 ## Minecart inventories and lecterns
 

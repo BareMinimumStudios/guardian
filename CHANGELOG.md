@@ -37,6 +37,16 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
 - MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
+## [0.4.0-alpha.93+1.21.1] - 2026-10-29
+
+### Fixed
+
+- Skip sealed loot inventories before reading items. Guardian no longer generates unopened loot during direct capture or lets a spectator's interaction bypass Minecraft's sealed-container restriction.
+- Check both halves of combined inventories and sealed entity inventories without calling their item getters.
+- Keep block/item radius searches consistent at extreme coordinates instead of overflowing their distance or SQL bounds.
+- Omit zero-quantity hopper routes when another item was only rearranged within the same inventory.
+- State explicitly in both setup guides that the separate WorldEdit adapter is Fabric only.
+
 ## [0.4.0-alpha.92+1.21.1] - 2026-10-25
 
 ### Added

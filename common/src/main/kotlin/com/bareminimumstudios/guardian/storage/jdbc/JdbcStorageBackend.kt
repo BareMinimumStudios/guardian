@@ -306,9 +306,9 @@ abstract class JdbcStorageBackend(
             query.dimension?.let { statement.setString(index++, it.toString()) }
             val center = query.position
             val radius = query.radius ?: 0
-            val min = query.bounds?.min ?: center?.let { com.bareminimumstudios.guardian.domain.BlockPosition(it.x - radius, it.y - radius, it.z - radius) }
-            val max = query.bounds?.max ?: center?.let { com.bareminimumstudios.guardian.domain.BlockPosition(it.x + radius, it.y + radius, it.z + radius) }
-            if (min != null && max != null) { for (coordinate in listOf(min.x, max.x, min.y, max.y, min.z, max.z)) statement.setInt(index++, coordinate) }
+            val coordinates=query.bounds?.let { listOf(it.min.x,it.max.x,it.min.y,it.max.y,it.min.z,it.max.z).map(Int::toLong) }
+                ?: center?.let { listOf(it.x.toLong()-radius,it.x.toLong()+radius,it.y.toLong()-radius,it.y.toLong()+radius,it.z.toLong()-radius,it.z.toLong()+radius) }
+            coordinates?.forEach { statement.setLong(index++,it) }
             query.afterEpochMillis?.let { statement.setLong(index++, it) }
             statement.setInt(index++, query.limit)
             statement.setInt(index, query.offset)
@@ -376,12 +376,12 @@ abstract class JdbcStorageBackend(
                 binders += { statement, index -> statement.setInt(index, pos.z) }
             } else {
                 sql.append(" AND b.x BETWEEN ? AND ? AND b.y BETWEEN ? AND ? AND b.z BETWEEN ? AND ?")
-                binders += { statement, index -> statement.setInt(index, pos.x - radius) }
-                binders += { statement, index -> statement.setInt(index, pos.x + radius) }
-                binders += { statement, index -> statement.setInt(index, pos.y - radius) }
-                binders += { statement, index -> statement.setInt(index, pos.y + radius) }
-                binders += { statement, index -> statement.setInt(index, pos.z - radius) }
-                binders += { statement, index -> statement.setInt(index, pos.z + radius) }
+                binders += { statement, index -> statement.setLong(index, pos.x.toLong() - radius) }
+                binders += { statement, index -> statement.setLong(index, pos.x.toLong() + radius) }
+                binders += { statement, index -> statement.setLong(index, pos.y.toLong() - radius) }
+                binders += { statement, index -> statement.setLong(index, pos.y.toLong() + radius) }
+                binders += { statement, index -> statement.setLong(index, pos.z.toLong() - radius) }
+                binders += { statement, index -> statement.setLong(index, pos.z.toLong() + radius) }
             }
         }
         query.actorUuid?.let { uuid ->

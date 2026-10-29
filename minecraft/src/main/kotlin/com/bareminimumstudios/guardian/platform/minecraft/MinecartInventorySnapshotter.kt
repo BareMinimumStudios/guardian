@@ -16,7 +16,7 @@ object MinecartInventorySnapshotter {
     fun capture(container:Container,level:ServerLevel,anchor:ItemSlotOwner.EntityContainer?=null):InventorySnapshot? {
         if(container !is AbstractMinecartContainer)return MinecraftBlockContainerSnapshotter.capture(container,level)
         val live=owner(container,level) ?: return null
-        if(container.lootTable!=null)return null
+        if(MinecraftBlockContainerSnapshotter.hasPendingLoot(container))return null
         if(anchor!=null && (anchor.dimension!=live.dimension || anchor.entityUuid!=live.entityUuid || anchor.entityType!=live.entityType))return null
         require(container.containerSize in 1..256)
         val owner=anchor ?: live;val items=MinecraftItemSnapshotter.CaptureBatch(level.registryAccess())

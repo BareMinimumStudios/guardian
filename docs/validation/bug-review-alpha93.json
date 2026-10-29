@@ -1,0 +1,191 @@
+{
+  "version": "0.4.0-alpha.93+1.21.1",
+  "date": "2026-10-29",
+  "schemaVersion": 25,
+  "configVersion": 18,
+  "tests": {
+    "tests": 801,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.93+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.93+1.21.1.jar",
+      "bytes": 13520778,
+      "sha256": "c55cb1c81e5598989c507c60cc22ccddafb5733d783946b7082b0f9a8368359e",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.93+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.93+1.21.1.jar",
+      "bytes": 13491304,
+      "sha256": "cb5d0085298a1fadcba2e918f8151cd76c4ba50512da402fd95f93ba11968a35",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.93+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.93+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "0ecc84b3342541cb76156580ecb3de280d8f251e834ca79fce2833ee6b644657",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "baselineAlpha92": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=7",
+      "items": [],
+      "lecterns": [],
+      "entityIndexes": []
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=8",
+      "items": [],
+      "lecterns": [],
+      "entityIndexes": []
+    }
+  ],
+  "patchedNative": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=43",
+      "items": [
+        [
+          "BLOCK_USE",
+          2
+        ],
+        [
+          "HOPPER_COLLECT",
+          1
+        ],
+        [
+          "HOPPER_TRANSFER",
+          4
+        ],
+        [
+          "QUICK_MOVE",
+          4
+        ]
+      ],
+      "lecterns": [
+        [
+          18,
+          5
+        ]
+      ],
+      "entityIndexes": [
+        [
+          "760d0609-2669-4f65-b24e-45511d251c4b",
+          5
+        ],
+        [
+          "bb3c4341-b6f2-4dac-985d-1aa82c305aaa",
+          5
+        ]
+      ]
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=44",
+      "items": [
+        [
+          "BLOCK_USE",
+          2
+        ],
+        [
+          "HOPPER_COLLECT",
+          1
+        ],
+        [
+          "HOPPER_TRANSFER",
+          4
+        ],
+        [
+          "QUICK_MOVE",
+          4
+        ]
+      ],
+      "lecterns": [
+        [
+          18,
+          5
+        ]
+      ],
+      "entityIndexes": [
+        [
+          "8737d363-9c14-436d-b9b1-3db349567847",
+          5
+        ],
+        [
+          "e6e75021-b598-4596-9618-b619ccd2fce3",
+          5
+        ]
+      ]
+    }
+  ],
+  "onlineItemRollback": [
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.class_1707)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Fabric",
+      "fixture": "OK checks=596",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.world.inventory.ChestMenu)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Neoforge",
+      "fixture": "OK checks=598",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "findings": [
+    {
+      "issue": "Direct capture invoked sealed container getItem before native use; this generated loot and let spectators open containers vanilla otherwise refuses.",
+      "fix": "Check pending loot before direct/menu slot reads, including both combined halves and entity inventories. Keep supported inspection without item getters.",
+      "reproduction": "Unchanged alpha92 jars reproduce on both loaders; patched jars retain loot table and spectator menu refusal."
+    },
+    {
+      "issue": "Int overflow in block/item radius distance and JDBC bounds could return false matches or omit nearby history for accepted extreme coordinates.",
+      "fix": "Use Long arithmetic for distances and SQL radius parameters; verify all three axes on memory, SQLite and optional DuckDB."
+    },
+    {
+      "issue": "A hopper action that rearranged an unrelated identity could print a moved-zero route.",
+      "fix": "Only render routes with a source and a destination; retain the actual nonzero transfer."
+    }
+  ],
+  "documentation": "Both public setup areas now state the optional WorldEdit adapter is Fabric only.",
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "suppliedOrRemoteServersModified": false,
+  "limits": "Bounded bug review, not exhaustive proof of all mod compatibility. Native fixtures use synthetic players; NeoForge menu synchronization uses an in-memory channel. Actual pack item rollback diagnosis still needs its precise Player/Container detail. Real-client acceptance remains pending.",
+  "ci": "Awaiting owner push"
+}

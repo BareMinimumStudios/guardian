@@ -13,6 +13,7 @@ object DirectBlockItems {
     }
     fun supported(block:BlockEntity):Boolean = block is net.minecraft.world.level.block.entity.LecternBlockEntity || block is Container || block is DisplayInventoryAccess || (block is HangingSignBlockEntity && hangingDisplay.get(block.javaClass))
     fun items(block:BlockEntity):List<ItemStack> {
+        require(block !is Container || !MinecraftBlockContainerSnapshotter.hasPendingLoot(block)) { "Sealed loot inventories cannot be observed" }
         if(block is net.minecraft.world.level.block.entity.LecternBlockEntity)return listOf(block.book)
         if(block is Container) {
             require(block.containerSize in 1..256) { "Direct block inventory exceeds the slot bound" }

@@ -78,9 +78,9 @@ class InMemoryStorageBackend : QueryableStorageBackend {
                 val center = query.position ?: return@filter true
                 val radius = query.radius
                 if (radius == null || radius == 0) row.snapshot.position == center
-                else abs(row.snapshot.position.x - center.x) <= radius &&
-                    abs(row.snapshot.position.y - center.y) <= radius &&
-                    abs(row.snapshot.position.z - center.z) <= radius
+                else abs(row.snapshot.position.x.toLong() - center.x) <= radius &&
+                    abs(row.snapshot.position.y.toLong() - center.y) <= radius &&
+                    abs(row.snapshot.position.z.toLong() - center.z) <= radius
             }
             .filter { if (query.rollbackStates.isNotEmpty()) it.rollbackState in query.rollbackStates else query.includeRolledBack || it.rollbackState in setOf(BlockRollbackState.ACTIVE, BlockRollbackState.PENDING) }
             .filter { query.actions.isEmpty() || it.snapshot.action in query.actions }

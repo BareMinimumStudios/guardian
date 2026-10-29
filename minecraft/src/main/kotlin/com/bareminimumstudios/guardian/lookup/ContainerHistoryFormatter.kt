@@ -23,6 +23,7 @@ object ContainerHistoryFormatter {
                 }
                 for ((identity, owners) in routes) {
                     val from = owners.filterValues { it < 0 }; val to = owners.filterValues { it > 0 }
+                    if(from.isEmpty() || to.isEmpty())continue
                     if (focus != null && focus !in from && focus !in to) continue
                     if(entityFocus!=null && owners.keys.none { it is ItemSlotOwner.EntityContainer && it.entityUuid==entityFocus })continue
                     fun positions(values: Map<ItemSlotOwner, Int>) = values.keys.joinToString(" + ") { target ->

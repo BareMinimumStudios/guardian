@@ -71,4 +71,18 @@ class ContainerHistoryFormatterTest {
             listOf(ItemSlotChange(ItemSlotAddress(cart,0),coal(1),ItemStackSnapshot.EMPTY),ItemSlotChange(ItemSlotAddress(owner,0),ItemStackSnapshot.EMPTY,coal(1))))
         assertTrue(ContainerHistoryFormatter.lines(listOf(transfer),2000).any { "Hopper moved 1 coal [hopper minecart" in it.string })
     }
+
+    @Test fun unrelatedSlotRearrangementDoesNotInventAZeroQuantityHopperRoute() {
+        val destination=owner.copy(position=BlockPosition(-280,111,-26))
+        val diamond=coal(1).copy(itemId=ResourceId.parse("minecraft:diamond"))
+        val tx=ContainerTransactionSnapshot(UUID.randomUUID(),1000,ActorIdentity.System("minecraft:hopper"),0,ContainerAction.HOPPER_TRANSFER,listOf(
+            ItemSlotChange(ItemSlotAddress(owner,0),coal(1),ItemStackSnapshot.EMPTY),
+            ItemSlotChange(ItemSlotAddress(destination,0),ItemStackSnapshot.EMPTY,coal(1)),
+            ItemSlotChange(ItemSlotAddress(owner,1),diamond,ItemStackSnapshot.EMPTY),
+            ItemSlotChange(ItemSlotAddress(owner,2),ItemStackSnapshot.EMPTY,diamond)))
+        val lines=ContainerHistoryFormatter.lines(listOf(tx),2000).map { it.string }
+        assertEquals(2,lines.size)
+        assertTrue(lines.any { "moved 1 coal" in it })
+        assertTrue(lines.none { "moved 0" in it || "diamond" in it })
+    }
 }

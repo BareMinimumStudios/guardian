@@ -116,7 +116,7 @@ object PlayerContainerCapture {
     @JvmStatic fun beginBlockUse(world:net.minecraft.world.level.Level,player:ServerPlayer,pos:net.minecraft.core.BlockPos):DirectPending? {
         if(!enabled() || world!==player.level() || !player.server.isSameThread || !world.hasChunk(pos.x shr 4,pos.z shr 4))return null
         val block=world.getBlockEntity(pos) ?: return null
-        if(!DirectBlockItems.supported(block))return null
+        if(!DirectBlockItems.supported(block) || block is Container && MinecraftBlockContainerSnapshotter.hasPendingLoot(block))return null
         val lease=scope.enter(player.uuid) ?: return null
         var retained=false
         try {
@@ -167,7 +167,7 @@ object PlayerContainerCapture {
         if (includeContainers) {
             var hasBlockContainer = false
             for (slot in menu.slots) {
-                if(slot.container is net.minecraft.world.entity.vehicle.AbstractMinecartContainer && (slot.container as net.minecraft.world.entity.vehicle.AbstractMinecartContainer).lootTable!=null)return null
+                if(MinecraftBlockContainerSnapshotter.hasPendingLoot(slot.container))return null
                 val address = address(slot.container, slot.containerSlot, player) ?: return null
                 if (address.owner is ItemSlotOwner.BlockContainer || address.owner is ItemSlotOwner.EntityContainer) hasBlockContainer = true
                 if (address.owner is ItemSlotOwner.PlayerInventory) continue

@@ -13,6 +13,17 @@ import net.minecraft.world.level.block.state.properties.ChestType
 import net.minecraft.world.level.block.entity.BlockEntity
 
 object MinecraftBlockContainerSnapshotter {
+    /** Item getters can unpack loot. This check must run before reading any slots. */
+    fun hasPendingLoot(container:Container):Boolean = when(container) {
+        is CompoundContainer -> {
+            val parts=container as CompoundContainerAccessor
+            hasPendingLoot(parts.`guardian$first`()) || hasPendingLoot(parts.`guardian$second`())
+        }
+        is RandomizableContainer -> container.lootTable!=null
+        is net.minecraft.world.entity.vehicle.ContainerEntity -> container.lootTable!=null
+        else -> false
+    }
+
     private fun loaded(level: ServerLevel, position: BlockPos) = level.chunkSource.getChunkNow(position.x shr 4, position.z shr 4) != null
 
     fun resolve(level: ServerLevel, position: BlockPos): Container? {
@@ -35,7 +46,7 @@ object MinecraftBlockContainerSnapshotter {
         }
         if (container !is BlockEntity || container.level !== level || container.isRemoved) return false
         if (!loaded(level, container.blockPos) || level.getBlockEntity(container.blockPos) !== container) return false
-        return container !is RandomizableContainer || container.lootTable == null
+        return !hasPendingLoot(container)
     }
 
     fun capture(container: Container,level: ServerLevel): InventorySnapshot? = captureSelected(container,level,null)

@@ -12,6 +12,6 @@ data class ContainerLookupQuery(val dimension: ResourceId? = null, val position:
         (actorUuid == null || actorUuid == (value.actor as? ActorIdentity.Player)?.uuid) &&
         (actorName == null || actorName.equals((value.actor as? ActorIdentity.Player)?.lastKnownName, ignoreCase = true)) &&
         (dimension == null || value.containers.any { owner ->
-            owner.dimension == dimension && (bounds == null || bounds.contains(owner.position)) && (position == null || if (radius == null) owner.position == position else kotlin.math.abs(owner.position.x - position.x) <= radius && kotlin.math.abs(owner.position.y - position.y) <= radius && kotlin.math.abs(owner.position.z - position.z) <= radius)
+            owner.dimension == dimension && (bounds == null || bounds.contains(owner.position)) && (position == null || if (radius == null) owner.position == position else kotlin.math.abs(owner.position.x.toLong() - position.x) <= radius && kotlin.math.abs(owner.position.y.toLong() - position.y) <= radius && kotlin.math.abs(owner.position.z.toLong() - position.z) <= radius)
         })
 }

@@ -21,7 +21,7 @@ player and time, and undo supported changes.
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.92** (testing release).
+Players do not need to install anything. Current build: **alpha.93** (testing release).
 
 ## Install
 
@@ -39,7 +39,7 @@ SQLite is included. Your history is saved in `guardian/guardian.sqlite` inside t
 Keep this database with your world backups; stop the server before copying it.
 
 Using WorldEdit on Fabric? Install the separate [WorldEdit adapter](worldedit-adapter/README.md)
-with WorldEdit 7.3.8. The adapter is optional.
+with WorldEdit 7.3.8. **The adapter is Fabric only; do not install it on NeoForge.**
 
 ## Inspect a block or container
 
