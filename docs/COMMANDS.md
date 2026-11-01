@@ -7,6 +7,28 @@ The short forms `l`, `i` and `rb` mean lookup, inspect and block rollback.
 
 ## Searches
 
+**Filters are optional for history searches.** Use the command alone to browse its history,
+or add only the filters you need. No user or time filter means all players and all retained
+ages, subject to that category's scope. Results arrive one page at a time, newest first by
+default; use the navigation links or `p:2` for more.
+
+| Broad search | What it shows |
+| --- | --- |
+| `/guardian lookup r:10` | Block history from all players within ten blocks in your current dimension |
+| `/guardian transactions r:10` | Item history from all players within ten blocks in your current dimension |
+| `/guardian lookup` | Block history throughout your current dimension |
+| `/guardian transactions` | Item history across dimensions |
+| `/guardian whispers` | All recorded whispers, server-wide |
+| `/guardian chat` | All recorded public chat, server-wide |
+| `/guardian sessions` | All recorded login/logout events, server-wide |
+| `/guardian commands` | All recorded player commands, server-wide |
+
+Each command searches its own category, not every kind of event together. Logging settings,
+permissions, retention and page limits still apply. This optional-filter guidance is for
+**history searches**; export, purge and recovery commands have their own requirements below.
+
+Add filters when you want a narrower search:
+
 | What you want | Example |
 | --- | --- |
 | Block changes | `/guardian lookup u:Alex t:1h r:10` |
@@ -49,6 +71,7 @@ messages are not covered. History records native dispatch, not proof that a play
 /guardian whispers u:Alex p:2
 ```
 
+Use `/guardian whispers` with no filters to browse everyone's recorded whispers.
 User filters match either the sender or recipient. Excluding a user excludes either side.
 One row is recorded per recipient. Private messages stay out of public chat and ordinary
 command history, even when command arguments are enabled. Filtered text is respected;

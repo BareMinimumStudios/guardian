@@ -17,7 +17,7 @@ Minecraft 1.21.1 · Java 21 · Server-side
 ## Guardian
 
 See who changed a block, moved items or edited a sign. Inspect the history in-game, search by
-player and time, and undo supported changes.
+player and time, and undo supported changes. Search broadly or add optional filters to narrow the results.
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
@@ -60,7 +60,30 @@ The item viewer is read-only. Use **Previous/Next transaction** to move through 
 
 ## Find out what happened
 
-Replace `Alex` with the player's name:
+**Search filters are optional.** You do not need a player name, time window or item ID.
+Start with a broad search:
+
+```text
+/guardian lookup r:10
+/guardian transactions r:10
+/guardian whispers
+```
+
+These show block changes within ten blocks, item movements within ten blocks, and
+recorded whispers from everyone, respectively. Radius searches include all players and
+all retained ages unless you add more filters. Each command searches its own history
+category; a block lookup does not combine blocks, items and whispers into one result list.
+
+You can also run `/guardian lookup`, `/guardian transactions`, `/guardian chat`,
+`/guardian sessions`, `/guardian commands` or `/guardian whispers` with no filters.
+Without a radius, block lookup covers your current dimension; item history can cover all
+dimensions. Chat, sessions, commands and whispers are server-wide.
+
+Results are paged, newest first by default—not all printed at once. Use **Next/Previous**
+or add `p:2`. Logging must have been enabled when the event happened, and staff permissions
+still apply.
+
+To narrow a search, add only the filters you need. Replace `Alex` with the player's name:
 
 ```text
 /guardian lookup u:Alex t:1h r:10
@@ -150,7 +173,8 @@ These are **off by default**. Enable `activity.whispers` in the server config an
 /guardian whispers u:Alex t:1h
 ```
 
-This finds whispers sent **or received** by Alex through vanilla `/msg`, `/tell` and `/w`.
+Run `/guardian whispers` alone for recorded whispers from everyone, or add `u:Alex` to find
+whispers sent **or received** by Alex through vanilla `/msg`, `/tell` and `/w`.
 Public chat history stays separate. To watch new messages, also enable `activity.liveSpy`:
 
 ```text

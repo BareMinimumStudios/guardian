@@ -15,6 +15,10 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Documentation
+
+- Make optional history filters explicit: browse all recorded whispers or search block/item history by radius alone. Explain no-filter scope, paging and the separate requirements for export, purge and recovery.
+
 ### Fixed
 
 - Correct the README database schema and early recovery-filter restrictions. Refresh current validation references and the existing client acceptance matrix during the alpha.82 readiness review; executable jars are unchanged.
