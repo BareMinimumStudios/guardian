@@ -20,6 +20,11 @@ class BlockHistoryService(
     private val server: MinecraftServer
 ) {
     private val logger = LoggerFactory.getLogger("Guardian/History")
+    private val activityQueries=java.util.concurrent.atomic.AtomicLong()
+    private val activityFailures=java.util.concurrent.atomic.AtomicLong()
+    private val lastActivityNanos=java.util.concurrent.atomic.AtomicLong()
+    private val maxActivityNanos=java.util.concurrent.atomic.AtomicLong()
+    fun queryStatus():String="Activity queries: completed="+activityQueries.get()+" failed="+activityFailures.get()+" lastMs="+lastActivityNanos.get()/1_000_000+" maxMs="+maxActivityNanos.get()/1_000_000
     private val running = AtomicBoolean(true)
     private val termination = java.util.concurrent.CompletableFuture<Void>()
     val drained: java.util.concurrent.CompletionStage<Void> get() = termination.minimalCompletionStage()
@@ -78,7 +83,11 @@ class BlockHistoryService(
     }
 
     fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.PlayerActivity>) -> Unit, onFailure: (Throwable) -> Unit) {
-        recoveryWork({ storage.lookupActivity(query) }, onSuccess, onFailure)
+        recoveryWork({
+            val start=System.nanoTime()
+            try { storage.lookupActivity(query) } catch(error:Throwable) { activityFailures.incrementAndGet();throw error }
+            finally { val elapsed=System.nanoTime()-start;lastActivityNanos.set(elapsed);maxActivityNanos.accumulateAndGet(elapsed,::maxOf);activityQueries.incrementAndGet() }
+        }, onSuccess, onFailure)
     }
 
     fun exportRows(query: com.bareminimumstudios.guardian.export.ExportQuery, permitted: () -> Boolean, onSuccess: (List<Any>) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({

@@ -21,7 +21,7 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.94** (testing release).
+Players do not need to install anything. Current build: **alpha.95** (testing release).
 
 ## Install
 
@@ -181,6 +181,29 @@ Public chat history stays separate. To watch new messages, also enable `activity
 /guardian spy whispers on
 /guardian spy whispers off
 ```
+
+Filters are optional: `/guardian spy whispers on` watches everyone. To focus your own feed:
+
+```text
+/guardian spy whispers on u:Alex,!Bob
+/guardian spy commands on c:!help,!list
+/guardian spy status
+/guardian spy off
+```
+
+Personal filters hide live updates only; they do not change saved history. `spy off` stops
+all your channels. History and spy entries use short, labelled previews; hover for the full
+text, exact timestamp and record IDs.
+
+To find literal text in public chat, whispers or command history:
+
+```text
+/guardian whispers t:1h q:"two words"
+/guardian commands t:1h q:teleport
+```
+
+Matches are highlighted. Text search needs a time window of at most seven days and supports
+the first 100 pages. Other searches still work without filters.
 
 For ordinary commands, enable `activity.commands` and use `/guardian spy commands on`.
 Arguments stay hidden unless `activity.commandArguments` is enabled. Authentication commands

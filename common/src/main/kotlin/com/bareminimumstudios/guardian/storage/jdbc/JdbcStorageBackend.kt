@@ -230,6 +230,7 @@ abstract class JdbcStorageBackend(
         val params = mutableListOf<Any>()
         val where = mutableListOf("kind IN (${query.kinds.joinToString(",") { "?" }})")
         query.kinds.forEach { params.add(it.name) }
+        query.textContains?.let { where.add("INSTR(LOWER(text),LOWER(?)) > 0");params.add(it) }
         val actors = HistorySearchSql.activityActors(query)
         if (actors.clause.isNotEmpty()) where.add(actors.clause.removePrefix(" AND "))
         params.addAll(actors.values)

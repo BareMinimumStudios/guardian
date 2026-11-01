@@ -86,6 +86,25 @@ To watch new activity, enable `activity.liveSpy` **and** the matching capture sw
 /guardian spy commands off
 ```
 
+Filters are optional; each subscription initially watches everyone. These affect only your
+live view, not stored history or other staff:
+
+```text
+/guardian spy whispers on u:Alex,!Bob
+/guardian spy commands on u:Alex c:!help,!list
+/guardian spy commands on c:say,teleport
+/guardian spy status
+/guardian spy off
+```
+
+`u:` accepts names or UUIDs and matches either side of a whisper. `c:` accepts command roots
+only for command spy. Commas mean any listed value; `!` excludes and takes precedence.
+Use each filter once, with up to 32 values. Re-running `on` replaces that channel's filters.
+`status` shows your channels, filters and pending suppression count; `off` stops all channels.
+After a burst, the next matching delivery reports how many updates were suppressed; the first
+notice appears immediately when the per-tick limit is reached. Status can show the count even
+if no more matching messages arrive.
+
 Each channel needs `guardian.spy` plus `guardian.whispers` or `guardian.commands`.
 Subscriptions are personal and last until logout/restart or an observed permission removal.
 Permissions are checked again before every delivery. Spy shows at most 20 updates per viewer
@@ -101,6 +120,33 @@ accepted records, not a way to bypass disabled logging or exclusions.
 `guardian.export` plus `guardian.whispers`. Global old-history purge includes whispers;
 world/type-scoped purge retains them. Tell players what your server records, restrict these
 permissions, and protect the database and exported files. Logging is not retroactive.
+
+## Text search and readable history
+
+Chat, whisper and command searches accept optional `q:` (or `text:`) literal text:
+
+```text
+/guardian chat t:1h q:hello
+/guardian whispers t:1d q:"two words"
+/guardian commands t:30m q:teleport
+```
+
+Use 2–128 characters; double quotes enclose a phrase. No regular expressions or wildcard
+syntax: `%` and `_` are ordinary characters. ASCII matching is case-insensitive; other scripts
+follow the database's case rules. Text filters run before paging. To bound scan costs, specify
+`t:` up to `7d` and `p:` at most `100`. Text filters are for these history searches, not export,
+block/item searches or live spy. Searches without `q:` retain their existing optional filters.
+
+Entries show a category label, short age, highlighted player names and a neutral message body.
+Text matches are highlighted in the preview. Long messages show the first 180 characters;
+hover for full text and exact UTC timestamp, event ID and player IDs. A match beyond the preview
+is still included in results; hover to read it. Display labels distinguish categories without
+relying on color alone. Player text remains literal: it cannot add clickable commands or styles.
+
+`/guardian status` includes completed activity-query attempts, failures and last/maximum
+database-task duration. These counters contain no message text. They measure query work,
+including storage-lock waits, not total network latency; restart resets them. Audit queue,
+accepted/persisted and backpressure counters retain their existing meanings.
 
 ## Search filters
 

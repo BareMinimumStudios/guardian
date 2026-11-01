@@ -1,0 +1,175 @@
+{
+  "version": "0.4.0-alpha.95+1.21.1",
+  "date": "2026-11-01",
+  "schemaVersion": 26,
+  "configVersion": 19,
+  "tests": {
+    "tests": 815,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.95+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.95+1.21.1.jar",
+      "bytes": 13561456,
+      "sha256": "5c6c51a6801eb190ac6eae3ef5c93b418974a262f37362e21261ac31a10368d0",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.95+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.95+1.21.1.jar",
+      "bytes": 13531165,
+      "sha256": "16edd9fc317edc4367e23cc2341b5080bdcc676c47eedc07d9acc961b130bfa1",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.95+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.95+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "07aebd591fcb561c4d80c799da8fcc1b0f425a1ecd61f2ab4098aa989f7e5468",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "nativeSpyAndSearch": [
+    {
+      "loader": "Fabric",
+      "result": "OK checks=30",
+      "activity": [
+        [
+          "COMMAND",
+          4
+        ],
+        [
+          "WHISPER",
+          39
+        ]
+      ],
+      "publicAliases": true,
+      "privateFilterMask": true,
+      "liveSpyPermissionsAndCap": true,
+      "sqliteIntegrity": "ok"
+    },
+    {
+      "loader": "Neoforge",
+      "result": "OK checks=31",
+      "activity": [
+        [
+          "COMMAND",
+          4
+        ],
+        [
+          "WHISPER",
+          39
+        ]
+      ],
+      "publicAliases": true,
+      "privateFilterMask": true,
+      "liveSpyPermissionsAndCap": true,
+      "sqliteIntegrity": "ok"
+    }
+  ],
+  "onlineItemRollbackRegression": [
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.class_1707)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Fabric",
+      "fixture": "OK checks=150",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.world.inventory.ChestMenu)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Neoforge",
+      "fixture": "OK checks=160",
+      "publicApplyConfirm": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "renderingMeasurement": [
+    {
+      "loader": "Fabric",
+      "samples": [
+        {
+          "rendersPerEvent": 1,
+          "events": 1000,
+          "nanos": 7681500,
+          "allocatedBytes": 3664264
+        },
+        {
+          "rendersPerEvent": 8,
+          "events": 1000,
+          "nanos": 57405400,
+          "allocatedBytes": 29312880
+        }
+      ],
+      "allocationReductionForEightViewers": 0.8749947463367639
+    },
+    {
+      "loader": "Neoforge",
+      "samples": [
+        {
+          "rendersPerEvent": 1,
+          "events": 1000,
+          "nanos": 6694700,
+          "allocatedBytes": 3664264
+        },
+        {
+          "rendersPerEvent": 8,
+          "events": 1000,
+          "nanos": 50507600,
+          "allocatedBytes": 29313216
+        }
+      ],
+      "allocationReductionForEightViewers": 0.8749961791978063
+    }
+  ],
+  "sqliteSearchMeasurement": {
+    "rows": 50000,
+    "iterations": 30,
+    "returned": 20,
+    "medianMs": 0.46530000000000005,
+    "p95Ms": 0.5451,
+    "scope": "Synthetic SQLite query microbenchmark; not Minecraft tick latency, JDBC overhead, concurrent writes or production capacity."
+  },
+  "coverage": [
+    "Personal participant filters include sender or recipient; excludes win; command-root filters do not alter saved records.",
+    "Status and all-channel off controls; matching-category permission revocation, explicit resubscription, default-off capture and auth exclusions retained.",
+    "All three actual vanilla whisper aliases; rejected targets and filtered recipients unchanged.",
+    "Private literal search on memory/SQLite/optional DuckDB precedes paging; percent, underscore and SQL-like strings are literal.",
+    "Quoted text navigation, malformed/empty filter diagnostics and exact hover details.",
+    "Safe labelled Unicode previews with no executable click actions; full console text retained.",
+    "Existing per-tick output cap and clearer suppression counts. Query timing contains no message or filter content."
+  ],
+  "performanceLimits": "Rendering measurements run on the server thread with synthetic immutable rows and compare one versus eight formatter invocations, not a full eight-client network/tick benchmark. SQLite measurement excludes JDBC, concurrency, disk-cold and production-pack behavior. No broad TPS claim.",
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "suppliedOrRemoteServersModified": false,
+  "limits": "Real-client hover/layout and production-pack acceptance remain pending. No new capture category, recovery target or automatic monitoring; existing durability and per-delivery permissions retained. Text search requires up to 7d and page<=100; this is a time/result bound, not a hard execution deadline. General history filters remain optional.",
+  "ci": "Awaiting owner push"
+}

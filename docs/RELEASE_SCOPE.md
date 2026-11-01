@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-29 against `0.4.0-alpha.94+1.21.1`.
+Assessed: 2026-10-29 against `0.4.0-alpha.95+1.21.1`.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
@@ -14,6 +14,12 @@ other private-channel integrations or additional recovery targets. Both new swit
 off. Connected-client checks must verify sender/recipient searches, separate permissions,
 permission revocation, spy off/logout and command argument/authentication exclusions.
 [Evidence](validation/whispers-spy-alpha94.json).
+
+The owner also authorized alpha.95 readability and spy polish: personal live filters, bounded
+literal activity text search, status/off controls, safe previews/highlights and measured shared
+rendering. These do not broaden capture, weaken permission checks or change recovery targets.
+[Evidence](validation/spy-polish-alpha95.json). Real-client hover, navigation, filter and
+multi-staff burst presentation still need acceptance.
 
 Alpha.88 fixes a reproduced R3 client-login defect: authorized command/entity/fluid history
 nodes were omitted from the initial command list. Node visibility now checks current permission

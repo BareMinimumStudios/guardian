@@ -1,7 +1,14 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.94+1.21.1**. Schema 26, config version 19.
+Current executable checkpoint: **0.4.0-alpha.95+1.21.1**. Schema 26, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Activity readability and spy polish
+
+Alpha.95 adds personal display filters, safe shared formatting, bounded literal text searches,
+status/off controls and content-free query timings. [Evidence](validation/spy-polish-alpha95.json)
+records tests, native fixture results and formatting measurements. Schema 26/config 19 are
+unchanged. Client hover/layout and production-pack acceptance remain open.
 
 ## Whisper history and live spy
 

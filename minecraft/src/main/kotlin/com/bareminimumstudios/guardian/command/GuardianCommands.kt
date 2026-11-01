@@ -113,17 +113,31 @@ object GuardianCommands {
                     .executes { context -> executeActivity(context.source, StringArgumentType.getString(context, "filters"), name, runtimeProvider(), configProvider()) }))
         }
         val spy=Commands.literal("spy").requires { authorized(activitySource(it,"commands"),permissions,"guardian.spy",3) }
-            .executes { context->context.source.sendSystemMessage(Component.literal("Use /guardian spy whispers on|off or /guardian spy commands on|off. Requires activity.liveSpy and the matching capture setting."));1 }
+            .executes { context->context.source.sendSystemMessage(Component.literal("Use /guardian spy status, off, whispers on [u:Alex,!Bob], or commands on [u:Alex] [c:say,!help]."));1 }
+        spy.then(Commands.literal("off").executes { context->
+            context.source.player?.let { com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.forget(it.uuid) }
+            context.source.sendSystemMessage(Component.literal("Guardian spy: all channels off."));1
+        })
+        spy.then(Commands.literal("status").executes { context->
+            val player=context.source.player
+            context.source.sendSystemMessage(Component.literal(if(player==null)"Guardian spy requires an online player." else com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.status(player)));1
+        })
         for(channel in listOf("whispers","commands")) {
             val kind=if(channel=="whispers")com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER else com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND
             val node=Commands.literal(channel).requires { authorized(activitySource(it,channel),permissions,"guardian.$channel",3) }
-            for(on in listOf(true,false))node.then(Commands.literal(if(on)"on" else "off").executes { context->
-                val player=context.source.player
-                if(player==null) { context.source.sendFailure(Component.literal("Guardian live spy requires an online player; use history from console."));0 }
-                else if(com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.set(player,kind,on)) {
-                    player.sendSystemMessage(Component.literal("Guardian $channel spy "+if(on)"enabled for this session." else "disabled."));1
-                } else { context.source.sendFailure(Component.literal("Guardian spy unavailable: enable activity.liveSpy and this capture category, and check guardian.spy plus guardian.$channel."));0 }
-            })
+            fun change(context:com.mojang.brigadier.context.CommandContext<CommandSourceStack>,on:Boolean,raw:String):Int {
+                val player=context.source.player ?: run { context.source.sendFailure(Component.literal("Guardian live spy requires an online player; use history from console."));return 0 }
+                val filter=runCatching { com.bareminimumstudios.guardian.command.SpyFilter.parse(raw,channel=="commands") }.getOrElse { context.source.sendFailure(Component.literal("Guardian spy: "+it.message));return 0 }
+                if(!com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.set(player,kind,on,filter)) {
+                    context.source.sendFailure(Component.literal("Guardian spy unavailable: enable activity.liveSpy and this capture category, and check guardian.spy plus guardian.$channel."));return 0
+                }
+                player.sendSystemMessage(Component.literal("Guardian $channel spy "+if(on)"enabled for this session. Use spy status to see filters." else "disabled."));return 1
+            }
+            node.then(Commands.literal("on").executes { change(it,true,"") }
+                .then(Commands.argument("filters",StringArgumentType.greedyString())
+                    .suggests { _,builder->net.minecraft.commands.SharedSuggestionProvider.suggest(if(channel=="commands")listOf("u:","c:","c:!help") else listOf("u:"),builder) }
+                    .executes { change(it,true,StringArgumentType.getString(it,"filters")) }))
+            node.then(Commands.literal("off").executes { change(it,false,"") })
             spy.then(node)
         }
         root.then(spy)
@@ -318,13 +332,13 @@ object GuardianCommands {
         val resourceKey = current.substringBefore(':').lowercase()
         val resources = if (!extended || activity || resourceKey !in setOf("i", "include", "e", "exclude")) emptyList() else
             (if (items) net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() }
-        val choices = if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else if(recovery) FilterSuggestions.recoveryValues(current,players,resources) else FilterSuggestions.values(current, players, items, resources, extended)
+        val choices = if(activity && (current.isEmpty() || "q:".startsWith(current)))listOf("q:","u:","t:","l:","p:","o:").filter { it.startsWith(current) } else if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else if(recovery) FilterSuggestions.recoveryValues(current,players,resources) else FilterSuggestions.values(current, players, items, resources, extended)
         if(recovery) {
             val target=builder.createOffset(start)
             choices.forEach(target::suggest)
             return target.buildFuture()
         }
-        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order") }, builder.createOffset(start))
+        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order", "q", "text") }, builder.createOffset(start))
     }
 
     private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
@@ -406,11 +420,16 @@ object GuardianCommands {
     private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
         if(!activityAuthorized(source,runtime.permissions,name))return 0
+        val textFilter=runCatching { com.bareminimumstudios.guardian.command.ActivityTextFilter.parse(raw) }.getOrElse { source.sendFailure(Component.literal("Guardian $name: "+it.message));return 0 }
+        val filterRaw=textFilter.remaining
         val allowed = setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order")
-        if (raw.split(Regex("\\s+")).any { it.isNotBlank() && it.substringBefore(':').lowercase() !in allowed }) {
-            source.sendFailure(Component.literal("Guardian $name accepts user, time, limit, page and order filters only.")); return 0
+        if (filterRaw.split(Regex("\\s+")).any { it.isNotBlank() && it.substringBefore(':').lowercase() !in allowed }) {
+            source.sendFailure(Component.literal("Guardian $name accepts user, time, limit, page, order and q: text filters only.")); return 0
         }
-        val filter = BlockCommandFilterParser.parse(raw).getOrElse { source.sendFailure(Component.literal("Guardian $name: ${it.message}")); return 0 }
+        val filter = BlockCommandFilterParser.parse(filterRaw).getOrElse { source.sendFailure(Component.literal("Guardian $name: ${it.message}")); return 0 }
+        if(textFilter.text!=null && ((filter.lookbackMillis ?: Long.MAX_VALUE)>604800000L || (filter.page ?: 1)>100)) {
+            source.sendFailure(Component.literal("Guardian text search needs t: up to 7d and p: at most 100. Example: /guardian $name t:1h q:\"two words\""));return 0
+        }
         val limit = filter.limit ?: config.lookup.defaultResults.get()
         if (limit > minOf(500, config.lookup.maxResults.get())) { source.sendFailure(Component.literal("Guardian activity page limit exceeded.")); return 0 }
         val kinds = when(name) {
@@ -419,16 +438,13 @@ object GuardianCommands {
             "whispers" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER)
             else -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
         }
-        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, search = resolvedSearch(source, filter),
+        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, textContains=textFilter.text, search = resolvedSearch(source, filter),
             afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) }, limit = limit, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst)
         history.lookupActivity(query, { rows ->
             if (!activityAuthorized(source, runtime.permissions, name)) return@lookupActivity
             source.sendSystemMessage(Component.literal("Guardian $name history: ${rows.size} records (page ${filter.page ?: 1})."))
-            rows.forEach { row ->
-                val details = when (row.kind) { com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN -> "logged in"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT -> "logged out"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND -> "issued ${row.text}"; com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER -> "whispered to ${row.recipientName}: ${row.text}"; else -> "said: ${row.text}" }
-                val plain = "${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)} ${row.actor.lastKnownName} $details".filter { !it.isISOControl() }.replace('\u00a7', '?')
-                source.sendSystemMessage(Component.literal(plain))
-            }
+            val renderedAt=System.currentTimeMillis()
+            rows.forEach { row->source.sendSystemMessage(if(source.player==null)com.bareminimumstudios.guardian.lookup.ActivityFormatter.console(row) else com.bareminimumstudios.guardian.lookup.ActivityFormatter.line(row,renderedAt,needle=textFilter.text)) }
             source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst, { page -> HistoryPageCommands.command(name, raw, page, filter.oldestFirst) }, HistoryPageCommands.command(name, raw, 1, !filter.oldestFirst)))
         }, { if (activityAuthorized(source, runtime.permissions, name)) source.sendFailure(Component.literal("Guardian $name lookup failed; see server log.")) })
         return 1
@@ -569,6 +585,7 @@ object GuardianCommands {
             )
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.status()))
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.status()))
+            runtimeProvider()?.history()?.let { context.source.sendSystemMessage(Component.literal(it.queryStatus())) }
             if (b != null) {
                 context.source.sendSystemMessage(
                     Component.literal(

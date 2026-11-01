@@ -29,6 +29,14 @@ class WhisperHistoryTest {
         assertEquals(listOf(excluded,received,sent),db.lookupActivity(q.copy(limit=10,search=HistorySearchFilter(),playerUuid=alice.uuid)))
         assertEquals(listOf(excluded,received,sent),db.lookupActivity(q.copy(limit=10,search=HistorySearchFilter(),playerName="ALICE")))
     }
+    @Test fun literalTextPredicatesPrecedePagingAndNeverTreatWildcardsAsPatterns()=stores { db->
+        val a=row(1).copy(text="100% real_coal");val b=row(2).copy(text="other");val c=row(3).copy(text="REAL_coal")
+        db.append(listOf(a,b,c))
+        val q=PlayerActivityQuery(setOf(PlayerActivityKind.WHISPER),textContains="real_coal",limit=1)
+        assertEquals(listOf(c),db.lookupActivity(q));assertEquals(listOf(a),db.lookupActivity(q.copy(offset=1)))
+        assertEquals(listOf(a),db.lookupActivity(q.copy(textContains="100%")))
+        assertTrue(db.lookupActivity(q.copy(textContains="' OR 1=1 --")).isEmpty())
+    }
     @Test fun ordinaryChatAndCommandQueriesNeverRevealWhispers()=stores { db->
         db.append(listOf(row(1),PlayerActivity(timestampEpochMillis=2,actor=alice,kind=PlayerActivityKind.CHAT,text="public"),PlayerActivity(timestampEpochMillis=3,actor=alice,kind=PlayerActivityKind.COMMAND,text="/help")))
         assertEquals(listOf("public"),db.lookupActivity(PlayerActivityQuery(setOf(PlayerActivityKind.CHAT))).map { it.text })

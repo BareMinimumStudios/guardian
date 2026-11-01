@@ -13,6 +13,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Opt-in `/guardian spy whispers on|off` and `/guardian spy commands on|off`. Subscriptions last for the session, recheck permissions and limit live output. Command arguments remain separately opt-in; authentication commands remain excluded.
 - Schema 26 recipient fields preserve older history. Global old-history purge includes whispers; scoped world/type purges retain them. Back up before upgrading; older jars cannot open schema 26.
 
+## [0.4.0-alpha.95+1.21.1] - 2026-11-01
+
+### Added
+
+- Personal live-spy player/command filters, status and all-channel off controls. Filtering changes only the staff viewer's feed.
+- Bounded literal chat/whisper/command text searches with highlighted matches, quoted phrases and preserved paging.
+- Content-free activity query timing counters in status and suppression counts after live-output bursts.
+
+### Changed
+
+- Render activity history and spy output with category labels, short ages, distinct player names and neutral text. Long messages use a short preview with full text and exact details on hover.
+- Reuse one formatted message across matching spy viewers per event. Keep current permission checks, audit durability and capture exclusions.
+- Document broad filter-free history searches and radius-only searches prominently. No schema or config upgrade is required.
+
 ## [Unreleased]
 
 ### Documentation
