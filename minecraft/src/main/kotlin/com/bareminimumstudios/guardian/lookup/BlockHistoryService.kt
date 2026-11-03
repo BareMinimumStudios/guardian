@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.logging.OperationTimings
+import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
 import com.bareminimumstudios.guardian.storage.QueryableStorageBackend
 import com.bareminimumstudios.guardian.storage.query.BlockLookupQuery
 import com.bareminimumstudios.guardian.storage.query.BlockRollbackState
@@ -57,9 +59,14 @@ class BlockHistoryService(
         onFailure: (Throwable) -> Unit
     ) {
         if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
+        val queuedAt=System.nanoTime()
         executor.execute {
-            runCatching { storage.lookupContainers(query) }
-                .onSuccess { rows -> server.execute { onSuccess(rows) } }
+            OperationTimings.record(Stage.TRANSACTION_QUEUE,System.nanoTime()-queuedAt)
+            val startedAt=System.nanoTime()
+            val result=runCatching { storage.lookupContainers(query) }
+            val finishedAt=System.nanoTime()
+            OperationTimings.record(Stage.TRANSACTION_QUERY,finishedAt-startedAt)
+            result.onSuccess { rows -> server.execute { OperationTimings.record(Stage.TRANSACTION_DELIVERY,System.nanoTime()-finishedAt);onSuccess(rows) } }
                 .onFailure { error -> logger.error("Container history lookup failed", error); server.execute { onFailure(error) } }
         }
     }
@@ -67,8 +74,13 @@ class BlockHistoryService(
     fun guardContainers(rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>, onSuccess: (com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard?) -> Unit, onFailure: (Throwable) -> Unit) {
         if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
         val immutableRows=rows.toList()
+        val queuedAt=System.nanoTime()
         executor.execute {
-            runCatching { storage.guardContainerHistory(immutableRows) }
+            OperationTimings.record(Stage.HISTORY_GUARD_QUEUE,System.nanoTime()-queuedAt)
+            val startedAt=System.nanoTime()
+            val result=runCatching { storage.guardContainerHistory(immutableRows) }
+            OperationTimings.record(Stage.HISTORY_GUARD_QUERY,System.nanoTime()-startedAt)
+            result
                 .onSuccess { guard -> server.execute { onSuccess(guard) } }
                 .onFailure { error -> logger.error("Container rollback history guard failed",error);server.execute { onFailure(error) } }
         }

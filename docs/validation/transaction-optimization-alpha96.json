@@ -1,0 +1,461 @@
+{
+  "version": "0.4.0-alpha.96+1.21.1",
+  "date": "2026-11-03",
+  "schemaVersion": 26,
+  "configVersion": 19,
+  "tests": {
+    "tests": 820,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "artifacts": [
+    {
+      "loader": "fabric",
+      "file": "guardian-0.4.0-alpha.96+1.21.1.jar",
+      "relativePath": "build/libs/guardian-0.4.0-alpha.96+1.21.1.jar",
+      "bytes": 13575939,
+      "sha256": "08ced2a22e8c75c6357d8e302b5213a02abe593b2f4506d04aa6b308b6797eb6",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jars/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "neoforge",
+      "file": "guardian-neoforge-0.4.0-alpha.96+1.21.1.jar",
+      "relativePath": "neoforge/build/libs/guardian-neoforge-0.4.0-alpha.96+1.21.1.jar",
+      "bytes": 13545161,
+      "sha256": "8f0fd955a5294d17084c592fbd1a4989a80972275e789484b91a397b31c31e0d",
+      "javaClassMajorMax": 65,
+      "nested": [
+        "META-INF/jarjar/sqlite-jdbc-3.53.4.0.jar"
+      ]
+    },
+    {
+      "loader": "worldedit",
+      "file": "guardian-worldedit-0.4.0-alpha.96+1.21.1.jar",
+      "relativePath": "worldedit-adapter/build/libs/guardian-worldedit-0.4.0-alpha.96+1.21.1.jar",
+      "bytes": 25382,
+      "sha256": "a336782eb8189a78091d0770e816914f6509d22b7ef2ed9dd16c36fde446585d",
+      "javaClassMajorMax": 65,
+      "nested": []
+    }
+  ],
+  "builds": {
+    "clean": "passed",
+    "repeat": "passed, configuration cache reused",
+    "worldedit": "passed"
+  },
+  "onlineItemRollback": [
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.class_1707)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Fabric",
+      "fixture": "OK checks=164",
+      "publicApplyConfirm": true,
+      "allTimingStagesObserved": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    },
+    {
+      "diagnostics": "cursor is holding an item\\npersonal crafting input slot 1 is occupied\\nplayer is offline or no longer registered on this server\\nan open menu is still active (net.minecraft.world.inventory.ChestMenu)\\nno block entity exists at this position\\ncontainer chunk is not loaded\\ndimension is not available\\ncontainer has unopened generated loot; reading it would generate loot\\n",
+      "publicPreviewExactCursorReason": true,
+      "loader": "Neoforge",
+      "fixture": "OK checks=581",
+      "publicApplyConfirm": true,
+      "allTimingStagesObserved": true,
+      "wrongTokenRefused": true,
+      "requesterOnlySuggestions": true,
+      "duplicateSourceClaimRefused": true,
+      "sqliteIntegrity": "ok",
+      "connectedClients": 0
+    }
+  ],
+  "timingSamples": {
+    "Fabric": "[03:33:10] [Server thread/INFO]: Guardian timing transaction_queue: last=0ms max=0ms count=3\n[03:33:10] [Server thread/INFO]: Guardian timing transaction_query: last=0ms max=2ms count=3\n[03:33:10] [Server thread/INFO]: Guardian timing transaction_delivery: last=0ms max=0ms count=3\n[03:33:10] [Server thread/INFO]: Guardian timing history_guard_queue: last=0ms max=0ms count=2\n[03:33:10] [Server thread/INFO]: Guardian timing history_guard_query: last=0ms max=0ms count=2\n[03:33:10] [Server thread/INFO]: Guardian timing rollback_fence: last=62ms max=107ms count=6\n[03:33:10] [Server thread/INFO]: Guardian timing rollback_prepare: last=7ms max=7ms count=2\n[03:33:10] [Server thread/INFO]: Guardian timing rollback_apply_save: last=1626ms max=1626ms count=1\n[03:33:10] [Server thread/INFO]: Guardian timing rollback_preview_total: last=236ms max=236ms count=1\n[03:33:10] [Server thread/INFO]: Guardian timing rollback_confirm_total: last=69ms max=1741ms count=2\n",
+    "Neoforge": "[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing transaction_queue: last=0ms max=0ms count=3\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing transaction_query: last=0ms max=2ms count=3\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing transaction_delivery: last=0ms max=0ms count=3\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing history_guard_queue: last=0ms max=0ms count=2\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing history_guard_query: last=0ms max=0ms count=2\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing rollback_fence: last=96ms max=97ms count=6\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing rollback_prepare: last=1ms max=5ms count=2\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing rollback_apply_save: last=1508ms max=1508ms count=1\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing rollback_preview_total: last=228ms max=228ms count=1\n[03:33:35] [Server thread/INFO] [minecraft/MinecraftServer]: Guardian timing rollback_confirm_total: last=98ms max=1550ms count=2\n"
+  },
+  "jdbcBenchmark": [
+    {
+      "loader": "Fabric",
+      "version": "alpha.95",
+      "report": {
+        "sparse": {
+          "medianNs": 183948500,
+          "p95Ns": 257255100,
+          "rows": 1
+        },
+        "dense": {
+          "medianNs": 1057700,
+          "p95Ns": 2166900,
+          "rows": 50
+        },
+        "global": {
+          "medianNs": 1082400,
+          "p95Ns": 2274700,
+          "rows": 50
+        }
+      },
+      "jdbcPayloadDecode": true
+    },
+    {
+      "loader": "Fabric",
+      "version": "alpha.96",
+      "report": {
+        "sparse": {
+          "medianNs": 18927500,
+          "p95Ns": 20388000,
+          "rows": 1
+        },
+        "dense": {
+          "medianNs": 1310200,
+          "p95Ns": 1877000,
+          "rows": 50
+        },
+        "global": {
+          "medianNs": 696200,
+          "p95Ns": 1051700,
+          "rows": 50
+        }
+      },
+      "jdbcPayloadDecode": true
+    },
+    {
+      "loader": "Neoforge",
+      "version": "alpha.96",
+      "report": {
+        "sparse": {
+          "medianNs": 24899500,
+          "p95Ns": 29824000,
+          "rows": 1
+        },
+        "dense": {
+          "medianNs": 2234900,
+          "p95Ns": 2751400,
+          "rows": 50
+        },
+        "global": {
+          "medianNs": 590600,
+          "p95Ns": 1229100,
+          "rows": 50
+        }
+      },
+      "jdbcPayloadDecode": true
+    }
+  ],
+  "sqlBenchmark": {
+    "iterations": 5,
+    "schema": "Existing transaction/location primary keys and indexes; no new index or production data.",
+    "cases": [
+      {
+        "case": "sparse",
+        "records": 200000,
+        "returned": 1,
+        "timings": {
+          "baseline": {
+            "medianMs": 111.4271,
+            "maxMs": 113.4672
+          },
+          "locationFirst": {
+            "medianMs": 0.0189,
+            "maxMs": 0.1264
+          },
+          "adaptive": {
+            "medianMs": 0.0329,
+            "maxMs": 0.0482
+          }
+        },
+        "plans": {
+          "baseline": [
+            [
+              9,
+              0,
+              0,
+              "SCAN c USING INDEX ex_container_time_idx"
+            ],
+            [
+              13,
+              0,
+              0,
+              "CORRELATED SCALAR SUBQUERY 1"
+            ],
+            [
+              18,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              24,
+              13,
+              0,
+              "SEARCH l USING COVERING INDEX sqlite_autoindex_ex_container_location_1 (transaction_uuid=? AND wid=? AND x>? AND x<?)"
+            ],
+            [
+              47,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              72,
+              0,
+              0,
+              "USE TEMP B-TREE FOR RIGHT PART OF ORDER BY"
+            ]
+          ],
+          "locationFirst": [
+            [
+              9,
+              0,
+              0,
+              "SEARCH c USING INDEX sqlite_autoindex_ex_container_1 (transaction_uuid=?)"
+            ],
+            [
+              13,
+              0,
+              0,
+              "LIST SUBQUERY 1"
+            ],
+            [
+              17,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              23,
+              13,
+              0,
+              "SEARCH l USING INDEX ex_container_location_idx (wid=? AND x>? AND x<?)"
+            ],
+            [
+              51,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              69,
+              0,
+              0,
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          ],
+          "adaptive": [
+            [
+              9,
+              0,
+              0,
+              "SEARCH c USING INDEX sqlite_autoindex_ex_container_1 (transaction_uuid=?)"
+            ],
+            [
+              13,
+              0,
+              0,
+              "LIST SUBQUERY 1"
+            ],
+            [
+              17,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              23,
+              13,
+              0,
+              "SEARCH l USING INDEX ex_container_location_idx (wid=? AND x>? AND x<?)"
+            ],
+            [
+              51,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              69,
+              0,
+              0,
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          ]
+        },
+        "resultsEquivalent": true
+      },
+      {
+        "case": "dense",
+        "records": 200000,
+        "returned": 50,
+        "timings": {
+          "baseline": {
+            "medianMs": 0.0779,
+            "maxMs": 0.3815
+          },
+          "locationFirst": {
+            "medianMs": 257.0423,
+            "maxMs": 268.3618
+          },
+          "adaptive": {
+            "medianMs": 1.023,
+            "maxMs": 1.4975
+          }
+        },
+        "plans": {
+          "baseline": [
+            [
+              9,
+              0,
+              0,
+              "SCAN c USING INDEX ex_container_time_idx"
+            ],
+            [
+              13,
+              0,
+              0,
+              "CORRELATED SCALAR SUBQUERY 1"
+            ],
+            [
+              18,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              24,
+              13,
+              0,
+              "SEARCH l USING COVERING INDEX sqlite_autoindex_ex_container_location_1 (transaction_uuid=? AND wid=? AND x>? AND x<?)"
+            ],
+            [
+              47,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              72,
+              0,
+              0,
+              "USE TEMP B-TREE FOR RIGHT PART OF ORDER BY"
+            ]
+          ],
+          "locationFirst": [
+            [
+              9,
+              0,
+              0,
+              "SEARCH c USING INDEX sqlite_autoindex_ex_container_1 (transaction_uuid=?)"
+            ],
+            [
+              13,
+              0,
+              0,
+              "LIST SUBQUERY 1"
+            ],
+            [
+              17,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              23,
+              13,
+              0,
+              "SEARCH l USING INDEX ex_container_location_idx (wid=? AND x>? AND x<?)"
+            ],
+            [
+              51,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              69,
+              0,
+              0,
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          ],
+          "adaptive": [
+            [
+              9,
+              0,
+              0,
+              "SCAN c USING INDEX ex_container_time_idx"
+            ],
+            [
+              13,
+              0,
+              0,
+              "CORRELATED SCALAR SUBQUERY 1"
+            ],
+            [
+              18,
+              13,
+              0,
+              "SEARCH w USING COVERING INDEX sqlite_autoindex_ex_world_map_1 (world=?)"
+            ],
+            [
+              24,
+              13,
+              0,
+              "SEARCH l USING COVERING INDEX sqlite_autoindex_ex_container_location_1 (transaction_uuid=? AND wid=? AND x>? AND x<?)"
+            ],
+            [
+              47,
+              0,
+              0,
+              "SEARCH a USING INTEGER PRIMARY KEY (rowid=?)"
+            ],
+            [
+              72,
+              0,
+              0,
+              "USE TEMP B-TREE FOR RIGHT PART OF ORDER BY"
+            ]
+          ]
+        },
+        "resultsEquivalent": true
+      }
+    ],
+    "scope": "Synthetic SQLite query benchmark, not JDBC/decode/concurrency or TPS."
+  },
+  "pageLocationBenchmark": {
+    "pageSize": 50,
+    "iterations": 50,
+    "timings": {
+      "perRow": {
+        "medianMs": 0.19674999999999998,
+        "maxMs": 0.2887,
+        "locationStatementsPerPage": 50
+      },
+      "pageBatch": {
+        "medianMs": 0.0581,
+        "maxMs": 0.1493,
+        "locationStatementsPerPage": 1
+      }
+    },
+    "resultsEquivalent": true,
+    "scope": "Synthetic SQLite location hydration SQL only, not JDBC or full operation."
+  },
+  "benchmarkMethod": "Separate copies of a private stopped-fixture SQLite database were given 200,000 additional valid transaction payloads, indexes and complete event-time contexts. Shipped alpha95 Fabric and alpha96 Fabric/NeoForge storage APIs opened their own isolated databases on a background fixture thread. Each query used five warmups and fifteen timed lookup/decode iterations. IDs/order matched for sparse/dense/global queries. No production or supplied database used.",
+  "changes": [
+    "Adaptive radius/bounds probe retains existing streaming plan above 2048 returned location rows; exact and whole-world query paths retain existing selection.",
+    "Page-wide location read preserves full contexts, including unaffected other-world endpoints. Existing resource/actor/entity/time filters and ordering precede page decoding.",
+    "Fixed content-free timing counters separate transaction queue/query/delivery and item history safety checks, audit fences, persistent preparation and apply/save.",
+    "Confirmation timing excludes human wait and stops on first completed/refused/recovery-required outcome. Counts are attempts, not success receipts."
+  ],
+  "safety": "Same backend lock, audit fences, persistent history guards/claims, inventory observations, exclusive ownership, live checks and actual saved completion. No additional reader connection, cache of authorization, relaxed durability or forced recovery. Probe row cap is not a hard execution-time/index-visit bound.",
+  "fixtureEngineering": "Dense optional-DuckDB regression fixtures use one API-encoded valid row and bulk SQL clones of immutable payloads plus all applicable indexes, avoiding slow per-row fixture creation. Query and decoding paths remain real.",
+  "finalRuntimeJarHashesMatch": true,
+  "connectedClients": 0,
+  "suppliedOrRemoteServersModified": false,
+  "limits": "Warm synthetic measurements, not production capacity or TPS. Fabric sparse median 183.95ms ->18.93ms; dense 1.06ms ->1.31ms; global1.08ms ->0.70ms. No NeoForge alpha95 baseline was measured. Savings do not remove necessary save waits. Real-client and production-pack acceptance remain open.",
+  "ci": "Awaiting owner push"
+}

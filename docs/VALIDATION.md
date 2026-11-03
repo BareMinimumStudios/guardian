@@ -1,7 +1,27 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.95+1.21.1**. Schema 26, config version 19.
+Current executable checkpoint: **0.4.0-alpha.96+1.21.1**. Schema 26, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Transaction and item rollback optimization
+
+820 automated tests pass. The clean build, repeated build with actual configuration-cache reuse
+and separate WorldEdit adapter build pass. Schema 26/config 19 are unchanged.
+
+The shipped JDBC benchmark uses 200,000 added synthetic transactions with valid payloads and
+full event-time location contexts in an isolated database. On Fabric, sparse-radius median
+lookup improved from 183.95 ms in alpha.95 to 18.93 ms in alpha.96. A dense query measured
+1.06 ms versus 1.31 ms, including the new probe overhead; a global page measured 1.08 ms versus
+0.70 ms. NeoForge alpha.96 also passed the same decoded-result checks. All compared IDs and
+ordering matched. These are warm isolated lookup/decode measurements, not production latency
+or TPS guarantees. The lower-level SQL fixture and its dense-plan tradeoff are recorded separately.
+
+Native Fabric and NeoForge checks verify actual preview diagnostics, saved apply/confirmation,
+invalid-token and duplicate-claim refusal, and all timing stages in status. Existing guard,
+owner, audit-fence and durable-save requirements remain. Timing totals can include refusals
+or the first recovery-required report and are not success receipts.
+[Evidence](validation/transaction-optimization-alpha96.json) records measurements, artifacts and limits.
+Synthetic players do not replace real-client/production-pack acceptance.
 
 ## Activity readability and spy polish
 

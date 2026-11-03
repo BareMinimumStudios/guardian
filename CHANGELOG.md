@@ -27,7 +27,20 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Reuse one formatted message across matching spy viewers per event. Keep current permission checks, audit durability and capture exclusions.
 - Document broad filter-free history searches and radius-only searches prominently. No schema or config upgrade is required.
 
+## [0.4.0-alpha.96+1.21.1] - 2026-11-03
+
+### Changed
+
+- Use adaptive spatial transaction lookup: sparse radius/bounds scopes can start from the location index; dense scopes retain streaming lookup.
+- Load a transaction page's complete event-time container locations together instead of querying each transaction separately. Ordering, filters and immutable slot snapshots are preserved.
+
+### Added
+
+- Content-free transaction queue/query/delivery and item rollback stage timings in `/guardian status`. Confirmation timing excludes the wait for a staff confirmation token.
+- Isolated 200,000-record SQL and shipped-JDBC benchmarks, including alpha.95 comparison and saved online rollback regression on both loaders. No schema/config migration, durability reduction or safety-check removal.
+
 ## [Unreleased]
+
 
 ### Documentation
 

@@ -262,6 +262,37 @@ after a purge because its transfer chain may be incomplete. Purge cannot be undo
 without a backup. `/guardian purge cancel` discards a pending request; it cannot undo
 a batch already committed. The database file may not shrink immediately.
 
+## Transaction and item rollback timings
+
+Alpha.96 adds content-free diagnostic timings to `/guardian status`.
+After a slow transaction search or item rollback, run status and include these lines when
+reporting it. Each stage reports its last and maximum duration in milliseconds and attempt
+count for this server process. These are shared diagnostic counters, not per-player history;
+failed/refused attempts can contribute. Restart resets them.
+
+| Stage | What it measures |
+| --- | --- |
+| `transaction_queue` | Waiting for the background history worker |
+| `transaction_query` | Database lock wait, scope selection, reading/decoding transactions and loading their locations |
+| `transaction_delivery` | Waiting to deliver successful results back on the server thread |
+| `history_guard_queue` / `history_guard_query` | Waiting for, then running persistent history safety checks |
+| `rollback_fence` | Confirming accepted audit writes, including callback scheduling |
+| `rollback_prepare` | Queued persistent admission checks/journal preparation through callback delivery |
+| `rollback_apply_save` | Exclusive inventory admission, apply and waiting for actual saving, until completion or first recovery-required report |
+| `rollback_preview_total` | Preview request through completion/refusal, including per-tick inventory observations |
+| `rollback_confirm_total` | Valid confirmation through completion/refusal or first recovery-required report |
+
+The confirmation total excludes time spent deciding whether to confirm. Stages can overlap or
+be sampled more than once; do not add their last values together as one request's total.
+Protection and actual-save checks still run. A recovery-required timing is not proof of a
+successful rollback. No messages, names, inventory contents or filter text enter these counters.
+
+Transaction loading batches a page's location reads while preserving every event-time
+container context. Radius/bounds searches probe up to 2,049 matching location rows: small
+scopes use a location-first plan, dense scopes retain the streaming plan. The probe limits
+returned rows, not the number of index entries visited or query execution time. It does not
+cache history or authorize rollback. General searches still accept no filters.
+
 ## Permissions
 
 Operators can use commands at the fallback level below. If a permissions provider

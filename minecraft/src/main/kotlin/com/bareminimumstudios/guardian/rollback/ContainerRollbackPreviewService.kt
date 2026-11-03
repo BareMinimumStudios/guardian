@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.logging.OperationTimings
+import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftBlockContainerSnapshotter
@@ -28,8 +30,10 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val session = Session(source,query)
         active = session
         source.sendSystemMessage(Component.literal("Guardian: checking item rollback candidates; no items will be changed..."))
+        val fenceStarted=System.nanoTime()
         session.barrier=pipeline.writeBarrier()
         session.barrier!!.result.whenComplete { _, error -> server.execute {
+            OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
             if(!authorize(session)) return@execute
             if(error != null) refuse(session,"Accepted audit writes could not be confirmed; see storage status.")
             else lookup(session,maxRecords)
@@ -89,8 +93,10 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         }
         if(!session.finalStarted) {
             session.finalStarted=true;session.ready=false
-            session.barrier=pipeline.writeBarrier()
+            val fenceStarted=System.nanoTime()
+        session.barrier=pipeline.writeBarrier()
             session.barrier!!.result.whenComplete { _,error -> server.execute {
+                OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
                 if(!authorize(session)) return@execute
                 if(error!=null) { refuse(session,"Final audit writes could not be confirmed.");return@execute }
                 history.guardContainers(session.rows,{ guard ->
@@ -120,7 +126,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         }
         if(session.unavailable.size>8) session.source.sendSystemMessage(Component.literal("  "+(session.unavailable.size-8)+" more unavailable inventories; narrow the filters."))
         session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use rollback-items apply with the same filters to request a separately checked confirmation."))
-        session.watch?.close();active=null
+        OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);session.watch?.close();active=null
     }
 
     /** Cancels reporting only; started reads and persistent ownership are untouched. */
@@ -150,7 +156,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         refuse(session,"Permission is no longer available; check cancelled.")
         return false
     }
-    private fun refuse(session: Session, message: String) { if(active !== session) return;active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
+    private fun refuse(session: Session, message: String) { if(active !== session) return;OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item rollback preview: $message No items changed.")) }
     private fun ownerLabel(owner:ItemSlotOwner,session:Session):String = when(owner) {
         is ItemSlotOwner.PlayerInventory -> "Player "+(server.playerList.getPlayer(owner.playerId)?.gameProfile?.name ?: session.rows.mapNotNull { it.actor as? ActorIdentity.Player }.firstOrNull { it.uuid==owner.playerId }?.lastKnownName ?: owner.playerId.toString())
         is ItemSlotOwner.BlockContainer -> "Container "+owner.dimension+" @ "+owner.position.x+","+owner.position.y+","+owner.position.z

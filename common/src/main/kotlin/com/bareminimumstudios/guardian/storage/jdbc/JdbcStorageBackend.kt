@@ -289,7 +289,8 @@ abstract class JdbcStorageBackend(
             // Exact-container searches can start at the existing location index instead of
             // probing every newer transaction. Broad scopes retain the streaming time scan.
             val exact=query.position!=null && (query.radius==null || query.radius==0)
-            sql.append(if(exact)
+            val locationFirst=exact || ((query.position!=null || query.bounds!=null) && sparseContainerScope(conn,query))
+            sql.append(if(locationFirst)
                 " AND c.transaction_uuid IN (SELECT l.transaction_uuid FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE w.world = ?"
             else " AND EXISTS (SELECT 1 FROM ex_container_location l JOIN ex_world_map w ON w.id = l.wid WHERE l.transaction_uuid = c.transaction_uuid AND w.world = ?")
             if (query.position != null || query.bounds != null) sql.append(" AND l.x BETWEEN ? AND ? AND l.y BETWEEN ? AND ? AND l.z BETWEEN ? AND ?")
@@ -297,7 +298,8 @@ abstract class JdbcStorageBackend(
         }
         if (query.afterEpochMillis != null) sql.append(" AND c.time >= ?")
         sql.append(if (query.oldestFirst) " ORDER BY c.time ASC, c.transaction_uuid ASC LIMIT ? OFFSET ?" else " ORDER BY c.time DESC, c.transaction_uuid DESC LIMIT ? OFFSET ?")
-        conn.prepareStatement(sql.toString()).use { statement ->
+        data class Pending(val id:UUID,val time:Long,val actor:ActorIdentity,val menu:Int,val action:ContainerAction,val changes:List<ItemSlotChange>)
+        val selected=conn.prepareStatement(sql.toString()).use { statement ->
             var index = 1
             actors.values.forEach { statement.setString(index++, it) }
             resources.values.forEach { statement.setString(index++, it) }
@@ -315,25 +317,44 @@ abstract class JdbcStorageBackend(
             statement.setInt(index, query.offset)
             statement.executeQuery().use { result ->
                 buildList {
-                    while (result.next()) add(ContainerTransactionSnapshot(
+                    while (result.next()) add(Pending(
                         UUID.fromString(result.getString("transaction_uuid")), result.getLong("time"),
                         actorCodec.actorFor(conn, result.getLong("actor")),
                         result.getInt("menu_id"), ContainerAction.valueOf(result.getString("interaction")),
-                        ContainerChangesCodec.decode(result.getBytes(result.findColumn("changes"))),
-                        containerLocations(conn, result.getString("transaction_uuid"))
+                        ContainerChangesCodec.decode(result.getBytes(result.findColumn("changes")))
                     ))
                 }
             }
         }
+        val locations=containerLocations(conn,selected.map { it.id.toString() })
+        selected.map { row->ContainerTransactionSnapshot(row.id,row.time,row.actor,row.menu,row.action,row.changes,locations[row.id.toString()].orEmpty()) }
     }
 
-    private fun containerLocations(conn: Connection, id: String): List<ItemSlotOwner.BlockContainer> =
-        conn.prepareStatement("SELECT wid, x, y, z FROM ex_container_location WHERE transaction_uuid = ? ORDER BY wid, x, y, z").use { statement ->
-            statement.setString(1, id)
-            statement.executeQuery().use { rows -> buildList {
-                while (rows.next()) add(ItemSlotOwner.BlockContainer(ResourceId.parse(worldMappings.valueFor(conn, rows.getInt("wid"))), BlockPosition(rows.getInt("x"), rows.getInt("y"), rows.getInt("z"))))
-            } }
+    /** Probe is capped; dense scopes retain the cheap newest-first streaming plan. No cached authority. */
+    private fun sparseContainerScope(conn:Connection,query:ContainerLookupQuery):Boolean {
+        val bounds=query.bounds
+        val center=query.position
+        val radius=(query.radius ?: 0).toLong()
+        val coordinates=bounds?.let { listOf(it.min.x,it.max.x,it.min.y,it.max.y,it.min.z,it.max.z).map(Int::toLong) }
+            ?: center?.let { listOf(it.x.toLong()-radius,it.x.toLong()+radius,it.y.toLong()-radius,it.y.toLong()+radius,it.z.toLong()-radius,it.z.toLong()+radius) }
+            ?: return false
+        return conn.prepareStatement("SELECT l.transaction_uuid FROM ex_container_location l JOIN ex_world_map w ON w.id=l.wid WHERE w.world=? AND l.x BETWEEN ? AND ? AND l.y BETWEEN ? AND ? AND l.z BETWEEN ? AND ? LIMIT 2049").use { statement->
+            statement.setString(1,checkNotNull(query.dimension).toString());coordinates.forEachIndexed { i,value->statement.setLong(i+2,value) }
+            statement.executeQuery().use { rows->var count=0;while(rows.next())count++;count<=2048 }
         }
+    }
+
+    /** One page-wide location read, including event-time locations unrelated to changed slots. */
+    private fun containerLocations(conn:Connection,ids:List<String>):Map<String,List<ItemSlotOwner.BlockContainer>> {
+        if(ids.isEmpty())return emptyMap()
+        require(ids.size<=500)
+        val locations=linkedMapOf<String,MutableList<ItemSlotOwner.BlockContainer>>()
+        conn.prepareStatement("SELECT l.transaction_uuid,w.world,l.x,l.y,l.z FROM ex_container_location l LEFT JOIN ex_world_map w ON w.id=l.wid WHERE l.transaction_uuid IN (${ids.joinToString(",") { "?" }}) ORDER BY l.transaction_uuid,l.wid,l.x,l.y,l.z").use { statement->
+            ids.forEachIndexed { i,id->statement.setString(i+1,id) }
+            statement.executeQuery().use { rows->while(rows.next())locations.getOrPut(rows.getString(1)) { mutableListOf() }.add(ItemSlotOwner.BlockContainer(ResourceId.parse(rows.getString(2)),BlockPosition(rows.getInt(3),rows.getInt(4),rows.getInt(5)))) }
+        }
+        return locations
+    }
 
     override fun lookupBlocks(query: BlockLookupQuery): List<StoredBlockChange> = lock.withLock {
         val conn = requireConnection()

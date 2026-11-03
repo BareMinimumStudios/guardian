@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.logging.OperationTimings
+import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.*
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
@@ -29,6 +31,8 @@ internal class OnlineItemRollbackService(
         var rows: List<ContainerTransactionSnapshot>? = null
         var watch: AuditOwnerObservation? = null
         var barrier: AuditWriteBarrier? = null
+        var confirmedAt=0L
+        var applyStartedAt=0L
         var preparing = false
         var cancelled = false
         var host: ItemOperationHost? = null
@@ -85,18 +89,22 @@ internal class OnlineItemRollbackService(
         val session = active ?: return fail(source,"No item rollback awaits confirmation.")
         if (!sameRequester(session.source,source) || token != session.token.toString() || !valid(session) ||
             session.rows == null || session.preparing || session.host != null) return fail(source,"Invalid, expired or unavailable item rollback confirmation.")
+        session.confirmedAt=System.nanoTime()
         session.preparing = true
         session.deadline = System.nanoTime()+TimeUnit.SECONDS.toNanos(10)
         val rows = checkNotNull(session.rows)
         session.watch = runCatching { pipeline.observeOwners(rows.flatMap { it.changes.map { c -> c.address.owner } }.distinct()) }
             .getOrElse { refuse(session,"Inventory observation could not be established."); return false }
         fence(session) {
+            val prepareStarted=System.nanoTime()
             history.prepareItemRollback(session.id,System.currentTimeMillis(),rows,{ record ->
+                OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted)
                 if (!valid(session) || session.watch?.changedOwners()?.isNotEmpty() != false) {
                     history.cancelPreparedItemRollback(session.id, { clear(session) }, { clear(session) })
                     fail(session.source,"Item rollback admission cancelled. No item setters ran; inspect recovery journal ${session.id} if claims remain.")
                     return@prepareItemRollback
                 }
+                session.applyStartedAt=System.nanoTime()
                 try {
                     // The complete reverse chain and full owner images are validated by the protected host.
                     session.host = checkNotNull(operations.admitOwned(record) { !stopped && !session.cancelled && permitted(session.source) })
@@ -107,7 +115,7 @@ internal class OnlineItemRollbackService(
                     history.cancelPreparedItemRollback(session.id,{ clear(session) },{ clear(session) })
                     fail(session.source,"Item rollback refused before apply: ${error.message?.take(180) ?: "unsupported inventory"}. Recovery journal: ${session.id}.")
                 }
-            }, { refuse(session,"Persistent admission refused: changed/newer history, claimed transactions, or unavailable storage.") })
+            }, { OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted);refuse(session,"Persistent admission refused: changed/newer history, claimed transactions, or unavailable storage.") })
         }
         return true
     }
@@ -139,10 +147,12 @@ internal class OnlineItemRollbackService(
             host.state !in setOf(ItemOperationState.COMPLETED,ItemOperationState.RECOVERY_REQUIRED,ItemOperationState.DRAINING)) operations.cancel(host)
         when (host.state) {
             ItemOperationState.COMPLETED -> {
+                recordOutcome(session)
                 if (permitted(session.source)) session.source.sendSystemMessage(Component.literal("Guardian item rollback completed and saved: ${session.rows!!.size} transactions. Operation ${session.id}."))
                 clear(session)
             }
             ItemOperationState.RECOVERY_REQUIRED -> if (!session.reportedRecovery) {
+                recordOutcome(session)
                 session.reportedRecovery=true
                 if (permitted(session.source)) fail(session.source,"Operation ${session.id} needs recovery; inventories remain protected. Use /guardian rollback-items reconcile, or recovery saved ${session.id}. Partial writes are never replayed automatically.")
             }
@@ -161,13 +171,20 @@ internal class OnlineItemRollbackService(
         return true
     }
     private fun fence(session: Session, next: () -> Unit) {
+        val fenceStarted=System.nanoTime()
         session.barrier=pipeline.writeBarrier()
         session.barrier!!.result.whenComplete { _, error -> server.execute {
+            OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
             if (!valid(session)) { if(session.host==null) clear(session); return@execute }
             if (error != null) refuse(session,"Accepted audit writes could not be confirmed.") else next()
         } }
     }
-    private fun clear(session: Session) { if(active !== session)return;session.watch?.close();session.barrier?.cancel();active=null }
+    private fun recordOutcome(session:Session) {
+        val now=System.nanoTime()
+        if(session.applyStartedAt!=0L) { OperationTimings.record(Stage.ROLLBACK_APPLY_SAVE,now-session.applyStartedAt);session.applyStartedAt=0L }
+        if(session.confirmedAt!=0L) { OperationTimings.record(Stage.ROLLBACK_CONFIRM_TOTAL,now-session.confirmedAt);session.confirmedAt=0L }
+    }
+    private fun clear(session: Session) { if(active !== session)return;recordOutcome(session);session.watch?.close();session.barrier?.cancel();active=null }
     private fun refuse(session: Session, message: String) { if(active !== session)return;fail(session.source,message+" No items changed.");clear(session) }
     private fun fail(source: CommandSourceStack, message: String): Boolean { source.sendFailure(Component.literal("Guardian item rollback: $message"));return false }
     private fun inside(owner: ItemSlotOwner.BlockContainer, query: ContainerLookupQuery): Boolean {

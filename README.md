@@ -21,7 +21,7 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.95** (testing release).
+Players do not need to install anything. Current build: **alpha.96** (testing release).
 
 ## Install
 
@@ -213,6 +213,17 @@ plus `guardian.spy` (operator level 3 by default).
 Tell players in your server rules what is recorded. Restrict staff access and protect database
 backups and exports. See the [command guide](docs/COMMANDS.md#whispers-and-live-spy) for limits.
 Back up before updating: alpha.94 upgrades the database to schema 26; older jars cannot open it.
+
+## Slow searches or item rollback?
+
+Guardian runs database searches in the background. Alpha.96 improves radius searches and
+loads transaction locations together to reduce repeated reads. It keeps every rollback safety
+check and waits for actual inventory saves.
+
+After a slow request, run `/guardian status`. Its `Guardian timing` lines separate queueing,
+database work, safety checks and saving. Include those lines, the exact command and the stage
+that felt slow when reporting a problem. See the [timing guide](docs/COMMANDS.md#transaction-and-item-rollback-timings).
+Timings contain no player names, messages or item contents.
 
 ## More help
 
