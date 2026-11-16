@@ -23,6 +23,9 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 Players do not need to install anything. Current build: **alpha.96** (testing release).
 
+Newer Minecraft ports are tracked in the [version support matrix](docs/VERSION_SUPPORT.md).
+The current jars target **1.21.1**; planned versions are listed separately.
+
 ## Install
 
 1. Stop your server and back up the world.

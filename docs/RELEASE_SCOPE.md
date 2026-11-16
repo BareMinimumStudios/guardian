@@ -2,6 +2,10 @@
 
 Assessed: 2026-10-29 against `0.4.0-alpha.96+1.21.1`.
 
+The owner separately authorized newer Minecraft ports on 2026-11-15, matching GriefLogger's
+published versions strictly above 1.21.1, on Fabric and NeoForge. [Version scope](VERSION_SUPPORT.md)
+tracks planned targets; the existing 1.21.1 release checklist still applies to the current jars.
+
 **The feature list is frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
 dependency is part of this pass. Fix reproducible defects within the existing contract;

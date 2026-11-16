@@ -2,6 +2,15 @@
 
 Guardian targets server-only Minecraft 1.21.1 on Fabric and NeoForge. Use Java 21, Gradle 9.8.0 and official Mojang mappings. Kotlin is preferred; Java is used for mixins and low-level hooks. Fabric uses Loom 1.17.21; NeoForge uses ModDevGradle 2.0.148.
 
+## Newer Minecraft targets
+
+The owner authorized matching GriefLogger's published Minecraft versions above 1.21.1 on
+Fabric and NeoForge. See [version scope and gates](docs/VERSION_SUPPORT.md) and
+[the target catalog](gradle/minecraft-targets.json). The first target is 26.2. Existing 1.21.1
+builds remain the available baseline. Java 25 is required for 26.x; Java 21 remains the
+1.21.x toolchain. Each target requires native capture/save/recovery validation, with explicit
+attention to historical item/block payload compatibility across game versions.
+
 ## Modules and checks
 
 `common` contains platform-neutral domain/storage/queue/rollback code. `minecraft` contains shared Minecraft adapters, configuration, commands and mixins. The root module supplies Fabric hooks; `neoforge` supplies its loader hooks. Each core jar includes the common output. `worldedit-adapter` is a separate optional GPL Fabric artifact; the BML core must not import WorldEdit.

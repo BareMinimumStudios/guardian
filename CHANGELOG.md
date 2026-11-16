@@ -41,6 +41,11 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+### Documentation
+
+- Record the authorized newer-Minecraft port scope: GriefLogger's published versions above 1.21.1 on Fabric and NeoForge, starting with 26.2. Planned targets are distinct from currently available jars; no runtime compatibility range has changed.
+
+
 
 ### Documentation
 
