@@ -1,0 +1,202 @@
+name: Modrinth upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Guardian release (without the Minecraft suffix)
+        type: string
+        default: 0.4.0-alpha.99
+        required: true
+      minecraft:
+        description: Minecraft target (all for the complete release)
+        type: choice
+        default: all
+        options: [all, '1.21.1', '1.21.4', '1.21.5', '1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10', '1.21.11', '26.1.2', '26.2']
+      loader:
+        description: Loader (select one when retrying a partial upload)
+        type: choice
+        default: all
+        options: [all, fabric, neoforge]
+      dry_run:
+        description: Check everything without uploading versions
+        type: boolean
+        default: true
+      project_id:
+        description: Guardian project ID or slug (blank uses MODRINTH_PROJECT_ID)
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      release:
+        type: string
+        default: 0.4.0-alpha.99
+      minecraft:
+        type: string
+        default: all
+      loader:
+        type: string
+        default: all
+      dry_run:
+        type: boolean
+        default: true
+      project_id:
+        type: string
+        default: ''
+    secrets:
+      MODRINTH_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guardian-modrinth
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Test publisher checks
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Check configuration and select targets
+        id: plan
+        env:
+          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          RELEASE: ${{ inputs.release }}
+          MINECRAFT: ${{ inputs.minecraft }}
+          LOADER: ${{ inputs.loader }}
+        shell: bash
+        run: |
+          test -n "$MODRINTH_PROJECT_ID" || { echo 'Set Guardian MODRINTH_PROJECT_ID or the project_id input'; exit 1; }
+          test -n "$MODRINTH_TOKEN" || { echo 'Allow this repository access to the organization MODRINTH_TOKEN secret'; exit 1; }
+          case "$LOADER" in all|fabric|neoforge) ;; *) echo 'Unsupported loader'; exit 1 ;; esac
+          python scripts/prepare_modrinth.py access
+          matrix=$(python scripts/prepare_modrinth.py matrix --release "$RELEASE" --minecraft "$MINECRAFT")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Build and test both loaders
+        env:
+          MINECRAFT: ${{ matrix.minecraft }}
+        shell: bash
+        run: |
+          chmod +x gradlew ports/gradlew
+          if [ "$MINECRAFT" = '1.21.1' ]; then
+            ./gradlew clean build --no-daemon --warning-mode all
+          else
+            ./ports/gradlew -p ports -PguardianTarget="$MINECRAFT" clean build --no-daemon --warning-mode all
+          fi
+      - name: Validate and prepare runtime jars
+        env:
+          RELEASE: ${{ inputs.release }}
+          MINECRAFT: ${{ matrix.minecraft }}
+        run: python scripts/prepare_modrinth.py prepare --release "$RELEASE" --minecraft "$MINECRAFT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: guardian-modrinth-build-${{ matrix.minecraft }}
+          path: build/modrinth/
+          if-no-files-found: error
+
+  preflight:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.check.outputs.matrix }}
+      count: ${{ steps.check.outputs.count }}
+      project: ${{ steps.check.outputs.project }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: guardian-modrinth-build-*
+          merge-multiple: true
+          path: build/modrinth
+      - name: Verify every file and existing Modrinth version before any uploads
+        id: check
+        env:
+          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          RELEASE: ${{ inputs.release }}
+          MINECRAFT: ${{ inputs.minecraft }}
+          LOADER: ${{ inputs.loader }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        shell: bash
+        run: |
+          python scripts/prepare_modrinth.py preflight --release "$RELEASE" --minecraft "$MINECRAFT" --loader "$LOADER" --output build/upload-plan.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          plan = json.loads(Path('build/upload-plan.json').read_text())
+          pending = [e for e in plan['entries'] if not e['skip']]
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('matrix=' + json.dumps({'include': pending}, separators=(',', ':')) + '\n')
+              output.write('count=' + str(len(pending)) + '\nproject=' + plan['project_id'] + '\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('# Guardian Modrinth upload plan\n\n')
+              summary.write('Dry run: ' + os.environ['DRY_RUN'] + '. Project status: ' + plan['project_status'] + '.\n\n')
+              for entry in plan['entries']:
+                  summary.write('- ' + entry['version'] + (': already uploaded, same file and dependencies\n' if entry['skip'] else ': ready\n'))
+              summary.write('\nAlpha testing builds. Back up before the schema-27 upgrade. Project approval and connected-client acceptance are separate.\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: guardian-modrinth-upload-plan
+          path: build/upload-plan.json
+          if-no-files-found: error
+
+  upload:
+    needs: preflight
+    if: ${{ !inputs.dry_run && needs.preflight.outputs.count != '0' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.preflight.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: guardian-modrinth-build-${{ matrix.minecraft }}
+          path: build/modrinth
+      - name: Recheck downloaded bytes
+        env:
+          RELEASE: ${{ inputs.release }}
+          MINECRAFT: ${{ matrix.minecraft }}
+          LOADER: ${{ matrix.loader }}
+        run: python scripts/prepare_modrinth.py verify --release "$RELEASE" --minecraft "$MINECRAFT" --loader "$LOADER"
+      - uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
+        with:
+          modrinth-id: ${{ needs.preflight.outputs.project }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-featured: false
+          name: Guardian ${{ matrix.mod_version }} (${{ matrix.loader }})
+          version: ${{ matrix.version }}
+          version-type: alpha
+          files: ${{ matrix.file }}
+          changelog-file: ${{ matrix.notes }}
+          loaders: ${{ matrix.loader }}
+          environment: server
+          game-versions: ${{ matrix.minecraft }}
+          game-version-filter: none
+          java: ${{ matrix.java }}
+          dependencies: ${{ matrix.dependency_input }}
+          retry-attempts: 1
+          fail-mode: fail

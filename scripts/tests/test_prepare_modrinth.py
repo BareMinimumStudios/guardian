@@ -1,0 +1,100 @@
+import copy
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from zipfile import ZipFile
+
+spec = importlib.util.spec_from_file_location('publisher', Path(__file__).resolve().parents[1] / 'prepare_modrinth.py')
+publisher = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(publisher)
+
+
+class PublisherChecks(unittest.TestCase):
+    def entry(self):
+        return {'minecraft': '1.21.1', 'loader': 'fabric', 'version': '0.4.0-alpha.99+1.21.1-fabric',
+                'sha512': 'abc', 'dependencies': list(publisher.DEPENDENCIES['fabric'])}
+
+    def remote(self, versions=(), status='processing', source='https://github.com/BareMinimumStudios/guardian'):
+        def get(route, token):
+            self.assertEqual('test-token', token)
+            if route.endswith('/version'):
+                return list(versions)
+            if route == '/project/guardian':
+                return {'id': 'project1', 'project_type': 'mod', 'status': status, 'source_url': source}
+            return {'id': route.rsplit('/', 1)[1] + '-id'}
+        return get
+
+    def existing(self):
+        entry = self.entry()
+        return {'version_number': entry['version'], 'version_type': 'alpha', 'loaders': ['fabric'],
+                'game_versions': ['1.21.1'], 'files': [{'primary': True, 'hashes': {'sha512': 'abc'}}],
+                'dependencies': [{'dependency_type': 'required', 'project_id': slug + '-id'} for slug in entry['dependencies']]}
+
+    def test_pending_project_plans_new_version_without_remote_writes(self):
+        result = publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote())
+        self.assertEqual('processing', result['project_status'])
+        self.assertFalse(result['entries'][0]['skip'])
+        self.assertNotIn('test-token', json.dumps(result))
+
+    def test_identical_upload_is_skipped(self):
+        self.assertTrue(publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote([self.existing()]))['entries'][0]['skip'])
+
+    def test_changed_bytes_refuse_replacement(self):
+        value = self.existing(); value['files'][0]['hashes']['sha512'] = 'different'
+        with self.assertRaisesRegex(ValueError, 'different bytes'):
+            publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote([value]))
+
+    def test_wrong_loader_or_missing_dependencies_refused(self):
+        for mutation in ('loader', 'dependencies'):
+            value = self.existing()
+            if mutation == 'loader': value['loaders'] = ['neoforge']
+            else: value['dependencies'] = []
+            with self.assertRaises(ValueError):
+                publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote([value]))
+
+    def test_wrong_project_refused(self):
+        with self.assertRaisesRegex(ValueError, 'source URL'):
+            publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote(source='https://github.com/BareMinimumStudios/remnant'))
+
+    def test_missing_secret_and_blocked_project_refused(self):
+        with self.assertRaisesRegex(ValueError, 'organization secret'):
+            publisher.check_remote([self.entry()], 'guardian', '', self.remote())
+        with self.assertRaisesRegex(ValueError, 'status'):
+            publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote(status='withheld'))
+
+    def test_ambiguous_remote_version_refused(self):
+        with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+            publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote([self.existing(), self.existing()]))
+
+    def test_exact_dated_notes_required(self):
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp); p = repo / 'CHANGELOG.md'
+            p.write_text('## [Unreleased]\n\nChanges\n')
+            with self.assertRaises(ValueError): publisher.release_notes(repo, '0.4.0-alpha.99')
+            p.write_text('## [0.4.0-alpha.99+1.21.1] - 2026-11-19\n\n### Added\n\n- Recovery\n\n## [older]\nPrivate older notes\n')
+            self.assertEqual('### Added\n\n- Recovery\n', publisher.release_notes(repo, '0.4.0-alpha.99'))
+
+    def test_unsafe_or_unknown_target_refused(self):
+        with self.assertRaises(ValueError): publisher.profile(Path('.'), '../../other')
+        with self.assertRaises(ValueError): publisher.release_notes(Path('.'), '0.4.0-alpha.99\nother')
+
+    def test_neoforge_dependencies_do_not_include_fabric(self):
+        self.assertEqual(('kotlin-for-forge', 'fzzy-config'), publisher.DEPENDENCIES['neoforge'])
+
+    def test_fixture_or_duckdb_jar_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'bad.jar'
+            with ZipFile(path, 'w') as archive:
+                archive.writestr('guardian/portprobe/NativeChecks.class', b'private')
+            with self.assertRaisesRegex(ValueError, 'Private test code'):
+                publisher.jar_metadata(path, '1.21.1', 'fabric', '0.4.0-alpha.99+1.21.1', 21)
+            with ZipFile(path, 'w') as archive:
+                archive.writestr('META-INF/jars/duckdb.jar', b'wrong backend')
+            with self.assertRaisesRegex(ValueError, 'SQLite only'):
+                publisher.jar_metadata(path, '1.21.1', 'fabric', '0.4.0-alpha.99+1.21.1', 21)
+
+
+if __name__ == '__main__':
+    unittest.main()

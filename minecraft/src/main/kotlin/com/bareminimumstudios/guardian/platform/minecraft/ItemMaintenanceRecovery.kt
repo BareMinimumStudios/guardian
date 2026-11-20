@@ -75,7 +75,7 @@ object ItemMaintenanceRecovery {
             val receipt=checkNotNull(journal.itemRollbackImages(id)) { "Complete protected inventory images are unavailable" }
             val images=receipt.images
             require(images.record.phase in setOf(ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING,ItemRollbackPhase.RECOVERY_REQUIRED,ItemRollbackPhase.COMPLETED))
-            require(images.record.entries.all { ContainerRollbackPlanner.conserving(it.changes) }) { "Nonconserving journal cannot be repaired" }
+            com.bareminimumstudios.guardian.rollback.ItemRecoveryPolicy.validate(images.record.purpose,images.record.entries)
             val owners=images.original.slots.keys.map { it.owner }.toSet()
             require(owners.size in 1..8 && images.original.slots.count { (address,item) -> images.expected.slots[address]!=item }<=64)
             require((images.original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024)

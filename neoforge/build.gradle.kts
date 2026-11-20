@@ -31,6 +31,7 @@ dependencies {
     implementation("me.fzzyhmstrs:fzzy_config:0.7.6+1.21+neoforge")
     implementation("thedarkcolour:kotlinforforge-neoforge:5.12.0")
     implementation("org.xerial:sqlite-jdbc:${providers.gradleProperty("sqliteJdbcVersion").get()}")
+    add("additionalRuntimeClasspath", "org.xerial:sqlite-jdbc:${providers.gradleProperty("sqliteJdbcVersion").get()}")
     jarJar("org.xerial:sqlite-jdbc") { version { strictly("[3.53.4.0]"); prefer("3.53.4.0") } }
     if (bundleDuckDb) {
         implementation("org.duckdb:duckdb_jdbc:${providers.gradleProperty("duckdbJdbcVersion").get()}")
@@ -56,6 +57,9 @@ tasks.processResources {
 }
 
 evaluationDependsOn(":common")
+// Development runs load source-set outputs instead of the packaged jar.
+neoForge.mods.named("guardian") { sourceSet(project(":common").extensions.getByType<SourceSetContainer>().named("main").get()) }
+
 val commonOutput = project(":common").extensions.getByType<SourceSetContainer>().named("main").map { it.output }
 tasks.jar { from(commonOutput); from(rootProject.file("LICENSE")) }
 java { withSourcesJar() }

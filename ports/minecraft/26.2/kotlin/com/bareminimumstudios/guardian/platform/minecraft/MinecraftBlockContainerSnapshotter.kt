@@ -1,0 +1,83 @@
+package com.bareminimumstudios.guardian.platform.minecraft
+
+import com.bareminimumstudios.guardian.domain.*
+import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
+import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.Container
+import net.minecraft.world.CompoundContainer
+import net.minecraft.world.RandomizableContainer
+import net.minecraft.world.level.block.ChestBlock
+import net.minecraft.world.level.block.state.properties.ChestType
+import net.minecraft.world.level.block.entity.BlockEntity
+
+object MinecraftBlockContainerSnapshotter {
+    /** Item getters can unpack loot. This check must run before reading any slots. */
+    fun hasPendingLoot(container:Container):Boolean = when(container) {
+        is CompoundContainer -> {
+            val parts=container as CompoundContainerAccessor
+            hasPendingLoot(parts.`guardian$first`()) || hasPendingLoot(parts.`guardian$second`())
+        }
+        is RandomizableContainer -> container.lootTable!=null
+        is net.minecraft.world.entity.vehicle.ContainerEntity -> container.containerLootTable!=null
+        else -> false
+    }
+
+    private fun loaded(level: ServerLevel, position: BlockPos) = level.chunkSource.getChunkNow(position.x shr 4, position.z shr 4) != null
+
+    fun resolve(level: ServerLevel, position: BlockPos): Container? {
+        if (!loaded(level, position)) return null
+        val blockEntity = level.getBlockEntity(position) as? Container ?: return null
+        val state = level.getBlockState(position)
+        val block = state.block
+        if (block is ChestBlock) {
+            if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE && !loaded(level, position.relative(ChestBlock.getConnectedDirection(state)))) return null
+            return ChestBlock.getContainer(block, state, level, position, true)
+        }
+        return blockEntity
+    }
+
+    /** Reading a sealed loot container would generate loot; skip it without changing gameplay. */
+    private fun observable(container: Container, level: ServerLevel): Boolean {
+        if (container is CompoundContainer) {
+            val parts = container as CompoundContainerAccessor
+            return observable(parts.`guardian$first`(), level) && observable(parts.`guardian$second`(), level)
+        }
+        if (container !is BlockEntity || container.level !== level || container.isRemoved) return false
+        if (!loaded(level, container.blockPos) || level.getBlockEntity(container.blockPos) !== container) return false
+        return !hasPendingLoot(container)
+    }
+
+    fun capture(container: Container,level: ServerLevel): InventorySnapshot? = captureSelected(container,level,null)
+
+    fun captureSelected(container: Container, level: ServerLevel,wanted: Set<ItemSlotAddress>?): InventorySnapshot? {
+        if (!observable(container, level)) return null
+        require(container.containerSize in 1..ContainerChangesCodec.MAX_SLOTS)
+        val slots = LinkedHashMap<ItemSlotAddress, ItemStackSnapshot>()
+        val items = MinecraftItemSnapshotter.CaptureBatch(level.registryAccess())
+        var retainedBytes=0L
+        for (index in 0 until container.containerSize) {
+            val address = address(container, index, level)
+            if(wanted!=null && address !in wanted) continue
+            require(address !in slots) { "Container aliases a logical slot" }
+            val item=try { items.capture(container.getItem(index)) } catch(error:Exception) { throw InventorySnapshotReadException("container slot "+address.index+" cannot be read ("+error.javaClass.simpleName+")",error) }
+            retainedBytes+=(item.itemData?.size ?: 0)
+            if(wanted!=null) require(retainedBytes<=16L*1024*1024) { "Observation payload budget exceeded" }
+            slots[address] = item
+        }
+        return InventorySnapshot(slots)
+    }
+
+    private fun address(container: Container, index: Int, level: ServerLevel): ItemSlotAddress {
+        if (container is CompoundContainer) {
+            val parts = container as CompoundContainerAccessor
+            val first = parts.`guardian$first`()
+            return if (index < first.containerSize) address(first, index, level)
+            else address(parts.`guardian$second`(), index - first.containerSize, level)
+        }
+        val block = container as BlockEntity
+        val pos = block.blockPos
+        return ItemSlotAddress(ItemSlotOwner.BlockContainer(ResourceId.parse(level.dimension().identifier().toString()), BlockPosition(pos.x, pos.y, pos.z)), index)
+    }
+}

@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, whispers, sessions, commands, spy, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items preview, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, whispers, sessions, commands, spy, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items, recover-items, or status."))
                 1
             }
 
@@ -177,6 +177,22 @@ object GuardianCommands {
             .then(Commands.argument("filters", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, permissions, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
+        root.then(Commands.literal("recover-items").requires { permissions.has(it,ROLLBACK_PERMISSION,3) && permissions.has(it,"guardian.recover.items",3) }
+            .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian recover-items preview u:Player t:10m, apply u:Player t:10m, confirm <token>, reconcile, or cancel. Recovers recorded creative deletions into their unchanged empty slots."));0 }
+            .then(Commands.literal("preview").then(Commands.argument("filters",StringArgumentType.greedyString())
+                .suggests { context,builder -> suggestCreativeRecovery(context.source,builder,permissions) }
+                .executes { context -> executeCreativeRecovery(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),false) }))
+            .then(Commands.literal("apply").then(Commands.argument("filters",StringArgumentType.greedyString())
+                .suggests { context,builder -> suggestCreativeRecovery(context.source,builder,permissions) }
+                .executes { context -> executeCreativeRecovery(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),true) }))
+            .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
+                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .executes { context -> if(runtimeProvider()?.onlineItems()?.confirmCreativeRecovery(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
+            .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
+            .then(Commands.literal("cancel").executes { context ->
+                val cancelled=runtimeProvider()?.onlineItems()?.cancel(context.source)==true || runtimeProvider()?.itemRollbackPreview()?.cancel()==true
+                context.source.sendSystemMessage(Component.literal(if(cancelled)"Guardian: item recovery cancellation requested; started writes remain protected." else "Guardian: no item recovery is active."));if(cancelled)1 else 0
+            }))
         root.then(Commands.literal("rollback-items").requires { permissions.has(it, ROLLBACK_PERMISSION, 3) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian rollback-items preview t:1h r:10, apply t:1h r:10, confirm <token>, reconcile, recovery [operation UUID], or cancel. Apply requires guardian.rollback.items and guardian.rollback.")); 0 }
             .then(Commands.literal("apply").requires { permissions.has(it,"guardian.rollback.items",3) }
@@ -740,6 +756,20 @@ object GuardianCommands {
         return if(recovery.request(source,id,saved)) 1 else 0
     }
 
+    private fun suggestCreativeRecovery(source:CommandSourceStack,builder:com.mojang.brigadier.suggestion.SuggestionsBuilder,permissions:PermissionService):java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+        if(!permissions.has(source,ROLLBACK_PERMISSION,3) || !permissions.has(source,"guardian.recover.items",3))return com.mojang.brigadier.suggestion.Suggestions.empty()
+        val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
+        val token=builder.input.substring(start)
+        return net.minecraft.commands.SharedSuggestionProvider.suggest(com.bareminimumstudios.guardian.command.CreativeRecoveryFilters.suggestions(token,source.server.playerList.players.map { it.gameProfile.name }),builder.createOffset(start))
+    }
+    private fun executeCreativeRecovery(source:CommandSourceStack,raw:String,runtime:GuardianRuntime?,config:GuardianConfig,apply:Boolean):Int {
+        val filter=com.bareminimumstudios.guardian.command.CreativeRecoveryFilters.parse(raw).getOrElse { source.sendFailure(Component.literal(it.message ?: "Use u:<player> t:<time>."));return 0 }
+        val player=source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(filter.actorName,ignoreCase=true) }
+            ?: run { source.sendFailure(Component.literal("Guardian: the player must be online with their personal inventory idle."));return 0 }
+        val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(actorUuid=player.uuid,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0L),limit=51)
+        val max=config.rollback.maxRecords.get().coerceAtMost(50)
+        return if(if(apply)runtime?.onlineItems()?.requestCreativeRecovery(source,query,max)==true else runtime?.itemRollbackPreview()?.requestCreativeRecovery(source,query,max)==true)1 else 0
+    }
     private fun executeItemPreview(source: CommandSourceStack,raw: String,runtime: GuardianRuntime?,config: GuardianConfig,apply: Boolean=false): Int {
         if(apply && runtime?.onlineItems()==null) { source.sendFailure(Component.literal("Guardian online item rollback requires an active persistent journal backend."));return 0 }
         val preview=runtime?.itemRollbackPreview()

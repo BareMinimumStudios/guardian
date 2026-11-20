@@ -39,7 +39,8 @@ claims or mix a newer database with older world/player saves to bypass a refusal
 
 - Reverse complete recorded conserving transfer chains, at most 50 source transactions,
   8 owners, 64 changed final slots and 2 MiB of full original/expected images.
-- Exact supported vanilla block inventories and idle online 41-slot player inventories only.
+- Exact supported vanilla block inventories and idle online player inventories only: 41 slots on 1.21.1/1.21.4/1.21.5,
+  43 slots on the newer experimental targets.
   Refuse unloaded, sealed-loot, unknown/custom, cursor/crafting and conflicting endpoints.
 - Detach native backing lists before asynchronous journal waits. Player items, armor, offhand
   and the private compartment collection all point to the owned views. The backing image is

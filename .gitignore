@@ -20,3 +20,7 @@ logs/
 *.duckdb.*
 .env
 .kotlin/
+
+# Python publishing helpers
+__pycache__/
+*.py[cod]

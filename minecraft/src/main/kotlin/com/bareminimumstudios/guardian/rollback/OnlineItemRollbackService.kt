@@ -23,7 +23,7 @@ internal class OnlineItemRollbackService(
     private val operations: MinecraftItemOperations,
     private val otherBusy: () -> Boolean
 ) {
-    private class Session(val source: CommandSourceStack, val query: ContainerLookupQuery, val max: Int) {
+    private class Session(val source: CommandSourceStack, val query: ContainerLookupQuery, val max: Int,val purpose: ItemRecoveryPurpose) {
         val token = UUID.randomUUID()
         val id = UUID.randomUUID()
         val started = System.nanoTime()
@@ -50,26 +50,32 @@ internal class OnlineItemRollbackService(
             !session.cancelled && System.nanoTime()<=session.deadline) listOf(session.token.toString()) else emptyList()
     }
     private fun currentSource(source: CommandSourceStack) = source.player?.createCommandSourceStack() ?: source
-    private fun permitted(source: CommandSourceStack): Boolean = runCatching {
+    private fun permitted(source: CommandSourceStack,purpose: ItemRecoveryPurpose = active?.purpose ?: ItemRecoveryPurpose.TRANSFER_ROLLBACK): Boolean = runCatching {
         val fresh = currentSource(source)
         (source.player == null || server.playerList.getPlayer(source.player!!.uuid) === source.player) &&
-            permissions.has(fresh,"guardian.rollback.items",3) && permissions.has(fresh,"guardian.rollback",3)
+            permissions.has(fresh,if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION)"guardian.recover.items" else "guardian.rollback.items",3) && permissions.has(fresh,"guardian.rollback",3)
     }.getOrDefault(false)
     private fun sameRequester(a: CommandSourceStack, b: CommandSourceStack) =
         if (a.player != null || b.player != null) a.player?.uuid == b.player?.uuid else (a as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`() ===
             (b as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`()
 
-    fun request(source: CommandSourceStack, query: ContainerLookupQuery, max: Int): Boolean {
+    fun request(source: CommandSourceStack, query: ContainerLookupQuery, max: Int): Boolean = requestFor(source,query,max,ItemRecoveryPurpose.TRANSFER_ROLLBACK)
+    fun requestCreativeRecovery(source: CommandSourceStack,query: ContainerLookupQuery,max:Int):Boolean = requestFor(source,query,max,ItemRecoveryPurpose.CREATIVE_DELETION)
+    private fun requestFor(source: CommandSourceStack, query: ContainerLookupQuery, max: Int,purpose: ItemRecoveryPurpose): Boolean {
         check(server.isSameThread)
-        if (stopped || !permitted(source)) return fail(source,"Requires guardian.rollback.items and guardian.rollback, or operator level 3.")
+        if (stopped || !permitted(source,purpose)) return fail(source,"Requires ${if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "guardian.recover.items" else "guardian.rollback.items"} and guardian.rollback, or operator level 3.")
         if (active != null || otherBusy()) return fail(source,"Another recovery or maintenance operation is active.")
-        val session = Session(source,query,max.coerceIn(1,50)); active = session
+        val session = Session(source,query,max.coerceIn(1,50),purpose); active = session
         source.sendSystemMessage(Component.literal("Guardian: selecting item transactions for confirmation; no items changed."))
         fence(session) {
-            history.lookupContainers(query.copy(limit=session.max+1,offset=0,oldestFirst=false), { rows ->
+            history.lookupContainers(query.copy(limit=session.max+1,offset=0,oldestFirst=false), { found ->
+                val rows=if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION) found.filter { it.action==ContainerAction.CREATIVE_SET } else found
                 if (!valid(session)) return@lookupContainers
-                if (rows.isEmpty() || rows.size > session.max || rows.sumOf { it.changes.size } > 2048) {
+                if (rows.isEmpty() || found.size > session.max || rows.sumOf { it.changes.size } > 2048) {
                     refuse(session,"No transactions or too many transactions match. Narrow the filters."); return@lookupContainers
+                }
+                if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION && (query.actorUuid==null || rows.any { !ItemRecoveryPolicy.transaction(purpose,it) })) {
+                    refuse(session,"Recovery requires one online player and recorded creative item-to-empty deletions. Narrow the time window.");return@lookupContainers
                 }
                 val owners = rows.flatMap { it.changes.map { change -> change.address.owner } }.toSet()
                 if (owners.size > 32 || owners.any { it !is ItemSlotOwner.BlockContainer && it !is ItemSlotOwner.PlayerInventory } ||
@@ -78,17 +84,19 @@ internal class OnlineItemRollbackService(
                 }
                 session.rows = rows.toList()
                 session.deadline = System.nanoTime()+TimeUnit.SECONDS.toNanos(30)
-                source.sendSystemMessage(Component.literal("Guardian: ${rows.size} item transactions selected. Close all open menus, then /guardian rollback-items confirm ${session.token} within 30 seconds. Eligibility and complete inventory contents are checked before writing."))
+                source.sendSystemMessage(Component.literal("Guardian: ${rows.size} item transactions selected. Close all open menus, then /guardian ${if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} confirm ${session.token} within 30 seconds. Eligibility and complete inventory contents are checked before writing."))
             }, { refuse(session,"Item history lookup failed.") })
         }
         return true
     }
 
-    fun confirm(source: CommandSourceStack, token: String): Boolean {
+    fun confirm(source: CommandSourceStack, token: String): Boolean = confirmFor(source,token,ItemRecoveryPurpose.TRANSFER_ROLLBACK)
+    fun confirmCreativeRecovery(source: CommandSourceStack,token:String):Boolean = confirmFor(source,token,ItemRecoveryPurpose.CREATIVE_DELETION)
+    private fun confirmFor(source: CommandSourceStack, token: String,purpose:ItemRecoveryPurpose): Boolean {
         check(server.isSameThread)
-        val session = active ?: return fail(source,"No item rollback awaits confirmation.")
-        if (!sameRequester(session.source,source) || token != session.token.toString() || !valid(session) ||
-            session.rows == null || session.preparing || session.host != null) return fail(source,"Invalid, expired or unavailable item rollback confirmation.")
+        val session = active ?: return fail(source,"No item recovery or rollback awaits confirmation.")
+        if (session.purpose!=purpose || !sameRequester(session.source,source) || token != session.token.toString() || !valid(session) ||
+            session.rows == null || session.preparing || session.host != null) return fail(source,"Invalid, expired or unavailable confirmation for this command.")
         session.confirmedAt=System.nanoTime()
         session.preparing = true
         session.deadline = System.nanoTime()+TimeUnit.SECONDS.toNanos(10)
@@ -97,12 +105,12 @@ internal class OnlineItemRollbackService(
             .getOrElse { refuse(session,"Inventory observation could not be established."); return false }
         fence(session) {
             val prepareStarted=System.nanoTime()
-            history.prepareItemRollback(session.id,System.currentTimeMillis(),rows,{ record ->
+            prepare(session,rows,{ record ->
                 OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted)
                 if (!valid(session) || session.watch?.changedOwners()?.isNotEmpty() != false) {
                     history.cancelPreparedItemRollback(session.id, { clear(session) }, { clear(session) })
                     fail(session.source,"Item rollback admission cancelled. No item setters ran; inspect recovery journal ${session.id} if claims remain.")
-                    return@prepareItemRollback
+                    return@prepare
                 }
                 session.applyStartedAt=System.nanoTime()
                 try {
@@ -110,7 +118,7 @@ internal class OnlineItemRollbackService(
                     session.host = checkNotNull(operations.admitOwned(record) { !stopped && !session.cancelled && permitted(session.source) })
                     session.watch?.close(); session.watch = null
                     session.deadline = Long.MAX_VALUE
-                    session.source.sendSystemMessage(Component.literal("Guardian: applying item rollback ${session.id}. Inventory actions are temporarily paused while saving."))
+                    session.source.sendSystemMessage(Component.literal("Guardian: applying item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} ${session.id}. Inventory actions are temporarily paused while saving."))
                 } catch (error: Exception) {
                     history.cancelPreparedItemRollback(session.id,{ clear(session) },{ clear(session) })
                     fail(session.source,"Item rollback refused before apply: ${error.message?.take(180) ?: "unsupported inventory"}. Recovery journal: ${session.id}.")
@@ -120,6 +128,10 @@ internal class OnlineItemRollbackService(
         return true
     }
 
+    private fun prepare(session:Session,rows:List<ContainerTransactionSnapshot>,success:(ItemRollbackRecord)->Unit,failure:(Throwable)->Unit) {
+        if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) history.prepareCreativeRecovery(session.id,System.currentTimeMillis(),rows,success,failure)
+        else history.prepareItemRollback(session.id,System.currentTimeMillis(),rows,success,failure)
+    }
     /** Reconciliation observes actual saved images. It never retries partial slot writes. */
     fun reconcile(source: CommandSourceStack): Boolean {
         val session = active ?: return fail(source,"No retained online operation is available in this process. Use recovery saved <UUID> after a restart.")
@@ -148,13 +160,13 @@ internal class OnlineItemRollbackService(
         when (host.state) {
             ItemOperationState.COMPLETED -> {
                 recordOutcome(session)
-                if (permitted(session.source)) session.source.sendSystemMessage(Component.literal("Guardian item rollback completed and saved: ${session.rows!!.size} transactions. Operation ${session.id}."))
+                if (permitted(session.source)) session.source.sendSystemMessage(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} completed and saved: ${session.rows!!.size} transactions. Operation ${session.id}."))
                 clear(session)
             }
             ItemOperationState.RECOVERY_REQUIRED -> if (!session.reportedRecovery) {
                 recordOutcome(session)
                 session.reportedRecovery=true
-                if (permitted(session.source)) fail(session.source,"Operation ${session.id} needs recovery; inventories remain protected. Use /guardian rollback-items reconcile, or recovery saved ${session.id}. Partial writes are never replayed automatically.")
+                if (permitted(session.source)) fail(session.source,"Operation ${session.id} needs recovery; inventories remain protected. Use /guardian ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} reconcile, or recovery saved ${session.id}. Partial writes are never replayed automatically.")
             }
             else -> Unit
         }
@@ -186,7 +198,7 @@ internal class OnlineItemRollbackService(
     }
     private fun clear(session: Session) { if(active !== session)return;recordOutcome(session);session.watch?.close();session.barrier?.cancel();active=null }
     private fun refuse(session: Session, message: String) { if(active !== session)return;fail(session.source,message+" No items changed.");clear(session) }
-    private fun fail(source: CommandSourceStack, message: String): Boolean { source.sendFailure(Component.literal("Guardian item rollback: $message"));return false }
+    private fun fail(source: CommandSourceStack, message: String): Boolean { source.sendFailure(Component.literal("Guardian item operation: $message"));return false }
     private fun inside(owner: ItemSlotOwner.BlockContainer, query: ContainerLookupQuery): Boolean {
         if(owner.dimension!=query.dimension)return false
         query.bounds?.let { return it.contains(owner.position) }

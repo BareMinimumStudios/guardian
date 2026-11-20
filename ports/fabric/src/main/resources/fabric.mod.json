@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "guardian",
+  "version": "${version}",
+  "name": "Guardian",
+  "description": "Find who changed blocks or moved items. Inspect history in-game and undo supported changes. Server-side for Fabric and NeoForge.",
+  "authors": [
+    "Bare Minimum Studios"
+  ],
+  "license": "Bare Minimum License (BML) v1.0",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "com.bareminimumstudios.guardian.Guardian"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "${minecraftVersion}",
+    "java": ">=${javaVersion}",
+    "fabric-api": "*",
+    "fabric-language-kotlin": ">=1.14.2+kotlin.2.4.21",
+    "fzzy_config": ">=${fzzyBaseVersion}"
+  },
+  "suggests": {
+    "luckperms": "*",
+    "worldedit": "*",
+    "guardian-worldedit": "*",
+    "fabric-permissions-api-v0": "*"
+  },
+  "mixins": [
+    "guardian.mixins.json"
+  ],
+  "icon": "assets/guardian/icon.png",
+  "contact": {
+    "homepage": "https://github.com/BareMinimumStudios/guardian",
+    "sources": "https://github.com/BareMinimumStudios/guardian",
+    "issues": "https://github.com/BareMinimumStudios/guardian/issues"
+  }
+}

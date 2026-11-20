@@ -328,3 +328,12 @@ For LuckPerms, grant individual nodes, for example:
 Item apply needs both `guardian.rollback` and `guardian.rollback.items`.
 Export needs `guardian.export` plus the selected history category's permission.
 Inspecting item frames also needs `guardian.entities`.
+
+## Recover creative deletions
+
+Use `/guardian recover-items preview u:Alex t:10m`, then `apply` with the same filters
+and `confirm <token>` using the returned token. The player must be online with the
+recorded deleted slots empty, menus closed and nothing on the cursor or crafting grid.
+This restores supported creative deletions Guardian recorded, not a whole past inventory.
+Only one player and a time window are accepted; radius filters do not apply.
+See the [creative recovery guide](CREATIVE_ITEM_RECOVERY.md) for requirements and refusals.

@@ -9,7 +9,7 @@ recorded rollback; it does not undo it, recover arbitrary lost items or provide 
 
 1. Stop the server normally if it is still running. Keep the matching world, player files,
    Guardian configuration and `guardian.sqlite` together. Use the same server installation,
-   world selection, mods and Minecraft 1.21.1 version. Keep a stopped-server backup before
+   world selection, mods and exact Minecraft version used to record the rollback. Keep a stopped-server backup before
    repair. Guardian's normal startup refusal reports the unresolved operation UUID; the
    online `/guardian rollback-items recovery` diagnostics also list retained operations.
 2. Add this **JVM argument**, replacing the placeholder with that exact UUID:
@@ -36,6 +36,11 @@ recorded rollback; it does not undo it, recover arbitrary lost items or provide 
    durable completion receipt must verify before protection is released. Neither maintenance
    run starts gameplay or accepts player connections. Success exits with code 0; refusal
    exits with code 2. These markers appear in the server log/console.
+Keep normal startup and other file-changing tools stopped between preview and apply. Even a
+normal startup that refuses gameplay can resave region data during shutdown. If a staged
+file changes, recovery refuses it; rerunning preview does not discard the existing plan.
+Preserve the database, files and recovery copies for review rather than deleting protection.
+
 5. Remove the maintenance argument, then start normally. If more protected operations exist,
    startup reports the next one; preview and confirm each separately.
 
@@ -74,7 +79,9 @@ Never delete journal rows or recovery copies to bypass a refusal.
 
 ## Limits
 
-SQLite only; supported exact vanilla block inventories and recorded 41-slot player images.
+SQLite only; supported exact vanilla block inventories and complete recorded player images.
+The baseline and 1.21.4/1.21.5 use 41 slots; newer experimental targets use 43.
+Recovery requires the same Minecraft data version as the recorded images.
 The online limits remain 50 source transactions, 8 inventories, 64 final changed slots and
 2 MiB of full inventory snapshot data. New online operations save their original images
 before admitting item writes and validate the expected native recovery representation.

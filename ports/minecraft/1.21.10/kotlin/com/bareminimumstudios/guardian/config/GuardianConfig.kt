@@ -1,0 +1,160 @@
+package com.bareminimumstudios.guardian.config
+
+import com.bareminimumstudios.guardian.GuardianConstants
+import com.bareminimumstudios.guardian.storage.StorageBackendType
+import me.fzzyhmstrs.fzzy_config.annotations.Action
+import me.fzzyhmstrs.fzzy_config.annotations.AdminAccess
+import me.fzzyhmstrs.fzzy_config.annotations.RequiresAction
+import me.fzzyhmstrs.fzzy_config.annotations.Version
+import me.fzzyhmstrs.fzzy_config.annotations.WithCustomPerms
+import me.fzzyhmstrs.fzzy_config.config.Config
+import me.fzzyhmstrs.fzzy_config.config.ConfigSection
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedEnum
+import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
+import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
+import net.minecraft.resources.ResourceLocation
+
+@Version(19)
+@AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
+@WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
+class GuardianConfig : Config(ResourceLocation.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
+
+    var general = General()
+    class General : ConfigSection() {
+        @RequiresAction(Action.RESTART)
+        var enabled = ValidatedBoolean(true)
+
+        @RequiresAction(Action.RESTART)
+        var verboseStartup = ValidatedBoolean(false)
+    }
+
+    var logging = Logging()
+    class Logging : ConfigSection() {
+        /** Live master switch for capture. Storage/history remain available while disabled. */
+        var enabled = ValidatedBoolean(true)
+
+        /** Player-originated primary block placement and break capture (Step 2B). */
+        var playerBlockChanges = ValidatedBoolean(true)
+
+        /** Supported player and automated item transactions (Step 4). */
+        var containerTransactions = ValidatedBoolean(true)
+
+        /** Opt-in block-to-block hopper capture while broader load/gameplay acceptance is pending. */
+        var automatedContainerTransfers = ValidatedBoolean(false)
+
+        /** Accepted player edits on either side of supported signs. */
+        var signTextChanges = ValidatedBoolean(false)
+
+        /** Read-only accepted lectern book, page and opening history. */
+        var lecternInteractions = ValidatedBoolean(false)
+    }
+
+    var environment = Environment()
+    class Environment : ConfigSection() {
+        /** Supported ignition, spread, burning and extinguishing. */
+        var fire = ValidatedBoolean(false)
+        /** Actual block changes during standard explosion finalization. */
+        var explosions = ValidatedBoolean(false)
+        var growth = ValidatedBoolean(false)
+        var leafDecay = ValidatedBoolean(false)
+        var pistons = ValidatedBoolean(false)
+        var fallingBlocks = ValidatedBoolean(false)
+    }
+
+    var fluids = Fluids()
+    class Fluids : ConfigSection() {
+        /** Read-only history for persistent changes through supported player bucket paths. */
+        var bucketChanges = ValidatedBoolean(false)
+        /** Natural flow can generate many records; attribution is bounded and temporary. */
+        var naturalFlow = ValidatedBoolean(false)
+    }
+
+    var entities = Entities()
+    class Entities : ConfigSection() {
+        /** Opt in separately; busy mob farms can generate substantial death history. */
+        var deaths = ValidatedBoolean(false)
+        var nameChanges = ValidatedBoolean(false)
+        var taming = ValidatedBoolean(false)
+        var breeding = ValidatedBoolean(false)
+        var itemFrames = ValidatedBoolean(false)
+    }
+
+    var activity = Activity()
+    class Activity : ConfigSection() {
+        /** Public chat only; off until the server owner opts in. */
+        var chat = ValidatedBoolean(false)
+        /** Private vanilla message dispatches. Separate permission and explicit server disclosure required. */
+        var whispers = ValidatedBoolean(false)
+        /** Staff must also opt in with /guardian spy and retain category/spy permissions. */
+        var liveSpy = ValidatedBoolean(false)
+        var sessions = ValidatedBoolean(true)
+        /** Parsed player-source commands only. Argument capture requires a separate opt-in. */
+        var commands = ValidatedBoolean(false)
+        var commandArguments = ValidatedBoolean(false)
+        /** Additional comma-separated roots, at most 64. Invalid entries fail closed. */
+        var commandExcludedRoots = ValidatedString("")
+    }
+
+    var storage = Storage()
+    class Storage : ConfigSection() {
+        @RequiresAction(Action.RESTART)
+        var backend = ValidatedEnum(StorageBackendType.SQLITE)
+
+        @RequiresAction(Action.RESTART)
+        var sqliteFile = ValidatedString("guardian.sqlite", "[A-Za-z0-9._-]+")
+
+        @RequiresAction(Action.RESTART)
+        var duckDbFile = ValidatedString("guardian.duckdb", "[A-Za-z0-9._-]+")
+
+        var warnWhenNonPersistent = ValidatedBoolean(true)
+    }
+
+    var performance = Performance()
+    class Performance : ConfigSection() {
+        @RequiresAction(Action.RESTART)
+        var queueCapacity = ValidatedInt(16_384, 1_000_000, 1_024)
+
+        @RequiresAction(Action.RESTART)
+        var batchSize = ValidatedInt(256, 8_192, 1)
+
+        @RequiresAction(Action.RESTART)
+        var flushIntervalMillis = ValidatedInt(1_000, 60_000, 50)
+    }
+
+    var lookup = Lookup()
+    class Lookup : ConfigSection() {
+        var defaultResults = ValidatedInt(10, 100, 1)
+        var maxResults = ValidatedInt(500, 10_000, 1)
+        var inspectorResults = ValidatedInt(10, 100, 1)
+        var maxRadius = ValidatedInt(100, 10_000, 0)
+    }
+
+    var rollback = Rollback()
+    class Rollback : ConfigSection() {
+        var defaultRadius = ValidatedInt(10, 100, 0)
+        var maxRadius = ValidatedInt(100, 10_000, 0)
+        var maxRecords = ValidatedInt(5_000, 9_999, 1)
+        var blocksPerTick = ValidatedInt(100, 2_000, 1)
+    }
+
+    var integrations = Integrations()
+    class Integrations : ConfigSection() {
+        var detectWorldEdit = ValidatedBoolean(true)
+
+        /** WorldEdit edit-session logging through the optional guardian-worldedit adapter. */
+        var worldEditLogging = ValidatedBoolean(true)
+
+        /** Enables r:#worldedit and r:#we cuboid selection filters when the adapter is installed. */
+        var worldEditSelections = ValidatedBoolean(true)
+
+        @RequiresAction(Action.RESTART)
+        var worldEditMaxChangesPerOperation = ValidatedInt(100_000, 1_000_000, 1_000)
+
+        @RequiresAction(Action.RESTART)
+        var worldEditMaxPendingOperations = ValidatedInt(2, 16, 1)
+
+        @RequiresAction(Action.RESTART)
+        var usePermissionApi = ValidatedBoolean(true)
+    }
+}

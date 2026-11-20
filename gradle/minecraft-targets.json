@@ -10,7 +10,7 @@
       "fabric",
       "neoforge"
     ],
-    "checkpoint": "0.4.0-alpha.96+1.21.1"
+    "checkpoint": "0.4.0-alpha.98+1.21.1"
   },
   "firstPort": "26.2",
   "targets": [
@@ -20,11 +20,17 @@
       "referenceVersion": "1.2.8-1.21.4",
       "referenceId": "8aAg6tyo",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/8aAg6tyo",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/87fcc1eec25874d12bca737d6579a247ce2d2746/1.21.4.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.4"
+      "referenceReleaseFamily": "1.21.4",
+      "buildProfile": "1.21.4",
+      "automatedTests": 943,
+      "nativeProbeChecks": 115,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.4"
     },
     {
       "minecraft": "1.21.4",
@@ -32,11 +38,17 @@
       "referenceVersion": "1.2.8-1.21.4",
       "referenceId": "N9PKngXe",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/N9PKngXe",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/87fcc1eec25874d12bca737d6579a247ce2d2746/1.21.4.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.4"
+      "referenceReleaseFamily": "1.21.4",
+      "buildProfile": "1.21.4",
+      "automatedTests": 943,
+      "nativeProbeChecks": 116,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.4"
     },
     {
       "minecraft": "1.21.5",
@@ -44,11 +56,17 @@
       "referenceVersion": "1.2.8-1.21.5",
       "referenceId": "o6zJ9ctJ",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/o6zJ9ctJ",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/deed2dfe12bd2f6dd3397178c68ce07d0a8f2604/1.21.5.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.5"
+      "referenceReleaseFamily": "1.21.5",
+      "buildProfile": "1.21.5",
+      "automatedTests": 945,
+      "nativeProbeChecks": 118,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.5"
     },
     {
       "minecraft": "1.21.5",
@@ -56,11 +74,17 @@
       "referenceVersion": "1.2.8-1.21.5",
       "referenceId": "4Xe23PAw",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/4Xe23PAw",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/deed2dfe12bd2f6dd3397178c68ce07d0a8f2604/1.21.5.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.5"
+      "referenceReleaseFamily": "1.21.5",
+      "buildProfile": "1.21.5",
+      "automatedTests": 945,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.5"
     },
     {
       "minecraft": "1.21.6",
@@ -68,11 +92,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "WJSu6UwK",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/WJSu6UwK",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/207b4f08c3f45142111bfc385be1fb6ac29a35df/1.21.6.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.6",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.6"
     },
     {
       "minecraft": "1.21.6",
@@ -80,11 +110,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "QKDUKDRk",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/QKDUKDRk",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/207b4f08c3f45142111bfc385be1fb6ac29a35df/1.21.6.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.6",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.6"
     },
     {
       "minecraft": "1.21.7",
@@ -92,11 +128,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "WJSu6UwK",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/WJSu6UwK",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/48c9b004f6add2f9dca3cca46cb036d1bed91cb4/1.21.7.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.7",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.7"
     },
     {
       "minecraft": "1.21.7",
@@ -104,11 +146,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "QKDUKDRk",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/QKDUKDRk",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/48c9b004f6add2f9dca3cca46cb036d1bed91cb4/1.21.7.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.7",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.7"
     },
     {
       "minecraft": "1.21.8",
@@ -116,11 +164,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "WJSu6UwK",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/WJSu6UwK",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/7493ff7be80f54b68cd7a9a9cdfb5a1392aaa1a1/1.21.8.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.8",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.8"
     },
     {
       "minecraft": "1.21.8",
@@ -128,11 +182,17 @@
       "referenceVersion": "1.2.9-1.21.6",
       "referenceId": "QKDUKDRk",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/QKDUKDRk",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/7493ff7be80f54b68cd7a9a9cdfb5a1392aaa1a1/1.21.8.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.6-1.21.8"
+      "referenceReleaseFamily": "1.21.6-1.21.8",
+      "buildProfile": "1.21.8",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.8"
     },
     {
       "minecraft": "1.21.9",
@@ -140,11 +200,17 @@
       "referenceVersion": "1.2.9-1.21.9",
       "referenceId": "W00iASFN",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/W00iASFN",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/1b06d2917e16b01b311a74e6e3abf644f390249c/1.21.9.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.9-1.21.10"
+      "referenceReleaseFamily": "1.21.9-1.21.10",
+      "buildProfile": "1.21.9",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.9"
     },
     {
       "minecraft": "1.21.9",
@@ -152,11 +218,17 @@
       "referenceVersion": "1.2.9-1.21.9",
       "referenceId": "6VwFUHXW",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/6VwFUHXW",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/1b06d2917e16b01b311a74e6e3abf644f390249c/1.21.9.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.9-1.21.10"
+      "referenceReleaseFamily": "1.21.9-1.21.10",
+      "buildProfile": "1.21.9",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.9"
     },
     {
       "minecraft": "1.21.10",
@@ -164,11 +236,17 @@
       "referenceVersion": "1.2.9-1.21.9",
       "referenceId": "W00iASFN",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/W00iASFN",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/1dcba28d18f2f8d1ac8611bf1c4d6273e8891f4c/1.21.10.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.9-1.21.10"
+      "referenceReleaseFamily": "1.21.9-1.21.10",
+      "buildProfile": "1.21.10",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.10"
     },
     {
       "minecraft": "1.21.10",
@@ -176,11 +254,17 @@
       "referenceVersion": "1.2.9-1.21.9",
       "referenceId": "6VwFUHXW",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/6VwFUHXW",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/1dcba28d18f2f8d1ac8611bf1c4d6273e8891f4c/1.21.10.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.9-1.21.10"
+      "referenceReleaseFamily": "1.21.9-1.21.10",
+      "buildProfile": "1.21.10",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.10"
     },
     {
       "minecraft": "1.21.11",
@@ -188,11 +272,17 @@
       "referenceVersion": "19.1.1",
       "referenceId": "DtRNcTw4",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/DtRNcTw4",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/812ee7fdfdf648bb872f7a1dca33718de4e786b4/1.21.11.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.11"
+      "referenceReleaseFamily": "1.21.11",
+      "buildProfile": "1.21.11",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.11"
     },
     {
       "minecraft": "1.21.11",
@@ -200,11 +290,17 @@
       "referenceVersion": "19.1.1",
       "referenceId": "Gi0K1Nwh",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/Gi0K1Nwh",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 21,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/812ee7fdfdf648bb872f7a1dca33718de4e786b4/1.21.11.json",
       "mappingMode": "mojang",
-      "referenceReleaseFamily": "1.21.11"
+      "referenceReleaseFamily": "1.21.11",
+      "buildProfile": "1.21.11",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+1.21.11"
     },
     {
       "minecraft": "26.1.2",
@@ -212,11 +308,17 @@
       "referenceVersion": "20.1.4",
       "referenceId": "xSeLw3Kh",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/xSeLw3Kh",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 25,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/0bbfbdb8272531060afbba5c671fe4ed3dd6f72f/26.1.2.json",
       "mappingMode": "unobfuscated",
-      "referenceReleaseFamily": "26.1.2"
+      "referenceReleaseFamily": "26.1.2",
+      "buildProfile": "26.1.2",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+26.1.2"
     },
     {
       "minecraft": "26.1.2",
@@ -224,11 +326,17 @@
       "referenceVersion": "20.1.4",
       "referenceId": "P8pPh0Yw",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/P8pPh0Yw",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 25,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/0bbfbdb8272531060afbba5c671fe4ed3dd6f72f/26.1.2.json",
       "mappingMode": "unobfuscated",
-      "referenceReleaseFamily": "26.1.2"
+      "referenceReleaseFamily": "26.1.2",
+      "buildProfile": "26.1.2",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+26.1.2"
     },
     {
       "minecraft": "26.2",
@@ -236,11 +344,17 @@
       "referenceVersion": "21.1.7",
       "referenceId": "QkjRJ094",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/QkjRJ094",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 25,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/f28ad96ed5d65e2438da836144a3de15bb9cafe7/26.2.json",
       "mappingMode": "unobfuscated",
-      "referenceReleaseFamily": "26.2"
+      "referenceReleaseFamily": "26.2",
+      "buildProfile": "26.2",
+      "automatedTests": 943,
+      "nativeProbeChecks": 119,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+26.2"
     },
     {
       "minecraft": "26.2",
@@ -248,11 +362,17 @@
       "referenceVersion": "21.1.7",
       "referenceId": "v5UxUtdz",
       "referenceUrl": "https://modrinth.com/mod/grieflogger/version/v5UxUtdz",
-      "status": "planned",
+      "status": "experimental-acceptance-pending",
       "java": 25,
       "mojangManifest": "https://piston-meta.mojang.com/v1/packages/f28ad96ed5d65e2438da836144a3de15bb9cafe7/26.2.json",
       "mappingMode": "unobfuscated",
-      "referenceReleaseFamily": "26.2"
+      "referenceReleaseFamily": "26.2",
+      "buildProfile": "26.2",
+      "automatedTests": 943,
+      "nativeProbeChecks": 120,
+      "rollbackValidation": "docs/PORT_VALIDATION.md",
+      "nativeRollbackRecovery": "selected-scenarios-passed",
+      "checkpoint": "0.4.0-alpha.98+26.2"
     }
   ],
   "notes": [

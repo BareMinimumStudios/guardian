@@ -32,24 +32,25 @@ object ContainerRollbackPlanner {
         live: InventorySnapshot,
         unavailable: Set<ItemSlotOwner> = emptySet(),
         outsideScope: Set<ItemSlotOwner> = emptySet(),
-        historyGuard: ContainerHistoryGuard = ContainerHistoryGuard()
+        historyGuard: ContainerHistoryGuard = ContainerHistoryGuard(),
+        purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK
     ): ContainerRollbackPreview {
         require(newestFirst.size <= 50) { "Item preview exceeds the transaction budget" }
         require(newestFirst.map { it.transactionId }.distinct().size == newestFirst.size) { "Duplicate preview transaction" }
         require(newestFirst.zipWithNext().all { (a,b) -> a.timestampEpochMillis >= b.timestampEpochMillis }) { "Preview must be newest first" }
         val ambiguous = newestFirst.groupBy { it.timestampEpochMillis }.values.flatMap { group ->
-            val repeatedOwners = group.flatMap { it.changes.map { change -> change.address.owner }.distinct() }.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
-            group.filter { value -> value.changes.any { it.address.owner in repeatedOwners } }.map { it.transactionId }
+            val repeatedOwners = group.flatMap { row -> row.changes.map { change -> if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION) change.address else change.address.owner }.distinct() }.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+            group.filter { value -> value.changes.any { (if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION) it.address else it.address.owner) in repeatedOwners } }.map { it.transactionId }
         }.toSet()
         val virtual = live.slots.toMutableMap()
         val blocked = mutableSetOf<ItemSlotOwner>()
         val entries = newestFirst.map { value ->
             val owners = value.changes.map { it.address.owner }.toSet()
             val reason = when {
-                value.action !in actions -> ContainerPreviewReason.UNSUPPORTED_ACTION
+                !ItemRecoveryPolicy.transaction(purpose,value) && (purpose==ItemRecoveryPurpose.CREATIVE_DELETION || value.action !in actions) -> ContainerPreviewReason.UNSUPPORTED_ACTION
                 value.transactionId in ambiguous -> ContainerPreviewReason.AMBIGUOUS_ORDER
                 !supported(value) -> ContainerPreviewReason.UNSUPPORTED_OWNER
-                !conserving(value) -> ContainerPreviewReason.NONCONSERVING_ACTION
+                purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK && !conserving(value) -> ContainerPreviewReason.NONCONSERVING_ACTION
                 value.transactionId in historyGuard.incompleteTransactions -> ContainerPreviewReason.INCOMPLETE_HISTORY
                 value.transactionId in historyGuard.claimedTransactions -> ContainerPreviewReason.CLAIMED_SOURCE
                 owners.any { it in historyGuard.reservedOwners } -> ContainerPreviewReason.RESERVED_OWNER

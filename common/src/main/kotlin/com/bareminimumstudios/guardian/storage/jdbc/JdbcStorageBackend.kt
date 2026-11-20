@@ -499,6 +499,9 @@ abstract class JdbcStorageBackend(
     override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst)
     }
+    override fun prepareCreativeRecovery(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst,com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CREATIVE_DELETION)
+    }
     override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).protect(record)
     }

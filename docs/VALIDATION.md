@@ -1,7 +1,36 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.96+1.21.1**. Schema 26, config version 19.
+Current executable checkpoint: **0.4.0-alpha.99+1.21.1**. Schema 27, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Alpha.99 creative item recovery
+
+All 22 selected Minecraft/loader pairs passed eight native stages: creative deletion
+capture and confirmed recovery, interrupted partial save, protected startup, maintenance
+preview, wrong-token refusal, repair, idempotent retry and restart readback. Tests use
+actual server-player packet handling with synthetic identities and no connected client.
+Names, damage, full saved-slot images, permanent source claims and SQLite integrity are
+checked. Preview, refusal and retry preserve native inventory file hashes.
+
+The baseline clean build passes 828 automated tests. Each newer target passes 951 tests,
+except 1.21.5 with 953, including additional equipment tests. The repeated baseline build reuses
+its configuration cache, and the separate Fabric 1.21.1 WorldEdit adapter build passes.
+
+Schema 27 persists separate creative-recovery authority. Existing schema-26 transfer
+journals and protected images migrate without gaining recreation authority; normal
+transfer rollback still requires item conservation. SQLite and the optional DuckDB
+backend are covered by migration tests. Config version 19 is unchanged.
+
+[Evidence](validation/creative-recovery-alpha99.json) records the version/loader matrix
+and exact limits. This does not certify real-client UI, permission providers, modpacks
+or every possible crash boundary. Full historical inventory backups remain unsupported.
+
+## Alpha.98 rollback review
+
+Native block rollback/redo and restart checks passed on both baseline loaders. The review
+fixed unchanged-state block-entity restoration and the baseline development launch classpath.
+Newer-version item rollback, process interruption and targeted recovery checks are recorded
+separately in [port validation](PORT_VALIDATION.md). Schema 26/config 19 are unchanged.
 
 ## Transaction and item rollback optimization
 

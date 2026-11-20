@@ -1,0 +1,201 @@
+package com.bareminimumstudios.guardian.rollback
+
+import com.bareminimumstudios.guardian.logging.OperationTimings
+import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
+import com.bareminimumstudios.guardian.domain.*
+import com.bareminimumstudios.guardian.lookup.BlockHistoryService
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftBlockContainerSnapshotter
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventorySnapshotter
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.ResourceKey
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.server.MinecraftServer
+import net.minecraft.network.chat.Component
+import org.slf4j.LoggerFactory
+import java.util.ArrayDeque
+
+/** One inventory read per tick, bounded preview only. No slot setters or journal writes. */
+class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: com.bareminimumstudios.guardian.logging.BufferedLogPipeline,private val permissions: com.bareminimumstudios.guardian.permission.PermissionService,private val otherBusy: () -> Boolean = { false }) {
+    private val logger = LoggerFactory.getLogger("Guardian/ItemRollbackPreview")
+    private var active: Session? = null
+
+    fun isBusy()=active!=null
+
+    fun request(source: CommandSourceStack,query: ContainerLookupQuery,maxRecords:Int=50):Boolean = requestFor(source,query,maxRecords,ItemRecoveryPurpose.TRANSFER_ROLLBACK)
+    fun requestCreativeRecovery(source:CommandSourceStack,query:ContainerLookupQuery,maxRecords:Int=50):Boolean = requestFor(source,query,maxRecords,ItemRecoveryPurpose.CREATIVE_DELETION)
+    private fun requestFor(source: CommandSourceStack, query: ContainerLookupQuery, maxRecords: Int,purpose:ItemRecoveryPurpose): Boolean {
+        require(maxRecords in 1..50)
+        if(!permitted(source,purpose)) { source.sendFailure(Component.literal("Guardian: item check requires guardian.rollback permission or operator level 3."));return false }
+        if (active != null || otherBusy()) { source.sendFailure(Component.literal("Guardian already has an item rollback preview in progress.")); return false }
+        val session = Session(source,query,purpose)
+        active = session
+        source.sendSystemMessage(Component.literal("Guardian: checking item rollback candidates; no items will be changed..."))
+        val fenceStarted=System.nanoTime()
+        session.barrier=pipeline.writeBarrier()
+        session.barrier!!.result.whenComplete { _, error -> server.execute {
+            OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
+            if(!authorize(session)) return@execute
+            if(error != null) refuse(session,"Accepted audit writes could not be confirmed; see storage status.")
+            else lookup(session,maxRecords)
+        } }
+        return true
+    }
+
+    private fun lookup(session: Session,maxRecords: Int) {
+        val query=session.query
+        history.lookupContainers(query.copy(limit=maxRecords+1,offset=0,oldestFirst=false), { found ->
+            val rows=if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION)found.filter { it.action==ContainerAction.CREATIVE_SET } else found
+            if (!authorize(session)) return@lookupContainers
+            if (found.size > maxRecords) { refuse(session,"More than $maxRecords transactions match. Narrow t:, r:, or u:."); return@lookupContainers }
+            val owners=rows.flatMap { it.changes.map { change -> change.address.owner } }.distinct()
+            if (owners.size > 32 || rows.sumOf { it.changes.size } > 2048) { refuse(session,"Too many inventories or changed slots match. Narrow the filters."); return@lookupContainers }
+            session.rows=rows
+            session.wanted=rows.flatMap { it.changes }.map { it.address }.toSet()
+            session.owners.addAll(owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory })
+            history.guardContainers(rows,{ guard ->
+                if(!authorize(session)) return@guardContainers
+                if(guard == null) { refuse(session,"This backend cannot verify persistent item rollback history.");return@guardContainers }
+                session.guard=guard
+                val watched=owners.filter { it is ItemSlotOwner.BlockContainer || it is ItemSlotOwner.PlayerInventory }
+                if(watched.isNotEmpty()) session.watch=runCatching { pipeline.observeOwners(watched) }.getOrElse { refuse(session,"Owner observation is unavailable.");return@guardContainers }
+                session.ready=true
+            }, { if(active === session) refuse(session,"History safety check failed; see the server log.") })
+        }, { if (active === session) refuse(session,"History lookup failed; see the server log.") })
+    }
+
+    fun tick() {
+        val session=active ?: return
+        if(!authorize(session)) return
+        if (!session.ready) {
+            if(System.nanoTime()-session.startedAt > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) refuse(session,"Timed out waiting for audit writes or history checks.")
+            return
+        }
+        val owner=session.owners.pollFirst()
+        if (owner != null) {
+            if (owner is ItemSlotOwner.BlockContainer && !inside(owner,session.query)) session.outside.add(owner)
+            else try {
+                val observation=MinecraftInventoryObservation.read(server,owner,session.wanted.filter { it.owner==owner }.toSet()) { reason->session.details[owner]=reason }
+                val snapshot=observation?.snapshot
+                if (snapshot == null) session.unavailable.add(owner)
+                else {
+                    val bytes=snapshot.slots.values.sumOf { (it.itemData?.size ?: 0).toLong() }
+                    if(session.retainedBytes+bytes>16L*1024*1024) { session.unavailable.add(owner);session.details[owner]="combined inventory snapshots exceeded the 16 MiB preview budget";return }
+                    session.retainedBytes+=bytes
+                    session.bindings[owner]=checkNotNull(observation)
+                    // Keep only addresses referenced by the selected history, bounded to 2048 slots.
+                    snapshot.slots.filterKeys { it in session.wanted }.forEach { (address,item) -> session.live[address]=item }
+                }
+            } catch (error: Throwable) {
+                logger.warn("Could not observe inventory for item rollback preview",error)
+                session.unavailable.add(owner)
+                session.details.putIfAbsent(owner,(error as? com.bareminimumstudios.guardian.platform.minecraft.InventorySnapshotReadException)?.diagnostic ?: "inventory could not be snapshotted ("+error.javaClass.simpleName+"); see server log")
+            }
+            return
+        }
+        if(!session.finalStarted) {
+            session.finalStarted=true;session.ready=false
+            val fenceStarted=System.nanoTime()
+        session.barrier=pipeline.writeBarrier()
+            session.barrier!!.result.whenComplete { _,error -> server.execute {
+                OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
+                if(!authorize(session)) return@execute
+                if(error!=null) { refuse(session,"Final audit writes could not be confirmed.");return@execute }
+                history.guardContainers(session.rows,{ guard ->
+                    if(!authorize(session)) return@guardContainers
+                    if(guard==null) { refuse(session,"Final history safety check is unavailable.");return@guardContainers }
+                    session.guard=guard
+                    finish(session)
+                }, { refuse(session,"Final history safety check failed.") })
+            } }
+        }
+    }
+
+    private fun finish(session: Session) {
+        if(!authorize(session)) return
+        session.watch?.changedOwners()?.forEach { owner->
+            session.unavailable.add(owner);session.details.putIfAbsent(owner,"item activity was captured while checking this inventory")
+        }
+        session.bindings.forEach { (owner,binding)-> binding.failureReason()?.let { reason->
+            session.unavailable.add(owner);session.details.putIfAbsent(owner,reason)
+        } }
+        val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard),session.purpose)
+        val summary=preview.entries.groupingBy { it.reason }.eachCount()
+        session.source.sendSystemMessage(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
+        for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
+        session.unavailable.take(8).forEach { owner->
+            session.source.sendSystemMessage(Component.literal("  "+ownerLabel(owner,session)+": "+(session.details[owner] ?: "inventory observation became unavailable")+"."))
+        }
+        if(session.unavailable.size>8) session.source.sendSystemMessage(Component.literal("  "+(session.unavailable.size-8)+" more unavailable inventories; narrow the filters."))
+        session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} apply with the same filters to request a separately checked confirmation."))
+        OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);session.watch?.close();active=null
+    }
+
+    /** Cancels reporting only; started reads and persistent ownership are untouched. */
+    fun cancel(): Boolean {
+        val session=active ?: return false
+        refuse(session,"Check cancelled by an operator.")
+        return true
+    }
+
+    fun stop() { val session=active;active=null;session?.barrier?.cancel();session?.watch?.close() }
+
+    private fun inside(owner: ItemSlotOwner.BlockContainer,query: ContainerLookupQuery): Boolean {
+        if (owner.dimension != query.dimension) return false
+        val bounds=query.bounds
+        if (bounds != null) return bounds.contains(owner.position)
+        val center=query.position ?: return false
+        val radius=query.radius ?: 0
+        return kotlin.math.abs(owner.position.x.toLong()-center.x) <= radius && kotlin.math.abs(owner.position.y.toLong()-center.y) <= radius && kotlin.math.abs(owner.position.z.toLong()-center.z) <= radius
+    }
+    private fun permitted(source: CommandSourceStack,purpose:ItemRecoveryPurpose = active?.purpose ?: ItemRecoveryPurpose.TRANSFER_ROLLBACK): Boolean {
+        check(server.isSameThread)
+        return runCatching { permissions.has(source,"guardian.rollback",3) && (purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK || permissions.has(source,"guardian.recover.items",3)) }.getOrDefault(false)
+    }
+    private fun authorize(session: Session): Boolean {
+        if(active !== session) return false
+        if(permitted(session.source)) return true
+        refuse(session,"Permission is no longer available; check cancelled.")
+        return false
+    }
+    private fun refuse(session: Session, message: String) { if(active !== session) return;OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: $message No items changed.")) }
+    private fun ownerLabel(owner:ItemSlotOwner,session:Session):String = when(owner) {
+        is ItemSlotOwner.PlayerInventory -> "Player "+(server.playerList.getPlayer(owner.playerId)?.gameProfile?.name ?: session.rows.mapNotNull { it.actor as? ActorIdentity.Player }.firstOrNull { it.uuid==owner.playerId }?.lastKnownName ?: owner.playerId.toString())
+        is ItemSlotOwner.BlockContainer -> "Container "+owner.dimension+" @ "+owner.position.x+","+owner.position.y+","+owner.position.z
+        else -> "Temporary player inventory"
+    }
+    private fun label(reason: ContainerPreviewReason) = when(reason) {
+        ContainerPreviewReason.UNSUPPORTED_ACTION -> "crafting, creative, drop, close or unsupported action"
+        ContainerPreviewReason.AMBIGUOUS_ORDER -> "shared inventory records have the same timestamp; order is uncertain"
+        ContainerPreviewReason.UNSUPPORTED_OWNER -> "temporary cursor/crafting or unsupported ownership"
+        ContainerPreviewReason.NONCONSERVING_ACTION -> "creation, destruction, drop or recipe transformation"
+        ContainerPreviewReason.UNAVAILABLE_OWNER -> "offline/busy player, missing/unloaded container, sealed loot, changed ownership, captured activity during checking or unreadable items"
+        ContainerPreviewReason.OUTSIDE_SCOPE -> "a transfer endpoint is outside the requested region"
+        ContainerPreviewReason.STATE_MISMATCH -> "recorded slots do not match the observed inventory"
+        ContainerPreviewReason.BLOCKED_CHAIN -> "an older transaction depends on a skipped inventory"
+        ContainerPreviewReason.NEWER_HISTORY -> "newer or equally timed item history is excluded by the selected filters"
+        ContainerPreviewReason.CHANGED_BLOCK -> "the container position has newer or equally timed block history"
+        ContainerPreviewReason.RESERVED_OWNER -> "an inventory is reserved by an unfinished item rollback journal"
+        ContainerPreviewReason.CLAIMED_SOURCE -> "the transaction is already claimed by an item rollback journal"
+        ContainerPreviewReason.INCOMPLETE_HISTORY -> "history before the purge cutoff is incomplete"
+        ContainerPreviewReason.ELIGIBLE -> "eligible"
+    }
+    private class Session(val source: CommandSourceStack,val query: ContainerLookupQuery,val purpose:ItemRecoveryPurpose) {
+        val startedAt=System.nanoTime()
+        var barrier: com.bareminimumstudios.guardian.logging.AuditWriteBarrier? = null
+        var rows: List<ContainerTransactionSnapshot> = emptyList()
+        val owners=ArrayDeque<ItemSlotOwner>()
+        val live=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
+        val unavailable=mutableSetOf<ItemSlotOwner>()
+        val details=linkedMapOf<ItemSlotOwner,String>()
+        val outside=mutableSetOf<ItemSlotOwner>()
+        var wanted: Set<ItemSlotAddress> = emptySet()
+        var guard: ContainerHistoryGuard? = null
+        var retainedBytes=0L
+        val bindings=linkedMapOf<ItemSlotOwner,MinecraftInventoryObservation>()
+        var watch: com.bareminimumstudios.guardian.logging.AuditOwnerObservation? = null
+        var finalStarted=false
+        var ready=false
+    }
+}

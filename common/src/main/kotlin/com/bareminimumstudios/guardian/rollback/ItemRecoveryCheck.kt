@@ -13,6 +13,7 @@ class ItemRecoveryCheck(val record: ItemRollbackRecord) {
     init {
         require(record.entries.size in 1..50 && record.entries.sumOf { it.changes.size } <= 2048)
         require(record.entries.map { it.transactionId }.distinct().size==record.entries.size)
+        ItemRecoveryPolicy.validate(record.purpose,record.entries)
         val changes=record.entries.flatMap { it.changes }
         require(changes.sumOf { (it.before.itemData?.size ?: 0).toLong()+(it.after.itemData?.size ?: 0) } <= 16L*1024*1024)
         wanted=changes.map { it.address }.toSet()
@@ -22,7 +23,6 @@ class ItemRecoveryCheck(val record: ItemRollbackRecord) {
         changes.forEach { virtual.putIfAbsent(it.address,it.after) }
         record.entries.forEach { entry ->
             require(entry.changes.isNotEmpty() && entry.changes.map { it.address }.distinct().size==entry.changes.size)
-            require(ContainerRollbackPlanner.conserving(entry.changes))
             require(entry.changes.all { virtual[it.address]==it.after }) { "Inconsistent recovery chain" }
             entry.changes.forEach { virtual[it.address]=it.before }
         }

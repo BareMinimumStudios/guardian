@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+"""Prepare and verify Guardian uploads. Only mc-publish performs remote writes."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import sys
+import tomllib
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+from zipfile import ZipFile
+
+VERSIONS = ('1.21.1', '1.21.4', '1.21.5', '1.21.6', '1.21.7', '1.21.8',
+            '1.21.9', '1.21.10', '1.21.11', '26.1.2', '26.2')
+LOADERS = ('fabric', 'neoforge')
+DEPENDENCIES = {'fabric': ('fabric-api', 'fabric-language-kotlin', 'fzzy-config'),
+                'neoforge': ('kotlin-for-forge', 'fzzy-config')}
+API = 'https://api.modrinth.com/v2'
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def properties(path):
+    return dict(line.split('=', 1) for line in path.read_text().splitlines()
+                if '=' in line and not line.startswith('#'))
+
+
+def profile(repo, minecraft):
+    require(minecraft in VERSIONS, 'Unsupported Minecraft target')
+    return properties(repo / ('gradle.properties' if minecraft == '1.21.1'
+                             else f'ports/targets/{minecraft}.properties'))
+
+
+def release_notes(repo, release):
+    require(re.fullmatch(r'\d+\.\d+\.\d+-alpha\.\d+', release), 'Expected an alpha release number')
+    version = release + '+1.21.1'
+    text = (repo / 'CHANGELOG.md').read_text(encoding='utf-8')
+    match = re.search(r'^## \[' + re.escape(version) + r'\] - \d{4}-\d{2}-\d{2}\s*$', text, re.M)
+    require(match, 'Missing dated changelog section for ' + version)
+    notes = re.split(r'^## ', text[match.end():], maxsplit=1, flags=re.M)[0].strip()
+    require(notes, 'Release notes are empty')
+    return notes + '\n'
+
+
+def jar_metadata(path, minecraft, loader, version, java):
+    require(path.is_file() and path.stat().st_size < 16 * 1024 * 1024, 'Missing or oversized jar: ' + str(path))
+    with ZipFile(path) as archive:
+        names = archive.namelist()
+        require(len(names) == len(set(names)), 'Duplicate jar entries')
+        require(not any('portprobe' in n.lower() or 'guardian-test-assertions' in n for n in names), 'Private test code in jar')
+        nested = [n for n in names if n.endswith('.jar')]
+        require(len(nested) == 1 and 'sqlite-jdbc-' in nested[0], 'Core must bundle SQLite only')
+        classes = [n for n in names if n.endswith('.class')]
+        require(classes and all(int.from_bytes(archive.read(n)[6:8], 'big') <= java + 44 for n in classes), 'Wrong Java bytecode version')
+        if loader == 'fabric':
+            meta = json.loads(archive.read('fabric.mod.json'))
+            require(meta['id'] == 'guardian' and meta['version'] == version and meta['environment'] == 'server', 'Wrong Fabric metadata')
+            require(meta['depends']['minecraft'] in (minecraft, '=' + minecraft), 'Wrong Fabric Minecraft version')
+        else:
+            meta = tomllib.loads(archive.read('META-INF/neoforge.mods.toml').decode())
+            require(any(m['modId'] == 'guardian' and m['version'] == version for m in meta['mods']), 'Wrong NeoForge metadata')
+            deps = meta['dependencies']['guardian']
+            require(any(d['modId'] == 'minecraft' and d['versionRange'] == '[' + minecraft + ']' and d['side'] == 'SERVER' for d in deps), 'Wrong NeoForge Minecraft version')
+            bundled = json.loads(archive.read('META-INF/jarjar/metadata.json'))['jars']
+            require(len(bundled) == 1 and bundled[0]['path'] == nested[0], 'Wrong NeoForge nested dependency metadata')
+    return hashlib.sha512(path.read_bytes()).hexdigest()
+
+
+def folder(repo, minecraft, loader):
+    if minecraft == '1.21.1':
+        return repo / ('build/libs' if loader == 'fabric' else 'neoforge/build/libs')
+    if minecraft == '26.2':
+        return repo / f'ports/{loader}/build/libs'
+    return repo / f'ports/build/{minecraft}/{loader}/libs'
+
+
+def prepare(repo, out, minecraft, release):
+    pins = profile(repo, minecraft)
+    version = release + '+' + minecraft
+    require(pins['modVersion'] == version, 'Profile version does not match requested release')
+    java = int(pins.get('javaVersion', '21'))
+    notes = release_notes(repo, release)
+    entries = []
+    for loader in LOADERS:
+        candidates = [p for p in folder(repo, minecraft, loader).glob('*.jar')
+                      if not p.name.endswith(('-sources.jar', '-dev.jar', '-javadoc.jar'))]
+        require(len(candidates) == 1, f'Expected exactly one {minecraft} {loader} runtime jar')
+        digest = jar_metadata(candidates[0], minecraft, loader, version, java)
+        name = f'guardian-{version}-{loader}.jar'
+        entries.append({'minecraft': minecraft, 'loader': loader, 'java': java,
+                        'mod_version': version, 'version': version + '-' + loader,
+                        'file': name, 'sha512': digest, 'dependencies': list(DEPENDENCIES[loader])})
+    dest = out / minecraft
+    dest.mkdir(parents=True, exist_ok=True)
+    for loader, entry in zip(LOADERS, entries):
+        source = next(p for p in folder(repo, minecraft, loader).glob('*.jar')
+                      if not p.name.endswith(('-sources.jar', '-dev.jar', '-javadoc.jar')))
+        shutil.copy2(source, dest / entry['file'])
+    (dest / 'RELEASE-NOTES.md').write_text(notes, encoding='utf-8')
+    (dest / 'manifest.json').write_text(json.dumps({'release': release, 'entries': entries}, indent=2) + '\n', encoding='utf-8')
+    return entries
+
+
+def load_bundle(bundle, release, minecraft='all', loader='all'):
+    require(minecraft == 'all' or minecraft in VERSIONS, 'Unsupported target')
+    require(loader == 'all' or loader in LOADERS, 'Unsupported loader')
+    entries = []
+    targets = VERSIONS if minecraft == 'all' else (minecraft,)
+    for target in targets:
+        root = bundle / target
+        manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
+        require(manifest['release'] == release, 'Mixed release manifests')
+        require(len(manifest['entries']) == 2 and {e['loader'] for e in manifest['entries']} == set(LOADERS), 'Incomplete loader pair')
+        require((root / 'RELEASE-NOTES.md').read_text(encoding='utf-8').strip(), 'Missing release notes')
+        for entry in manifest['entries']:
+            require(entry['minecraft'] == target and entry['mod_version'] == release + '+' + target, 'Wrong manifest version')
+            require(entry['version'] == entry['mod_version'] + '-' + entry['loader'], 'Wrong public version number')
+            require(entry['java'] == (25 if target.startswith('26.') else 21), 'Wrong Java target')
+            require(entry['dependencies'] == list(DEPENDENCIES[entry['loader']]), 'Wrong loader dependencies')
+            path = root / entry['file']
+            require(path.resolve().parent == root.resolve() and path.suffix == '.jar', 'Unsafe artifact path')
+            digest = jar_metadata(path, target, entry['loader'], entry['mod_version'], entry['java'])
+            require(digest == entry['sha512'], 'Artifact changed after preparation')
+            if loader == 'all' or entry['loader'] == loader:
+                entries.append({**entry, 'file': path.as_posix(), 'notes': (root / 'RELEASE-NOTES.md').as_posix()})
+    return entries
+
+
+def api_get(route, token):
+    request = Request(API + route, headers={'Authorization': token, 'User-Agent': 'BareMinimumStudios/Guardian-publisher (github.com/BareMinimumStudios/guardian)'})
+    try:
+        with urlopen(request, timeout=30) as response:
+            data = response.read(8 * 1024 * 1024 + 1)
+        require(len(data) <= 8 * 1024 * 1024, 'Modrinth response exceeds budget')
+        return json.loads(data)
+    except HTTPError as error:
+        raise ValueError(f'Modrinth preflight refused (HTTP {error.code}); check project ID and organization token access') from None
+    except URLError:
+        raise ValueError('Modrinth preflight could not connect; no uploads started') from None
+
+
+def check_remote(entries, project, token, get=api_get):
+    require(project and re.fullmatch(r'[A-Za-z0-9_-]+', project), 'Set MODRINTH_PROJECT_ID to Guardian\'s project ID or slug')
+    require(token, 'MODRINTH_TOKEN is unavailable; allow Guardian access to the organization secret')
+    meta = get('/project/' + quote(project, safe=''), token)
+    require(meta['project_type'] == 'mod', 'Expected a Modrinth mod project')
+    require((meta.get('source_url') or '').rstrip('/').lower() == 'https://github.com/bareminimumstudios/guardian', 'Guardian project source URL must point to https://github.com/BareMinimumStudios/guardian')
+    require(meta['status'] not in ('rejected', 'withheld', 'archived'), 'Project status does not allow this upload plan')
+    required = {slug: get('/project/' + slug, token)['id'] for slug in sorted({d for e in entries for d in e['dependencies']})}
+    versions = get('/project/' + quote(meta['id'], safe='') + '/version', token)
+    for entry in entries:
+        existing = [v for v in versions if v['version_number'] == entry['version']]
+        require(len(existing) <= 1, 'Ambiguous duplicate remote version: ' + entry['version'])
+        entry['skip'] = bool(existing)
+        if existing:
+            version = existing[0]
+            require(version['loaders'] == [entry['loader']] and version['game_versions'] == [entry['minecraft']] and version['version_type'] == 'alpha', 'Existing version metadata conflicts: ' + entry['version'])
+            require(any(f['hashes'].get('sha512') == entry['sha512'] and f.get('primary') for f in version['files']), 'Existing version has different bytes; refusing replacement: ' + entry['version'])
+            found = {d.get('project_id') for d in version['dependencies'] if d['dependency_type'] == 'required'}
+            require({required[d] for d in entry['dependencies']} <= found, 'Existing version dependencies conflict')
+        entry['dependency_input'] = '\n'.join(d + '(required){modrinth:' + d + '}' for d in entry['dependencies'])
+    return {'project_id': meta['id'], 'project_status': meta['status'], 'entries': entries}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=('access', 'matrix', 'prepare', 'verify', 'preflight'))
+    parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument('--bundle', type=Path, default=Path('build/modrinth'))
+    parser.add_argument('--release', default='0.4.0-alpha.99')
+    parser.add_argument('--minecraft', default='all')
+    parser.add_argument('--loader', default='all')
+    parser.add_argument('--project', default=os.environ.get('MODRINTH_PROJECT_ID', ''))
+    parser.add_argument('--output', type=Path)
+    args = parser.parse_args()
+    if args.command == 'access':
+        result = check_remote([], args.project, os.environ.get('MODRINTH_TOKEN', ''))
+    elif args.command == 'matrix':
+        release_notes(args.repo, args.release)
+        require(args.minecraft == 'all' or args.minecraft in VERSIONS, 'Unsupported target')
+        targets = VERSIONS if args.minecraft == 'all' else (args.minecraft,)
+        for v in targets:
+            require(profile(args.repo, v)['modVersion'] == args.release + '+' + v, 'Release/profile version mismatch')
+        result = {'include': [{'minecraft': v, 'java': 25 if v.startswith('26.') else 21} for v in targets]}
+    elif args.command == 'prepare':
+        result = prepare(args.repo, args.bundle, args.minecraft, args.release)
+    else:
+        entries = load_bundle(args.bundle, args.release, args.minecraft, args.loader)
+        result = entries if args.command == 'verify' else check_remote(entries, args.project, os.environ.get('MODRINTH_TOKEN', ''))
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
+    else:
+        print(json.dumps(result, separators=(',', ':')))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (ValueError, KeyError, OSError) as error:
+        print('Guardian publish check: ' + str(error), file=sys.stderr)
+        sys.exit(1)

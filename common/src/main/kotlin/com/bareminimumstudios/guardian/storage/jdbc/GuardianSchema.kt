@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 26
+    const val CURRENT_VERSION = 27
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -166,6 +166,14 @@ internal object GuardianSchema {
             "ALTER TABLE ex_player_activity ADD COLUMN recipient_uuid VARCHAR",
             "ALTER TABLE ex_player_activity ADD COLUMN recipient_name VARCHAR",
             "CREATE INDEX ex_activity_recipient_idx ON ex_player_activity(recipient_uuid,time,event_uuid)"
+        )),
+        SchemaMigration(27,"Explicit creative-deletion recovery authority",listOf(
+            "DROP INDEX ex_item_rollback_phase_idx",
+            "ALTER TABLE ex_item_rollback RENAME TO ex_item_rollback_v26",
+            "CREATE TABLE ex_item_rollback (operation_uuid VARCHAR PRIMARY KEY, created_at BIGINT NOT NULL, phase VARCHAR NOT NULL, purpose VARCHAR NOT NULL DEFAULT 'TRANSFER_ROLLBACK')",
+            "INSERT INTO ex_item_rollback(operation_uuid,created_at,phase,purpose) SELECT operation_uuid,created_at,phase,'TRANSFER_ROLLBACK' FROM ex_item_rollback_v26",
+            "DROP TABLE ex_item_rollback_v26",
+            "CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase,created_at)"
         ))
     )
 }

@@ -125,5 +125,5 @@ class AsyncItemSaveCompletion(
 }
 
 internal fun sameSaveRecord(expected: ItemRollbackRecord, actual: ItemRollbackRecord?, phase: ItemRollbackPhase = expected.phase): Boolean =
-    actual != null && actual.operationId == expected.operationId && actual.createdAt == expected.createdAt && actual.phase == phase &&
+    actual != null && actual.operationId == expected.operationId && actual.createdAt == expected.createdAt && actual.phase == phase && actual.purpose == expected.purpose &&
         actual.entries.size == expected.entries.size && actual.entries.zip(expected.entries).all { (a, b) -> a.transactionId == b.transactionId && a.changes == b.changes }

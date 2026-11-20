@@ -14,6 +14,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Test publishing checks
+        run: python -m unittest discover -s scripts/tests -v
       - run: chmod +x gradlew
       - name: Clean build and test
         run: ./gradlew clean build --no-daemon --warning-mode all

@@ -5,6 +5,28 @@ All notable changes to Guardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Guardian uses semantic versions with a Minecraft version suffix while it is in alpha.
 
+## [Unreleased]
+
+## [0.4.0-alpha.99+1.21.1] - 2026-11-19
+
+### Added
+
+- Recover supported creative inventory deletions with `/guardian recover-items preview`, `apply` and `confirm`. Recorded names, damage and other item components are preserved. Conflicting slots, newer history and repeat recovery are refused.
+- Alpha testing builds for Fabric and NeoForge on Minecraft 1.21.4 through 1.21.11, 26.1.2 and 26.2, alongside the retained 1.21.1 builds. Each file targets exactly one Minecraft version and loader.
+- A Modrinth upload workflow with a dry run, per-version and loader selection, artifact checks and retries that skip identical existing versions. It uses the existing organization token through GitHub Actions.
+
+### Changed
+
+- Upgrade the database to schema 27 while preserving existing rollback journals and protected images. Back up before updating; older Guardian versions cannot open the upgraded database.
+- Keep creative recovery separate from conserving item-transfer rollback. Full historical inventory backups and item redo remain unsupported.
+- Update the Gradle wrappers to 9.9.1 with verified distribution checksums. Java remains 21 for 1.21.x and is 25 for 26.x.
+- Document the recovery commands, optional history filters and automated validation limits. These are alpha testing builds; connected-client and production-modpack acceptance remain separate.
+
+### Fixed
+
+- Restore and redo block-entity data when the block state is unchanged, including recorded container names. Validate payloads before mutation and verify the resulting state.
+- Align the baseline logging API with Minecraft and include shared classes and SQLite in the NeoForge development launch.
+
 ## [0.4.0-alpha.94+1.21.1] - 2026-10-29
 
 ### Added
@@ -39,47 +61,6 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 - Content-free transaction queue/query/delivery and item rollback stage timings in `/guardian status`. Confirmation timing excludes the wait for a staff confirmation token.
 - Isolated 200,000-record SQL and shipped-JDBC benchmarks, including alpha.95 comparison and saved online rollback regression on both loaders. No schema/config migration, durability reduction or safety-check removal.
 
-## [Unreleased]
-
-### Documentation
-
-- Record the authorized newer-Minecraft port scope: GriefLogger's published versions above 1.21.1 on Fabric and NeoForge, starting with 26.2. Planned targets are distinct from currently available jars; no runtime compatibility range has changed.
-
-
-
-### Documentation
-
-- Make optional history filters explicit: browse all recorded whispers or search block/item history by radius alone. Explain no-filter scope, paging and the separate requirements for export, purge and recovery.
-
-### Fixed
-
-- Correct the README database schema and early recovery-filter restrictions. Refresh current validation references and the existing client acceptance matrix during the alpha.82 readiness review; executable jars are unchanged.
-
-### Removed
-
-- Archive superseded milestone notes and historical fixture reports outside the repository. Retain current architecture, storage, release scope and validation contracts.
-
-### Changed
-
-- Rewrite the README for server installation, permissions, inspection, history filters, bounded block rollback, configuration and troubleshooting. Consolidate development guidance and remove redundant build-file whitespace. Gameplay and read-only item rollback limits are unchanged.
-
-- Include the existing BML license in the Fabric core jar and the separate GPL license in the optional WorldEdit adapter jar.
-- Prepare the alpha.62 test package and artifact review. Correct the documented schema version, direct block rollback behavior and completed server-side permissions gate. Connected-client acceptance and final sign-off remain pending.
-
-### Added
-
-- Review alpha.67 server artifact metadata and packaging, and prepare a checksummed client acceptance bundle with loader-specific installation notes. Connected-client acceptance and final release approval remain pending.
-
-- Record alpha.66 server-side acceptance for separate chat/session permissions and read-only block preview with actual LuckPerms and operator fallback on both loaders. Connected-client acceptance remains pending; executable jars are unchanged.
-
-- Record actual LuckPerms Fabric and NeoForge grant/deny/revocation command checks, including the tested NeoForge 5.4.150 replacement for the older provider capability failure. Server-side permissions acceptance subsequently passed in alpha.62; connected-client acceptance remains open.
-
-- Define a fixed alpha release scope for logging, inspection, block rollback and read-only item checks. Defer item apply explicitly and separate actual permissions/client acceptance from future mutation-exclusion research.
-
-- Document synthetic-player persistence acceptance on both loaders, including complete 41-slot images, started compressed-file failures, explicit recovery after all affected owners are saved, and protected refusal after process termination. Connected-client acceptance remains pending.
-- Document started chunk-write acceptance on both loaders, including protected cancellation, shutdown waiting, fresh-process recovery and safe refusal after process termination before region-header commit.
-- Document additional Fabric and NeoForge acceptance for all eight supported containers, saved-image verification after observer closure and safe refusal of unsupported, loot-backed or unloaded inventories. Item rollback apply remains disabled.
-- MixinMCP dependency indexing for both loaders and the WorldEdit adapter, with Codex and IntelliJ development guidance.
 
 ## [0.4.0-alpha.93+1.21.1] - 2026-10-29
 

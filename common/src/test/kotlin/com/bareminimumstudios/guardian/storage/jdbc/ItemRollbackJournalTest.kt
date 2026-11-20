@@ -129,4 +129,25 @@ class ItemRollbackJournalTest {
         }
     }
 
+    @Test fun schema26UpgradePreservesProtectedTransferImagesAndAuthority() = backends { factory,path,prefix ->
+        val value=row();val operation=UUID.randomUUID()
+        val original=InventorySnapshot(buildMap { for(owner in listOf(left.owner,right.owner))for(i in 0..26)put(ItemSlotAddress(owner,i),if(owner==right.owner&&i==0)item else ItemStackSnapshot.EMPTY) })
+        factory(path).use { db ->db.open();db.append(listOf(ContainerAuditEntry(value)))
+            val record=db.prepareItemRollback(operation,200,listOf(value));assertTrue(db.protectItemRollback(record,original))
+        }
+        DriverManager.getConnection(prefix+path.toAbsolutePath()).use { c -> c.createStatement().use { statement ->
+            statement.executeUpdate("DROP INDEX ex_item_rollback_phase_idx")
+            statement.executeUpdate("ALTER TABLE ex_item_rollback DROP COLUMN purpose")
+            statement.executeUpdate("CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase,created_at)")
+            statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=27")
+            statement.executeUpdate("UPDATE ex_meta SET meta_value='26' WHERE meta_key='schema_version'")
+        } }
+        factory(path).use { db ->db.open()
+            val record=assertNotNull(db.itemRollback(operation));assertEquals(ItemRecoveryPurpose.TRANSFER_ROLLBACK,record.purpose)
+            val receipt=assertNotNull(db.itemRollbackImages(operation));assertFalse(receipt.acknowledged);assertEquals(original.slots,receipt.images.original.slots)
+            assertEquals(ItemRecoveryPurpose.TRANSFER_ROLLBACK,receipt.images.record.purpose)
+        }
+        DriverManager.getConnection(prefix+path.toAbsolutePath()).use { c ->assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(26)).migrate(c) } }
+    }
+
 }

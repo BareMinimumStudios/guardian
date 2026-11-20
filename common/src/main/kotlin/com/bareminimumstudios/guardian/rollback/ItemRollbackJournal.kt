@@ -8,7 +8,7 @@ enum class ItemRollbackPhase { PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED,
 
 data class ItemRollbackSummary(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase)
 
-class ItemRollbackRecord(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase, entries: List<ItemRollbackEntry>) {
+class ItemRollbackRecord @JvmOverloads constructor(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase, entries: List<ItemRollbackEntry>, val purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK) {
     val entries: List<ItemRollbackEntry> = Collections.unmodifiableList(ArrayList(entries))
 }
 
@@ -19,6 +19,7 @@ class ItemRollbackEntry(val transactionId: UUID, changes: List<ItemSlotChange>) 
 /** Persistent journal only. No implementation may mutate Minecraft inventories. */
 interface ItemRollbackJournal {
     fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord
+    fun prepareCreativeRecovery(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord = throw UnsupportedOperationException("Creative item recovery is unavailable")
     fun itemRollback(operationId: UUID): ItemRollbackRecord?
     /** Headers only, including protected COMPLETED records still awaiting reconciliation. No payload bulk load. */
     fun unfinishedItemRollbacks(limit: Int = 50): List<ItemRollbackSummary>

@@ -132,3 +132,17 @@ With sign-text capture enabled, edit both sides of standing/wall/hanging signs, 
 6. **Item recovery and administration:** preview/recovery/saved/cancel with valid permission, unsupported/busy endpoints and permission revocation. Verify clear refusal/skipping and no changed items, consumed source history or cleared unresolved claims. For online items, use a recent completed shift-click transfer in the isolated world: preview, apply, confirm, token suggestions, wrong-requester/permission refusal, exact count/components after saved completion, and clear interruption/reconciliation wording. Verify open-menu/unsupported/conflicting requests refuse. Synthetic checks do not replace this client acceptance. On an isolated database only, preview/cancel purge, check separate level-four permission and confirmation suggestions, confirm a known batch, and verify retained recent/recovery history after restart. Never use a production database for this acceptance exercise. For scoped purge, verify the world/type scope and whole-transaction wording before confirming. For export, check its separate level-four/category grants, client messages, generated server-local path, filters/counts, JSON/native bytes, cancellation and completed-file retention. These remain within this existing administration/read-only acceptance row.
 
 Record pass/fail per row and loader, link any reproducible defects, and close R3 when all six rows pass. There is no fixed number of development passes promised while the external acceptance is pending.
+
+## Alpha.99 item recovery acceptance
+
+The owner authorized recorded creative-deletion recovery separately from the earlier
+feature freeze. Alpha.99 adds only that recovery direction: one online player, bounded
+history, separate permission and confirmation, matching empty slots, persisted recovery
+purpose, permanent source claims and existing actual-save/interruption safeguards.
+Schema 27 preserves existing transfer journals; transfer rollback remains conserving.
+
+All 22 selected version/loader pairs passed the eight-stage isolated native creative
+recovery sequence. [Validation](VALIDATION.md) and [evidence](validation/creative-recovery-alpha99.json)
+record the automated scope. Real-client, permission-provider and production-pack
+acceptance remain pending. Full historical inventory checkpoints and the broader
+feature backlog are not included in alpha.99.

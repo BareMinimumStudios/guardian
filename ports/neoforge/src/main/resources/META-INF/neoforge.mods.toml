@@ -1,0 +1,35 @@
+modLoader="kotlinforforge"
+loaderVersion="[${kotlinLoaderVersion},)"
+license="BML-1.0"
+issueTrackerURL="https://github.com/BareMinimumStudios/guardian/issues"
+
+[[mods]]
+modId="guardian"
+version="${version}"
+displayName="Guardian"
+displayURL="https://github.com/BareMinimumStudios/guardian"
+iconFile="assets/guardian/icon.png"
+authors="Bare Minimum Studios"
+description="Find who changed blocks or moved items. Inspect history in-game and undo supported changes. Server-side for Fabric and NeoForge."
+displayTest="IGNORE_SERVER_VERSION"
+
+[[dependencies.guardian]]
+modId="neoforge"
+type="required"
+versionRange="[${neoForgeVersion},)"
+side="SERVER"
+
+[[dependencies.guardian]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraftVersion}]"
+side="SERVER"
+
+[[dependencies.guardian]]
+modId="fzzy_config"
+type="required"
+versionRange="[${fzzyBaseVersion},)"
+side="SERVER"
+
+[[mixins]]
+config="guardian.neoforge.mixins.json"

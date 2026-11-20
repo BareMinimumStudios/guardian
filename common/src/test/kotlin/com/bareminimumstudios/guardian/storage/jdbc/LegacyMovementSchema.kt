@@ -3,6 +3,12 @@ import java.sql.Statement
 /** Reconstruct the older block layout before replaying its migration path. */
 internal object LegacyMovementSchema {
     fun stripPrivateActivity(statement:Statement) {
+        val journalColumns=try { statement.connection.createStatement().use { probe -> probe.executeQuery("SELECT * FROM ex_item_rollback WHERE 1=0").use { rs -> (1..rs.metaData.columnCount).map { rs.metaData.getColumnName(it).lowercase() }.toSet() } } } catch(_:java.sql.SQLException) { emptySet() }
+        if("purpose" in journalColumns) {
+            statement.executeUpdate("DROP INDEX ex_item_rollback_phase_idx")
+            statement.executeUpdate("ALTER TABLE ex_item_rollback DROP COLUMN purpose")
+            statement.executeUpdate("CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase,created_at)")
+        }
         val columns=try { statement.connection.createStatement().use { probe->probe.executeQuery("SELECT * FROM ex_player_activity WHERE 1=0").use { rs->(1..rs.metaData.columnCount).map { rs.metaData.getColumnName(it).lowercase() }.toSet() } } } catch(_:java.sql.SQLException) { return }
         if("recipient_uuid" in columns) {
             val indexes=GuardianSchema.migrations.flatMap { it.statements }.filter { it.startsWith("CREATE INDEX") && " ON ex_player_activity(" in it }

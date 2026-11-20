@@ -1,0 +1,526 @@
+{
+  "checkpoint": "alpha.99",
+  "schema": 27,
+  "configuration": 19,
+  "scope": "Recorded creative item-to-empty deletions; separate persisted authority from conserving transfer rollback.",
+  "pairs": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 30",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.4",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.4",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.5",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.5",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.6",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.6",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.7",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.7",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.9",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.9",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stages": {
+        "normal": "PASS 22",
+        "crash": "CRASH_AFTER_PARTIAL_RECREATION 15",
+        "guard": "protected startup stopped before gameplay",
+        "preview": "PASS",
+        "wrong-token": "PASS",
+        "apply": "PASS",
+        "retry": "PASS",
+        "verify": "PASS 4"
+      }
+    }
+  ],
+  "limitations": [
+    "Synthetic native server players and in-memory network channels; no real-client certification.",
+    "Isolated worlds and databases only; no production data accessed.",
+    "Interruption fixture stops after the first actual slot write and physically saves a partial player file; this is not exhaustive crash-boundary coverage.",
+    "No historical full-inventory backups, force overwrite, item redo or cross-Minecraft payload conversion.",
+    "Real-client, permission-provider and production-modpack acceptance remain pending."
+  ],
+  "builds": [
+    {
+      "minecraft": "1.21.1",
+      "modules": {
+        "common": {
+          "tests": 707,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 0,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.4",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.5",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 122,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 122,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.6",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.7",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.8",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.9",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.10",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "1.21.11",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "26.1.2",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "modules": {
+        "common": {
+          "tests": 709,
+          "failures": 0
+        },
+        "fabric": {
+          "tests": 121,
+          "failures": 0
+        },
+        "neoforge": {
+          "tests": 121,
+          "failures": 0
+        }
+      },
+      "status": "PASS"
+    }
+  ],
+  "baselineCleanBuild": "PASS",
+  "baselineConfigurationCacheReuse": true,
+  "separateWorldEditBuild": "PASS (Fabric 1.21.1 only)"
+}

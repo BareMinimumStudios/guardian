@@ -21,7 +21,7 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.96** (testing release).
+Players do not need to install anything. Current build: **alpha.99** (testing release).
 
 Newer Minecraft ports are tracked in the [version support matrix](docs/VERSION_SUPPORT.md).
 The current jars target **1.21.1**; planned versions are listed separately.
@@ -141,6 +141,26 @@ Read the [item rollback guide](docs/ONLINE_ITEM_ROLLBACK.md) before using it on 
 Minecarts, direct item displays and lectern book actions are not supported rollback targets.
 There is no item redo.
 
+**Deleted items in creative:**
+
+Use the separate recovery command for recorded creative item deletions:
+
+```text
+/guardian recover-items preview u:Alex t:10m
+/guardian recover-items apply u:Alex t:10m
+/guardian recover-items confirm <token shown by apply>
+```
+
+Alex must stay online with menus closed and the deleted slots empty. Choose a short
+window containing the deletion. Recovery restores the recorded item data, including
+names and damage. It refuses conflicting history, occupied slots and repeat recovery.
+This requires `guardian.recover.items` and `guardian.rollback`, or operator level 3.
+
+This recovers supported creative deletions recorded by Guardian, not a whole past
+inventory. It cannot recover unlogged items, consumed items or history from before
+installation. Only player and time filters apply; there is no radius filter because
+inventory deletion has no container location. [Recovery details](docs/CREATIVE_ITEM_RECOVERY.md).
+
 ## Choose what to log
 
 Player block changes, supported item transactions and login/logout events are enabled by default.
@@ -215,7 +235,7 @@ plus `guardian.spy` (operator level 3 by default).
 
 Tell players in your server rules what is recorded. Restrict staff access and protect database
 backups and exports. See the [command guide](docs/COMMANDS.md#whispers-and-live-spy) for limits.
-Back up before updating: alpha.94 upgrades the database to schema 26; older jars cannot open it.
+Back up before updating: alpha.99 upgrades the database to schema 27; older jars cannot open it.
 
 ## Slow searches or item rollback?
 
@@ -231,6 +251,7 @@ Timings contain no player names, messages or item contents.
 ## More help
 
 - [Command guide](docs/COMMANDS.md): chat, entities, fluids, filters, permissions, exports and deleting old history.
+- [Publishing builds](docs/PUBLISHING.md) for maintainers.
 - [Item rollback](docs/ONLINE_ITEM_ROLLBACK.md) and [interrupted-operation recovery](docs/ITEM_RECOVERY.md).
 - [WorldEdit setup](worldedit-adapter/README.md).
 - [Changelog](CHANGELOG.md) and [test/release status](docs/VALIDATION.md).

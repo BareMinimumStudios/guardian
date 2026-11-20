@@ -9,21 +9,23 @@ import java.util.UUID
 
 /** Called only under the backend lock. All multi-table changes share one database transaction. */
 internal class JdbcItemRollbackJournal(private val connection: Connection) {
-    fun prepare(id: UUID, createdAt: Long, rows: List<ContainerTransactionSnapshot>): ItemRollbackRecord {
+    fun prepare(id: UUID, createdAt: Long, rows: List<ContainerTransactionSnapshot>, purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK): ItemRollbackRecord {
         require(createdAt >= 0 && rows.size in 1..50)
         require(rows.sumOf { it.changes.size } <= 2048)
         val owners = rows.flatMap { it.changes.map { change -> change.address.owner } }.distinct()
         require(owners.size <= 32)
         val observed = linkedMapOf<ItemSlotAddress, ItemStackSnapshot>()
         rows.forEach { row -> row.changes.forEach { observed.putIfAbsent(it.address, it.after) } }
-        require(ContainerRollbackPlanner.plan(rows, InventorySnapshot(observed)).eligible == rows.size) { "Journal requires an unambiguous conserving transfer chain" }
+        require(ContainerRollbackPlanner.plan(rows, InventorySnapshot(observed),purpose=purpose).eligible == rows.size) { "Journal requires a valid, unambiguous plan for the selected recovery purpose" }
+        ItemRecoveryPolicy.validate(purpose,rows.map { ItemRollbackEntry(it.transactionId,it.changes) })
+        require(rows.all { ItemRecoveryPolicy.transaction(purpose,it) })
         val payloads = rows.map { ContainerChangesCodec.encode(it.changes) }
         // Bound the whole plan, not just individual payloads.
         require(payloads.sumOf { it.size.toLong() } <= 16L * 1024 * 1024) { "Journal payload exceeds budget" }
         return atomic {
             val existing = read(id)
             if (existing != null) {
-                require(existing.createdAt == createdAt && existing.entries.size == rows.size && existing.entries.zip(rows).all { (a,b) -> a.transactionId == b.transactionId && a.changes == b.changes }) { "Operation ID reused with a different plan" }
+                require(existing.purpose == purpose && existing.createdAt == createdAt && existing.entries.size == rows.size && existing.entries.zip(rows).all { (a,b) -> a.transactionId == b.transactionId && a.changes == b.changes }) { "Operation ID reused with a different plan" }
                 return@atomic existing
             }
             for (row in rows) connection.prepareStatement("SELECT time, interaction, changes FROM ex_container WHERE transaction_uuid = ?").use { query ->
@@ -34,8 +36,8 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
                 }
             }
             require(ContainerOwnerIndex.guard(connection,rows).clear) { "Newer history, changed blocks or existing journal claims invalidate the plan" }
-            connection.prepareStatement("INSERT INTO ex_item_rollback(operation_uuid, created_at, phase) VALUES (?, ?, ?)").use { insert ->
-                insert.setString(1,id.toString());insert.setLong(2,createdAt);insert.setString(3,ItemRollbackPhase.PREPARED.name);insert.executeUpdate()
+            connection.prepareStatement("INSERT INTO ex_item_rollback(operation_uuid, created_at, phase, purpose) VALUES (?, ?, ?, ?)").use { insert ->
+                insert.setString(1,id.toString());insert.setLong(2,createdAt);insert.setString(3,ItemRollbackPhase.PREPARED.name);insert.setString(4,purpose.name);insert.executeUpdate()
             }
             owners.forEach { owner -> insertPair("INSERT INTO ex_item_rollback_owner(owner_key, operation_uuid) VALUES (?, ?)",ownerKey(owner),id.toString()) }
             rows.forEachIndexed { index, row ->
@@ -49,8 +51,8 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
     }
 
     fun read(id: UUID): ItemRollbackRecord? {
-        val header = connection.prepareStatement("SELECT created_at, phase FROM ex_item_rollback WHERE operation_uuid = ?").use { query ->
-            query.setString(1,id.toString());query.executeQuery().use { result -> if (result.next()) result.getLong(1) to ItemRollbackPhase.valueOf(result.getString(2)) else null }
+        val header = connection.prepareStatement("SELECT created_at, phase, purpose FROM ex_item_rollback WHERE operation_uuid = ?").use { query ->
+            query.setString(1,id.toString());query.executeQuery().use { result -> if (result.next()) Triple(result.getLong(1),ItemRollbackPhase.valueOf(result.getString(2)),ItemRecoveryPurpose.valueOf(result.getString(3))) else null }
         } ?: return null
         val entries = connection.prepareStatement("SELECT entry_index, transaction_uuid, changes FROM ex_item_rollback_entry WHERE operation_uuid = ? ORDER BY entry_index LIMIT 51").use { query ->
             query.setString(1,id.toString());query.executeQuery().use { result -> buildList {
@@ -64,7 +66,7 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
             } }
         }
         require(entries.isNotEmpty() && entries.sumOf { it.changes.size } <= 2048) { "Corrupt journal entries" }
-        return ItemRollbackRecord(id,header.first,header.second,entries)
+        return ItemRollbackRecord(id,header.first,header.second,entries,header.third)
     }
 
     fun protected(id: UUID): Boolean = connection.prepareStatement("SELECT 1 FROM ex_item_rollback_protection WHERE operation_uuid = ?").use { query ->

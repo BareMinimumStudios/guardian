@@ -58,6 +58,8 @@ object ItemRollbackImagesCodec {
     private fun fingerprint(record: ItemRollbackRecord): ByteArray {
         val hash=MessageDigest.getInstance("SHA-256")
         DataOutputStream(DigestOutputStream(OutputStream.nullOutputStream(),hash)).use { out ->
+            // Preserve existing transfer fingerprints; bind new recreation plans to explicit purpose.
+            if(record.purpose!=ItemRecoveryPurpose.TRANSFER_ROLLBACK) out.writeUTF("guardian-purpose:"+record.purpose.name)
             out.writeUTF(record.operationId.toString());out.writeLong(record.createdAt);out.writeInt(record.entries.size)
             record.entries.forEach { entry ->
                 out.writeUTF(entry.transactionId.toString());val payload=ContainerChangesCodec.encode(entry.changes)
