@@ -26,3 +26,16 @@ Taming capture compares the standard tame method before/after state and verifies
 Bucket fluid history brackets the actual placement target using each loader's emptyContents overload and wraps the shared pickup invocation. A successful return is necessary but not sufficient: registered before/after fluid identity/source must change, and placement must leave a persistent fluid. Immutable snapshots retain fluid/source/host IDs in a separate read-only schema-18 table. Fluid records have independent query permissions and never enter rollback or existing purge.
 
 Item-frame history captures accepted HangingEntityItem placement and ItemFrame interaction/damage transitions. A scoped damage actor is restored in finally; destructive Entity.remove reasons retain the before display, while unload/transfer reasons are excluded. Schema 19 stores bounded immutable item/rotation snapshots in entity history. The existing inspector selects the frame UUID, checks both inspector/entity permissions before query and deferred output, and intercepts entity packets before gameplay. Explicit current item/rotation metadata, including default empty values, is resent without consuming entity dirty flags. No entity or item restoration is enabled.
+
+## Inventory checkpoints
+
+Complete player states use a separate immutable codec and store, not synthetic
+container transactions. Server-thread capture is limited to one player per tick and
+four queued images, with persistence on the history worker. Header lists are bounded;
+the virtual viewer uses plain icons without decoding historical components.
+
+Checkpoint replacement has separate level-four authority. Confirmation captures a
+fresh full preimage, stores an atomic before-state and source claim, then reuses native
+exclusive ownership and actual saved-file verification. Native admission checks that
+entire preimage again after detaching the backing inventories. Existing transfer
+conservation is unchanged. See [inventory backups](INVENTORY_BACKUPS.md).

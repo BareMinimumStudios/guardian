@@ -60,6 +60,8 @@ object ItemRollbackImagesCodec {
         DataOutputStream(DigestOutputStream(OutputStream.nullOutputStream(),hash)).use { out ->
             // Preserve existing transfer fingerprints; bind new recreation plans to explicit purpose.
             if(record.purpose!=ItemRecoveryPurpose.TRANSFER_ROLLBACK) out.writeUTF("guardian-purpose:"+record.purpose.name)
+            if(record.purpose==ItemRecoveryPurpose.TRANSFER_REDO) out.writeUTF(checkNotNull(record.redoOf).toString())
+            if(record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE) out.writeUTF(checkNotNull(record.checkpointOf).toString())
             out.writeUTF(record.operationId.toString());out.writeLong(record.createdAt);out.writeInt(record.entries.size)
             record.entries.forEach { entry ->
                 out.writeUTF(entry.transactionId.toString());val payload=ContainerChangesCodec.encode(entry.changes)

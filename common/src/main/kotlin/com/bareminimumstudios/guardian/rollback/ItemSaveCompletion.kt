@@ -69,6 +69,6 @@ class ItemSaveCompletion(private val record: ItemRollbackRecord,private val jour
         if(state==ItemSaveCompletionState.CHECKING) refuse("Save completion stopped")
         return state
     }
-    private fun sameJournal(other: ItemRollbackRecord?)=other!=null && other.operationId==record.operationId && other.phase==record.phase && other.purpose==record.purpose && other.createdAt==record.createdAt && other.entries.size==record.entries.size && other.entries.zip(record.entries).all { (a,b) -> a.transactionId==b.transactionId && a.changes==b.changes }
+    private fun sameJournal(other: ItemRollbackRecord?)=other!=null && other.operationId==record.operationId && other.phase==record.phase && other.purpose==record.purpose && other.redoOf==record.redoOf && other.checkpointOf==record.checkpointOf && other.createdAt==record.createdAt && other.entries.size==record.entries.size && other.entries.zip(record.entries).all { (a,b) -> a.transactionId==b.transactionId && a.changes==b.changes }
     private fun refuse(message: String): ItemSaveCompletionState { waiting=null;reason=message;state=ItemSaveCompletionState.UNRESOLVED;return state }
 }

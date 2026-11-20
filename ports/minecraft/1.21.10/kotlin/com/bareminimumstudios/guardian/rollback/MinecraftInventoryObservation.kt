@@ -21,8 +21,10 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
         fun read(server: MinecraftServer,owner: ItemSlotOwner,wanted: Set<ItemSlotAddress>): MinecraftInventoryObservation? {
             return read(server,owner,wanted) {}
         }
-        fun read(server: MinecraftServer,owner: ItemSlotOwner,wanted: Set<ItemSlotAddress>,unavailable:(String)->Unit): MinecraftInventoryObservation? {
-            check(server.isSameThread)
+        fun read(server: MinecraftServer,owner: ItemSlotOwner,wanted: Set<ItemSlotAddress>,unavailable:(String)->Unit): MinecraftInventoryObservation? =
+            read(server,owner,wanted,16L*1024*1024,unavailable)
+        fun read(server: MinecraftServer,owner: ItemSlotOwner,wanted: Set<ItemSlotAddress>,maxBytes:Long,unavailable:(String)->Unit): MinecraftInventoryObservation? {
+            check(server.isSameThread);require(maxBytes in 1..16L*1024*1024)
             fun reject(reason:String):MinecraftInventoryObservation? { unavailable(reason);return null }
             return when(owner) {
                 is ItemSlotOwner.BlockContainer -> {
@@ -43,6 +45,7 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                     }
                     if(container.containerSize !in 1..com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec.MAX_SLOTS) return reject("unsupported container slot count ("+container.containerSize+")")
                     val snapshot=MinecraftBlockContainerSnapshotter.captureSelected(container,level,wanted) ?: return reject("container snapshot is unavailable")
+                    require(snapshot.slots.values.sumOf { (it.itemData?.size ?: 0).toLong() }<=maxBytes) { "Observation payload budget exceeded" }
                     val identities=parts(container).map { entity ->
                         val state=entity.blockState;val size=(entity as Container).containerSize;
                         {
@@ -79,7 +82,7 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                     val items=MinecraftItemSnapshotter.CaptureBatch(player.registryAccess());var bytes=0L
                     wanted.filter { it.owner==owner && it.index in 0 until inventory.containerSize }.forEach { address ->
                         val item=try { items.capture(inventory.getItem(address.index)) } catch(error:Exception) { unavailable("player inventory slot "+address.index+" cannot be read ("+error.javaClass.simpleName+")");throw error };bytes+=(item.itemData?.size ?: 0)
-                        require(bytes<=16L*1024*1024) { "Observation payload budget exceeded" };slots[address]=item
+                        require(bytes<=maxBytes) { "Observation payload budget exceeded" };slots[address]=item
                     }
                     MinecraftInventoryObservation(InventorySnapshot(slots),::current)
                 }

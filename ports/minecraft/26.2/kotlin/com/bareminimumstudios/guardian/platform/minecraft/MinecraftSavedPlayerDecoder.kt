@@ -29,7 +29,7 @@ object MinecraftSavedPlayerDecoder {
         val equipment = tag.get("equipment")
         require(equipment == null || equipment is CompoundTag) { "Invalid saved equipment" }
         val equipmentSlots = (36..42).associateBy { requireNotNull(net.minecraft.world.entity.player.Inventory.EQUIPMENT_SLOT_MAPPING.get(it)).serializedName }
-        (equipment as? CompoundTag)?.let { items ->
+        equipment?.let { items ->
             require(items.keySet().all { it in equipmentSlots }) { "Unsupported saved equipment slot" }
             items.keySet().forEach { key ->
                 val index=equipmentSlots.getValue(key)

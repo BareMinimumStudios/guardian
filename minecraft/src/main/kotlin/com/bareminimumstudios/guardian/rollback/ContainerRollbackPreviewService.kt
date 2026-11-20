@@ -43,6 +43,31 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         return true
     }
 
+    fun requestItemRestore(source: CommandSourceStack, operationId: java.util.UUID): Boolean {
+        if(!permitted(source,ItemRecoveryPurpose.TRANSFER_REDO)) {
+            source.sendFailure(Component.literal("Guardian: item redo requires guardian.restore and guardian.restore.items, or operator level 3."));return false
+        }
+        if(active != null || otherBusy()) { source.sendFailure(Component.literal("Guardian already has an item operation in progress."));return false }
+        val session=Session(source,ContainerLookupQuery(),ItemRecoveryPurpose.TRANSFER_REDO)
+        active=session
+        source.sendSystemMessage(Component.literal("Guardian: checking saved item rollback $operationId for redo; no items changed."))
+        session.barrier=pipeline.writeBarrier()
+        session.barrier!!.result.whenComplete { _,error -> server.execute {
+            if(!authorize(session)) return@execute
+            if(error!=null) { refuse(session,"Accepted audit writes could not be confirmed.");return@execute }
+            history.itemRestoreSource(operationId,{ restore ->
+                if(!authorize(session)) return@itemRestoreSource
+                session.restore=restore;session.guard=restore.guard
+                session.wanted=restore.images.expected.slots.keys
+                val owners=session.wanted.map { it.owner }.distinct()
+                session.owners.addAll(owners)
+                session.watch=runCatching { pipeline.observeOwners(owners) }.getOrElse { refuse(session,"Inventory observation is unavailable.");return@itemRestoreSource }
+                session.ready=true
+            }, { refuse(session,"Saved rollback cannot be redone: ${it.message?.take(180) ?: "unavailable receipt"}.") })
+        } }
+        return true
+    }
+
     private fun lookup(session: Session,maxRecords: Int) {
         val query=session.query
         history.lookupContainers(query.copy(limit=maxRecords+1,offset=0,oldestFirst=false), { found ->
@@ -74,7 +99,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         }
         val owner=session.owners.pollFirst()
         if (owner != null) {
-            if (owner is ItemSlotOwner.BlockContainer && !inside(owner,session.query)) session.outside.add(owner)
+            if (session.restore==null && owner is ItemSlotOwner.BlockContainer && !inside(owner,session.query)) session.outside.add(owner)
             else try {
                 val observation=MinecraftInventoryObservation.read(server,owner,session.wanted.filter { it.owner==owner }.toSet()) { reason->session.details[owner]=reason }
                 val snapshot=observation?.snapshot
@@ -102,6 +127,12 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
                 OperationTimings.record(Stage.ROLLBACK_FENCE,System.nanoTime()-fenceStarted)
                 if(!authorize(session)) return@execute
                 if(error!=null) { refuse(session,"Final audit writes could not be confirmed.");return@execute }
+                if(session.restore!=null) {
+                    history.itemRestoreSource(session.restore!!.images.record.operationId,{ source ->
+                        if(authorize(session)) { session.restore=source;session.guard=source.guard;finish(session) }
+                    },{ refuse(session,"Final saved rollback check failed: ${it.message?.take(180)}.") })
+                    return@execute
+                }
                 history.guardContainers(session.rows,{ guard ->
                     if(!authorize(session)) return@guardContainers
                     if(guard==null) { refuse(session,"Final history safety check is unavailable.");return@guardContainers }
@@ -120,15 +151,16 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         session.bindings.forEach { (owner,binding)-> binding.failureReason()?.let { reason->
             session.unavailable.add(owner);session.details.putIfAbsent(owner,reason)
         } }
-        val preview=ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard),session.purpose)
+        val preview=session.restore?.preview(InventorySnapshot(session.live),session.unavailable) ?: ContainerRollbackPlanner.plan(session.rows,InventorySnapshot(session.live),session.unavailable,session.outside,checkNotNull(session.guard),session.purpose)
         val summary=preview.entries.groupingBy { it.reason }.eachCount()
-        session.source.sendSystemMessage(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
+        session.source.sendSystemMessage(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.TRANSFER_REDO) "redo" else if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: ${preview.eligible} eligible, ${preview.entries.size-preview.eligible} skipped (${preview.entries.size} transactions checked)."))
         for ((reason,count) in summary) if (reason != ContainerPreviewReason.ELIGIBLE) session.source.sendSystemMessage(Component.literal("  $count: ${label(reason)}"))
         session.unavailable.take(8).forEach { owner->
             session.source.sendSystemMessage(Component.literal("  "+ownerLabel(owner,session)+": "+(session.details[owner] ?: "inventory observation became unavailable")+"."))
         }
         if(session.unavailable.size>8) session.source.sendSystemMessage(Component.literal("  "+(session.unavailable.size-8)+" more unavailable inventories; narrow the filters."))
-        session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} apply with the same filters to request a separately checked confirmation."))
+        val followup=session.restore?.let { "restore-items apply ${it.images.record.operationId}" } ?: "${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} apply with the same filters"
+        session.source.sendSystemMessage(Component.literal("Preview only: no items changed. Eligible means the observed slots match; use $followup to request a separately checked confirmation."))
         OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);session.watch?.close();active=null
     }
 
@@ -151,7 +183,12 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
     }
     private fun permitted(source: CommandSourceStack,purpose:ItemRecoveryPurpose = active?.purpose ?: ItemRecoveryPurpose.TRANSFER_ROLLBACK): Boolean {
         check(server.isSameThread)
-        return runCatching { permissions.has(source,"guardian.rollback",3) && (purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK || permissions.has(source,"guardian.recover.items",3)) }.getOrDefault(false)
+        return runCatching {
+            if(source.player?.let { server.playerList.getPlayer(it.uuid) !== it } == true) return@runCatching false
+            val fresh=source.player?.createCommandSourceStack() ?: source
+            if(purpose==ItemRecoveryPurpose.TRANSFER_REDO) permissions.has(fresh,"guardian.restore",3) && permissions.has(fresh,"guardian.restore.items",3)
+            else permissions.has(fresh,"guardian.rollback",3) && (purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK || permissions.has(fresh,"guardian.recover.items",3))
+        }.getOrDefault(false)
     }
     private fun authorize(session: Session): Boolean {
         if(active !== session) return false
@@ -159,7 +196,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         refuse(session,"Permission is no longer available; check cancelled.")
         return false
     }
-    private fun refuse(session: Session, message: String) { if(active !== session) return;OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: $message No items changed.")) }
+    private fun refuse(session: Session, message: String) { if(active !== session) return;OperationTimings.record(Stage.ROLLBACK_PREVIEW_TOTAL,System.nanoTime()-session.startedAt);active=null;session.barrier?.cancel();session.watch?.close();session.source.sendFailure(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.TRANSFER_REDO) "redo" else if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} preview: $message No items changed.")) }
     private fun ownerLabel(owner:ItemSlotOwner,session:Session):String = when(owner) {
         is ItemSlotOwner.PlayerInventory -> "Player "+(server.playerList.getPlayer(owner.playerId)?.gameProfile?.name ?: session.rows.mapNotNull { it.actor as? ActorIdentity.Player }.firstOrNull { it.uuid==owner.playerId }?.lastKnownName ?: owner.playerId.toString())
         is ItemSlotOwner.BlockContainer -> "Container "+owner.dimension+" @ "+owner.position.x+","+owner.position.y+","+owner.position.z
@@ -185,6 +222,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val startedAt=System.nanoTime()
         var barrier: com.bareminimumstudios.guardian.logging.AuditWriteBarrier? = null
         var rows: List<ContainerTransactionSnapshot> = emptyList()
+        var restore: ItemRestoreSource? = null
         val owners=ArrayDeque<ItemSlotOwner>()
         val live=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
         val unavailable=mutableSetOf<ItemSlotOwner>()

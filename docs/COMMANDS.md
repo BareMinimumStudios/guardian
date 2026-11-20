@@ -313,7 +313,8 @@ explicitly denies a node, operator status does not override that denial.
 | `guardian.rollback` | Block rollback, item checks and required base grant for item apply | 3 |
 | `guardian.rollback.items` | Confirmed online item rollback and retained-operation reconciliation | 3 |
 | `guardian.recover.items` | Recorded creative-deletion recovery; also requires `guardian.rollback` | 3 |
-| `guardian.restore` | Block restore/redo and its preview | 3 |
+| `guardian.restore` | Block restore/redo; also required for item redo | 3 |
+| `guardian.restore.items` | Redo a completed item-transfer rollback; also requires `guardian.restore` | 3 |
 | `guardian.export` | Write bounded history files; also needs the category history grant | 4 |
 | `guardian.purge` | Preview/confirm/cancel old-history deletion | 4 |
 | `guardian.config.edit` | Fzzy Config editing | 3 |
@@ -339,3 +340,42 @@ recorded deleted slots empty, menus closed and nothing on the cursor or crafting
 This restores supported creative deletions Guardian recorded, not a whole past inventory.
 Only one player and a time window are accepted; radius filters do not apply.
 See the [creative recovery guide](CREATIVE_ITEM_RECOVERY.md) for requirements and refusals.
+
+## Redo an item rollback
+
+Run `/guardian restore-items` to list recent saved transfer rollbacks. Use the operation
+UUID from the list or original completion message:
+
+```text
+/guardian restore-items preview <operation UUID>
+/guardian restore-items apply <operation UUID>
+/guardian restore-items confirm <token>
+```
+
+Preview and apply selection change nothing; confirm the token within 30 seconds to proceed.
+All players must be online and idle, and all containers loaded. Every involved inventory
+must still match its complete saved rollback result. Each rollback can be redone once.
+Creative deletion recovery and redo operations cannot themselves be redone.
+Requires `guardian.restore` and `guardian.restore.items`, or operator level 3.
+[Requirements and recovery](ITEM_REDO.md).
+
+## Inventory checkpoints
+
+Filters for lists are optional; `/guardian inventory list` shows everyone's newest checkpoints.
+
+```text
+/guardian inventory snapshot u:Alex
+/guardian inventory list u:Alex t:1d l:10 p:1
+/guardian inventory view <checkpoint UUID>
+/guardian inventory restore preview <checkpoint UUID>
+/guardian inventory restore apply <checkpoint UUID>
+/guardian inventory restore confirm <token>
+/guardian inventory restore reconcile
+/guardian inventory restore cancel
+```
+
+List/view require `guardian.inventory` (level 3); manual snapshots also require
+`guardian.inventory.snapshot` (level 3). Restoration additionally requires
+`guardian.inventory.restore` (level 4). This is full normal-inventory replacement,
+with a before-checkpoint for undo, separate from conserving transfer rollback.
+See [inventory backups](INVENTORY_BACKUPS.md) for exact coverage, limits and setup.

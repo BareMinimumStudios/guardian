@@ -8,7 +8,8 @@ enum class ItemRollbackPhase { PREPARED, APPLYING, RECOVERY_REQUIRED, COMPLETED,
 
 data class ItemRollbackSummary(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase)
 
-class ItemRollbackRecord @JvmOverloads constructor(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase, entries: List<ItemRollbackEntry>, val purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK) {
+class ItemRollbackRecord @JvmOverloads constructor(val operationId: UUID, val createdAt: Long, val phase: ItemRollbackPhase, entries: List<ItemRollbackEntry>, val purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK, val redoOf: UUID? = null, val checkpointOf: UUID? = null) {
+    init { require((purpose == ItemRecoveryPurpose.TRANSFER_REDO) == (redoOf != null)); require(redoOf != operationId); require((purpose == ItemRecoveryPurpose.CHECKPOINT_RESTORE) == (checkpointOf != null)); require(checkpointOf != operationId) }
     val entries: List<ItemRollbackEntry> = Collections.unmodifiableList(ArrayList(entries))
 }
 
@@ -20,6 +21,12 @@ class ItemRollbackEntry(val transactionId: UUID, changes: List<ItemSlotChange>) 
 interface ItemRollbackJournal {
     fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord
     fun prepareCreativeRecovery(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord = throw UnsupportedOperationException("Creative item recovery is unavailable")
+    fun restorableItemRollbacks(limit: Int = 10): List<ItemRollbackSummary> = emptyList()
+    fun itemRestoreSource(operationId: UUID): ItemRestoreSource = throw UnsupportedOperationException("Item redo is unavailable")
+    fun prepareItemRestore(operationId: UUID, createdAt: Long, sourceOperation: UUID): ItemRollbackRecord = throw UnsupportedOperationException("Item redo is unavailable")
+    fun checkpointRestoreSource(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource = throw UnsupportedOperationException("Checkpoint restore is unavailable")
+    fun checkpointRestoreLink(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink? = null
+    fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, requester: com.bareminimumstudios.guardian.checkpoint.CheckpointRequester, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits): ItemRollbackRecord = throw UnsupportedOperationException("Checkpoint restore is unavailable")
     fun itemRollback(operationId: UUID): ItemRollbackRecord?
     /** Headers only, including protected COMPLETED records still awaiting reconciliation. No payload bulk load. */
     fun unfinishedItemRollbacks(limit: Int = 50): List<ItemRollbackSummary>

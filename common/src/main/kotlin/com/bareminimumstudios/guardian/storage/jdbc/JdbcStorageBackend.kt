@@ -37,7 +37,7 @@ abstract class JdbcStorageBackend(
     private val path: Path,
     private val jdbcUrl: (Path) -> String,
     private val driverClassName: String
-) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackProtectionJournal {
+) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackProtectionJournal, com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore {
     private val lock = ReentrantLock()
     private var connection: Connection? = null
     private var fileLockChannel: FileChannel? = null
@@ -502,6 +502,11 @@ abstract class JdbcStorageBackend(
     override fun prepareCreativeRecovery(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst,com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CREATIVE_DELETION)
     }
+    override fun restorableItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).restorable(limit) }
+    override fun itemRestoreSource(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).restoreSource(operationId) }
+    override fun prepareItemRestore(operationId: UUID, createdAt: Long, sourceOperation: UUID) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).prepareRestore(operationId,createdAt,sourceOperation)
+    }
     override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).protect(record)
     }
@@ -515,6 +520,18 @@ abstract class JdbcStorageBackend(
     override fun acknowledgeItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord, images: com.bareminimumstudios.guardian.rollback.ItemRollbackImages, saved: InventorySnapshot) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).acknowledge(record,images,saved)
     }
+    override fun checkpointRestoreSource(id: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).checkpointSource(id) }
+    override fun checkpointRestoreLink(id: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).checkpointLink(id) }
+    override fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, requester: com.bareminimumstudios.guardian.checkpoint.CheckpointRequester, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits) = lock.withLock {
+        JdbcItemRollbackJournal(requireConnection()).prepareCheckpoint(id,time,checkpoint,before,requester,limits)
+    }
+    override fun saveInventoryCheckpoint(checkpoint: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits) = lock.withLock {
+        JdbcInventoryCheckpoints(requireConnection(),allocator).save(checkpoint,limits)
+    }
+    override fun inventoryCheckpoint(id: UUID) = lock.withLock { JdbcInventoryCheckpoints(requireConnection(),allocator).read(id) }
+    override fun inventoryCheckpoints(playerId: UUID?, limit: Int, offset: Int, after: Long?) = lock.withLock { JdbcInventoryCheckpoints(requireConnection(),allocator).list(playerId,limit,offset,after) }
+    override fun inventoryCheckpointPlayers(name: String) = lock.withLock { JdbcInventoryCheckpoints(requireConnection(),allocator).players(name) }
+
     override fun itemRollbackProtected(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).protected(operationId) }
     override fun itemRollback(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).read(operationId) }
     override fun unfinishedItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).unfinished(limit) }

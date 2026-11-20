@@ -74,6 +74,11 @@ object ItemMaintenanceRecovery {
             check(lock.isValid)
             val receipt=checkNotNull(journal.itemRollbackImages(id)) { "Complete protected inventory images are unavailable" }
             val images=receipt.images
+            if(images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE) {
+                val store=journal as? com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore ?: error("Checkpoint authority is unavailable")
+                val source=checkNotNull(store.inventoryCheckpoint(checkNotNull(images.record.checkpointOf))) { "Checkpoint authority is missing" }
+                require(source.minecraftVersion==GuardianMinecraftVersion.current) { "Resolve this checkpoint operation using Minecraft "+source.minecraftVersion+" before changing game versions" }
+            }
             require(images.record.phase in setOf(ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING,ItemRollbackPhase.RECOVERY_REQUIRED,ItemRollbackPhase.COMPLETED))
             com.bareminimumstudios.guardian.rollback.ItemRecoveryPolicy.validate(images.record.purpose,images.record.entries)
             val owners=images.original.slots.keys.map { it.owner }.toSet()

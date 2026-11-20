@@ -3,7 +3,7 @@ package com.bareminimumstudios.guardian.rollback
 import com.bareminimumstudios.guardian.domain.*
 
 /** A persisted authority boundary. Inventory recreation is never inferred from a failed transfer. */
-enum class ItemRecoveryPurpose { TRANSFER_ROLLBACK, CREATIVE_DELETION }
+enum class ItemRecoveryPurpose { TRANSFER_ROLLBACK, CREATIVE_DELETION, TRANSFER_REDO, CHECKPOINT_RESTORE }
 
 object ItemRecoveryPolicy {
     private val transferActions = setOf(ContainerAction.PICKUP, ContainerAction.QUICK_MOVE,
@@ -17,15 +17,24 @@ object ItemRecoveryPolicy {
         return changes.all { it.address.owner==owner && it.address.index in 0..42 && !it.before.isEmpty &&
             it.before.itemData!=null && it.after.isEmpty } && changes.map { it.address }.distinct().size==changes.size
     }
+    fun checkpoint(changes: List<ItemSlotChange>): Boolean {
+        if(changes.size !in 1..43) return false
+        val owner=changes.first().address.owner as? ItemSlotOwner.PlayerInventory ?: return false
+        return changes.map { it.address }.distinct().size==changes.size && changes.all {
+            it.address.owner==owner && it.address.index in 0..42 && listOf(it.before,it.after).all { stack -> stack.isEmpty || stack.itemData!=null }
+        }
+    }
     fun transaction(purpose: ItemRecoveryPurpose, row: ContainerTransactionSnapshot): Boolean = when(purpose) {
-        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> transferAction(row.action) &&
+        ItemRecoveryPurpose.TRANSFER_ROLLBACK, ItemRecoveryPurpose.TRANSFER_REDO -> transferAction(row.action) &&
             ContainerRollbackPlanner.supported(row) && ContainerRollbackPlanner.conserving(row)
+        ItemRecoveryPurpose.CHECKPOINT_RESTORE -> false
         ItemRecoveryPurpose.CREATIVE_DELETION -> row.action==ContainerAction.CREATIVE_SET && row.actor is ActorIdentity.Player &&
             deletion(row.changes) && row.changes.all { (it.address.owner as ItemSlotOwner.PlayerInventory).playerId==row.actor.uuid }
     }
     fun validate(purpose: ItemRecoveryPurpose, entries: List<ItemRollbackEntry>) {
         when(purpose) {
-            ItemRecoveryPurpose.TRANSFER_ROLLBACK -> require(entries.all { ContainerRollbackPlanner.conserving(it.changes) }) { "Transfer recovery requires conserving changes" }
+            ItemRecoveryPurpose.TRANSFER_ROLLBACK, ItemRecoveryPurpose.TRANSFER_REDO -> require(entries.all { ContainerRollbackPlanner.conserving(it.changes) }) { "Transfer recovery requires conserving changes" }
+            ItemRecoveryPurpose.CHECKPOINT_RESTORE -> require(entries.size==1 && checkpoint(entries.single().changes)) { "Checkpoint restore requires one persistent player inventory" }
             ItemRecoveryPurpose.CREATIVE_DELETION -> {
                 require(entries.all { deletion(it.changes) }) { "Creative recovery requires recorded item-to-empty player slots" }
                 require(entries.flatMap { it.changes }.map { it.address.owner }.distinct().size==1) { "Creative recovery requires one player" }

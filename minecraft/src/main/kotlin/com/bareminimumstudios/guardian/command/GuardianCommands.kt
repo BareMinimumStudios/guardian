@@ -44,7 +44,7 @@ object GuardianCommands {
     ) {
         val root = Commands.literal(name)
             .executes { context ->
-                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, whispers, sessions, commands, spy, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items, recover-items, or status."))
+                context.source.sendSystemMessage(Component.literal("Guardian: use lookup/l, transactions, chat, whispers, sessions, commands, spy, entities, fluids, inspect/i, rollback/rb, restore/redo, purge, export, rollback-items, recover-items, restore-items, inventory, or status."))
                 1
             }
 
@@ -70,6 +70,7 @@ object GuardianCommands {
 
         // Vanilla sends the login command tree before adding this player to playersByUUID.
         // Advertise by current permission; execution and deferred results still require a live identity.
+        root.then(com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCommands.node(permissions,runtimeProvider))
         root.then(Commands.literal("entities").requires { authorized(it,permissions,"guardian.entities",2) }
             .executes { context -> executeEntities(context.source,"",runtimeProvider(),configProvider()) }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
@@ -177,6 +178,23 @@ object GuardianCommands {
             .then(Commands.argument("filters", StringArgumentType.greedyString())
                 .suggests { context, builder -> suggestFilters(context.source, builder, permissions, true) }
                 .executes { context -> executeTransactions(context.source, StringArgumentType.getString(context, "filters"), runtimeProvider(), configProvider()) }))
+        root.then(Commands.literal("restore-items").requires { permissions.has(it,"guardian.restore",3) && permissions.has(it,"guardian.restore.items",3) }
+            .executes { context -> listItemRestores(context.source,runtimeProvider(),permissions) }
+            .then(Commands.literal("preview").then(Commands.argument("operation",StringArgumentType.word())
+                .suggests { context,builder -> suggestItemRestores(context.source,builder,runtimeProvider(),permissions) }
+                .executes { context -> executeItemRestore(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),false) }))
+            .then(Commands.literal("apply").then(Commands.argument("operation",StringArgumentType.word())
+                .suggests { context,builder -> suggestItemRestores(context.source,builder,runtimeProvider(),permissions) }
+                .executes { context -> executeItemRestore(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
+            .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
+                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .executes { context -> if(runtimeProvider()?.onlineItems()?.confirmItemRestore(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
+            .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
+            .then(Commands.literal("cancel").executes { context ->
+                val cancelled=runtimeProvider()?.onlineItems()?.cancel(context.source)==true || runtimeProvider()?.itemRollbackPreview()?.cancel()==true
+                context.source.sendSystemMessage(Component.literal(if(cancelled)"Guardian: item redo cancellation requested; started writes remain protected." else "Guardian: no item redo is active."));if(cancelled)1 else 0
+            }))
+
         root.then(Commands.literal("recover-items").requires { permissions.has(it,ROLLBACK_PERMISSION,3) && permissions.has(it,"guardian.recover.items",3) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian recover-items preview u:Player t:10m, apply u:Player t:10m, confirm <token>, reconcile, or cancel. Recovers recorded creative deletions into their unchanged empty slots."));0 }
             .then(Commands.literal("preview").then(Commands.argument("filters",StringArgumentType.greedyString())
@@ -602,6 +620,7 @@ object GuardianCommands {
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.status()))
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.status()))
             runtimeProvider()?.history()?.let { context.source.sendSystemMessage(Component.literal(it.queryStatus())) }
+            runtimeProvider()?.checkpoints()?.let { context.source.sendSystemMessage(Component.literal(it.status())) }
             com.bareminimumstudios.guardian.logging.OperationTimings.status().forEach { context.source.sendSystemMessage(Component.literal(it)) }
             if (b != null) {
                 context.source.sendSystemMessage(
@@ -781,7 +800,7 @@ object GuardianCommands {
         val center=if (scope.bounds == null) filter.explicitPosition ?: sourcePosition(source) else null
         val player=filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name,ignoreCase=true) } }
         val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=scope.dimension,position=center,bounds=scope.bounds,radius=radius,actorUuid=player?.uuid,actorName=if(player==null)filter.actorName else null,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0),limit=51)
-        return if(if(apply) runtime?.onlineItems()?.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))==true
+        return if(if(apply) runtime.onlineItems()?.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))==true
             else preview.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))) 1 else 0
     }
 
@@ -816,4 +835,42 @@ object GuardianCommands {
         Mth.floor(source.position.y),
         Mth.floor(source.position.z)
     )
+    private fun executeItemRestore(source:CommandSourceStack,raw:String,runtime:GuardianRuntime?,apply:Boolean):Int {
+        val id=runCatching { java.util.UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse {
+            source.sendFailure(Component.literal("Guardian: use a complete operation UUID from a completed item rollback."));return 0
+        }
+        if(runtime==null) { source.sendFailure(Component.literal("Guardian is not ready."));return 0 }
+        return if(if(apply)runtime.onlineItems()?.requestItemRestore(source,id)==true else runtime.itemRollbackPreview()?.requestItemRestore(source,id)==true)1 else 0
+    }
+
+    private fun mayRestoreItems(source:CommandSourceStack,permissions:PermissionService):Boolean =
+        source.player?.let { source.server.playerList.getPlayer(it.uuid) !== it } != true &&
+            authorized(source,permissions,"guardian.restore",3) && authorized(source,permissions,"guardian.restore.items",3)
+
+    private fun listItemRestores(source:CommandSourceStack,runtime:GuardianRuntime?,permissions:PermissionService):Int {
+        if(!mayRestoreItems(source,permissions)) return 0
+        val history=runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable."));return 0 }
+        source.sendSystemMessage(Component.literal("Guardian: listing recent saved item rollbacks; this does not change items."))
+        history.itemRestoreHeaders({ headers ->
+            if(mayRestoreItems(source,permissions)) {
+                source.sendSystemMessage(Component.literal("Use /guardian restore-items preview <operation UUID>, then apply and confirm. Each redo is checked against the saved complete inventories."))
+                if(headers.isEmpty()) source.sendSystemMessage(Component.literal("No completed, saved item-transfer rollback is available for redo."))
+                headers.forEach { source.sendSystemMessage(Component.literal("  ${it.operationId} | ${java.time.Instant.ofEpochMilli(it.createdAt)}")) }
+            }
+        },{ if(mayRestoreItems(source,permissions)) source.sendFailure(Component.literal("Guardian: saved item rollback list is unavailable.")) })
+        return 1
+    }
+
+    private fun suggestItemRestores(source:CommandSourceStack,builder:com.mojang.brigadier.suggestion.SuggestionsBuilder,runtime:GuardianRuntime?,permissions:PermissionService):java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+        val history=runtime?.history()
+        if(history==null || !mayRestoreItems(source,permissions)) return builder.buildFuture()
+        val result=java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions>()
+        history.itemRestoreHeaders({ headers ->
+            if(mayRestoreItems(source,permissions)) headers.filter { it.operationId.toString().startsWith(builder.remainingLowerCase) }.forEach { builder.suggest(it.operationId.toString()) }
+            result.complete(builder.build())
+        },{ result.complete(builder.build()) })
+        return result
+    }
+
+
 }

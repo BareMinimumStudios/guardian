@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 27
+    const val CURRENT_VERSION = 30
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -174,6 +174,20 @@ internal object GuardianSchema {
             "INSERT INTO ex_item_rollback(operation_uuid,created_at,phase,purpose) SELECT operation_uuid,created_at,phase,'TRANSFER_ROLLBACK' FROM ex_item_rollback_v26",
             "DROP TABLE ex_item_rollback_v26",
             "CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase,created_at)"
+        )),
+        SchemaMigration(28,"Linked item transfer redo authority",listOf(
+            "CREATE TABLE ex_item_restore_link (operation_uuid VARCHAR PRIMARY KEY, source_operation_uuid VARCHAR NOT NULL)",
+            "CREATE TABLE ex_item_restore_claim (source_operation_uuid VARCHAR PRIMARY KEY, operation_uuid VARCHAR NOT NULL UNIQUE)"
+        )),
+        SchemaMigration(29,"Complete inventory checkpoints and protected restore authority",listOf(
+            "CREATE TABLE ex_inventory_checkpoint (checkpoint_uuid VARCHAR PRIMARY KEY,sequence BIGINT NOT NULL UNIQUE,player_uuid VARCHAR NOT NULL,player_name VARCHAR NOT NULL,captured_at BIGINT NOT NULL,minecraft_version VARCHAR NOT NULL,reason VARCHAR NOT NULL,slot_count SMALLINT NOT NULL,payload_bytes INTEGER NOT NULL,payload BLOB NOT NULL)",
+            "CREATE INDEX ex_checkpoint_player_idx ON ex_inventory_checkpoint(player_uuid,sequence)",
+            "CREATE TABLE ex_checkpoint_restore_link (operation_uuid VARCHAR PRIMARY KEY,source_uuid VARCHAR NOT NULL,before_uuid VARCHAR NOT NULL UNIQUE,requester_uuid VARCHAR,requester_name VARCHAR NOT NULL)",
+            "CREATE TABLE ex_checkpoint_restore_claim (checkpoint_uuid VARCHAR PRIMARY KEY,operation_uuid VARCHAR NOT NULL UNIQUE)"
+        )),
+        SchemaMigration(30,"Cover checkpoint budgets and offline player lookup",listOf(
+            "CREATE INDEX ex_checkpoint_budget_idx ON ex_inventory_checkpoint(payload_bytes)",
+            "CREATE INDEX ex_checkpoint_name_idx ON ex_inventory_checkpoint(lower(player_name),player_uuid)"
         ))
     )
 }

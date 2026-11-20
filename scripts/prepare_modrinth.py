@@ -183,7 +183,7 @@ def main():
     parser.add_argument('command', choices=('access', 'matrix', 'prepare', 'verify', 'preflight'))
     parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--bundle', type=Path, default=Path('build/modrinth'))
-    parser.add_argument('--release', default='0.4.0-alpha.99')
+    parser.add_argument('--release', default='0.4.0-alpha.100')
     parser.add_argument('--minecraft', default='all')
     parser.add_argument('--loader', default='all')
     parser.add_argument('--project', default=os.environ.get('MODRINTH_PROJECT_ID', ''))

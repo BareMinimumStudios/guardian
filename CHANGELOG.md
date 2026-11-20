@@ -7,6 +7,35 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ## [Unreleased]
 
+## [0.4.0-alpha.101+1.21.1] - 2026-11-20
+
+### Added
+
+- Full player inventory checkpoints with immutable item component data, manual capture, opt-in periodic capture and a read-only viewer.
+- Confirmed online checkpoint restoration under a separate administrator permission, with an atomic before-checkpoint for undo and existing protected interruption recovery.
+- Bounded retention that preserves recovery authority, capture/save timings and exact Minecraft-version checks.
+
+### Changed
+
+- Storage schema 30 and configuration version 20. Existing history and recovery receipts migrate without losing their source claims.
+- Covering indexes remove full checkpoint-table scans from budget checks and offline-name lookups. Query-plan and upgrade tests preserve protected images and claims.
+- Checkpoint lists accept optional player/time filters; each game/loader jar contains its exact target version for recovery validation.
+
+## [0.4.0-alpha.100+1.21.1] - 2026-11-19
+
+### Added
+
+- Redo a completed, saved item-transfer rollback with `/guardian restore-items`: list recent operations, preview an operation UUID, then apply and confirm. Separate restore permissions are required.
+- Persist the link to the original rollback and prevent duplicate redo. Full saved inventories, current history, exclusive ownership and actual saved-state checks remain required. Interrupted redo uses the existing protected recovery procedure.
+
+### Changed
+
+- Upgrade the database to schema 28 while preserving existing transfer and creative-recovery journals. Back up before updating; older jars cannot open the upgraded database. Configuration version 19 is unchanged.
+
+### Fixed
+
+- Correct player inventory previews on Minecraft 1.21.4 and 1.21.5: these targets have 41 persistent slots, rather than the 43 used by newer versions. Exact size and ownership checks remain in place.
+
 ## [0.4.0-alpha.99+1.21.1] - 2026-11-19
 
 ### Added

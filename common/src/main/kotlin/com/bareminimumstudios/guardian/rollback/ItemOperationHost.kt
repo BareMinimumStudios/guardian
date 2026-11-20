@@ -139,7 +139,7 @@ class ItemOperationHost private constructor(
                         check(current() && image()?.slots == checkNotNull(fullImages).expected.slots)
                         for ((_, result) in pendingSaved) saved.putAll(checkNotNull(result.toCompletableFuture().join()).slots)
                         check(saved == fullImages.expected.slots && state == ItemOperationState.ACKNOWLEDGING)
-                        val completed = ItemRollbackRecord(plan.operationId, plan.createdAt, ItemRollbackPhase.COMPLETED, plan.entries, plan.purpose)
+                        val completed = ItemRollbackRecord(plan.operationId, plan.createdAt, ItemRollbackPhase.COMPLETED, plan.entries, plan.purpose, plan.redoOf, plan.checkpointOf)
                         acknowledgment = worker.acknowledge(completed, fullImages, InventorySnapshot(saved)).toCompletableFuture()
                     }
                     if (acknowledgment!!.isDone) {

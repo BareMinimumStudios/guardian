@@ -1,13 +1,13 @@
 # Release scope and acceptance
 
-Current testing checkpoint: `0.4.0-alpha.99+1.21.1`.
+Current testing checkpoint: `0.4.0-alpha.101+1.21.1`.
 Original baseline assessment: 2026-10-29 against `0.4.0-alpha.96+1.21.1`.
 
 The owner separately authorized selected newer Minecraft ports on 2026-11-15, on Fabric
 and NeoForge, while retaining the 1.21.1 baseline. [Version scope](VERSION_SUPPORT.md)
 tracks planned targets; the existing 1.21.1 release checklist still applies to the current jars.
 
-**The feature list is frozen.** The owner authorized this optimization and release-polish
+**The earlier release-polish feature list was frozen.** The owner authorized this optimization and release-polish
 pass after alpha.86 passed CI. No new capture category, recovery direction, UI feature or
 dependency is part of this pass. Fix reproducible defects within the existing contract;
 historical future-work lists do not add release requirements.
@@ -61,7 +61,7 @@ omits misleading zero-quantity hopper routes. Existing recovery checks remain in
 ## Current release
 
 - Server-only Minecraft 1.21.1 on Fabric and NeoForge, Java 21, official Mojang mappings,
-  Gradle 9.8.0. Standard jars bundle SQLite only. The Fabric WorldEdit adapter is optional
+  Gradle 9.9.1. Standard jars bundle SQLite only. The Fabric WorldEdit adapter is optional
   and separately GPL licensed; the core remains BML licensed.
 - Existing block/item history and opt-in activity, entity/frame, fluid, environmental,
   growth/decay, movement and sign-text history, with filtered lookup, inspection and export.
@@ -83,9 +83,9 @@ their existing query shape. No schema/config migration or new index is required.
 
 | Gate | Current status | Evidence / remaining action |
 | --- | --- | --- |
-| R1: automated baseline | Alpha.90 passes 781 local tests and required builds; alpha.89 passed GitHub CI | [Current login fix](validation/login-commands-alpha88.json), [optimization evidence](validation/polish-alpha87.json), [alpha.87 CI](https://github.com/BareMinimumStudios/guardian/actions/runs/40190105399). Check alpha.90 CI after the owner's push. |
+| R1: automated builds | Alpha.101 passes 861 baseline tests, modern shared tests and all loader builds | [Current validation](VALIDATION.md) and [checkpoint evidence](validation/inventory-checkpoints-alpha101.json). Pushed CI and connected-client acceptance remain pending. |
 | R2: server permissions | Recorded server-side checks pass within the tested contracts | [Actual-provider baseline](validation/exports-alpha82.json), [native UI authority checks](validation/item-ui-alpha86.json), [current regressions](validation/polish-alpha87.json). Synthetic requests are not connected-client acceptance. |
-| R3: connected-client / pack acceptance | Pending | Run the six existing rows below on both loaders when a tester is available, including actual claim/mod behavior and UI visuals. The owner cannot join yet; do not repeatedly request it or replace it with synthetic evidence. |
+| R3: connected-client / pack acceptance | Pending | Run the six existing rows below on both loaders when a tester is available, including actual claim/mod behavior and UI visuals. Synthetic tests do not replace connected-client acceptance. |
 | R4: release package and approval | Local artifact checks/package prepared; final sign-off pending | Review the final selected jars, instructions, licenses and publishing metadata; confirm platform project configuration, then obtain the owner's release approval. No push, tag or publication is authorized by this document. |
 
 The isolated UI/query measurements are comparison fixtures, not a production TPS guarantee.
@@ -97,10 +97,10 @@ feature or fixed number of development passes is required to close these gates.
 | Area | Current contract |
 | --- | --- |
 | Blocks and inspection | Existing registered block capture and accepted interaction hooks; lookup and inspector behavior must pass the connected-client checks below. Mod items that bypass these hooks are not universally certified. |
-| Item history | Supported block-backed menus, ordinary player inventory actions, exact vanilla crafting models and optional supported block-hopper transfers. No arbitrary custom menus, capability-only storage or entity inventory promise. |
+| Item history | Supported block-backed menus, ordinary player inventory actions, exact vanilla crafting models and optional supported block-hopper transfers. Supported chest/hopper minecarts are recorded; arbitrary custom menus and capability-only storage remain unsupported. |
 | Read-only item checks | Existing eligibility, history and identity checks apply. Unloaded, missing, sealed-loot, busy or unsupported endpoints are skipped/refused without loading chunks or unpacking loot. |
-| Internal bound inventories | Exact barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker classes with expected sizes; exact 41-slot player inventory with current online player and idle ordinary menu. Subclasses and custom inventories are refused. Bindings alone do not authorize item apply; the online adapter must install detached native ownership. |
-| Item rollback writes | Confirmed supported conserving transfers only, at most 50 source transactions, 8 inventories, 64 final changed slots and 2 MiB of full images. Confirmed targeted maintenance recovery for exact partial images; no automatic replay, force overwrite or item redo. See online/recovery contracts. |
+| Internal bound inventories | Exact barrel, chest, hopper, dispenser, dropper, furnace, blast furnace and smoker classes with expected sizes; exact 41/43-slot player inventory according to the Minecraft target, with current online player and idle ordinary menu. Subclasses and custom inventories are refused. Bindings alone do not authorize item apply; the online adapter must install detached native ownership. |
+| Item rollback writes | Confirmed supported conserving transfers only, at most 50 source transactions, 8 inventories, 64 final changed slots and 2 MiB of full images. Confirmed targeted maintenance recovery for exact partial images; no automatic replay or force overwrite. Receipt-bound item redo is separately supported. See online/recovery contracts. |
 | Permissions | Vanilla operator fallback and optional provider integration exist. Actual-provider acceptance through alpha.82 and native UI operator/revocation checks through alpha.87 are recorded separately. Network/client acceptance remains R3; simulated permissions are not evidence of a tested provider. |
 | Entity history | Opt-in standard living/player deaths, tracked custom names, verified animal/horse tame transitions, inserted standard animal offspring with parent IDs, and normal/glow frame placement/display/rotation/removal history. Read-only world history, with separate query permission; confirmed old-history purge is supported, restoration is excluded. |
 | Fluid history | Opt-in persistent standard player bucket placement/collection and supported waterlogging. Read-only and separately permissioned; opt-in supported scheduled flow/levels/recession and liquid-formed blocks; no arbitrary automation, cauldron/custom storage or rollback. Confirmed old-history purge is supported. |
@@ -147,3 +147,22 @@ recovery sequence. [Validation](VALIDATION.md) and [evidence](validation/creativ
 record the automated scope. Real-client, permission-provider and production-pack
 acceptance remain pending. Full historical inventory checkpoints and the broader
 feature backlog are not included in alpha.99.
+
+## Authorized parity work
+
+The owner subsequently authorized the remaining parity work, including item redo, broader
+recovery targets, entity restoration, capture coverage, integrations, configuration and
+storage/API work. These are staged additions, not evidence of complete parity. Alpha.100
+starts with receipt-bound redo of supported completed transfer rollbacks. It does not add
+full inventory checkpoints, custom-inventory rollback or entity restoration. Real-client
+and production-pack acceptance remain separate from isolated automated validation.
+
+## Alpha.101 inventory checkpoints
+
+The separately authorized full inventory checkpoint milestone is implemented for
+normal player slots. Manual/opt-in periodic capture, read-only viewing, confirmed
+online replacement, saved before-state undo and protected targeted repair are
+validated on isolated fixtures. This does not add ender chests, mod inventory slots,
+entity restoration or the rest of the parity backlog. It does not complete real-client
+or production-pack acceptance. Further feature work is deferred after this inventory milestone. [Usage](INVENTORY_BACKUPS.md) and
+[evidence](validation/inventory-checkpoints-alpha101.json).

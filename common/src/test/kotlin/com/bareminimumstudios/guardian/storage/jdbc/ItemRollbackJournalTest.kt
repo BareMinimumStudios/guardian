@@ -139,7 +139,12 @@ class ItemRollbackJournalTest {
             statement.executeUpdate("DROP INDEX ex_item_rollback_phase_idx")
             statement.executeUpdate("ALTER TABLE ex_item_rollback DROP COLUMN purpose")
             statement.executeUpdate("CREATE INDEX ex_item_rollback_phase_idx ON ex_item_rollback(phase,created_at)")
-            statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=27")
+            statement.executeUpdate("DROP TABLE ex_checkpoint_restore_claim")
+            statement.executeUpdate("DROP TABLE ex_checkpoint_restore_link")
+            statement.executeUpdate("DROP TABLE ex_inventory_checkpoint")
+            statement.executeUpdate("DROP TABLE ex_item_restore_claim")
+            statement.executeUpdate("DROP TABLE ex_item_restore_link")
+            statement.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=27")
             statement.executeUpdate("UPDATE ex_meta SET meta_value='26' WHERE meta_key='schema_version'")
         } }
         factory(path).use { db ->db.open()

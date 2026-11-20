@@ -6,7 +6,7 @@ on:
       release:
         description: Guardian release (without the Minecraft suffix)
         type: string
-        default: 0.4.0-alpha.99
+        default: 0.4.0-alpha.101
         required: true
       minecraft:
         description: Minecraft target (all for the complete release)
@@ -30,7 +30,7 @@ on:
     inputs:
       release:
         type: string
-        default: 0.4.0-alpha.99
+        default: 0.4.0-alpha.101
       minecraft:
         type: string
         default: all

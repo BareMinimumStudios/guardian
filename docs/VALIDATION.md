@@ -1,7 +1,73 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.99+1.21.1**. Schema 27, config version 19.
+Current executable checkpoint: **0.4.0-alpha.101+1.21.1**. Schema 30, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+
+## Alpha.101 inventory checkpoints
+
+All 22 selected version/loader pairs pass the isolated native capture, full restore,
+saved-file verification and before-state undo test (46 assertions each). Both loaders
+on 1.21.1 and 26.2 also pass admission conflict (26), incompatible version (16) and
+opt-in periodic capture/deduplication (20) checks. Viewer actions use virtual slots;
+they never execute historical item components.
+
+Four endpoint pairs pass the selected nine-stage sequence including normal restore,
+partial saved write and abrupt exit, protected startup, maintenance preview,
+incompatible-version repair refusal, wrong token, targeted apply, retry and restart
+readback. Refused/preview operations preserve inventory-file hashes. These are
+synthetic players and private databases, not connected-client acceptance.
+
+The baseline and modern shared suites pass 740 and 742 tests.
+They run once for their respective inventory-image implementations. Each remaining
+target receives clean Fabric/NeoForge builds and its own Minecraft unit tests;
+identical shared database tests are not needlessly rerun per target. Existing
+creative recovery and transfer redo are rerun on both endpoint loaders. Artifact
+metadata, exact-version resources, SQLite-only bundling, configuration-cache reuse
+and the separate baseline Fabric WorldEdit adapter are checked.
+
+Schema 29 adds standalone checkpoint authority and preserves schema-28 protected
+redo receipts. Schema 30 adds only budget/name query indexes; upgrades preserve
+protected schema-29 checkpoint receipts too. The interruption sequence ran before
+this index-only migration. Final target jars and normal/empty inventory runs include
+the migration. Configuration 20 defaults automatic inventory capture to off.
+
+A separate production-JDBC fixture with 5,000 complete images (8 KiB opaque data
+each) measured median budget queries at 2.670 ms before indexing and 0.110 ms after,
+and offline-name queries at 13.114 ms before and 0.038 ms after. There were 10 warmups
+and 101 samples. Covering query plans and unchanged results are checked. A tested
+time index gave little benefit and is not shipped. These are query-only synthetic
+measurements, not end-to-end command latency, native component decoding or server
+capacity guarantees.
+[Evidence](validation/inventory-checkpoints-alpha101.json) and [usage](INVENTORY_BACKUPS.md).
+
+## Alpha.100 item redo
+
+All 22 selected version/loader pairs pass the native online redo check. Each test
+reverses a seeded transfer through the production rollback service, then previews,
+selects and confirms redo through the registered public commands. Names, damage,
+complete saved inventories, parent links and repeat-redo refusal are checked.
+
+Both loaders on 1.21.1 and 26.2 pass an additional unrelated-slot conflict check
+and the selected eight-stage interruption/recovery sequence. A partial player file
+is saved before abrupt exit; startup protection, read-only maintenance preview,
+wrong-token refusal, confirmed repair, retry and restart readback are verified.
+These are synthetic players and isolated worlds, not connected-client acceptance.
+
+The clean baseline build passes 837 tests. Most newer targets pass 960;
+1.21.4 passes 962 and 1.21.5 passes 964. Nine journal tests exercise SQLite and optional DuckDB,
+including full-image integrity, duplicate claims, cancellation, restart and ordering.
+All target builds, repeated baseline configuration-cache reuse, the separate Fabric
+WorldEdit adapter, 13 publisher checks and 22 runtime artifact audits pass. Normal
+creative recovery is also rerun on both loaders for 1.21.1, 1.21.4, 1.21.5 and 26.2.
+
+The sweep caught an inherited 43-slot preview check on the 41-slot 1.21.4/1.21.5
+inventories. The adapter now uses the correct layout, with an automated regression
+against Minecraft's actual Inventory plus both-loader native eligibility checks.
+
+Schema 28 retains existing transfer/creative purposes and fingerprints, adding a
+linked redo claim. Configuration version 19 is unchanged. This milestone does not
+add custom-inventory recovery or complete historical inventory checkpoints.
+[Evidence](validation/item-redo-alpha100.json) records the exact scope.
 
 ## Alpha.99 follow-up review
 
@@ -38,7 +104,7 @@ backend are covered by migration tests. Config version 19 is unchanged.
 
 [Evidence](validation/creative-recovery-alpha99.json) records the version/loader matrix
 and exact limits. This does not certify real-client UI, permission providers, modpacks
-or every possible crash boundary. Full historical inventory backups remain unsupported.
+or every possible crash boundary. Full historical inventory backups were not included in alpha.99.
 
 ## Alpha.98 rollback review
 

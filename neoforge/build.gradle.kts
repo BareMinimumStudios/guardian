@@ -50,9 +50,10 @@ kotlin {
 }
 tasks.withType<JavaCompile>().configureEach { options.release.set(21) }
 tasks.processResources {
-    val props = mapOf("version" to providers.gradleProperty("modVersion").get())
+    val props = mapOf("version" to providers.gradleProperty("modVersion").get(), "minecraftVersion" to providers.gradleProperty("minecraftVersion").get())
     inputs.properties(props)
     filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
+    filesMatching("guardian-build.properties") { expand(props) }
     from(rootProject.file("src/main/resources/assets")) { into("assets") }
 }
 
@@ -64,3 +65,5 @@ val commonOutput = project(":common").extensions.getByType<SourceSetContainer>()
 tasks.jar { from(commonOutput); from(rootProject.file("LICENSE")) }
 java { withSourcesJar() }
 tasks.named<Jar>("sourcesJar") { from(rootProject.file("common/src/main/kotlin")) }
+
+sourceSets.main { resources.srcDir(rootProject.file("minecraft/src/main/resources")) }

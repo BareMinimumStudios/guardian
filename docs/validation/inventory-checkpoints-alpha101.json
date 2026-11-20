@@ -1,0 +1,628 @@
+{
+  "checkpoint": "alpha.101",
+  "schema": 30,
+  "configVersion": 20,
+  "scope": "Complete persisted normal player inventory checkpoints with separate confirmed online replacement and before-state undo.",
+  "builds": {
+    "1.21.1": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 0
+      },
+      "sharedTests": 740,
+      "sharedSuite": null,
+      "testScope": "Clean full build"
+    },
+    "1.21.4": {
+      "loaderTests": {
+        "fabric": 122,
+        "neoforge": 122
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.5": {
+      "loaderTests": {
+        "fabric": 123,
+        "neoforge": 123
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.6": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.7": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.8": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.9": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.10": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "1.21.11": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "26.1.2": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 0,
+      "sharedSuite": "final-build-26.2.json",
+      "testScope": "Clean Fabric/NeoForge builds and their Minecraft unit tests; identical modern common suite is run once separately, not rerun for this target."
+    },
+    "26.2": {
+      "loaderTests": {
+        "fabric": 121,
+        "neoforge": 121
+      },
+      "sharedTests": 742,
+      "sharedSuite": null,
+      "testScope": "Clean full build"
+    }
+  },
+  "nativeCheckpoints": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.4",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.4",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.5",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.5",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.6",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.6",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.7",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.7",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.9",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.9",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    }
+  ],
+  "emptyInventoryRestoreAndUndo": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 46"
+    }
+  ],
+  "endpointChecks": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "conflict",
+      "result": "PASS 26"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "version",
+      "result": "PASS 16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "automatic",
+      "result": "PASS 20"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "conflict",
+      "result": "PASS 26"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "version",
+      "result": "PASS 16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "automatic",
+      "result": "PASS 20"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "conflict",
+      "result": "PASS 26"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "version",
+      "result": "PASS 16"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "automatic",
+      "result": "PASS 20"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "conflict",
+      "result": "PASS 26"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "version",
+      "result": "PASS 16"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "automatic",
+      "result": "PASS 20"
+    }
+  ],
+  "selectedInterruptionStages": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "normal",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "crash",
+      "result": "CRASH_AFTER_PARTIAL_CHECKPOINT 24"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "guard",
+      "result": "protected startup stopped before gameplay"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "preview",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "version-repair-refusal",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "wrong-token",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "apply",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "retry",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "stage": "verify",
+      "result": "PASS 4"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "normal",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "crash",
+      "result": "CRASH_AFTER_PARTIAL_CHECKPOINT 24"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "guard",
+      "result": "protected startup stopped before gameplay"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "preview",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "version-repair-refusal",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "wrong-token",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "apply",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "retry",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "stage": "verify",
+      "result": "PASS 4"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "normal",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "crash",
+      "result": "CRASH_AFTER_PARTIAL_CHECKPOINT 24"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "guard",
+      "result": "protected startup stopped before gameplay"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "preview",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "version-repair-refusal",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "wrong-token",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "apply",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "retry",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "stage": "verify",
+      "result": "PASS 4"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "normal",
+      "result": "PASS 46"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "crash",
+      "result": "CRASH_AFTER_PARTIAL_CHECKPOINT 24"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "guard",
+      "result": "protected startup stopped before gameplay"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "preview",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "version-repair-refusal",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "wrong-token",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "apply",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "retry",
+      "result": "PASS"
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "stage": "verify",
+      "result": "PASS 4"
+    }
+  ],
+  "priorRecoveryRegressions": [
+    {
+      "kind": "creative",
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 22"
+    },
+    {
+      "kind": "redo",
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 24"
+    },
+    {
+      "kind": "creative",
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 22"
+    },
+    {
+      "kind": "redo",
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 24"
+    },
+    {
+      "kind": "creative",
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 22"
+    },
+    {
+      "kind": "redo",
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 24"
+    },
+    {
+      "kind": "creative",
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 22"
+    },
+    {
+      "kind": "redo",
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 24"
+    }
+  ],
+  "checkpointQueryBenchmark": {
+    "version": "1.21.1",
+    "rows": 5000,
+    "opaqueBytesPerRow": 8192,
+    "seedMillis": 9598.136,
+    "budgetMedianMicrosBefore": 2669.7,
+    "budgetMedianMicrosAfter": 109.5,
+    "nameMedianMicrosBefore": 13113.7,
+    "nameMedianMicrosAfter": 38.4,
+    "timeMedianMicrosBefore": 3849.4,
+    "timeMedianMicrosAfter": 3649.3,
+    "budgetSpeedup": 24.38,
+    "nameSpeedup": 341.5,
+    "limits": "Isolated production JDBC SQLite database, 5000 synthetic complete images with 8KiB opaque payloads, 32 UUIDs, 10 warmups/101 samples. No real item decode, connected clients or capacity/production-latency guarantee. Time index did not show a material benefit and is not shipped.",
+    "budgetPlans": [
+      "BEFORE SCAN ex_inventory_checkpoint",
+      "AFTER SCAN ex_inventory_checkpoint USING COVERING INDEX guardian_bench_size_idx"
+    ]
+  },
+  "interruptionSchema": 29,
+  "indexMigration": 30,
+  "indexMigrationPreservesProtectedReceipts": true,
+  "guarantees": [
+    "Automatic capture disabled by default; manual capture available under separate permission.",
+    "One player captured per tick, at most four outstanding immutable writes; unchanged periodic images skipped.",
+    "Bounded complete 41/43-slot opaque item image, checksum, exact game version, persistent header and sequence pagination.",
+    "Atomic checkpoint/source claims, requester, complete before-restore checkpoint and owner reservation.",
+    "Fresh complete preimage checked again after native detachment; existing exclusive ownership and actual saved-state verification retained.",
+    "Before-state checkpoints support independently confirmed undo. Used source claims and recovery data are protected from retention.",
+    "Virtual read-only viewer never materializes historical item components.",
+    "Schema-28 protected redo migration and all prior recovery source claims preserved."
+  ],
+  "limits": [
+    "Normal vanilla persistent player slots only. No ender chest or mod-added slots.",
+    "Explicit administrative replacement may recreate items moved to other inventories; outside inventories are not reversed.",
+    "One successful use per checkpoint, exact Minecraft version only, 1 MiB total saved component data.",
+    "Only manual and periodic capture are wired; no death, join or logout checkpoint hook claim.",
+    "Synthetic players, isolated worlds and databases. No real-client, external permission-provider or production-modpack acceptance claim.",
+    "Selected partial-write/save interruption boundaries, not all possible failures."
+  ],
+  "artifacts": 22,
+  "baselineCleanBuild": true,
+  "configurationCacheReused": true,
+  "separateFabricWorldEditBuild": true,
+  "buildRunner": "IntelliJ Gradle Tooling API via MixinMCP; warning-mode all. CLI --no-daemon is rejected by this interface and was not used; these are not claimed as exact CLI invocations."
+}

@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.checkpoint.*
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftCheckpointCapture
+import com.bareminimumstudios.guardian.platform.minecraft.GuardianMinecraftVersion
 import com.bareminimumstudios.guardian.logging.OperationTimings
 import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
 import com.bareminimumstudios.guardian.domain.*
@@ -29,6 +32,10 @@ internal class OnlineItemRollbackService(
         val started = System.nanoTime()
         var deadline = started + TimeUnit.SECONDS.toNanos(10)
         var rows: List<ContainerTransactionSnapshot>? = null
+        var restore: ItemRestoreSource? = null
+        var checkpoint: CheckpointRestoreSource? = null
+        var before: MinecraftCheckpointCapture.Observed? = null
+        var checkpointLimits: InventoryCheckpointLimits? = null
         var watch: AuditOwnerObservation? = null
         var barrier: AuditWriteBarrier? = null
         var confirmedAt=0L
@@ -53,11 +60,83 @@ internal class OnlineItemRollbackService(
     private fun permitted(source: CommandSourceStack,purpose: ItemRecoveryPurpose = active?.purpose ?: ItemRecoveryPurpose.TRANSFER_ROLLBACK): Boolean = runCatching {
         val fresh = currentSource(source)
         (source.player == null || server.playerList.getPlayer(source.player!!.uuid) === source.player) &&
-            permissions.has(fresh,if(purpose==ItemRecoveryPurpose.CREATIVE_DELETION)"guardian.recover.items" else "guardian.rollback.items",3) && permissions.has(fresh,"guardian.rollback",3)
+            permissions.has(fresh,operationPermission(purpose),if(purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)4 else 3) && permissions.has(fresh,basePermission(purpose),3)
     }.getOrDefault(false)
     private fun sameRequester(a: CommandSourceStack, b: CommandSourceStack) =
         if (a.player != null || b.player != null) a.player?.uuid == b.player?.uuid else (a as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`() ===
             (b as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`()
+
+    fun requestItemRestore(source: CommandSourceStack, parent: UUID): Boolean {
+        check(server.isSameThread)
+        if(stopped || !permitted(source,ItemRecoveryPurpose.TRANSFER_REDO))
+            return fail(source,"Requires guardian.restore and guardian.restore.items, or operator level 3.")
+        if(active!=null || otherBusy()) return fail(source,"Another recovery or maintenance operation is active.")
+        val session=Session(source,ContainerLookupQuery(),50,ItemRecoveryPurpose.TRANSFER_REDO)
+        active=session
+        source.sendSystemMessage(Component.literal("Guardian: selecting saved item rollback $parent for redo; no items changed."))
+        fence(session) {
+            history.itemRestoreSource(parent,{ restore ->
+                if(!valid(session)) return@itemRestoreSource
+                if(!restore.guard.clear) { refuse(session,"Newer history, changed blocks or reserved inventories prevent redo.");return@itemRestoreSource }
+                session.restore=restore
+                session.rows=emptyList()
+                session.deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(30)
+                source.sendSystemMessage(Component.literal("Guardian: ${restore.images.record.entries.size} saved transactions selected. Close all menus, then /guardian restore-items confirm ${session.token} within 30 seconds. Every inventory must still match the saved rollback result."))
+            },{ refuse(session,"Saved rollback cannot be redone: ${it.message?.take(180) ?: "unavailable receipt"}.") })
+        }
+        return true
+    }
+
+    fun requestCheckpointRestore(source:CommandSourceStack,parent:UUID,limits:InventoryCheckpointLimits):Boolean {
+        check(server.isSameThread)
+        if(stopped || !permitted(source,ItemRecoveryPurpose.CHECKPOINT_RESTORE))
+            return fail(source,"Requires guardian.inventory and guardian.inventory.restore (operator level 4 by default).")
+        if(active!=null || otherBusy())return fail(source,"Another recovery or maintenance operation is active.")
+        val session=Session(source,ContainerLookupQuery(),1,ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+        session.checkpointLimits=limits;active=session
+        fence(session) {
+            history.checkpointRestoreSource(parent,{ saved ->
+                if(!valid(session))return@checkpointRestoreSource
+                if(saved.checkpoint.minecraftVersion!=GuardianMinecraftVersion.current) {
+                    refuse(session,"Checkpoint belongs to a different Minecraft version.");return@checkpointRestoreSource
+                }
+                val target=server.playerList.getPlayer(saved.checkpoint.playerId)
+                if(target==null) { refuse(session,"Checkpoint owner must be online.");return@checkpointRestoreSource }
+                session.checkpoint=saved;session.rows=emptyList()
+                session.deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(30)
+                source.sendSystemMessage(Component.literal("Guardian: replace ${saved.checkpoint.playerName}'s full persistent inventory with checkpoint $parent. This can recreate items moved elsewhere; outside inventories are not reversed. The current inventory will be saved separately for undo. Close menus, then /guardian inventory restore confirm ${session.token} within 30 seconds."))
+            },{ refuse(session,"Checkpoint unavailable: ${it.message?.take(180) ?: "no saved source"}.") })
+        }
+        return true
+    }
+    fun confirmCheckpointRestore(source:CommandSourceStack,token:String):Boolean=confirmFor(source,token,ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+
+    fun confirmItemRestore(source: CommandSourceStack,token:String):Boolean = confirmFor(source,token,ItemRecoveryPurpose.TRANSFER_REDO)
+
+    private fun operationCommand(purpose: ItemRecoveryPurpose): String = when(purpose) {
+        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> "rollback-items"
+        ItemRecoveryPurpose.CREATIVE_DELETION -> "recover-items"
+        ItemRecoveryPurpose.TRANSFER_REDO -> "restore-items"
+        ItemRecoveryPurpose.CHECKPOINT_RESTORE -> "inventory restore"
+    }
+    private fun operationName(purpose: ItemRecoveryPurpose): String = when(purpose) {
+        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> "rollback"
+        ItemRecoveryPurpose.CREATIVE_DELETION -> "recovery"
+        ItemRecoveryPurpose.TRANSFER_REDO -> "redo"
+        ItemRecoveryPurpose.CHECKPOINT_RESTORE -> "checkpoint restore"
+    }
+    private fun operationPermission(purpose: ItemRecoveryPurpose): String = when(purpose) {
+        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> "guardian.rollback.items"
+        ItemRecoveryPurpose.CREATIVE_DELETION -> "guardian.recover.items"
+        ItemRecoveryPurpose.TRANSFER_REDO -> "guardian.restore.items"
+        ItemRecoveryPurpose.CHECKPOINT_RESTORE -> "guardian.inventory.restore"
+    }
+    private fun basePermission(purpose: ItemRecoveryPurpose) = when(purpose) {
+        ItemRecoveryPurpose.TRANSFER_REDO -> "guardian.restore"
+        ItemRecoveryPurpose.CHECKPOINT_RESTORE -> "guardian.inventory"
+        else -> "guardian.rollback"
+    }
+    private fun transactionCount(session:Session) = if(session.checkpoint!=null)1 else session.restore?.images?.record?.entries?.size ?: checkNotNull(session.rows).size
 
     fun request(source: CommandSourceStack, query: ContainerLookupQuery, max: Int): Boolean = requestFor(source,query,max,ItemRecoveryPurpose.TRANSFER_ROLLBACK)
     fun requestCreativeRecovery(source: CommandSourceStack,query: ContainerLookupQuery,max:Int):Boolean = requestFor(source,query,max,ItemRecoveryPurpose.CREATIVE_DELETION)
@@ -101,13 +180,21 @@ internal class OnlineItemRollbackService(
         session.preparing = true
         session.deadline = System.nanoTime()+TimeUnit.SECONDS.toNanos(10)
         val rows = checkNotNull(session.rows)
-        session.watch = runCatching { pipeline.observeOwners(rows.flatMap { it.changes.map { c -> c.address.owner } }.distinct()) }
+        session.watch = runCatching { pipeline.observeOwners(session.checkpoint?.let { listOf(ItemSlotOwner.PlayerInventory(it.checkpoint.playerId)) } ?: session.restore?.images?.expected?.slots?.keys?.map { it.owner }?.distinct() ?: rows.flatMap { it.changes.map { c -> c.address.owner } }.distinct()) }
             .getOrElse { refuse(session,"Inventory observation could not be established."); return false }
         fence(session) {
+            if(session.checkpoint!=null) {
+                try {
+                    val player=server.playerList.getPlayer(checkNotNull(session.checkpoint).checkpoint.playerId) ?: error("Checkpoint owner is offline")
+                    session.before=MinecraftCheckpointCapture.observe(server,player,InventoryCheckpointReason.BEFORE_RESTORE)
+                    // Check shape/version/no-op before persisting claims and the complete undo image.
+                    checkNotNull(session.checkpoint).record(session.id,checkNotNull(session.before).checkpoint.capturedAt,checkNotNull(session.before).checkpoint)
+                } catch(error:Exception) { refuse(session,error.message?.take(180) ?: "Current inventory cannot be captured.");return@fence }
+            }
             val prepareStarted=System.nanoTime()
             prepare(session,rows,{ record ->
                 OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted)
-                if (!valid(session) || session.watch?.changedOwners()?.isNotEmpty() != false) {
+                if (!valid(session) || session.watch?.changedOwners()?.isNotEmpty() != false || session.before?.binding?.failureReason()!=null) {
                     history.cancelPreparedItemRollback(session.id, { clear(session) }, { clear(session) })
                     fail(session.source,"Item rollback admission cancelled. No item setters ran; inspect recovery journal ${session.id} if claims remain.")
                     return@prepare
@@ -115,21 +202,26 @@ internal class OnlineItemRollbackService(
                 session.applyStartedAt=System.nanoTime()
                 try {
                     // The complete reverse chain and full owner images are validated by the protected host.
-                    session.host = checkNotNull(operations.admitOwned(record) { !stopped && !session.cancelled && permitted(session.source) })
+                    session.host = checkNotNull(operations.admitOwned(record,session.before?.checkpoint?.inventory ?: session.restore?.images?.expected) { !stopped && !session.cancelled && permitted(session.source) })
                     session.watch?.close(); session.watch = null
                     session.deadline = Long.MAX_VALUE
-                    session.source.sendSystemMessage(Component.literal("Guardian: applying item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} ${session.id}. Inventory actions are temporarily paused while saving."))
+                    session.source.sendSystemMessage(Component.literal("Guardian: applying item ${operationName(session.purpose)} ${session.id}. Inventory actions are temporarily paused while saving."))
                 } catch (error: Exception) {
                     history.cancelPreparedItemRollback(session.id,{ clear(session) },{ clear(session) })
                     fail(session.source,"Item rollback refused before apply: ${error.message?.take(180) ?: "unsupported inventory"}. Recovery journal: ${session.id}.")
                 }
-            }, { OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted);refuse(session,"Persistent admission refused: changed/newer history, claimed transactions, or unavailable storage.") })
+            }, { OperationTimings.record(Stage.ROLLBACK_PREPARE,System.nanoTime()-prepareStarted);refuse(session,if(session.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE && (it is CheckpointRestoreRefusedException || it is InventoryCheckpointCapacityException))
+                "Checkpoint admission refused: ${it.message?.filter { c -> !c.isISOControl() && c.code!=167 }?.take(180)}." else "Persistent admission refused: changed/newer history, claimed transactions, or unavailable storage.") })
         }
         return true
     }
 
     private fun prepare(session:Session,rows:List<ContainerTransactionSnapshot>,success:(ItemRollbackRecord)->Unit,failure:(Throwable)->Unit) {
-        if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) history.prepareCreativeRecovery(session.id,System.currentTimeMillis(),rows,success,failure)
+        if(session.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)history.prepareCheckpointRestore(
+            session.id,checkNotNull(session.before).checkpoint,checkNotNull(session.checkpoint).checkpoint.checkpointId,
+            CheckpointRequester(session.source.player?.uuid,session.source.player?.gameProfile?.name ?: "Console"),checkNotNull(session.checkpointLimits),success,failure)
+        else if(session.purpose==ItemRecoveryPurpose.TRANSFER_REDO) history.prepareItemRestore(session.id,System.currentTimeMillis(),checkNotNull(session.restore).images.record.operationId,success,failure)
+        else if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) history.prepareCreativeRecovery(session.id,System.currentTimeMillis(),rows,success,failure)
         else history.prepareItemRollback(session.id,System.currentTimeMillis(),rows,success,failure)
     }
     /** Reconciliation observes actual saved images. It never retries partial slot writes. */
@@ -160,13 +252,18 @@ internal class OnlineItemRollbackService(
         when (host.state) {
             ItemOperationState.COMPLETED -> {
                 recordOutcome(session)
-                if (permitted(session.source)) session.source.sendSystemMessage(Component.literal("Guardian item ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recovery" else "rollback"} completed and saved: ${session.rows!!.size} transactions. Operation ${session.id}."))
+                if (permitted(session.source)) {
+                    session.source.sendSystemMessage(Component.literal("Guardian item ${operationName(session.purpose)} completed and saved: ${transactionCount(session)} ${if(session.checkpoint!=null)"inventory" else "transactions"}. Operation ${session.id}."))
+                    session.before?.checkpoint?.let { before ->
+                        session.source.sendSystemMessage(Component.literal("To preview undo, use /guardian inventory restore preview ${before.checkpointId}. This saved the full inventory immediately before restoration."))
+                    }
+                }
                 clear(session)
             }
             ItemOperationState.RECOVERY_REQUIRED -> if (!session.reportedRecovery) {
                 recordOutcome(session)
                 session.reportedRecovery=true
-                if (permitted(session.source)) fail(session.source,"Operation ${session.id} needs recovery; inventories remain protected. Use /guardian ${if(session.purpose==ItemRecoveryPurpose.CREATIVE_DELETION) "recover-items" else "rollback-items"} reconcile, or recovery saved ${session.id}. Partial writes are never replayed automatically.")
+                if (permitted(session.source)) fail(session.source,"Operation ${session.id} needs recovery; inventories remain protected. Use /guardian ${operationCommand(session.purpose)} reconcile, or recovery saved ${session.id}. Partial writes are never replayed automatically.")
             }
             else -> Unit
         }

@@ -39,6 +39,7 @@ java { withSourcesJar() }
 tasks.processResources {
     val props=mapOf("version" to project.version.toString(),"minecraftVersion" to minecraftVersion,"javaVersion" to targetJava.toString(),"javaCompatibility" to "JAVA_$targetJava","fzzyBaseVersion" to pin("fzzyNeoForgeVersion").substringBefore('+'),"kotlinLoaderVersion" to pin("kotlinForForgeVersion").substringBeforeLast('.'),"neoForgeVersion" to pin("neoForgeVersion"))
     filesMatching("*.mixins.json") { expand(props) }
+    filesMatching("guardian-build.properties") { expand(props) }
     inputs.properties(props);filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
     from(baseline.resolve("src/main/resources/assets")) { into("assets") }
 }
@@ -135,5 +136,5 @@ fun org.gradle.api.file.SourceDirectorySet.excludePaths(paths:Set<String>) { exc
 fun Jar.excludePaths(paths:Set<String>) { exclude { it.relativePath.pathString in paths } }
 sourceSets.main { java.excludePaths(excludedMainSources) }
 tasks.named<Jar>("sourcesJar") { excludePaths(excludedMainSources) }
-val mainResourceRoots=listOf(project.file("src/main/resources"))+sourceVersions.map { project.file("src/$it/resources") }
+val mainResourceRoots=listOf(baseline.resolve("minecraft/src/main/resources"),project.file("src/main/resources"))+sourceVersions.map { project.file("src/$it/resources") }
 sourceSets.main { resources.setSrcDirs(emptyList<File>());resources.ordered(mainResourceRoots) }

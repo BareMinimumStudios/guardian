@@ -38,7 +38,12 @@ internal object ContainerOwnerIndex {
         }
     }
 
-    fun guard(connection: Connection, rows: List<ContainerTransactionSnapshot>): ContainerHistoryGuard {
+    data class Source(val transactionId: java.util.UUID, val timestampEpochMillis: Long, val changes: List<ItemSlotChange>)
+
+    fun guard(connection: Connection, rows: List<ContainerTransactionSnapshot>): ContainerHistoryGuard =
+        guardSources(connection, rows.map { Source(it.transactionId, it.timestampEpochMillis, it.changes) })
+
+    fun guardSources(connection: Connection, rows: List<Source>): ContainerHistoryGuard {
         require(rows.size <= 50 && rows.sumOf { it.changes.size } <= 2048)
 
         val floor=connection.prepareStatement("SELECT meta_value FROM ex_meta WHERE meta_key='history_purged_before'").use { q ->q.executeQuery().use { if(it.next())it.getString(1).toLong()else 0L } }

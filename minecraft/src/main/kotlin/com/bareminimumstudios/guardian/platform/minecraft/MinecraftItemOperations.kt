@@ -1,6 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
 import com.bareminimumstudios.guardian.rollback.*
+import com.bareminimumstudios.guardian.domain.InventorySnapshot
 import net.minecraft.server.MinecraftServer
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -57,7 +58,10 @@ internal class MinecraftItemOperations(
         host
     }
 
-    fun admitOwned(record: ItemRollbackRecord, authorized: () -> Boolean): ItemOperationHost? = control {
+    fun admitOwned(record: ItemRollbackRecord, authorized: () -> Boolean): ItemOperationHost? = admitOwned(record,null,authorized)
+
+    fun admitOwned(record: ItemRollbackRecord, requiredOriginal: InventorySnapshot?, authorized: () -> Boolean): ItemOperationHost? = control {
+        check((record.purpose in setOf(ItemRecoveryPurpose.TRANSFER_REDO,ItemRecoveryPurpose.CHECKPOINT_RESTORE))==(requiredOriginal!=null)) { "Receipt/checkpoint recovery requires its exact original image" }
         checkThread(); check(!stopped && !busy())
         check(entries.size + restarts.size < 32)
         var lease: ItemOwnerCoordination.Lease? = null
@@ -66,7 +70,11 @@ internal class MinecraftItemOperations(
             check(authorized())
             val session = MinecraftInventoryCoordination.bindOwnedInventories(server, acquired, record)
             MinecraftBoundOperationPort(server, acquired, session,
-                { authorized() && MinecraftInventoryCoordination.ownsDetached(acquired) }, owned = true)
+                { authorized() && MinecraftInventoryCoordination.ownsDetached(acquired) }, owned = true).also { port ->
+                if(requiredOriginal != null) check(port.readOwners(acquired.owners)?.slots == requiredOriginal.slots) {
+                    "An inventory no longer matches the saved rollback result"
+                }
+            }
         }) } catch (error: Exception) {
             // startProtected submits no journal request and performs no slot write before returning.
             // Only this failed admission may return its unchanged native backing lists immediately.

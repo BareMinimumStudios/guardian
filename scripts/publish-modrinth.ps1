@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Release = '0.4.0-alpha.99',
+    [string]$Release = '0.4.0-alpha.101',
     [ValidateSet('all','1.21.1','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11','26.1.2','26.2')]
     [string]$Minecraft = 'all',
     [ValidateSet('all','fabric','neoforge')][string]$Loader = 'all',

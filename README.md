@@ -21,9 +21,9 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.99** (testing release).
+Players do not need to install anything. Current build: **alpha.101** (testing release).
 
-Alpha.99 testing builds target **1.21.1, 1.21.4�1.21.11, 26.1.2 and 26.2**.
+Alpha.100 testing builds target **1.21.1, 1.21.4 to 1.21.11, 26.1.2 and 26.2**.
 Choose the file for your exact Minecraft version and loader. Newer ports remain experimental;
 see the [version support matrix](docs/VERSION_SUPPORT.md) for validation limits.
 
@@ -114,6 +114,24 @@ and filters. See the [command guide](docs/COMMANDS.md) for other searches and fi
 Guardian only knows about events recorded while the relevant logging was enabled.
 It cannot recover history from before installation.
 
+## Recover a complete inventory
+
+Choose a checkpoint saved **before the loss**. Start by listing existing backups:
+
+```text
+/guardian inventory list u:Alex
+/guardian inventory restore preview <checkpoint UUID>
+/guardian inventory restore apply <checkpoint UUID>
+/guardian inventory restore confirm <token>
+```
+
+For a new backup, use `/guardian inventory snapshot u:Alex` while Alex is online with
+menus closed. Taking one after a clear only saves that empty state. Automatic
+checkpoints are off by default. Full inventory restoration requires operator
+level 4 or `guardian.inventory.restore` plus `guardian.inventory`. It replaces the
+player's inventory and saves a before-state for undo; it does not reverse items moved
+elsewhere. See [inventory backups](docs/INVENTORY_BACKUPS.md) for setup and recovery.
+
 ## Undo changes
 
 Back up first and preview a small area.
@@ -143,7 +161,9 @@ transfer between a player and a vanilla chest or barrel.
 
 Read the [item rollback guide](docs/ONLINE_ITEM_ROLLBACK.md) before using it on live history.
 Minecarts, direct item displays and lectern book actions are not supported rollback targets.
-There is no item redo.
+To undo a completed item rollback, use `/guardian restore-items` to find its operation UUID,
+then preview, apply and confirm the redo. All involved inventories must still match the
+saved rollback result. See the [item redo guide](docs/ITEM_REDO.md).
 
 **Deleted items in creative:**
 
@@ -239,7 +259,7 @@ plus `guardian.spy` (operator level 3 by default).
 
 Tell players in your server rules what is recorded. Restrict staff access and protect database
 backups and exports. See the [command guide](docs/COMMANDS.md#whispers-and-live-spy) for limits.
-Back up before updating: alpha.99 upgrades the database to schema 27; older jars cannot open it.
+Back up before updating: alpha.101 upgrades the database to schema 30; older jars cannot open it.
 
 ## Slow searches or item rollback?
 

@@ -34,6 +34,7 @@ object ContainerRollbackPlanner {
         historyGuard: ContainerHistoryGuard = ContainerHistoryGuard(),
         purpose: ItemRecoveryPurpose = ItemRecoveryPurpose.TRANSFER_ROLLBACK
     ): ContainerRollbackPreview {
+        require(purpose == ItemRecoveryPurpose.TRANSFER_ROLLBACK || purpose == ItemRecoveryPurpose.CREATIVE_DELETION) { "This recovery requires its own persisted authority" }
         require(newestFirst.size <= 50) { "Item preview exceeds the transaction budget" }
         require(newestFirst.map { it.transactionId }.distinct().size == newestFirst.size) { "Duplicate preview transaction" }
         require(newestFirst.zipWithNext().all { (a,b) -> a.timestampEpochMillis >= b.timestampEpochMillis }) { "Preview must be newest first" }

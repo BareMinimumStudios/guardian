@@ -66,6 +66,7 @@ tasks.processResources {
     // This is required by Gradle 9.8's configuration cache.
     val resourceProperties: Map<String, String> = mapOf(
         "version" to modVersion,
+        "minecraftVersion" to minecraftVersion,
         "loaderVersion" to loaderVersion,
         "fabricKotlinVersion" to fabricKotlinVersion,
         "fzzyConfigVersion" to fzzyConfigVersion
@@ -75,6 +76,7 @@ tasks.processResources {
     filesMatching("fabric.mod.json") {
         expand(resourceProperties)
     }
+    filesMatching("guardian-build.properties") { expand(resourceProperties) }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -115,3 +117,5 @@ tasks.named<Jar>("sourcesJar") { from(project(":common").file("src/main/kotlin")
 
 sourceSets.main { java.srcDir("minecraft/src/main/java") }
 kotlin.sourceSets.main { kotlin.srcDir("minecraft/src/main/kotlin") }
+
+sourceSets.main { resources.srcDir("minecraft/src/main/resources") }

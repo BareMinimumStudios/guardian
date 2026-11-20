@@ -36,6 +36,8 @@ class GuardianRuntime(
     private var shutdownDrains: List<java.util.concurrent.CompletionStage<Void>>? = null
     private var shutdownClean = true
 
+    private var checkpoints: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointService? = null
+
     private var onlineItems: com.bareminimumstudios.guardian.rollback.OnlineItemRollbackService? = null
 
     private var itemRecovery: com.bareminimumstudios.guardian.rollback.ItemRecoveryService? = null
@@ -98,6 +100,12 @@ class GuardianRuntime(
                 itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || purge?.isBusy()==true || rollback?.isBusy()==true
             }
         }
+        checkpoints = com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointService(
+            server,selectedHistory,permissions,config.inventoryBackups.automatic.get(),config.inventoryBackups.intervalSeconds.get(),
+            com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits(config.inventoryBackups.perPlayer.get(),config.inventoryBackups.total.get(),config.inventoryBackups.maxMiB.get().toLong()*1024*1024),
+            { config.general.enabled.get() && config.logging.enabled.get() },
+            { onlineItems?.isBusy()==true || itemPreview?.isBusy()==true || itemRecovery?.isBusy()==true || purge?.isBusy()==true || rollback?.isBusy()==true || inventoryCoordination?.hasReservations()==true }
+        )
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ pipeline }, { config })
         com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.install({ pipeline }, { config })
@@ -128,6 +136,8 @@ class GuardianRuntime(
         export?.stop()
         export=null
         purge?.stop()
+        checkpoints?.stop()
+        checkpoints=null
         onlineItems?.stop()
         val itemDrain = itemOperations?.stopAndDrain()
         managedRetentions = itemOperations?.ownsAllRetentions() == true
@@ -184,8 +194,10 @@ class GuardianRuntime(
         itemRecovery?.tick()
         itemOperations?.tick()
         onlineItems?.tick()
+        checkpoints?.tick()
     }
 
+    internal fun checkpoints() = checkpoints
     internal fun onlineItems() = onlineItems
     internal fun itemOperations() = itemOperations
     fun inventoryCoordination() = inventoryCoordination

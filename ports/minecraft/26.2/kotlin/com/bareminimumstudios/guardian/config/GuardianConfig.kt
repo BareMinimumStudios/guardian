@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.Identifier
 
-@Version(19)
+@Version(20)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(Identifier.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -94,6 +94,21 @@ class GuardianConfig : Config(Identifier.fromNamespaceAndPath(GuardianConstants.
         var commandArguments = ValidatedBoolean(false)
         /** Additional comma-separated roots, at most 64. Invalid entries fail closed. */
         var commandExcludedRoots = ValidatedString("")
+    }
+
+    /** Complete player inventory checkpoints. Automatic capture is opt-in and bounded. */
+    var inventoryBackups = InventoryBackups()
+    class InventoryBackups : ConfigSection() {
+        @RequiresAction(Action.RESTART)
+        var automatic = ValidatedBoolean(false)
+        @RequiresAction(Action.RESTART)
+        var intervalSeconds = ValidatedInt(60, 3600, 10)
+        @RequiresAction(Action.RESTART)
+        var perPlayer = ValidatedInt(128, 1000, 1)
+        @RequiresAction(Action.RESTART)
+        var total = ValidatedInt(10000, 100000, 1000)
+        @RequiresAction(Action.RESTART)
+        var maxMiB = ValidatedInt(512, 16384, 2)
     }
 
     var storage = Storage()

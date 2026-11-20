@@ -29,7 +29,8 @@ item displays, lectern book actions, cursor/crafting transfers and custom storag
 excluded. A completed shift-click transfer is the simplest test.
 
 Use one included player. Item rollback does not accept multi-user or item-type filters.
-There is no item redo. During apply/save checks, inventory interactions and automation
+Completed, saved transfer rollbacks can be redone with `/guardian restore-items`.
+See the [item redo guide](ITEM_REDO.md). During apply/save checks, inventory interactions and automation
 may briefly pause. Item components are preserved for supported records.
 
 If interrupted, follow [targeted recovery](ITEM_RECOVERY.md). Do not delete journal
@@ -73,7 +74,7 @@ All runtime fixtures use private synthetic players, worlds and databases, with n
 clients. These tests do not certify client menu presentation, arbitrary mod callbacks or a
 particular production pack.
 
-There is no item redo, forced restore or automatic partial replay. Explicit maintenance
+There is no forced restore or automatic partial replay. Explicit maintenance
 preview/confirmation can finish a proven partial protected image, including its recorded
 player files, through targeted file replacements. A protected PREPARED admission can be
 cancelled without item writes. See [recovery procedure and limits](ITEM_RECOVERY.md). Conflicts

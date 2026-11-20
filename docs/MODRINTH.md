@@ -10,7 +10,7 @@ Find out who changed blocks, moved items or edited signs. Inspect history in-gam
 
 - Inspect block history and item movements, including a read-only transaction viewer.
 - Search by area, player, time or block/item ID.
-- Roll back supported block edits and item transfers; redo rolled-back blocks.
+- Roll back supported block edits and item transfers; redo completed block and supported item rollbacks.
 - Recover recorded creative item deletions with names and other item data intact.
 - Optionally record chat, commands, whispers, signs, entity events and environmental changes.
 
@@ -29,7 +29,7 @@ Modded storage and interactions are supported when they use compatible paths. Cu
 
 SQLite is included. History is saved in `guardian/guardian.sqlite`; stop the server before copying it for a backup.
 
-**Alpha.99 is a testing release.** Targets: 1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2 on both loaders. Check the Versions tab for uploaded files. Use Java 21 for 1.21.x and Java 25 for 26.x. Back up before updating: schema 27 cannot be opened by older Guardian builds.
+**Alpha.100 is a testing release.** Targets: 1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2 on both loaders. Check the Versions tab for uploaded files. Use Java 21 for 1.21.x and Java 25 for 26.x. Back up before updating: schema 28 cannot be opened by older Guardian builds.
 
 ## Inspect something
 
@@ -70,7 +70,7 @@ Preview a small area first:
 /guardian rollback u:Alex t:10m r:5
 ```
 
-Use `/guardian restore preview` and `/guardian restore` with the same filters to redo rolled-back blocks.
+Use `/guardian restore preview` and `/guardian restore` with the same filters to redo completed block and supported item rollbacks.
 
 For supported item transfers:
 
@@ -94,7 +94,18 @@ For recorded creative item deletions, use the separate recovery command:
 
 Keep Alex online, menus closed and the deleted slots empty. Recovery refuses occupied slots, conflicting history and repeat recovery. It accepts a player and time window, without a radius.
 
-**This is not a full inventory backup.** Guardian cannot recover unlogged items or earlier events. Item redo and rollback of minecarts, direct displays and lectern books are unsupported. Read the [item rollback](https://github.com/BareMinimumStudios/guardian/blob/main/docs/ONLINE_ITEM_ROLLBACK.md) and [creative recovery](https://github.com/BareMinimumStudios/guardian/blob/main/docs/CREATIVE_ITEM_RECOVERY.md) guides before using them on live history.
+**Creative-deletion recovery is separate from full inventory checkpoints.** Guardian cannot recover unlogged items or earlier events. Use `/guardian restore-items` to list saved transfer rollbacks, then `preview <UUID>`, `apply <UUID>` and `confirm <token>` to redo one. All complete inventories must still match the saved result. Minecarts, direct displays and lectern books remain unsupported rollback targets. Read the [item rollback](https://github.com/BareMinimumStudios/guardian/blob/main/docs/ONLINE_ITEM_ROLLBACK.md) and [creative recovery](https://github.com/BareMinimumStudios/guardian/blob/main/docs/CREATIVE_ITEM_RECOVERY.md) guides before using them on live history.
+
+## Full inventory recovery
+
+Use `/guardian inventory list` to choose a checkpoint saved **before the loss**.
+The viewer is read-only. `inventory restore preview`, `apply` and `confirm` provide
+a separate administrator-only replacement, with a saved before-state for undo.
+
+For future backups, use `/guardian inventory snapshot u:Player` or enable automatic
+checkpoints in the server config. Automatic capture is off by default. Normal
+player slots are covered; ender chests and mod-added slots are not. Restoring a
+snapshot can recreate items moved elsewhere. Read the [inventory backup guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/INVENTORY_BACKUPS.md) before use.
 
 ## Optional logging
 

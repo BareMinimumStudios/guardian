@@ -1,6 +1,6 @@
 # Minecraft version support
 
-**Alpha.99 testing builds** cover the targets below on Fabric and NeoForge.
+**Alpha.100 testing builds** cover the targets below on Fabric and NeoForge.
 The 1.21.1 baseline is retained; newer ports remain experimental. Check the download
 page for uploaded files. Passing automated checks does not mean final release acceptance.
 
@@ -9,7 +9,7 @@ and NeoForge builds. The 1.21.1 baseline is retained alongside the newer ports.
 
 | Minecraft | Fabric | NeoForge | Java |
 | --- | --- | --- | --- |
-| 1.21.1 | Testing alpha.99 | Testing alpha.99 | 21 |
+| 1.21.1 | Testing alpha.101 | Testing alpha.101 | 21 |
 | 1.21.4 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.5 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.6 | Experimental; acceptance pending | Experimental (NeoForge beta); acceptance pending | 21 |

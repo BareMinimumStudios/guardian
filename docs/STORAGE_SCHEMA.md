@@ -1,6 +1,14 @@
 # Guardian storage schema
 
-Current schema: **26**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+Current schema: **30**. `GuardianSchema` and `SchemaMigrator` in `common` are authoritative for migrations. Startup upgrades supported older databases; newer unsupported schemas are refused. Back up before upgrading and retain the backup for downgrade.
+
+Schema 28 adds separate item-redo link/claim tables. A redo binds its entries and
+complete images to one acknowledged conserving transfer rollback. Original source
+claims remain permanent; redo does not grant creative or checkpoint authority.
+
+Schema 27 persists the recovery purpose in item journals. Older transfer headers
+migrate with the original transfer purpose and unchanged image fingerprints;
+recorded creative item-to-empty recovery has a separate validated purpose.
 
 Schema 26 adds nullable `recipient_uuid` and `recipient_name` columns and a recipient/time
 index to `ex_player_activity`. WHISPER (action 52) requires sender, recipient and bounded plain
@@ -63,3 +71,31 @@ Schema 19 adds nullable `frame_before` and `frame_after` BLOBs to `ex_entity`, w
 Schema 24 is an empty compatibility-marker migration admitting `BLOCK_USE` and `GROUND_PICKUP` interaction names in `ex_container`. Both reuse the existing immutable component-aware slot payloads and owner/item/location indexes. No old rows are rewritten. Standard inventory contracts and explicit optional display adapters are read only on the server thread; pending live objects never enter the writer queue. Direct display rows include changed player slots and physical block slot ownership where available. Pickup rows describe the actual player inventory delta, not a reversible item-entity transfer. Both new actions are excluded by the rollback planner. Older builds reject schema 24 instead of encountering unknown action names.
 
 Schema 25 adds stable entity-inventory UUID indexing and GCT3 item-owner addresses. Existing GCT1/GCT2 records remain readable. Entity inventory and lectern audit records do not grant recovery support.
+
+## Complete inventory checkpoints (schema 29)
+
+Schema 29 adds `ex_inventory_checkpoint` with bounded GCP1 checksummed full images,
+exact Minecraft version, player identity, capture reason and monotonic sequence.
+`ex_checkpoint_restore_link` binds each operation to its source, complete before-state
+and administrative requester. `ex_checkpoint_restore_claim` allows one completed use
+per source. These are independent of container transactions and transfer redo claims.
+
+Checkpoint preparation saves its before-state, source claim, owner reservation and
+canonical changes atomically. Protected original/expected images must exactly match
+the before/source checkpoints, including unchanged and empty slots. The new recovery
+purpose retains existing exclusive handoff, actual saves, reconciliation and targeted
+maintenance repair. Older transfer/creative/redo fingerprints remain unchanged.
+
+Retention prunes at most 1,000 unused images per save, subject to per-player and global
+count/byte limits. Claimed source images and non-cancelled before-states stay protected.
+If they exhaust capacity, the whole new save/admission rolls back. An unstarted cancel
+releases its claim; a completed operation keeps it. Restoring a before-state uses a new,
+independently checked checkpoint operation. Older jars refuse schema 29.
+
+## Checkpoint query indexes (schema 30)
+
+Schema 30 adds covering `payload_bytes` and case-folded player-name/UUID indexes.
+Budget sums avoid scanning payload-bearing table rows; offline name resolution can
+use an indexed search. The migration rewrites no checkpoint, journal image, source
+claim or receipt. Upgrade tests retain protected interrupted schema-29 checkpoints
+and earlier transfer redo records. Older builds refuse schema 30.

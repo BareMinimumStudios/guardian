@@ -43,7 +43,7 @@ internal object MaintenanceInventoryNbt {
         val raw=holder.get(key)
         require(raw==null && owner is ItemSlotOwner.BlockContainer || raw is ListTag) { "Missing or invalid inventory list" }
         val actual=MutableList<CompoundTag?>(original.size) { null }
-        (raw as? ListTag)?.forEach { value ->
+        raw?.forEach { value ->
             require(value is CompoundTag && (value.get("Slot")?.id == Tag.TAG_BYTE))
             val saved=value.getByte("Slot").orElseThrow().toInt() and 255
             val index=if(owner is ItemSlotOwner.PlayerInventory) when(saved) { in 0..35 -> saved;in 100..103 -> saved-64;150 -> 40;else -> error("Unknown player slot") } else saved
@@ -94,7 +94,7 @@ internal object MaintenanceInventoryNbt {
         val names=(36..42).associateBy { requireNotNull(net.minecraft.world.entity.player.Inventory.EQUIPMENT_SLOT_MAPPING.get(it)).serializedName }
         val equipment=document.get("equipment")
         require(equipment==null || equipment is CompoundTag)
-        (equipment as? CompoundTag)?.let { items ->
+        equipment?.let { items ->
             require(items.keySet().all { it in names }) { "Unsupported saved equipment slot" }
             items.keySet().forEach { key -> actual[names.getValue(key)]=normalized(items.get(key) as? CompoundTag ?: error("Invalid equipment item"),false) }
         }

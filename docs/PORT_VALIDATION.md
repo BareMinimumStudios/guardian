@@ -6,6 +6,23 @@ before loading the recorded block-entity data. The restorer now keeps the existi
 when the state already matches, validates payloads before mutation and verifies the state.
 The test reproduced the failure before the fix and passed afterward.
 
+## Alpha.101 inventory checkpoints
+
+All target/loader pairs pass full normal-inventory checkpoint capture, confirmed
+restoration and before-state undo. Both endpoint loaders additionally cover changed
+inventory admission, incompatible versions, periodic capture and selected crash/
+maintenance repair boundaries. No ender chest, mod-slot or real-client acceptance
+is implied. [Evidence](validation/inventory-checkpoints-alpha101.json).
+
+## Alpha.100 item redo
+
+All 22 selected version/loader pairs pass normal online item redo. Both loaders on
+1.21.1 and 26.2 also pass an unrelated-slot conflict check and selected partial-save
+interruption/recovery stages. Complete component data, saved images, parent authority
+and duplicate-redo refusal are verified. The source transfer row is seeded in these
+fixtures; this is not new transfer-capture or connected-client evidence.
+[Exact scope](validation/item-redo-alpha100.json) and [usage](ITEM_REDO.md).
+
 ## Alpha.99 creative deletion recovery
 
 All listed versions plus the 1.21.1 baseline passed eight creative-recovery stages on
