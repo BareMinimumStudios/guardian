@@ -1,7 +1,8 @@
 # Minecraft version support
 
-Guardian's available build is currently **Minecraft 1.21.1**, on Fabric and NeoForge.
-The newer targets below have experimental testing builds. They are not public releases.
+**Alpha.99 testing builds** cover the targets below on Fabric and NeoForge.
+The 1.21.1 baseline is retained; newer ports remain experimental. Check the download
+page for uploaded files. Passing automated checks does not mean final release acceptance.
 
 The owner requested the Minecraft versions published by [GriefLogger](https://modrinth.com/mod/grieflogger/versions),
 strictly above 1.21.1. Both loader variants were checked against its release feed on 2026-11-15.
@@ -10,7 +11,7 @@ remaining entries. The existing 1.21.1 build is retained.
 
 | Minecraft | Fabric | NeoForge | Java |
 | --- | --- | --- | --- |
-| 1.21.1 | Testing alpha.98 | Testing alpha.98 | 21 |
+| 1.21.1 | Testing alpha.99 | Testing alpha.99 | 21 |
 | 1.21.4 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.5 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.6 | Experimental; acceptance pending | Experimental (NeoForge beta); acceptance pending | 21 |
@@ -52,8 +53,9 @@ Preserve history and fail closed on incompatible recovery data until migration i
 The optional GPL WorldEdit adapter remains separate and Fabric-only. Its newer-version support
 requires matching WorldEdit builds and separate checks; core port status does not enable it.
 
-No existing world, database or publish workflow is changed by these experimental builds.
-Use the existing 1.21.1 jars until a target is explicitly marked available with build evidence.
+The upload workflow can prepare all listed targets. Use only the jar matching the exact
+server version and loader, and back up before installing a testing build. Existing saves
+and recovery payloads must not be treated as interchangeable across Minecraft versions.
 
 Sources: [GriefLogger release feed](https://api.modrinth.com/v2/project/grieflogger/version),
 [Fabric 26.1 tooling changes](https://fabricmc.net/2026/03/14/261.html),

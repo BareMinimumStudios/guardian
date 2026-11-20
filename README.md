@@ -23,8 +23,9 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 Players do not need to install anything. Current build: **alpha.99** (testing release).
 
-Newer Minecraft ports are tracked in the [version support matrix](docs/VERSION_SUPPORT.md).
-The current jars target **1.21.1**; planned versions are listed separately.
+Alpha.99 testing builds target **1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2**.
+Choose the file for your exact Minecraft version and loader. Newer ports remain experimental;
+see the [version support matrix](docs/VERSION_SUPPORT.md) for validation limits.
 
 ## Install
 
@@ -32,6 +33,9 @@ The current jars target **1.21.1**; planned versions are listed separately.
 2. Put the matching Guardian jar and the dependencies below in the server's `mods` folder.
    When updating, remove the old Guardian jar.
 3. Start the server and run `/guardian status` as an operator.
+
+The dependency versions below are for **1.21.1**. For newer targets, use the dependencies
+listed with that exact download.
 
 | Server | Install alongside Guardian |
 | --- | --- |
