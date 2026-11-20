@@ -17,12 +17,18 @@ Guardian uses semantic versions with a Minecraft version suffix while it is in a
 
 ### Changed
 
+- Avoid redundant item payload scans during rollback planning while retaining conservation and ownership checks. Reuse the transfer action whitelist.
+- Stream publishing checksums and avoid fetching version history during the initial Modrinth access check. Index existing versions once for upload preflight.
+- Update the version catalog to alpha.99 validation results and remove references to other audit mods.
+
 - Upgrade the database to schema 27 while preserving existing rollback journals and protected images. Back up before updating; older Guardian versions cannot open the upgraded database.
 - Keep creative recovery separate from conserving item-transfer rollback. Full historical inventory backups and item redo remain unsupported.
 - Update the Gradle wrappers to 9.9.1 with verified distribution checksums. Java remains 21 for 1.21.x and is 25 for 26.x.
 - Document the recovery commands, optional history filters and automated validation limits. These are alpha testing builds; connected-client and production-modpack acceptance remain separate.
 
 ### Fixed
+
+- Verify prepared release-note hashes before uploading, alongside the runtime jar hashes.
 
 - Restore and redo block-entity data when the block state is unchanged, including recorded container names. Validate payloads before mutation and verify the resulting state.
 - Align the baseline logging API with Minecraft and include shared classes and SQLite in the NeoForge development launch.

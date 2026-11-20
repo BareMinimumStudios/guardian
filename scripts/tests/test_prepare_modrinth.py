@@ -1,9 +1,10 @@
-import copy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from zipfile import ZipFile
 
 spec = importlib.util.spec_from_file_location('publisher', Path(__file__).resolve().parents[1] / 'prepare_modrinth.py')
@@ -37,6 +38,35 @@ class PublisherChecks(unittest.TestCase):
         self.assertEqual('processing', result['project_status'])
         self.assertFalse(result['entries'][0]['skip'])
         self.assertNotIn('test-token', json.dumps(result))
+
+    def test_access_check_does_not_download_version_history(self):
+        routes = []
+        def get(route, token):
+            routes.append(route)
+            return {'id': 'project1', 'project_type': 'mod', 'status': 'processing',
+                    'source_url': 'https://github.com/BareMinimumStudios/guardian'}
+        result = publisher.check_remote([], 'guardian', 'test-token', get)
+        self.assertEqual(['/project/guardian'], routes)
+        self.assertEqual([], result['entries'])
+
+    def test_prepared_notes_are_portable_and_changed_notes_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'gradle.properties').write_text('modVersion=0.4.0-alpha.99+1.21.1\n')
+            (root / 'CHANGELOG.md').write_text('## [0.4.0-alpha.99+1.21.1] - 2026-11-19\n\n### Added\n\n- Named items: caf\u00e9\n', encoding='utf-8')
+            for loader in publisher.LOADERS:
+                folder = publisher.folder(root, '1.21.1', loader)
+                folder.mkdir(parents=True)
+                (folder / 'runtime.jar').write_bytes(b'fixture runtime')
+            digest = hashlib.sha512(b'fixture runtime').hexdigest()
+            with patch.object(publisher, 'jar_metadata', return_value=digest):
+                publisher.prepare(root, root / 'bundle', '1.21.1', '0.4.0-alpha.99')
+                self.assertEqual(2, len(publisher.load_bundle(root / 'bundle', '0.4.0-alpha.99', '1.21.1')))
+                notes = root / 'bundle/1.21.1/RELEASE-NOTES.md'
+                self.assertNotIn(b'\r', notes.read_bytes())
+                notes.write_text('Wrong release notes\n', encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, 'Release notes changed'):
+                    publisher.load_bundle(root / 'bundle', '0.4.0-alpha.99', '1.21.1')
 
     def test_identical_upload_is_skipped(self):
         self.assertTrue(publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote([self.existing()]))['entries'][0]['skip'])

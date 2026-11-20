@@ -71,7 +71,7 @@ python scripts/prepare_modrinth.py verify --minecraft 1.21.1
 ```
 
 These commands validate and copy core runtime jars into `build/modrinth`, write their
-hash manifests and extract the dated release notes. They do not build or upload files.
+hash manifests, bind the release notes to their hashes and extract the dated notes. They do not build or upload files.
 `preflight` performs read-only Modrinth checks using `MODRINTH_TOKEN` from the environment;
 only the mc-publish workflow step performs uploads.
 

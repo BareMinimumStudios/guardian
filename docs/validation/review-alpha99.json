@@ -1,0 +1,76 @@
+{
+  "checkpoint": "alpha.99",
+  "scope": "Targeted code, publishing and documentation review.",
+  "runtimeChange": "Remove the repeated conservation scan in each transfer planner entry; retain distinct action, owner and conservation refusal checks and the separate durable admission checks.",
+  "baselineTests": 828,
+  "portTests": {
+    "default": 951,
+    "1.21.5": 953
+  },
+  "publisherTests": 13,
+  "nativeSpotChecks": [
+    {
+      "type": "transfer",
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 76"
+    },
+    {
+      "type": "transfer",
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 76"
+    },
+    {
+      "type": "transfer",
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 76"
+    },
+    {
+      "type": "transfer",
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 76"
+    },
+    {
+      "type": "creative",
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "result": "PASS 22"
+    },
+    {
+      "type": "creative",
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "result": "PASS 22"
+    },
+    {
+      "type": "creative",
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "result": "PASS 22"
+    },
+    {
+      "type": "creative",
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "result": "PASS 22"
+    }
+  ],
+  "interruptionCoverage": "Prior alpha.99 176-stage matrix remains historical evidence; this review reran normal transfer and creative recovery on both endpoint versions/loaders. No persistence/save mechanism changed.",
+  "hashBenchmark": {
+    "read_bytes": {
+      "medianMs": 18.1,
+      "peakPythonBytes": 13602645
+    },
+    "stream": {
+      "medianMs": 16.9,
+      "peakPythonBytes": 271601
+    }
+  },
+  "limitations": [
+    "Real-client, permission-provider and production-modpack acceptance remain pending.",
+    "Checksum benchmark measures local Python memory/time, not server tick performance."
+  ]
+}

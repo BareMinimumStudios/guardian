@@ -70,7 +70,8 @@ def jar_metadata(path, minecraft, loader, version, java):
             require(any(d['modId'] == 'minecraft' and d['versionRange'] == '[' + minecraft + ']' and d['side'] == 'SERVER' for d in deps), 'Wrong NeoForge Minecraft version')
             bundled = json.loads(archive.read('META-INF/jarjar/metadata.json'))['jars']
             require(len(bundled) == 1 and bundled[0]['path'] == nested[0], 'Wrong NeoForge nested dependency metadata')
-    return hashlib.sha512(path.read_bytes()).hexdigest()
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha512').hexdigest()
 
 
 def folder(repo, minecraft, loader):
@@ -103,8 +104,9 @@ def prepare(repo, out, minecraft, release):
         source = next(p for p in folder(repo, minecraft, loader).glob('*.jar')
                       if not p.name.endswith(('-sources.jar', '-dev.jar', '-javadoc.jar')))
         shutil.copy2(source, dest / entry['file'])
-    (dest / 'RELEASE-NOTES.md').write_text(notes, encoding='utf-8')
-    (dest / 'manifest.json').write_text(json.dumps({'release': release, 'entries': entries}, indent=2) + '\n', encoding='utf-8')
+    (dest / 'RELEASE-NOTES.md').write_text(notes, encoding='utf-8', newline='\n')
+    notes_hash = hashlib.sha512(notes.encode('utf-8')).hexdigest()
+    (dest / 'manifest.json').write_text(json.dumps({'release': release, 'notes_sha512': notes_hash, 'entries': entries}, indent=2) + '\n', encoding='utf-8')
     return entries
 
 
@@ -118,7 +120,9 @@ def load_bundle(bundle, release, minecraft='all', loader='all'):
         manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
         require(manifest['release'] == release, 'Mixed release manifests')
         require(len(manifest['entries']) == 2 and {e['loader'] for e in manifest['entries']} == set(LOADERS), 'Incomplete loader pair')
-        require((root / 'RELEASE-NOTES.md').read_text(encoding='utf-8').strip(), 'Missing release notes')
+        notes = (root / 'RELEASE-NOTES.md').read_bytes()
+        require(notes.strip(), 'Missing release notes')
+        require(hashlib.sha512(notes).hexdigest() == manifest.get('notes_sha512'), 'Release notes changed after preparation')
         for entry in manifest['entries']:
             require(entry['minecraft'] == target and entry['mod_version'] == release + '+' + target, 'Wrong manifest version')
             require(entry['version'] == entry['mod_version'] + '-' + entry['loader'], 'Wrong public version number')
@@ -153,10 +157,15 @@ def check_remote(entries, project, token, get=api_get):
     require(meta['project_type'] == 'mod', 'Expected a Modrinth mod project')
     require((meta.get('source_url') or '').rstrip('/').lower() == 'https://github.com/bareminimumstudios/guardian', 'Guardian project source URL must point to https://github.com/BareMinimumStudios/guardian')
     require(meta['status'] not in ('rejected', 'withheld', 'archived'), 'Project status does not allow this upload plan')
+    if not entries:
+        return {'project_id': meta['id'], 'project_status': meta['status'], 'entries': []}
     required = {slug: get('/project/' + slug, token)['id'] for slug in sorted({d for e in entries for d in e['dependencies']})}
     versions = get('/project/' + quote(meta['id'], safe='') + '/version', token)
+    by_number = {}
+    for version in versions:
+        by_number.setdefault(version['version_number'], []).append(version)
     for entry in entries:
-        existing = [v for v in versions if v['version_number'] == entry['version']]
+        existing = by_number.get(entry['version'], [])
         require(len(existing) <= 1, 'Ambiguous duplicate remote version: ' + entry['version'])
         entry['skip'] = bool(existing)
         if existing:

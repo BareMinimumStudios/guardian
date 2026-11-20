@@ -1,9 +1,10 @@
 # Release scope and acceptance
 
-Assessed: 2026-10-29 against `0.4.0-alpha.96+1.21.1`.
+Current testing checkpoint: `0.4.0-alpha.99+1.21.1`.
+Original baseline assessment: 2026-10-29 against `0.4.0-alpha.96+1.21.1`.
 
-The owner separately authorized newer Minecraft ports on 2026-11-15, matching GriefLogger's
-published versions strictly above 1.21.1, on Fabric and NeoForge. [Version scope](VERSION_SUPPORT.md)
+The owner separately authorized selected newer Minecraft ports on 2026-11-15, on Fabric
+and NeoForge, while retaining the 1.21.1 baseline. [Version scope](VERSION_SUPPORT.md)
 tracks planned targets; the existing 1.21.1 release checklist still applies to the current jars.
 
 **The feature list is frozen.** The owner authorized this optimization and release-polish

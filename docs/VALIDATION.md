@@ -3,6 +3,21 @@
 Current executable checkpoint: **0.4.0-alpha.99+1.21.1**. Schema 27, config version 19.
 The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
 
+## Alpha.99 follow-up review
+
+The shared planner avoids a second component-payload conservation scan for each transfer;
+its independent action, owner, state and conservation refusals remain. All target builds
+pass (828 baseline tests; 951 per newer target, or 953 on 1.21.5). Native saved transfer
+rollback and creative recovery were rerun on both loaders for 1.21.1 and 26.2: eight
+checks pass, including component preservation and duplicate-source refusal.
+
+The publisher passes 13 checks, binds release-note hashes, avoids unused version-history
+requests during access checks and streams jar hashes. A five-run local benchmark on the
+baseline jar measured peak Python allocation dropping from 13,602,645 to 271,601 bytes,
+with identical hashes. This is upload-tool memory, not a server performance measurement.
+[Review evidence](validation/review-alpha99.json) separates this pass from the earlier
+interruption matrix. Real-client and production-modpack acceptance remain pending.
+
 ## Alpha.99 creative item recovery
 
 All 22 selected Minecraft/loader pairs passed eight native stages: creative deletion

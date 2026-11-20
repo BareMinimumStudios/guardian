@@ -6,6 +6,11 @@ import com.bareminimumstudios.guardian.domain.*
 enum class ItemRecoveryPurpose { TRANSFER_ROLLBACK, CREATIVE_DELETION }
 
 object ItemRecoveryPolicy {
+    private val transferActions = setOf(ContainerAction.PICKUP, ContainerAction.QUICK_MOVE,
+        ContainerAction.SWAP, ContainerAction.QUICK_CRAFT, ContainerAction.PICKUP_ALL, ContainerAction.HOPPER_TRANSFER)
+
+    fun transferAction(action: ContainerAction): Boolean = action in transferActions
+
     fun deletion(changes: List<ItemSlotChange>): Boolean {
         if(changes.isEmpty() || changes.size > 43) return false
         val owner=changes.first().address.owner as? ItemSlotOwner.PlayerInventory ?: return false
@@ -13,8 +18,7 @@ object ItemRecoveryPolicy {
             it.before.itemData!=null && it.after.isEmpty } && changes.map { it.address }.distinct().size==changes.size
     }
     fun transaction(purpose: ItemRecoveryPurpose, row: ContainerTransactionSnapshot): Boolean = when(purpose) {
-        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> row.action in setOf(ContainerAction.PICKUP,ContainerAction.QUICK_MOVE,
-            ContainerAction.SWAP,ContainerAction.QUICK_CRAFT,ContainerAction.PICKUP_ALL,ContainerAction.HOPPER_TRANSFER) &&
+        ItemRecoveryPurpose.TRANSFER_ROLLBACK -> transferAction(row.action) &&
             ContainerRollbackPlanner.supported(row) && ContainerRollbackPlanner.conserving(row)
         ItemRecoveryPurpose.CREATIVE_DELETION -> row.action==ContainerAction.CREATIVE_SET && row.actor is ActorIdentity.Player &&
             deletion(row.changes) && row.changes.all { (it.address.owner as ItemSlotOwner.PlayerInventory).playerId==row.actor.uuid }

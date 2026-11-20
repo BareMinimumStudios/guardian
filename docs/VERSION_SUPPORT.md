@@ -4,10 +4,8 @@
 The 1.21.1 baseline is retained; newer ports remain experimental. Check the download
 page for uploaded files. Passing automated checks does not mean final release acceptance.
 
-The owner requested the Minecraft versions published by [GriefLogger](https://modrinth.com/mod/grieflogger/versions),
-strictly above 1.21.1. Both loader variants were checked against its release feed on 2026-11-15.
-Versions it skips are outside this scope. The first port target is **26.2**, followed by the
-remaining entries. The existing 1.21.1 build is retained.
+Guardian targets the Minecraft versions listed below. Each version has separate Fabric
+and NeoForge builds. The 1.21.1 baseline is retained alongside the newer ports.
 
 | Minecraft | Fabric | NeoForge | Java |
 | --- | --- | --- | --- |
@@ -23,9 +21,9 @@ remaining entries. The existing 1.21.1 build is retained.
 | 26.1.2 | Experimental; acceptance pending | Experimental; acceptance pending | 25 |
 | 26.2 | Experimental; acceptance pending | Experimental; acceptance pending | 25 |
 
-The [machine-readable matrix](../gradle/minecraft-targets.json) links each target to its published
-GriefLogger reference and Mojang release manifest. GriefLogger shares files across some patch
-releases; Guardian must verify each version before making that compatibility claim.
+The [machine-readable matrix](../gradle/minecraft-targets.json) records each target's build
+profile, Mojang release manifest and validation evidence. Each jar is checked for its exact
+Minecraft version and loader.
 
 ## Porting gates
 
@@ -57,8 +55,7 @@ The upload workflow can prepare all listed targets. Use only the jar matching th
 server version and loader, and back up before installing a testing build. Existing saves
 and recovery payloads must not be treated as interchangeable across Minecraft versions.
 
-Sources: [GriefLogger release feed](https://api.modrinth.com/v2/project/grieflogger/version),
-[Fabric 26.1 tooling changes](https://fabricmc.net/2026/03/14/261.html),
+Sources: [Fabric 26.1 tooling changes](https://fabricmc.net/2026/03/14/261.html),
 [Fabric 26.2 tooling notes](https://fabricmc.net/2026/06/15/262.html),
 [Cloche targets](https://github.com/terrarium-earth/cloche).
 

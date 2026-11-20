@@ -12,7 +12,6 @@ class ContainerRollbackPreview(entries: List<ContainerPreviewEntry>) {
 
 /** Pure reverse-history simulation. This is a preview, never permission to mutate live slots. */
 object ContainerRollbackPlanner {
-    private val actions = setOf(ContainerAction.PICKUP,ContainerAction.QUICK_MOVE,ContainerAction.SWAP,ContainerAction.QUICK_CRAFT,ContainerAction.PICKUP_ALL,ContainerAction.HOPPER_TRANSFER)
     fun supported(value: ContainerTransactionSnapshot): Boolean =
         value.changes.all { it.address.owner is ItemSlotOwner.BlockContainer || it.address.owner is ItemSlotOwner.PlayerInventory }
 
@@ -47,7 +46,8 @@ object ContainerRollbackPlanner {
         val entries = newestFirst.map { value ->
             val owners = value.changes.map { it.address.owner }.toSet()
             val reason = when {
-                !ItemRecoveryPolicy.transaction(purpose,value) && (purpose==ItemRecoveryPurpose.CREATIVE_DELETION || value.action !in actions) -> ContainerPreviewReason.UNSUPPORTED_ACTION
+                (purpose==ItemRecoveryPurpose.CREATIVE_DELETION && !ItemRecoveryPolicy.transaction(purpose,value)) ||
+                    (purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK && !ItemRecoveryPolicy.transferAction(value.action)) -> ContainerPreviewReason.UNSUPPORTED_ACTION
                 value.transactionId in ambiguous -> ContainerPreviewReason.AMBIGUOUS_ORDER
                 !supported(value) -> ContainerPreviewReason.UNSUPPORTED_OWNER
                 purpose==ItemRecoveryPurpose.TRANSFER_ROLLBACK && !conserving(value) -> ContainerPreviewReason.NONCONSERVING_ACTION

@@ -312,6 +312,7 @@ explicitly denies a node, operator status does not override that denial.
 | `guardian.status` | Storage/capture status | 2 |
 | `guardian.rollback` | Block rollback, item checks and required base grant for item apply | 3 |
 | `guardian.rollback.items` | Confirmed online item rollback and retained-operation reconciliation | 3 |
+| `guardian.recover.items` | Recorded creative-deletion recovery; also requires `guardian.rollback` | 3 |
 | `guardian.restore` | Block restore/redo and its preview | 3 |
 | `guardian.export` | Write bounded history files; also needs the category history grant | 4 |
 | `guardian.purge` | Preview/confirm/cancel old-history deletion | 4 |
@@ -325,7 +326,8 @@ For LuckPerms, grant individual nodes, for example:
 /lp user Alex permission set guardian.lookup true
 ```
 
-Item apply needs both `guardian.rollback` and `guardian.rollback.items`.
+Item transfer apply needs both `guardian.rollback` and `guardian.rollback.items`.
+Creative-deletion recovery needs both `guardian.rollback` and `guardian.recover.items`.
 Export needs `guardian.export` plus the selected history category's permission.
 Inspecting item frames also needs `guardian.entities`.
 

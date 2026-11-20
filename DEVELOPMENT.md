@@ -4,8 +4,7 @@ Guardian targets server-only Minecraft 1.21.1 on Fabric and NeoForge. Use Java 2
 
 ## Newer Minecraft targets
 
-The owner authorized matching GriefLogger's published Minecraft versions above 1.21.1 on
-Fabric and NeoForge. See [version scope and gates](docs/VERSION_SUPPORT.md) and
+Guardian maintains selected newer Minecraft targets on Fabric and NeoForge. See [version scope and gates](docs/VERSION_SUPPORT.md) and
 [the target catalog](gradle/minecraft-targets.json). The first target is 26.2. Existing 1.21.1
 builds remain the available baseline. Java 25 is required for 26.x; Java 21 remains the
 1.21.x toolchain. Each target requires native capture/save/recovery validation, with explicit
