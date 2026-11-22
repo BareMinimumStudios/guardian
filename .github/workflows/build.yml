@@ -31,6 +31,4 @@ jobs:
         run: ./gradlew build --no-daemon --warning-mode all --max-workers=2 --no-parallel
       - name: Verify configuration cache reuse
         shell: bash
-        run: |
-          ./gradlew build --no-daemon --warning-mode all --max-workers=2 --no-parallel | tee build/configuration-cache-verification.log
-          grep -F 'Configuration cache entry reused.' build/configuration-cache-verification.log
+        run: python scripts/verify_configuration_cache.py

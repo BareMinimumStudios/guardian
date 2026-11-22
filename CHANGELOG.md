@@ -7,6 +7,10 @@ Guardian uses semantic versions with a Minecraft version suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- CI permits one additional cache check when a cold Loom build creates its Minecraft version manifest. Build failures and unrelated cache invalidation still fail verification.
+
 ## [0.4.0+1.21.1] - 2026-11-21
 
 ### Added
