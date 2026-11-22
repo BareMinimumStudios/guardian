@@ -65,7 +65,38 @@ class ConfigurationCacheChecks(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
 
     def test_windows_manifest_path_is_recognized(self):
-        self.assertTrue(cache.manifest_created(COLD.replace('/', '\\')))
+        self.assertTrue(cache.loom_cache_created(COLD.replace('/', '\\')))
+
+    def jar_cold(self):
+        return COLD.replace('../../../.gradle/caches/fabric-loom/mojang_versions_manifest.json',
+            '.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-9b5ff62f35/'
+            '1.21.1-loom.mappings.1_21_1.layered+hash.2198-v2/'
+            'minecraft-merged-9b5ff62f35-1.21.1-loom.mappings.1_21_1.layered+hash.2198-v2.jar')
+
+    def test_actual_restored_runner_minecraft_jar_gets_one_retry(self):
+        status, run, _ = self.verify([(0, self.jar_cold()), (0, HIT)])
+        self.assertEqual(status, 0)
+        self.assertEqual(run.call_count, 2)
+
+    def test_minecraft_jar_repeated_miss_still_fails(self):
+        status, run, _ = self.verify([(0, self.jar_cold()), (0, self.jar_cold())])
+        self.assertEqual(status, 1)
+        self.assertEqual(run.call_count, 2)
+
+    def test_changed_generated_jar_is_not_creation(self):
+        status, run, _ = self.verify([(0, self.jar_cold().replace('has been created.', 'has changed.'))])
+        self.assertEqual(status, 1)
+        self.assertEqual(run.call_count, 1)
+
+    def test_unrelated_jar_creation_is_not_retried(self):
+        output = self.jar_cold().replace('.gradle/loom-cache/minecraftMaven/net/minecraft/', 'src/main/resources/')
+        status, run, _ = self.verify([(0, output)])
+        self.assertEqual(status, 1)
+        self.assertEqual(run.call_count, 1)
+
+    def test_generated_path_cannot_escape_version_directory(self):
+        output = self.jar_cold().replace('1.21.1-loom.mappings.1_21_1.layered+hash.2198-v2/', '../')
+        self.assertFalse(cache.loom_cache_created(output))
 
 
 if __name__ == '__main__':
