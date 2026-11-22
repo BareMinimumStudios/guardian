@@ -20,21 +20,34 @@ internal class InventoryCheckpointMenu(
     private val display=SimpleContainer(90)
     private var closed=false
     private var resync=false
+    private var page=0
+    private val pageCount=1+((checkpoint.equipment?.slots?.size ?: 0)+44)/45
     init {
         for(i in 0 until 90)addSlot(object:Slot(display,i,8+(i%9)*18,18+(i/9)*18) {
             override fun mayPlace(stack:ItemStack)=false
             override fun mayPickup(player:Player)=false
         })
+        render()
+    }
+    private fun render() {
         for(i in 0 until 54)display.setItem(i,card(Items.GRAY_STAINED_GLASS_PANE," "))
-        checkpoint.inventory.slots.entries.sortedBy { it.key.index }.forEach { (address,snapshot) ->
+        if(page==0)checkpoint.inventory.slots.entries.sortedBy { it.key.index }.forEach { (address,snapshot) ->
             val slot=address.index
             val target=if(slot<9)27+slot else if(slot<36)slot-9 else slot
             val icon=if(snapshot.isEmpty)Items.LIGHT_GRAY_STAINED_GLASS_PANE else CheckpointLinks.icon(snapshot.itemId)
             display.setItem(target,card(icon,if(snapshot.isEmpty)"Slot $slot: empty" else "Slot $slot: ${snapshot.count} ${snapshot.itemId!!.path.replace('_',' ')}",
                 listOf("Item: ${snapshot.itemId ?: "empty"}","Count: ${snapshot.count}","Plain icon; saved components are retained but not rendered")))
         }
+        if(page>0)checkpoint.equipment?.slots?.entries?.drop((page-1)*45)?.take(45)?.forEachIndexed { index,(address,snapshot) ->
+            val icon=if(snapshot.isEmpty)Items.LIGHT_GRAY_STAINED_GLASS_PANE else CheckpointLinks.icon(snapshot.itemId)
+            val label=if(address.provider=="minecraft")address.slot.replace('_',' ') else "${address.provider}: ${address.slot}"
+            display.setItem(index,card(icon,"$label: ${if(snapshot.isEmpty) "empty" else "${snapshot.count} ${snapshot.itemId!!.path.replace('_',' ')}"}",
+                listOf("Item: ${snapshot.itemId ?: "empty"}","Count: ${snapshot.count}","Plain icon; saved components are retained but not rendered")))
+        }
+        if(page>0)display.setItem(46,card(Items.ARROW,"Previous page"))
+        if(page+1<pageCount)display.setItem(50,card(Items.ARROW,"Ender chest and equipment: next page"))
         display.setItem(45,card(Items.BOOK,checkpoint.playerName,listOf("Player UUID: ${checkpoint.playerId}","Checkpoint: ${checkpoint.checkpointId}","Minecraft: ${checkpoint.minecraftVersion}")))
-        display.setItem(49,card(Items.PAPER,"${java.time.Instant.ofEpochMilli(checkpoint.capturedAt)}",listOf("${checkpoint.reason.name.lowercase().replace('_',' ')} | ${checkpoint.inventory.slots.size} persistent slots","Top rows: main inventory, then hotbar and equipment","Your inventory below is also read-only")))
+        display.setItem(49,card(Items.PAPER,"${java.time.Instant.ofEpochMilli(checkpoint.capturedAt)}",listOf("${checkpoint.reason.name.lowercase().replace('_',' ')} | ${checkpoint.slotCount} persistent slots | Page ${page+1}/$pageCount",if(page==0)"Main inventory, hotbar and armor" else "Ender chest and named equipment slots","Your inventory below is also read-only")))
         display.setItem(52,card(Items.COMPASS,"Preview restoration",listOf("Closes this viewer and checks eligibility","Does not change items; separate apply/confirmation required","Requires guardian.inventory.restore")))
         display.setItem(53,card(Items.BARRIER,"Close"))
     }
@@ -51,7 +64,9 @@ internal class InventoryCheckpointMenu(
         resync=true
         // Never enter vanilla's mutation machinery, including outside and bottom slots.
         if(type!=ClickType.PICKUP || button!=0)return
-        if(index==53)viewer.closeContainer()
+        if(index==46 && page>0) { page--;render() }
+        else if(index==50 && page+1<pageCount) { page++;render() }
+        else if(index==53)viewer.closeContainer()
         else if(index==52) { viewer.closeContainer();preview() }
     }
     override fun broadcastChanges() {

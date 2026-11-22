@@ -13,10 +13,16 @@ object ContainerChangesCodec {
         require(changes.size in 1..MAX_SLOTS)
         val bytes = ByteArrayOutputStream()
         DataOutputStream(bytes).use { output ->
-            output.writeInt(if(changes.any { it.address.owner is ItemSlotOwner.EntityContainer })0x47435433 else if (changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) 0x47435432 else 0x47435431); output.writeInt(changes.size)
+            val extended=changes.any { (it.address.owner as? ItemSlotOwner.PlayerInventory)?.layout!=null }
+            val owners=if(extended)changes.map { it.address.owner }.distinct() else emptyList()
+            output.writeInt(if(extended)0x47435434 else if(changes.any { it.address.owner is ItemSlotOwner.EntityContainer })0x47435433 else if (changes.any { it.address.owner is ItemSlotOwner.CraftingGrid }) 0x47435432 else 0x47435431); output.writeInt(changes.size)
+            if(extended) {
+                require(owners.size in 1..32);output.writeByte(owners.size)
+                owners.forEach { SlotOwnerWire.write(output,it) }
+            }
             changes.forEach { change ->
-                when (val owner = change.address.owner) {
-                    is ItemSlotOwner.PlayerInventory -> { output.writeByte(1); output.writeUTF(owner.playerId.toString()) }
+                if(extended)output.writeByte(owners.indexOf(change.address.owner)) else when (val owner = change.address.owner) {
+                    is ItemSlotOwner.PlayerInventory -> { require(owner.layout==null) { "Extended player storage requires the equipment owner codec" }; output.writeByte(1); output.writeUTF(owner.playerId.toString()) }
                     is ItemSlotOwner.CraftingGrid -> { output.writeByte(4); output.writeUTF(owner.playerId.toString()); output.writeInt(owner.menuId) }
                     is ItemSlotOwner.Cursor -> { output.writeByte(2); output.writeUTF(owner.playerId.toString()) }
                     is ItemSlotOwner.EntityContainer -> {
@@ -39,10 +45,16 @@ object ContainerChangesCodec {
         require(bytes.size <= MAX_BYTES)
         return DataInputStream(ByteArrayInputStream(bytes)).use { input ->
             val format = input.readInt()
-            require(format == 0x47435431 || format == 0x47435432 || format == 0x47435433) { "Unsupported container changes format" }
+            require(format == 0x47435431 || format == 0x47435432 || format == 0x47435433 || format == 0x47435434) { "Unsupported container changes format" }
             val size = input.readInt(); require(size in 1..MAX_SLOTS)
+            val owners=if(format==0x47435434) {
+                val count=input.readUnsignedByte();require(count in 1..32)
+                List(count) { SlotOwnerWire.read(input) }.also { require(it.distinct().size==it.size) }
+            } else emptyList()
             val changes = List(size) {
-                val owner = when (input.readUnsignedByte()) {
+                val owner = if(format==0x47435434) {
+                    val index=input.readUnsignedByte();require(index in owners.indices);owners[index]
+                } else when (input.readUnsignedByte()) {
                     1 -> ItemSlotOwner.PlayerInventory(UUID.fromString(input.readUTF()))
                     2 -> ItemSlotOwner.Cursor(UUID.fromString(input.readUTF()))
                     3 -> ItemSlotOwner.BlockContainer(ResourceId.parse(input.readUTF()), BlockPosition(input.readInt(), input.readInt(), input.readInt()))

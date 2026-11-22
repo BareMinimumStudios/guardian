@@ -1,6 +1,7 @@
 package com.bareminimumstudios.guardian.mixin;
 
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
+import com.bareminimumstudios.guardian.platform.minecraft.EquipmentMutationGate;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -17,12 +18,14 @@ public abstract class PlayerTransitionMixin {
     @WrapMethod(method = "die")
     private void guardian$beforeDeath(DamageSource source, Operation<Void> original) {
         MinecraftInventoryCoordination.beforePlayerTransition((ServerPlayer) (Object) this);
+        if (EquipmentMutationGate.blocked(this)) return;
         original.call(source);
     }
 
     @WrapMethod(method = "teleport")
     private ServerPlayer guardian$beforeTravel(TeleportTransition transition, Operation<ServerPlayer> original) {
         MinecraftInventoryCoordination.beforePlayerTransition((ServerPlayer) (Object) this);
+        if (EquipmentMutationGate.blocked(this)) return (ServerPlayer) (Object) this;
         return original.call(transition);
     }
 
@@ -30,6 +33,7 @@ public abstract class PlayerTransitionMixin {
     private void guardian$beforeCopy(ServerPlayer previous, boolean keepEverything, Operation<Void> original) {
         MinecraftInventoryCoordination.beforePlayerTransition(previous);
         MinecraftInventoryCoordination.beforePlayerTransition((ServerPlayer) (Object) this);
+        if (EquipmentMutationGate.blocked(this) || EquipmentMutationGate.blocked(previous)) return;
         original.call(previous, keepEverything);
     }
 

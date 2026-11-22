@@ -14,10 +14,15 @@ object ItemRollbackImagesCodec {
     fun encode(images: ItemRollbackImages): ByteArray {
         val bytes=ByteArrayOutputStream()
         DataOutputStream(bytes).use { out ->
-            out.writeInt(MAGIC);out.write(fingerprint(images.record));out.writeInt(images.original.slots.size)
-            images.original.slots.entries.sortedBy { it.key.toString() }.forEach { (address,item) ->
-                when(val owner=address.owner) {
-                    is ItemSlotOwner.PlayerInventory -> {out.writeByte(1);out.writeUTF(owner.playerId.toString())}
+            val extended=images.original.slots.keys.any { (it.owner as? ItemSlotOwner.PlayerInventory)?.layout!=null }
+            val owners=if(extended)images.original.slots.keys.map { it.owner }.distinct() else emptyList()
+            out.writeInt(if(extended)0x47494932 else MAGIC);out.write(fingerprint(images.record));out.writeInt(images.original.slots.size)
+            if(extended) { require(owners.size in 1..32);out.writeByte(owners.size);owners.forEach { SlotOwnerWire.write(out,it) } }
+            val entries=if(extended)images.original.slots.entries.sortedWith(compareBy<Map.Entry<ItemSlotAddress,ItemStackSnapshot>> { owners.indexOf(it.key.owner) }.thenBy { it.key.index })
+                else images.original.slots.entries.sortedBy { it.key.toString() }
+            entries.forEach { (address,item) ->
+                if(extended)out.writeByte(owners.indexOf(address.owner)) else when(val owner=address.owner) {
+                    is ItemSlotOwner.PlayerInventory -> { require(owner.layout==null) { "Extended player storage requires the equipment owner codec" };out.writeByte(1);out.writeUTF(owner.playerId.toString())}
                     is ItemSlotOwner.BlockContainer -> {
                         out.writeByte(3);out.writeUTF(owner.dimension.toString());out.writeInt(owner.position.x);out.writeInt(owner.position.y);out.writeInt(owner.position.z)
                     }
@@ -36,12 +41,18 @@ object ItemRollbackImagesCodec {
         val hash=MessageDigest.getInstance("SHA-256");hash.update(bytes,0,bytes.size-32)
         require(MessageDigest.isEqual(hash.digest(),bytes.copyOfRange(bytes.size-32,bytes.size))) { "Owner image checksum differs" }
         return DataInputStream(ByteArrayInputStream(bytes,0,bytes.size-32)).use { input ->
-            require(input.readInt()==MAGIC) { "Unsupported owner images codec" }
+            val format=input.readInt();require(format==MAGIC || format==0x47494932) { "Unsupported owner images codec" }
             val bound=ByteArray(32);input.readFully(bound);require(MessageDigest.isEqual(bound,fingerprint(record))) { "Owner images belong to another journal plan" }
             val size=input.readInt();require(size in 1..2048)
+            val owners=if(format==0x47494932) {
+                val count=input.readUnsignedByte();require(count in 1..32)
+                List(count) { SlotOwnerWire.read(input) }.also { require(it.distinct().size==it.size) }
+            } else emptyList()
             val original=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>();val expected=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
             repeat(size) {
-                val owner=when(input.readUnsignedByte()) {
+                val owner=if(format==0x47494932) {
+                    val index=input.readUnsignedByte();require(index in owners.indices);owners[index]
+                } else when(input.readUnsignedByte()) {
                     1 -> ItemSlotOwner.PlayerInventory(UUID.fromString(input.readUTF()))
                     3 -> ItemSlotOwner.BlockContainer(ResourceId.parse(input.readUTF()),BlockPosition(input.readInt(),input.readInt(),input.readInt()))
                     else -> throw IllegalArgumentException("Unsupported saved owner")

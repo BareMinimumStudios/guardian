@@ -1,7 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
 internal object GuardianSchema {
-    const val CURRENT_VERSION = 30
+    const val CURRENT_VERSION = 31
 
     val migrations: List<SchemaMigration> = listOf(
         SchemaMigration(
@@ -188,6 +188,8 @@ internal object GuardianSchema {
         SchemaMigration(30,"Cover checkpoint budgets and offline player lookup",listOf(
             "CREATE INDEX ex_checkpoint_budget_idx ON ex_inventory_checkpoint(payload_bytes)",
             "CREATE INDEX ex_checkpoint_name_idx ON ex_inventory_checkpoint(lower(player_name),player_uuid)"
-        ))
+        )),
+        // Format/authority barrier: older builds cannot read complete equipment owners.
+        SchemaMigration(31,"Named equipment checkpoints and complete recovery images",emptyList())
     )
 }

@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 class MinecraftInventoryObservation private constructor(val snapshot: InventorySnapshot, val failureReason: () -> String?) {
     val isCurrent: () -> Boolean = { failureReason()==null }
     companion object {
+        internal fun combined(snapshot: InventorySnapshot, failureReason: ()->String?) = MinecraftInventoryObservation(snapshot,failureReason)
         fun read(server: MinecraftServer,owner: ItemSlotOwner,wanted: Set<ItemSlotAddress>): MinecraftInventoryObservation? {
             return read(server,owner,wanted) {}
         }
@@ -63,6 +64,7 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                     MinecraftInventoryObservation(snapshot) { identities.firstNotNullOfOrNull { it() } }
                 }
                 is ItemSlotOwner.PlayerInventory -> {
+                    if(owner.layout!=null)return reject("equipment storage requires its native observation adapter")
                     val player=server.playerList.getPlayer(owner.playerId) ?: return reject("player is offline or no longer registered on this server")
                     val menu=player.inventoryMenu;val inventory=player.inventory;val level=player.level()
                     fun current():String? = when {

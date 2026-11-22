@@ -17,7 +17,9 @@ class InventoryCheckpointService(
 ) {
     private val scan=java.util.ArrayDeque<UUID>()
     private val pending=mutableSetOf<UUID>()
-    private var nextScan=0L
+    private var nextScan:Long?=null
+    private var nanoTime:()->Long=System::nanoTime
+    private var lastSkipReason="none"
     private var stopped=false
     private var reading=false
     private var captured=0L;private var unchanged=0L;private var failures=0L;private var skipped=0L
@@ -25,7 +27,7 @@ class InventoryCheckpointService(
     private var lastSaveNanos=0L;private var maxSaveNanos=0L
     private var lastNanos=0L;private var maxNanos=0L;private var lastWarning=0L
     private val logger=org.slf4j.LoggerFactory.getLogger("Guardian/Checkpoints")
-    fun status()="Inventory checkpoints: automatic=$automatic pending=${pending.size} captured=$captured unchanged=$unchanged failures=$failures skipped=$skipped captureLastMs=${lastNanos/1_000_000} captureMaxMs=${maxNanos/1_000_000} saveLastMs=${lastSaveNanos/1_000_000} saveMaxMs=${maxSaveNanos/1_000_000}"
+    fun status()="Inventory checkpoints: automatic=$automatic pending=${pending.size} captured=$captured unchanged=$unchanged failures=$failures skipped=$skipped captureLastMs=${lastNanos/1_000_000} captureMaxMs=${maxNanos/1_000_000} saveLastMs=${lastSaveNanos/1_000_000} saveMaxMs=${maxSaveNanos/1_000_000} lastSkip=$lastSkipReason"
 
     fun permitted(source:CommandSourceStack,restore:Boolean=false):Boolean=runCatching {
         !stopped && (source.player==null || server.playerList.getPlayer(source.player!!.uuid)===source.player) &&
@@ -36,16 +38,20 @@ class InventoryCheckpointService(
     fun tick() {
         check(server.isSameThread)
         if(stopped || !automatic || !captureAllowed() || pending.size>=4 || otherBusy())return
-        val now=System.nanoTime()
+        val now=nanoTime()
         if(scan.isEmpty()) {
-            if(now<nextScan)return
+            // nanoTime may have a negative origin and can wrap.
+            if(nextScan?.let { now-it<0 }==true)return
             scan.addAll(server.playerList.players.map { it.uuid });nextScan=now+java.util.concurrent.TimeUnit.SECONDS.toNanos(intervalSeconds.toLong())
         }
         val id=scan.pollFirst() ?: return
         if(id in pending)return
         val player=server.playerList.getPlayer(id) ?: return
         val started=System.nanoTime()
-        val value=runCatching { MinecraftCheckpointCapture.observe(server,player,InventoryCheckpointReason.PERIODIC) }.getOrNull()
+        val value=runCatching { MinecraftCheckpointCapture.observe(server,player,InventoryCheckpointReason.PERIODIC) }.getOrElse {
+            lastSkipReason=(it.message ?: it.javaClass.simpleName).replace('\n',' ').take(180)
+            null
+        }
         lastNanos=System.nanoTime()-started;maxNanos=maxOf(maxNanos,lastNanos)
         if(value!=null)save(value.checkpoint,null) else skipped++
     }
@@ -98,7 +104,14 @@ class InventoryCheckpointService(
                     source.sendSystemMessage(Component.literal("${row.playerName} | ${java.time.Instant.ofEpochMilli(row.capturedAt)} | ${row.reason.name.lowercase().replace('_',' ')} ")
                         .append(CheckpointLinks.run("[View]","/guardian inventory view ${row.checkpointId}")))
                 }
-                if(rows.isEmpty())source.sendSystemMessage(Component.literal("No inventory checkpoints match. Automatic capture is off by default; use /guardian inventory snapshot u:Player or enable it in the server config."))
+                if(rows.isEmpty()) {
+                    val captureStatus=when {
+                        !automatic -> "Automatic capture is disabled in the loaded server config."
+                        !captureAllowed() -> "Automatic capture is enabled, but the logging master switch is disabled."
+                        else -> "Automatic capture is enabled. Last capture skip: $lastSkipReason. See /guardian status."
+                    }
+                    source.sendSystemMessage(Component.literal("No inventory checkpoints match. $captureStatus Use /guardian inventory snapshot u:Player to test capture."))
+                }
                 source.sendSystemMessage(Component.literal("Use p:${page+1} for another page. View is read-only; restoration requires separate preview and confirmation."))
             },{ reading=false;if(permitted(source))fail(source,it.message?.take(180) ?: "Checkpoint history is unavailable.") })
         }
@@ -135,8 +148,9 @@ class InventoryCheckpointService(
             if(otherBusy()) { fail(source,"Another inventory or recovery check became active.");return@checkpointRestoreSource }
             try {
                 val target=server.playerList.getPlayer(saved.checkpoint.playerId) ?: error("Target player is offline")
-                val observed=MinecraftCheckpointCapture.observe(server,target,InventoryCheckpointReason.BEFORE_RESTORE)
+                val observed=MinecraftCheckpointCapture.observe(server,target,InventoryCheckpointReason.BEFORE_RESTORE,includeEquipment=saved.checkpoint.equipment!=null)
                 val record=saved.record(UUID.randomUUID(),observed.checkpoint.capturedAt,observed.checkpoint)
+                MinecraftCheckpointCapture.validateTarget(server,target,saved.checkpoint)
                 source.sendSystemMessage(Component.literal("Guardian checkpoint preview: replace ${target.gameProfile.name}'s persistent inventory with ${java.time.Instant.ofEpochMilli(saved.checkpoint.capturedAt)}; ${record.entries.single().changes.size} slots would change. No items changed."))
                 source.sendSystemMessage(Component.literal("Snapshot restore may recreate items that were moved elsewhere; it does not reverse outside inventories. The current inventory is saved as a before-restore checkpoint. Use /guardian inventory restore apply $id, then confirm its token."))
             } catch(error:Exception) { fail(source,error.message?.take(180) ?: "Checkpoint restore is unavailable.") }

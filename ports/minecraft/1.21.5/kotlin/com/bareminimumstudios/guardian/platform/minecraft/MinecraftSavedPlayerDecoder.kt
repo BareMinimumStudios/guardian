@@ -9,8 +9,10 @@ import net.minecraft.world.item.ItemStack
 
 /** Vanilla saved main/armor/offhand slots, matched by UUID; never constructs a player. */
 object MinecraftSavedPlayerDecoder {
+    internal fun currentDataVersion():Int=SharedConstants.getCurrentVersion().dataVersion.version
+
     fun decode(tag: CompoundTag,owner: ItemSlotOwner.PlayerInventory,wanted: Set<ItemSlotAddress>,registries: HolderLookup.Provider): InventorySnapshot {
-        require((tag.get("DataVersion")?.id == Tag.TAG_INT) && tag.getInt("DataVersion").orElseThrow()==SharedConstants.getCurrentVersion().dataVersion.version)
+        require((tag.get("DataVersion")?.id == Tag.TAG_INT) && tag.getInt("DataVersion").orElseThrow()==currentDataVersion())
         require(tag.read("UUID",net.minecraft.core.UUIDUtil.CODEC).isPresent && tag.read("UUID",net.minecraft.core.UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player UUID mismatch" }
         require(wanted.size in 1..41 && wanted.all { it.owner==owner && it.index in 0..40 })
         val raw=tag.get("Inventory") as? ListTag ?: error("Missing saved player inventory")

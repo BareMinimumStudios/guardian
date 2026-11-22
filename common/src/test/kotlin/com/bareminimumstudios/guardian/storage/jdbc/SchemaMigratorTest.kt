@@ -37,6 +37,16 @@ class SchemaMigratorTest {
     }
 
     @Test
+    fun equipmentCheckpointSchemaRefusesThePreviousBinaryWithoutChangingItsHistory() {
+        Class.forName("org.sqlite.JDBC")
+        DriverManager.getConnection("jdbc:sqlite::memory:").use { connection ->
+            SchemaMigrator().migrate(connection)
+            assertFailsWith<IllegalArgumentException> { SchemaMigrator(GuardianSchema.migrations.take(30)).migrate(connection) }
+            assertEquals(31,SchemaMigrator().migrate(connection))
+        }
+    }
+
+    @Test
     fun rejectsDatabaseFromNewerSchema() {
         Class.forName("org.sqlite.JDBC")
         DriverManager.getConnection("jdbc:sqlite::memory:").use { connection ->

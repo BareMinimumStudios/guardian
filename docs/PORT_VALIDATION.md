@@ -6,6 +6,16 @@ before loading the recorded block-entity data. The restorer now keeps the existi
 when the state already matches, validates payloads before mutation and verifies the state.
 The test reproduced the failure before the fix and passed afterward.
 
+## 0.4.0 equipment and OPAC validation
+
+All newer target pairs pass their Minecraft-specific tests and jar checks with the shared
+baseline/modern suite evidence retained. OPAC 0.33.0 additionally passes native claim,
+queue, permission and saved-metadata checks on 1.21.8, 1.21.10, 1.21.11, 26.1.2 and 26.2,
+on both loaders. The seven equipment-provider restore/undo and physical interruption
+cohorts run on 1.21.1; these do not establish provider compatibility with every newer
+mod release. Unsupported provider shapes or changed layouts refuse capture/restoration.
+[Evidence and limits](validation/equipment-claims-040.json).
+
 ## Alpha.101 inventory checkpoints
 
 All target/loader pairs pass full normal-inventory checkpoint capture, confirmed

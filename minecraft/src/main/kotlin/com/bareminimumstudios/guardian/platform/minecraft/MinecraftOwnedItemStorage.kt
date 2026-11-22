@@ -22,7 +22,10 @@ internal class MinecraftOwnedItemStorage private constructor(
     private var write: Write? = null
 
     /** Vanilla serialization may read this fixed-size view, but cannot acquire mutable backing items. */
-    val view: NonNullList<ItemStack> = object : NonNullList<ItemStack>(mutableListOf(), ItemStack.EMPTY) {
+    val view: NonNullList<ItemStack> = OwnedView()
+
+    private inner class OwnedView : NonNullList<ItemStack>(mutableListOf(), ItemStack.EMPTY) {
+        fun permitsNativeSetter() = Thread.currentThread() === thread && !released && write != null
         override val size: Int get() { checkCurrent(); return image.size }
         override fun get(index: Int): ItemStack {
             checkCurrent()
@@ -98,6 +101,13 @@ internal class MinecraftOwnedItemStorage private constructor(
     }
 
     companion object {
+        /** Identity test only; ordinary containers keep their native behavior. */
+        @JvmStatic fun ownsView(items: NonNullList<ItemStack>): Boolean = items is MinecraftOwnedItemStorage.OwnedView
+
+        /** The view itself still checks the exact slot and stack and consumes the permit once. */
+        @JvmStatic fun allowsNativeSetter(items: NonNullList<ItemStack>): Boolean =
+            (items as? MinecraftOwnedItemStorage.OwnedView)?.permitsNativeSetter() ?: true
+
         private const val MAX_BYTES = 16L * 1024 * 1024
         fun capture(items: List<ItemStack>, registries: HolderLookup.Provider): MinecraftOwnedItemStorage {
             require(items.size in 1..256) { "Unsupported owned inventory size" }

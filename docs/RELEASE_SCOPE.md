@@ -1,6 +1,6 @@
 # Release scope and acceptance
 
-Current testing checkpoint: `0.4.0-alpha.101+1.21.1`.
+Current testing checkpoint: `0.4.0-alpha.102+1.21.1`.
 Original baseline assessment: 2026-10-29 against `0.4.0-alpha.96+1.21.1`.
 
 The owner separately authorized selected newer Minecraft ports on 2026-11-15, on Fabric
@@ -166,3 +166,13 @@ validated on isolated fixtures. This does not add ender chests, mod inventory sl
 entity restoration or the rest of the parity backlog. It does not complete real-client
 or production-pack acceptance. Further feature work is deferred after this inventory milestone. [Usage](INVENTORY_BACKUPS.md) and
 [evidence](validation/inventory-checkpoints-alpha101.json).
+
+## 0.4.0 equipment and OPAC milestone
+
+The owner authorized full online equipped-item restore, before-state undo and targeted
+interruption recovery for the seven supported equipment integrations, plus optional OPAC
+structure claim protection. These additions are implemented and validated within the
+[recorded scope](validation/equipment-claims-040.json). See [inventory recovery](INVENTORY_BACKUPS.md)
+and [structure claiming](STRUCTURE_CLAIMS.md) for setup and limits. The stable version pins
+are prepared locally. Connected-client and production-pack acceptance remain pending;
+these results do not establish complete CoreProtect parity or authorize publication.

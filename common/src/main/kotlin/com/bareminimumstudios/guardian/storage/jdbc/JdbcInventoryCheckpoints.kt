@@ -10,7 +10,7 @@ internal class JdbcInventoryCheckpoints(private val connection: Connection, priv
     private fun header(row: ResultSet) = InventoryCheckpointHeader(UUID.fromString(row.getString(1)),UUID.fromString(row.getString(2)),
         row.getString(3),row.getLong(4),row.getString(5),InventoryCheckpointReason.valueOf(row.getString(6)),row.getInt(7))
     private fun header(value: InventoryCheckpoint) = InventoryCheckpointHeader(value.checkpointId,value.playerId,value.playerName,
-        value.capturedAt,value.minecraftVersion,value.reason,value.inventory.slots.size)
+        value.capturedAt,value.minecraftVersion,value.reason,value.slotCount)
     private val columns = "checkpoint_uuid,player_uuid,player_name,captured_at,minecraft_version,reason,slot_count"
 
     fun read(id: UUID): InventoryCheckpoint? = connection.prepareStatement(
@@ -52,7 +52,7 @@ internal class JdbcInventoryCheckpoints(private val connection: Connection, priv
                 val claimed=connection.prepareStatement("SELECT 1 FROM ex_checkpoint_restore_claim WHERE checkpoint_uuid=?").use {
                     it.setString(1,latest.checkpointId.toString());it.executeQuery().use { rows -> rows.next() }
                 }
-                if(!claimed && read(latest.checkpointId)?.inventory?.slots==checkpoint.inventory.slots)return@atomic latest
+                if(!claimed && read(latest.checkpointId)?.let { it.inventory.slots==checkpoint.inventory.slots && it.equipment==checkpoint.equipment }==true)return@atomic latest
             }
         }
         insert(checkpoint)
@@ -72,7 +72,7 @@ internal class JdbcInventoryCheckpoints(private val connection: Connection, priv
         connection.prepareStatement("INSERT INTO ex_inventory_checkpoint(checkpoint_uuid,sequence,player_uuid,player_name,captured_at,minecraft_version,reason,slot_count,payload_bytes,payload) VALUES (?,?,?,?,?,?,?,?,?,?)").use {
             it.setString(1,checkpoint.checkpointId.toString());it.setLong(2,sequence);it.setString(3,checkpoint.playerId.toString())
             it.setString(4,checkpoint.playerName);it.setLong(5,checkpoint.capturedAt);it.setString(6,checkpoint.minecraftVersion)
-            it.setString(7,checkpoint.reason.name);it.setInt(8,checkpoint.inventory.slots.size);it.setInt(9,bytes.size);it.setBytes(10,bytes)
+            it.setString(7,checkpoint.reason.name);it.setInt(8,checkpoint.slotCount);it.setInt(9,bytes.size);it.setBytes(10,bytes)
             check(it.executeUpdate()==1)
         }
     }

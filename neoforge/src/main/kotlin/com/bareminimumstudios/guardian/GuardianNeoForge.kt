@@ -31,6 +31,7 @@ class GuardianNeoForge {
         )
         BlockInspector.install({ runtime?.history() }, { config }, permissions)
         NeoForge.EVENT_BUS.addListener(::starting)
+        NeoForge.EVENT_BUS.addListener(::started)
         NeoForge.EVENT_BUS.addListener(::stopping)
         NeoForge.EVENT_BUS.addListener(::tick)
         NeoForge.EVENT_BUS.addListener(::commands)
@@ -49,6 +50,7 @@ class GuardianNeoForge {
             if (it.uncleanShutdownDetected) logger.warn("Guardian recovered an unclean storage shutdown; integrity passed={}", it.integrityCheckPassed)
         }
     }
+    private fun started(event: net.neoforged.neoforge.event.server.ServerStartedEvent) { runtime?.serverStarted(event.server) }
     private fun stopping(event: ServerStoppingEvent) {
         event.server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
         BlockInspector.clear()

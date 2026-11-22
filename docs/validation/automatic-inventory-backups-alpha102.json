@@ -1,0 +1,62 @@
+{
+  "release": "alpha.102",
+  "schema": 30,
+  "tests": {
+    "1.21.1": {
+      "common": 740,
+      "fabric": 123
+    },
+    "26.2": {
+      "common": 742,
+      "fabric": 123,
+      "neoforge": 123
+    }
+  },
+  "native": [
+    {
+      "name": "clean-build",
+      "checks": 0,
+      "sha256": "e3116788d7dd8687b937ecaa901da43ff5dd45ce0316aa140bf1d69917ef236d"
+    },
+    {
+      "name": "build",
+      "checks": 0,
+      "sha256": "795233bb9485f455ab89853f9a44e43304a1da23ac36d2fe75acd0aa705c1dc6"
+    },
+    {
+      "name": "fabric-automatic-negative",
+      "checks": 24,
+      "sha256": "94907c5d063131c62d1c1d59a4100320745ed9b010a9b8f727d3fdd5a10f12c2"
+    },
+    {
+      "name": "neoforge-automatic-negative",
+      "checks": 24,
+      "sha256": "2bc8e57f0bd7fc8d97ebf1ba5c7858eba9e534b520b0564a614b6532a05c20bd"
+    },
+    {
+      "name": "fabric-extended-restore-undo",
+      "checks": 48,
+      "sha256": "1d124c28ba350b76f56d4ca9c8dc5027e8c9e9dd001691fddd775c067ee232dd"
+    },
+    {
+      "name": "neoforge-extended-restore-undo",
+      "checks": 48,
+      "sha256": "52497abbed5e4350544c622b6daec814d5577eac558b64037bad948b29b2f10c"
+    },
+    {
+      "name": "fabric-automatic-wrap",
+      "checks": 24,
+      "sha256": "87494043bd8aca8d4f18344db662a259bd38154a7ab0401d6ef5b21c3243a286"
+    },
+    {
+      "name": "neoforge-automatic-wrap",
+      "checks": 24,
+      "sha256": "0510108592ed60602012bccd09b4f7c3ca3aa287741e4e685e47985728fd65fa"
+    }
+  ],
+  "limits": [
+    "Synthetic extended menus reproduce the rejected layout, not full mod API equipment restore.",
+    "Trinkets, Curios, Accessories and backpack equipment contents remain outside this hotfix.",
+    "No production data used. Other nine Minecraft targets not rebuilt in this hotfix pass."
+  ]
+}

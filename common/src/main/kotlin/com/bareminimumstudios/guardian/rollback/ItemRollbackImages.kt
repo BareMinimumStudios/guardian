@@ -13,7 +13,8 @@ class ItemRollbackImages(val record: ItemRollbackRecord, original: InventorySnap
         owners.forEach { owner ->
             val indices=original.slots.keys.filter { it.owner==owner }.map { it.index }.sorted()
             require(indices.size in 1..256 && indices == indices.indices.toList()) { "Owner image must contain every contiguous slot" }
-            if(owner is ItemSlotOwner.PlayerInventory) require(indices.size==41) { "Player image requires all 41 inventory slots" }
+            if(owner is ItemSlotOwner.PlayerInventory && owner.layout!=null) require(indices.size==owner.layout.slotCount) { "Player equipment image must match its recorded topology" }
+            if(owner is ItemSlotOwner.PlayerInventory && owner.layout==null) require(indices.size==41) { "Player image requires all 41 inventory slots" }
         }
         val virtual=original.slots.toMutableMap()
         record.entries.forEach { entry -> entry.changes.forEach { change ->

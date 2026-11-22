@@ -15,18 +15,18 @@ internal class MinecraftDetachedInventory private constructor(
     private val container: Container,
     private val storage: List<MinecraftOwnedItemStorage>,
     private val registries: HolderLookup.Provider
-) {
+) : MinecraftInventoryHandoff {
     private val thread = Thread.currentThread()
     private var released = false
     private val views = storage.map { it.view }
 
-    fun isCurrent(): Boolean {
+    override fun isCurrent(): Boolean {
         check(Thread.currentThread() === thread)
         if (released) return false
         return lists(container).let { current -> current.size == views.size && current.indices.all { current[it] === views[it] } }
     }
 
-    fun write(index: Int, expected: ItemStackSnapshot, replacement: ItemStackSnapshot, setter: (ItemStack) -> Unit) {
+    override fun write(index: Int, expected: ItemStackSnapshot, replacement: ItemStackSnapshot, setter: (ItemStack) -> Unit) {
         check(isCurrent())
         var offset = index
         val part = storage.firstOrNull { if (offset < it.view.size) true else { offset -= it.view.size; false } }
@@ -36,7 +36,7 @@ internal class MinecraftDetachedInventory private constructor(
     }
 
     /** Prepare every replacement first. Never invalidate an installed view on an uncertain handoff. */
-    fun release() {
+    override fun release() {
         check(isCurrent())
         val mutable = storage.map { image ->
             val snapshots = image.snapshot()

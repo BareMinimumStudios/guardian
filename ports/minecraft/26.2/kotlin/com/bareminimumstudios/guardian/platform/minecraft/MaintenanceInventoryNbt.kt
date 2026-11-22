@@ -10,10 +10,21 @@ internal object MaintenanceInventoryNbt {
     private val sizes=mapOf("minecraft:barrel" to 27,"minecraft:chest" to 27,"minecraft:hopper" to 5,
         "minecraft:dispenser" to 9,"minecraft:dropper" to 9,"minecraft:furnace" to 3,"minecraft:blast_furnace" to 3,"minecraft:smoker" to 3)
     fun repair(document: CompoundTag, owner: ItemSlotOwner, images: ItemRollbackImages) {
+        require(owner !is ItemSlotOwner.PlayerInventory || owner.layout==null) { "Equipment owners require their combined saved-file repair" }
+        repairNormal(document,owner,images)
+    }
+
+    /** Used only after the equipment planner validates every extra slot in private file copies. */
+    fun repairEquipmentNormalPart(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
+        require(owner.layout!=null && images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+        repairNormal(document,owner,images)
+    }
+
+    private fun repairNormal(document: CompoundTag, owner: ItemSlotOwner, images: ItemRollbackImages) {
         require(document.getInt("DataVersion").orElseThrow()==SharedConstants.getCurrentVersion().dataVersion().version() && (document.get("DataVersion")?.id == Tag.TAG_INT)) { "Saved Minecraft data version differs" }
         if(owner is ItemSlotOwner.PlayerInventory) { repairPlayer(document,owner,images);return }
-        val original=images.original.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
-        val expected=images.expected.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
+        val original=images.original.slots.filterKeys { address -> address.owner==owner && ((owner as? ItemSlotOwner.PlayerInventory)?.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
+        val expected=images.expected.slots.filterKeys { address -> address.owner==owner && ((owner as? ItemSlotOwner.PlayerInventory)?.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
         require(original.isNotEmpty() && original.map { it.key.index }==original.indices.toList())
         val holder: CompoundTag
         val key: String
@@ -69,8 +80,8 @@ internal object MaintenanceInventoryNbt {
     /** 26.2 saves main inventory and equipment independently; neither side may be omitted from a repair. */
     private fun repairPlayer(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
         require(document.read("UUID",net.minecraft.core.UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player identity differs" }
-        val original=images.original.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
-        val expected=images.expected.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
+        val original=images.original.slots.filterKeys { address -> address.owner==owner && (owner.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
+        val expected=images.expected.slots.filterKeys { address -> address.owner==owner && (owner.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
         require(original.size==43 && expected.size==43 && original.map { it.key.index }==(0..42).toList() && expected.map { it.key.index }==(0..42).toList())
         val actual=MutableList<CompoundTag?>(43) { null }
         fun normalized(raw: CompoundTag, slotted: Boolean): CompoundTag {

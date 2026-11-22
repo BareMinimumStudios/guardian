@@ -1,6 +1,7 @@
 {
   "required": true,
   "package": "com.bareminimumstudios.guardian.mixin",
+  "plugin": "com.bareminimumstudios.guardian.mixin.GuardianOptionalMixinPlugin",
   "compatibilityLevel": "${javaCompatibility}",
   "mixins": [
     "BlockItemMixin",
@@ -89,7 +90,34 @@
     "LetsDoDisplayInventoryMixin",
     "GroundItemPickupMixin",
     "OwnedLivingEquipmentAccessor",
-    "OwnedEquipmentCodecMixin"
+    "OwnedEquipmentCodecMixin",
+    "OwnedSimpleInventoryAccessor",
+    "SimpleContainerOwnershipMixin",
+    "FrameworkEntryOwnershipMixin",
+    "FrameworkHolderOwnershipMixin",
+    "FrameworkPlayerOwnershipMixin",
+    "EquipmentPlayerTickMixin",
+    "EquipmentResourceReloadMixin",
+    "OpacClaimManagerMixin",
+    "OpacRequestContextMixin",
+    "OpacCommandContextMixin",
+    "OpacAreaTaskMixin",
+    "OpacReplacementTaskMixin",
+    "OpacChunkMetadataMixin",
+    "BackpackedOwnershipMixin",
+    "TrinketsComponentOwnershipMixin",
+    "CuriosInventoryOwnershipMixin",
+    "CuriosSlotsOwnershipMixin",
+    "ToolBeltOwnershipMixin",
+    "TrinketsInventoryOwnershipMixin",
+    "AccessoriesHolderOwnershipMixin",
+    "AccessoriesSlotsOwnershipMixin",
+    "AccessoriesInventoryOwnershipMixin",
+    "AccessoriesCapabilityOwnershipMixin",
+    "TravelerEquipmentOwnershipMixin",
+    "TravelerFabricSaveOwnershipMixin",
+    "TravelerNeoForgeSaveOwnershipMixin",
+    "TravelerWrapperOwnershipMixin"
   ],
   "injectors": {
     "defaultRequire": 1

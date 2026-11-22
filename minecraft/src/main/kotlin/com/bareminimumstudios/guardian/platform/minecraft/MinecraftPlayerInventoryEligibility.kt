@@ -14,7 +14,7 @@ internal object MinecraftPlayerInventoryEligibility {
         val menu = player.inventoryMenu
         if (player.containerMenu !== menu) return "an open menu is still active ("+player.containerMenu.javaClass.name+")"
         if (menu.javaClass != InventoryMenu::class.java) return "unsupported personal inventory menu ("+menu.javaClass.name+")"
-        val grid = MinecraftCraftingSnapshotter.grid(menu, player.inventory) ?: return "personal crafting grid could not be identified"
+        val grid = MinecraftPersonalCraftingGrid.read(menu) ?: return "personal crafting grid could not be identified (slots=${menu.slots.size}; result=${menu.slots.firstOrNull()?.javaClass?.simpleName})"
         if (!menu.carried.isEmpty) return "cursor is holding an item"
         if (!menu.slots[0].item.isEmpty) return "personal crafting output slot is occupied"
         for(index in 0 until grid.containerSize) if(!grid.getItem(index).isEmpty) return "personal crafting input slot "+(index+1)+" is occupied"

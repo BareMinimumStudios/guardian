@@ -48,6 +48,26 @@ class ItemApplyDriverTest {
         assertEquals(ItemApplyState.WRITING,driver.state)
     }
 
+    @Test fun aChangedCheckpointAuthorityIsRefusedBeforeIntentOrWrites() {
+        val source=UUID.randomUUID()
+        val planned=ItemRollbackRecord(UUID.randomUUID(),1,ItemRollbackPhase.PREPARED,
+            listOf(ItemRollbackEntry(source,listOf(ItemSlotChange(b,ItemStackSnapshot.EMPTY,item)))),
+            ItemRecoveryPurpose.CHECKPOINT_RESTORE,checkpointOf=source)
+        val changed=ItemRollbackRecord(planned.operationId,1,ItemRollbackPhase.PREPARED,planned.entries,
+            ItemRecoveryPurpose.CHECKPOINT_RESTORE,checkpointOf=UUID.randomUUID())
+        val journal=Journal(changed)
+        var writes=0
+        val port=object:ItemApplyPort {
+            override fun isExclusiveAndCurrent(owners:Set<ItemSlotOwner>)=true
+            override fun readOwners(owners:Set<ItemSlotOwner>)=InventorySnapshot(mapOf(b to item))
+            override fun writeSlot(address:ItemSlotAddress,expected:ItemStackSnapshot,replacement:ItemStackSnapshot) { writes++ }
+        }
+        val driver=ItemApplyDriver(planned,journal,port)
+        driver.advance();journal.finish()
+        assertEquals(ItemApplyState.UNRESOLVED,driver.advance())
+        assertEquals(0,writes);assertTrue(journal.marks.isEmpty())
+    }
+
     @Test fun noSetterRunsUntilIntentAndFreshApplyingRecordAreConfirmed() {
         val record=record();val journal=Journal(record);val port=Port();val driver=ItemApplyDriver(record,journal,port)
         driver.advance();repeat(3){driver.advance()};assertEquals(1,journal.reads.size);assertEquals(0,port.writes)

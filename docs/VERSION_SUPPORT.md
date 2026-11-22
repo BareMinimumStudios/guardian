@@ -1,6 +1,6 @@
 # Minecraft version support
 
-**Alpha.100 testing builds** cover the targets below on Fabric and NeoForge.
+**0.4.0 source builds** cover the targets below on Fabric and NeoForge.
 The 1.21.1 baseline is retained; newer ports remain experimental. Check the download
 page for uploaded files. Passing automated checks does not mean final release acceptance.
 
@@ -9,7 +9,7 @@ and NeoForge builds. The 1.21.1 baseline is retained alongside the newer ports.
 
 | Minecraft | Fabric | NeoForge | Java |
 | --- | --- | --- | --- |
-| 1.21.1 | Testing alpha.101 | Testing alpha.101 | 21 |
+| 1.21.1 | 0.4.0; pack acceptance pending | 0.4.0; pack acceptance pending | 21 |
 | 1.21.4 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.5 | Experimental; acceptance pending | Experimental; acceptance pending | 21 |
 | 1.21.6 | Experimental; acceptance pending | Experimental (NeoForge beta); acceptance pending | 21 |
@@ -64,3 +64,5 @@ channel remains beta; passing Guardian checks does not change that status.
 
 The 1.21.5 inventory adapter owns its native 41 slots. It refuses player body equipment
 that has no persistent inventory address in that version, before detaching any backing state.
+
+Optional OPAC structure protection requires a matching OPAC 0.33.0 build. Keep that feature disabled where none is published. See [setup and limits](STRUCTURE_CLAIMS.md).

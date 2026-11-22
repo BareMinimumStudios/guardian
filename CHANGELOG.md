@@ -3,9 +3,36 @@
 All notable changes to Guardian will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Guardian uses semantic versions with a Minecraft version suffix while it is in alpha.
+Guardian uses semantic versions with a Minecraft version suffix.
 
 ## [Unreleased]
+
+## [0.4.0+1.21.1] - 2026-11-21
+
+### Added
+
+- Optional Open Parties and Claims 0.33.0 structure claim protection with configured structure IDs, a configurable 50-block default buffer, staff/admin/server-mode reservations, bounded background metadata reads and queued-claim checks. Existing claims are preserved.
+- Full online checkpoint restore and undo for ender chests and supported equipped items: Trinkets, Curios, Accessories, Cosmetic Armor Reworked, Tool Belt, Backpacked and Traveler's Backpack, where available for each loader/version.
+- Read-only checkpoint pages identify ender-chest and named equipment slots. Equipped bag and belt item data is preserved.
+- Targeted interruption recovery covers the complete player image and separate cosmetic armor file, with exact saved-file proof before releasing protection.
+
+### Fixed
+
+- Native Curios slot validity is checked before restoration; equipment layout or mod-version changes are refused instead of producing a partial restore.
+- Equipment ownership and asynchronous data-pack reloads exclude each other until native work finishes, including cancelled reload observers.
+
+### Changed
+
+- Bound build concurrency to two Gradle workers, disable parallel project builds and run Kotlin compilation inside the existing Gradle process.
+- Reuse CI dependency caches, remove redundant clean/rebuild steps and avoid a second push build for release tags. Tests and configuration-cache verification remain enabled.
+- Publishing accepts stable releases and numbered prereleases, derives the current release from the build version, and checks release classification when retrying an upload. Upload files are sent one at a time.
+
+## [0.4.0-alpha.102+1.21.1] - 2026-11-20
+
+### Fixed
+- Inventory backups and restore admission recognize the normal crafting grid when mods append equipment slots to the personal menu. Extra mod slots remain outside inventory backups; occupied cursor and crafting slots still block capture and restoration.
+- Automatic backup scheduling supports negative and wrapped monotonic timer values.
+- Empty backup lists report the loaded capture setting. Status includes the last capture skip reason instead of hiding it behind a count.
 
 ## [0.4.0-alpha.101+1.21.1] - 2026-11-20
 

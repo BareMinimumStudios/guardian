@@ -5,7 +5,7 @@ import java.util.UUID
 
 /** Logical storage addresses, independent of a menu's display-slot numbering. */
 sealed interface ItemSlotOwner {
-    data class PlayerInventory(val playerId: UUID) : ItemSlotOwner
+    data class PlayerInventory @JvmOverloads constructor(val playerId: UUID, val layout: PlayerStorageLayout? = null) : ItemSlotOwner
     data class Cursor(val playerId: UUID) : ItemSlotOwner
     /** Temporary ingredients; never a persistent block inventory or a recipe preview. */
     data class CraftingGrid(val playerId: UUID, val menuId: Int) : ItemSlotOwner { init { require(menuId >= 0) } }

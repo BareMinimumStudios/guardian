@@ -21,9 +21,9 @@ player and time, and undo supported changes. Search broadly or add optional filt
 
 **Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
 
-Players do not need to install anything. Current build: **alpha.101** (testing release).
+Players do not need to install anything. Source version: **0.4.0**.
 
-Alpha.100 testing builds target **1.21.1, 1.21.4 to 1.21.11, 26.1.2 and 26.2**.
+Separate builds target **1.21.1, 1.21.4 to 1.21.11, 26.1.2 and 26.2**.
 Choose the file for your exact Minecraft version and loader. Newer ports remain experimental;
 see the [version support matrix](docs/VERSION_SUPPORT.md) for validation limits.
 
@@ -47,6 +47,13 @@ Keep this database with your world backups; stop the server before copying it.
 
 Using WorldEdit on Fabric? Install the separate [WorldEdit adapter](worldedit-adapter/README.md)
 with WorldEdit 7.3.8. **The adapter is Fabric only; do not install it on NeoForge.**
+
+## Protect structures from claims
+
+Using Open Parties and Claims 0.33.0? Guardian can prevent player claims around selected
+structures, with a configurable **50-block buffer** by default. Staff need permission,
+OPAC admin mode and server claiming mode to reserve them. This optional feature is off by
+default. Follow the [setup guide](docs/STRUCTURE_CLAIMS.md).
 
 ## Inspect a block or container
 
@@ -129,7 +136,9 @@ For a new backup, use `/guardian inventory snapshot u:Alex` while Alex is online
 menus closed. Taking one after a clear only saves that empty state. Automatic
 checkpoints are off by default. Full inventory restoration requires operator
 level 4 or `guardian.inventory.restore` plus `guardian.inventory`. It replaces the
-player's inventory and saves a before-state for undo; it does not reverse items moved
+player's inventory, ender chest and supported equipped items, and saves a before-state
+for undo. Supported adapters cover Trinkets, Curios, Accessories, Cosmetic Armor,
+Tool Belt, Backpacked and Traveler's Backpack where available. It does not reverse items moved
 elsewhere. See [inventory backups](docs/INVENTORY_BACKUPS.md) for setup and recovery.
 
 ## Undo changes
@@ -259,7 +268,7 @@ plus `guardian.spy` (operator level 3 by default).
 
 Tell players in your server rules what is recorded. Restrict staff access and protect database
 backups and exports. See the [command guide](docs/COMMANDS.md#whispers-and-live-spy) for limits.
-Back up before updating: alpha.101 upgrades the database to schema 30; older jars cannot open it.
+Back up before updating: this build upgrades the database to schema 31; older jars cannot open it.
 
 ## Slow searches or item rollback?
 
@@ -285,7 +294,7 @@ No results? Check `/guardian status`, the logging switch, player name, time wind
 For item history, actually move an item; opening a chest alone adds no transaction.
 Commands missing? Check your operator level or [permissions](docs/COMMANDS.md#permissions).
 
-This is an alpha release. Real-client and modpack testing is still in progress.
+Connected-client and modpack acceptance is still in progress; see the validation notes above.
 When reporting a problem, include the exact command, Guardian version and relevant log.
 For item rollback, include the specific **Player…** or **Container…** diagnostic beneath the summary.
 

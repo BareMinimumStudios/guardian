@@ -78,11 +78,18 @@ object ItemMaintenanceRecovery {
                 val store=journal as? com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore ?: error("Checkpoint authority is unavailable")
                 val source=checkNotNull(store.inventoryCheckpoint(checkNotNull(images.record.checkpointOf))) { "Checkpoint authority is missing" }
                 require(source.minecraftVersion==GuardianMinecraftVersion.current) { "Resolve this checkpoint operation using Minecraft "+source.minecraftVersion+" before changing game versions" }
+                source.equipment?.let { equipment ->
+                    val installed=com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()
+                    equipment.providers.forEach { (id,version) ->
+                        val current=if(id=="minecraft")GuardianMinecraftVersion.current else installed[id]
+                        require(current==version) { "Resolve equipment recovery using matching $id ($version) before changing equipment mods" }
+                    }
+                }
             }
             require(images.record.phase in setOf(ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING,ItemRollbackPhase.RECOVERY_REQUIRED,ItemRollbackPhase.COMPLETED))
             com.bareminimumstudios.guardian.rollback.ItemRecoveryPolicy.validate(images.record.purpose,images.record.entries)
             val owners=images.original.slots.keys.map { it.owner }.toSet()
-            require(owners.size in 1..8 && images.original.slots.count { (address,item) -> images.expected.slots[address]!=item }<=64)
+            require(owners.size in 1..8 && images.original.slots.count { (address,item) -> images.expected.slots[address]!=item }<=(if(images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64))
             require((images.original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024)
             if(!receipt.acknowledged)require(journal.itemRollbackProtected(id)) { "Journal lacks persistent protection" }
             else require(images.record.phase==ItemRollbackPhase.COMPLETED)
@@ -132,6 +139,11 @@ object ItemMaintenanceRecovery {
         private fun edits(images: ItemRollbackImages): List<ItemRecoveryFiles.Edit> {
             val root=world.toRealPath()
             val owners=images.original.slots.keys.map { it.owner }.distinct()
+            if(owners.any { it is ItemSlotOwner.PlayerInventory && it.layout!=null }) {
+                val owner=owners.single() as ItemSlotOwner.PlayerInventory
+                val platform=if("neoforge" in com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()) EquipmentSavePlatform.NEOFORGE else EquipmentSavePlatform.FABRIC
+                return EquipmentPlayerFileRecovery.edits(root,owner,images,platform)
+            }
             val grouped=owners.groupBy { owner -> when(owner) {
                 is ItemSlotOwner.PlayerInventory -> root.resolve(net.minecraft.world.level.storage.LevelResource.PLAYER_DATA_DIR.id).resolve("${owner.playerId}.dat")
                 is ItemSlotOwner.BlockContainer -> {

@@ -1,6 +1,13 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: guardian-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -14,14 +21,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Test publishing checks
         run: python -m unittest discover -s scripts/tests -v
       - run: chmod +x gradlew
-      - name: Clean build and test
-        run: ./gradlew clean build --no-daemon --warning-mode all
-      - name: Store build configuration
-        run: ./gradlew build --no-daemon --warning-mode all
+      - name: Build and test Fabric, NeoForge and optional WorldEdit adapter
+        run: ./gradlew build --no-daemon --warning-mode all --max-workers=2 --no-parallel
       - name: Verify configuration cache reuse
-        run: ./gradlew build --no-daemon --warning-mode all
-      - name: Build optional WorldEdit adapter
-        run: ./gradlew :worldedit-adapter:build --no-daemon --warning-mode all
+        shell: bash
+        run: |
+          ./gradlew build --no-daemon --warning-mode all --max-workers=2 --no-parallel | tee build/configuration-cache-verification.log
+          grep -F 'Configuration cache entry reused.' build/configuration-cache-verification.log

@@ -43,6 +43,7 @@ class GuardianRuntime(
     private var itemRecovery: com.bareminimumstudios.guardian.rollback.ItemRecoveryService? = null
 
     fun start(server: MinecraftServer) {
+        com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.prepare(config.structureClaims)
         if (!config.general.enabled.get()) return
 
         check(storage == null && shutdownDrains == null) { "Prior runtime shutdown is not complete" }
@@ -121,10 +122,17 @@ class GuardianRuntime(
         com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.install({ pipeline }, {
             config.general.enabled.get() && config.logging.enabled.get() && config.logging.containerTransactions.get() && config.logging.automatedContainerTransfers.get()
         })
+
+    }
+
+    /** Optional integrations need other mods and all world registries to be ready. */
+    fun serverStarted(server: net.minecraft.server.MinecraftServer) {
+        com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.start(server,config.structureClaims,permissions)
     }
 
     fun stop(): Boolean {
         if (shutdownDrains != null) return finishShutdown()
+        com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.stop()
         com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.EnvironmentHistoryCapture.install({ null }, { null })
         com.bareminimumstudios.guardian.platform.minecraft.SignHistoryCapture.install({ null }, { null })
@@ -186,6 +194,7 @@ class GuardianRuntime(
 
     /** Both loaders use the same tick order and item lifecycle. */
     fun tick() {
+        com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.tick()
         com.bareminimumstudios.guardian.platform.minecraft.BlockMovementCapture.tick()
         export?.tick()
         purge?.tick()

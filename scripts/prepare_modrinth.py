@@ -38,8 +38,14 @@ def profile(repo, minecraft):
                              else f'ports/targets/{minecraft}.properties'))
 
 
+def release_type(release):
+    match = re.fullmatch(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(alpha|beta|rc)\.(?:0|[1-9]\d*))?', release)
+    require(match, 'Expected a stable version or numbered alpha, beta or rc prerelease')
+    return 'release' if match.group(1) is None else 'alpha' if match.group(1) == 'alpha' else 'beta'
+
+
 def release_notes(repo, release):
-    require(re.fullmatch(r'\d+\.\d+\.\d+-alpha\.\d+', release), 'Expected an alpha release number')
+    release_type(release)
     version = release + '+1.21.1'
     text = (repo / 'CHANGELOG.md').read_text(encoding='utf-8')
     match = re.search(r'^## \[' + re.escape(version) + r'\] - \d{4}-\d{2}-\d{2}\s*$', text, re.M)
@@ -96,7 +102,7 @@ def prepare(repo, out, minecraft, release):
         digest = jar_metadata(candidates[0], minecraft, loader, version, java)
         name = f'guardian-{version}-{loader}.jar'
         entries.append({'minecraft': minecraft, 'loader': loader, 'java': java,
-                        'mod_version': version, 'version': version + '-' + loader,
+                        'mod_version': version, 'version': version + '-' + loader, 'release_type': release_type(release),
                         'file': name, 'sha512': digest, 'dependencies': list(DEPENDENCIES[loader])})
     dest = out / minecraft
     dest.mkdir(parents=True, exist_ok=True)
@@ -126,6 +132,7 @@ def load_bundle(bundle, release, minecraft='all', loader='all'):
         for entry in manifest['entries']:
             require(entry['minecraft'] == target and entry['mod_version'] == release + '+' + target, 'Wrong manifest version')
             require(entry['version'] == entry['mod_version'] + '-' + entry['loader'], 'Wrong public version number')
+            require(entry.get('release_type', release_type(release)) == release_type(release), 'Wrong release type')
             require(entry['java'] == (25 if target.startswith('26.') else 21), 'Wrong Java target')
             require(entry['dependencies'] == list(DEPENDENCIES[entry['loader']]), 'Wrong loader dependencies')
             path = root / entry['file']
@@ -133,7 +140,7 @@ def load_bundle(bundle, release, minecraft='all', loader='all'):
             digest = jar_metadata(path, target, entry['loader'], entry['mod_version'], entry['java'])
             require(digest == entry['sha512'], 'Artifact changed after preparation')
             if loader == 'all' or entry['loader'] == loader:
-                entries.append({**entry, 'file': path.as_posix(), 'notes': (root / 'RELEASE-NOTES.md').as_posix()})
+                entries.append({**entry, 'release_type': release_type(release), 'file': path.as_posix(), 'notes': (root / 'RELEASE-NOTES.md').as_posix()})
     return entries
 
 
@@ -165,12 +172,13 @@ def check_remote(entries, project, token, get=api_get):
     for version in versions:
         by_number.setdefault(version['version_number'], []).append(version)
     for entry in entries:
+        entry['release_type'] = release_type(entry['version'].split('+', 1)[0])
         existing = by_number.get(entry['version'], [])
         require(len(existing) <= 1, 'Ambiguous duplicate remote version: ' + entry['version'])
         entry['skip'] = bool(existing)
         if existing:
             version = existing[0]
-            require(version['loaders'] == [entry['loader']] and version['game_versions'] == [entry['minecraft']] and version['version_type'] == 'alpha', 'Existing version metadata conflicts: ' + entry['version'])
+            require(version['loaders'] == [entry['loader']] and version['game_versions'] == [entry['minecraft']] and version['version_type'] == entry['release_type'], 'Existing version metadata conflicts: ' + entry['version'])
             require(any(f['hashes'].get('sha512') == entry['sha512'] and f.get('primary') for f in version['files']), 'Existing version has different bytes; refusing replacement: ' + entry['version'])
             found = {d.get('project_id') for d in version['dependencies'] if d['dependency_type'] == 'required'}
             require({required[d] for d in entry['dependencies']} <= found, 'Existing version dependencies conflict')
@@ -183,12 +191,14 @@ def main():
     parser.add_argument('command', choices=('access', 'matrix', 'prepare', 'verify', 'preflight'))
     parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--bundle', type=Path, default=Path('build/modrinth'))
-    parser.add_argument('--release', default='0.4.0-alpha.100')
+    parser.add_argument('--release', help='Defaults to the release in gradle.properties')
     parser.add_argument('--minecraft', default='all')
     parser.add_argument('--loader', default='all')
     parser.add_argument('--project', default=os.environ.get('MODRINTH_PROJECT_ID', ''))
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    if args.command != 'access' and not args.release:
+        args.release = properties(args.repo / 'gradle.properties')['modVersion'].split('+', 1)[0]
     if args.command == 'access':
         result = check_remote([], args.project, os.environ.get('MODRINTH_TOKEN', ''))
     elif args.command == 'matrix':

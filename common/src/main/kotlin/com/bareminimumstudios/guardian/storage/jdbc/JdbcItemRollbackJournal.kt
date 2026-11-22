@@ -142,7 +142,7 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
         val before=checkpointStore().read(link.before) ?: return false
         val canonical=com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource(saved).record(record.operationId,record.createdAt,before)
         return sameSaveRecord(canonical,record,record.phase) && (image==null ||
-            image.original.slots==before.inventory.slots && image.expected.slots==saved.inventory.slots)
+            image.original.slots==before.fullInventory.slots && image.expected.slots==saved.fullInventory.slots)
     }
 
     fun prepareCheckpoint(id:UUID,time:Long,checkpointId:UUID,before:com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint,

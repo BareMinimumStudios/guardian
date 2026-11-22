@@ -1,7 +1,35 @@
 # Release validation
 
-Current executable checkpoint: **0.4.0-alpha.101+1.21.1**. Schema 30, config version 19.
-The owner authorized targeted acceptance fixes for signs, displays, pickups and UI navigation.
+Current source version: **0.4.0+1.21.1**. Schema 31, config version 21.
+
+## 0.4.0 equipment restore and structure protection
+
+All 22 selected Minecraft/loader jars pass build and packaged metadata checks. The baseline
+shared Minecraft suite and newer per-loader Minecraft suites pass. The shared baseline and
+modern domain/storage suites run in full; unchanged shared results
+are reused for the remaining local target builds. Counts are recorded in the
+[validation evidence](validation/equipment-claims-040.json).
+
+Native connected-player fixtures cover full equipment checkpoint restore and before-state
+undo for Trinkets, Curios, Accessories, Cosmetic Armor Reworked, Tool Belt, Backpacked and
+Traveler's Backpack, where available on Fabric/NeoForge 1.21.1. Six equipment cohorts cover
+abrupt process interruption, unchanged maintenance preview, targeted repair and a fresh
+native reload of every expected named slot and item component. These include standalone
+backpacks and integration through other equipment providers. A large checkpoint also
+exercises more than 64 changed slots. Equipment layouts and provider versions must match.
+
+OPAC 0.33.0 passes 35 native assertions per loader on 1.21.1, 1.21.8, 1.21.10, 1.21.11,
+26.1.2 and 26.2. Checks cover whole bounding boxes and buffers, native/forced claim refusal,
+staff/admin/server-mode requirements, revoked queued access, native packet/command scopes,
+replacement preservation, exact saved metadata and remote reads without chunk generation
+or new region files. Baseline startup order and newer native storage paths are covered.
+
+The clean baseline build, repeated configuration-cache check, separate WorldEdit build,
+publisher unit tests and workflow lint also pass. Native fixtures use synthetic connected
+players and private databases. Real-client presentation and production-pack acceptance
+remain separate; no publication is implied by these results.
+
+The sections below describe earlier milestones.
 
 ## Alpha.101 inventory checkpoints
 

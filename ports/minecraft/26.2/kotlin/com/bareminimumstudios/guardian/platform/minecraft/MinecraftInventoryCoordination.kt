@@ -37,7 +37,7 @@ object MinecraftInventoryCoordination {
         var operations: MinecraftItemOperations? = null
         var stopping = false
         val detachedImages = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, com.bareminimumstudios.guardian.rollback.ItemRollbackImages>()
-        val detached = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftDetachedInventory>>()
+        val detached = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftInventoryHandoff>>()
         val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
         fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader(actualIo, false).also { savedPlayers = it }
@@ -146,12 +146,13 @@ object MinecraftInventoryCoordination {
         try {
             val original=session.read()
             val images=com.bareminimumstudios.guardian.rollback.ItemRollbackImages(record,original)
-            require(lease.owners.size<=8 && original.slots.count { (address, stack) -> images.expected.slots[address]!=stack }<=64) {
-                "Online rollback supports at most 8 inventories and 64 changed final slots; narrow the filters"
+            require(lease.owners.size<=8 && original.slots.count { (address, stack) -> images.expected.slots[address]!=stack }<=(if(record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64)) {
+                "Online rollback exceeds its inventory or changed-slot budget; narrow the filters"
             }
             require((original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024) {
                 "Online rollback exceeds its 2 MiB complete-image budget"
             }
+            session.validateEquipmentTarget(images.expected)
             current.detached[lease] = session.detach(); current.detachedImages[lease]=images; return session
         }
         catch (error: Exception) { session.close(); throw error }
@@ -182,6 +183,20 @@ object MinecraftInventoryCoordination {
             java.io.DataOutputStream(output).use { net.minecraft.nbt.NbtIo.write(expected,it) }
             require(output.size()<=512*1024) { "Expected saved inventory chunk exceeds the recoverable 512 KiB bound" }
         } else MaintenanceInventoryNbt.repair(expected,owner,images)
+    }
+
+    internal fun prepareEquipmentHandback(lease: ItemOwnerCoordination.Lease,baseline: InventorySnapshot) {
+        val current=checkNotNull(binding);val images=current.detachedImages[lease] ?: return
+        check(current.server.isSameThread && ownsDetached(lease))
+        if(images.expected.slots==baseline.slots)current.detached.getValue(lease).values.forEach { it.prepareRelease() }
+    }
+
+    internal fun validateEquipmentRecoverySave(lease: ItemOwnerCoordination.Lease,owner: ItemSlotOwner.PlayerInventory,
+                                               documents: MinecraftSavedPlayerReader.EquipmentSavedDocuments) {
+        val current=checkNotNull(binding)
+        val images=current.detachedImages[lease] ?: return
+        check(current.server.isSameThread && ownsDetached(lease))
+        MinecraftEquipmentSavedReadback.proveRepair(documents,owner,images,current.server.registryAccess())
     }
 
     internal fun releaseOwned(lease: ItemOwnerCoordination.Lease) {
@@ -223,14 +238,26 @@ object MinecraftInventoryCoordination {
         val current = checkNotNull(binding) { "Inventory coordination is not installed" }
         val owned = current.detached[lease]?.get(lease.owners.singleOrNull { owner ->
             when (owner) {
-                is ItemSlotOwner.PlayerInventory -> container is Inventory && container.player.uuid == owner.playerId
+                is ItemSlotOwner.PlayerInventory -> when(container) {
+                    is Inventory -> container.player.uuid==owner.playerId
+                    is MinecraftPlayerEquipmentStorage -> container.player.uuid==owner.playerId && container.layout==owner.layout
+                    else -> false
+                }
                 is ItemSlotOwner.BlockContainer -> container is BlockEntity && container.blockPos.let { it.x == owner.position.x && it.y == owner.position.y && it.z == owner.position.z } &&
                     (container.level as? ServerLevel)?.dimension()?.identifier()?.toString() == owner.dimension.toString()
                 else -> false
             }
         })
         if (owned == null) current.slotWriter.write(lease, container, slot, expected, replacement)
-        else owned.write(slot, expected, replacement) { stack -> current.slotWriter.write(lease, container, slot, expected, replacement, stack) }
+        else {
+            check(current.server.isSameThread && currentLease(current,lease)) { "A current composite inventory lease is required" }
+            owned.write(slot, expected, replacement) { stack ->
+                if(container is MinecraftPlayerEquipmentStorage) {
+                    if(slot<container.layout.normalSlots)current.slotWriter.write(lease,container.normal,slot,expected,replacement,stack)
+                    else container.setItem(slot,stack)
+                } else current.slotWriter.write(lease,container,slot,expected,replacement,stack)
+            }
+        }
     }
 
     /** Main-thread block API guard. Unknown callbacks can affect owners beyond this block. */

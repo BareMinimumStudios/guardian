@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: Guardian release (without the Minecraft suffix)
+        description: Guardian version without Minecraft suffix (blank uses the build version)
         type: string
-        default: 0.4.0-alpha.101
-        required: true
+        default: ''
+        required: false
       minecraft:
         description: Minecraft target (all for the complete release)
         type: choice
@@ -30,7 +30,7 @@ on:
     inputs:
       release:
         type: string
-        default: 0.4.0-alpha.101
+        default: ''
       minecraft:
         type: string
         default: all
@@ -93,6 +93,9 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Build and test both loaders
         env:
           MINECRAFT: ${{ matrix.minecraft }}
@@ -100,9 +103,9 @@ jobs:
         run: |
           chmod +x gradlew ports/gradlew
           if [ "$MINECRAFT" = '1.21.1' ]; then
-            ./gradlew clean build --no-daemon --warning-mode all
+            ./gradlew build --no-daemon --warning-mode all --max-workers=2 --no-parallel
           else
-            ./ports/gradlew -p ports -PguardianTarget="$MINECRAFT" clean build --no-daemon --warning-mode all
+            ./ports/gradlew -p ports -PguardianTarget="$MINECRAFT" build --no-daemon --warning-mode all --max-workers=2 --no-parallel
           fi
       - name: Validate and prepare runtime jars
         env:
@@ -154,7 +157,7 @@ jobs:
               summary.write('Dry run: ' + os.environ['DRY_RUN'] + '. Project status: ' + plan['project_status'] + '.\n\n')
               for entry in plan['entries']:
                   summary.write('- ' + entry['version'] + (': already uploaded, same file and dependencies\n' if entry['skip'] else ': ready\n'))
-              summary.write('\nAlpha testing builds. Back up before the schema-27 upgrade. Project approval and connected-client acceptance are separate.\n')
+              summary.write('\nThe version number determines release or prerelease status. Keep a current backup before upgrading; see the bundled release notes.\n')
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -168,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix: ${{ fromJSON(needs.preflight.outputs.matrix) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -189,7 +192,7 @@ jobs:
           modrinth-featured: false
           name: Guardian ${{ matrix.mod_version }} (${{ matrix.loader }})
           version: ${{ matrix.version }}
-          version-type: alpha
+          version-type: ${{ matrix.release_type }}
           files: ${{ matrix.file }}
           changelog-file: ${{ matrix.notes }}
           loaders: ${{ matrix.loader }}

@@ -139,7 +139,7 @@ class ItemApplyDriver(
     }
 
     private fun sameJournal(other: ItemRollbackRecord, phase: ItemRollbackPhase): Boolean =
-        other.operationId == record.operationId && other.createdAt == record.createdAt && other.phase == phase && other.purpose == record.purpose && other.redoOf == record.redoOf &&
+        other.operationId == record.operationId && other.createdAt == record.createdAt && other.phase == phase && other.purpose == record.purpose && other.redoOf == record.redoOf && other.checkpointOf == record.checkpointOf &&
             other.entries.size == record.entries.size && other.entries.zip(record.entries).all { (a, b) ->
                 a.transactionId == b.transactionId && a.changes == b.changes
             }

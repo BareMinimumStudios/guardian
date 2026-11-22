@@ -25,6 +25,25 @@ class InventoryCheckpointStoreTest {
         it.isAccessible=true;it.get(db) as Connection
     }
 
+    @Test fun equipmentImagesSurviveRestartAndDedupIncludesEquipment() = backends { factory,path ->
+        val normal=checkpoint()
+        val address=EquipmentSlotAddress("trinkets","hand/ring/0")
+        val equipment=PlayerEquipmentSnapshot(mapOf("trinkets" to "3.10.0"),mapOf(address to ItemStackSnapshot.EMPTY))
+        fun value(image:PlayerEquipmentSnapshot)=InventoryCheckpoint(UUID.randomUUID(),normal.playerId,normal.playerName,100,
+            normal.minecraftVersion,InventoryCheckpointReason.PERIODIC,normal.dimension,normal.position,normal.inventory,image)
+        val first=value(equipment)
+        factory(path).use { db ->
+            db.open();assertEquals(42,db.saveInventoryCheckpoint(first,InventoryCheckpointLimits()).slotCount)
+            assertEquals(first.checkpointId,db.saveInventoryCheckpoint(value(equipment),InventoryCheckpointLimits()).checkpointId)
+            val changed=value(PlayerEquipmentSnapshot(equipment.providers,mapOf(address to normal.inventory.slots.values.first { !it.isEmpty })))
+            assertEquals(changed.checkpointId,db.saveInventoryCheckpoint(changed,InventoryCheckpointLimits()).checkpointId)
+        }
+        factory(path).use { db ->
+            db.open();assertEquals(equipment,db.inventoryCheckpoint(first.checkpointId)?.equipment)
+            assertEquals(2,db.inventoryCheckpoints(normal.playerId).size)
+        }
+    }
+
     @Test fun fullCheckpointAndMetadataSurviveRestart() = backends { factory,path ->
         val value=checkpoint(size=43)
         factory(path).use { db -> db.open();val header=db.saveInventoryCheckpoint(value,InventoryCheckpointLimits());assertEquals(value.checkpointId,header.checkpointId) }
@@ -66,7 +85,7 @@ class InventoryCheckpointStoreTest {
             c.createStatement().use {
                 it.executeUpdate("DROP INDEX ex_checkpoint_budget_idx")
                 it.executeUpdate("DROP INDEX ex_checkpoint_name_idx")
-                it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version=30")
+                it.executeUpdate("DELETE FROM ex_schema_migrations WHERE version>=30")
                 it.executeUpdate("UPDATE ex_meta SET meta_value='29' WHERE meta_key='schema_version'")
             }
         }
@@ -83,7 +102,7 @@ class InventoryCheckpointStoreTest {
             assertEquals(value.inventory.slots,receipt.images.expected.slots)
             assertTrue(db.itemRollbackProtected(operation))
             assertFails { db.checkpointRestoreSource(value.checkpointId) }
-            for(sql in GuardianSchema.migrations.last().statements) {
+            for(sql in GuardianSchema.migrations.single { it.version==30 }.statements) {
                 assertFailsWith<java.sql.SQLException> { connection(db).createStatement().use { it.executeUpdate(sql) } }
             }
             if(path.toString().endsWith("sqlite")) {

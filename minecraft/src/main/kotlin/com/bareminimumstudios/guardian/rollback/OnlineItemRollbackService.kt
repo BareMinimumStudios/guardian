@@ -186,9 +186,10 @@ internal class OnlineItemRollbackService(
             if(session.checkpoint!=null) {
                 try {
                     val player=server.playerList.getPlayer(checkNotNull(session.checkpoint).checkpoint.playerId) ?: error("Checkpoint owner is offline")
-                    session.before=MinecraftCheckpointCapture.observe(server,player,InventoryCheckpointReason.BEFORE_RESTORE)
+                    session.before=MinecraftCheckpointCapture.observe(server,player,InventoryCheckpointReason.BEFORE_RESTORE,includeEquipment=checkNotNull(session.checkpoint).checkpoint.equipment!=null)
                     // Check shape/version/no-op before persisting claims and the complete undo image.
                     checkNotNull(session.checkpoint).record(session.id,checkNotNull(session.before).checkpoint.capturedAt,checkNotNull(session.before).checkpoint)
+                    MinecraftCheckpointCapture.validateTarget(server,player,checkNotNull(session.checkpoint).checkpoint)
                 } catch(error:Exception) { refuse(session,error.message?.take(180) ?: "Current inventory cannot be captured.");return@fence }
             }
             val prepareStarted=System.nanoTime()
@@ -202,7 +203,7 @@ internal class OnlineItemRollbackService(
                 session.applyStartedAt=System.nanoTime()
                 try {
                     // The complete reverse chain and full owner images are validated by the protected host.
-                    session.host = checkNotNull(operations.admitOwned(record,session.before?.checkpoint?.inventory ?: session.restore?.images?.expected) { !stopped && !session.cancelled && permitted(session.source) })
+                    session.host = checkNotNull(operations.admitOwned(record,session.before?.checkpoint?.fullInventory ?: session.restore?.images?.expected) { !stopped && !session.cancelled && permitted(session.source) })
                     session.watch?.close(); session.watch = null
                     session.deadline = Long.MAX_VALUE
                     session.source.sendSystemMessage(Component.literal("Guardian: applying item ${operationName(session.purpose)} ${session.id}. Inventory actions are temporarily paused while saving."))

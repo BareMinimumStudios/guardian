@@ -1,4 +1,6 @@
 import hashlib
+import contextlib
+import io
 import importlib.util
 import json
 from pathlib import Path
@@ -32,6 +34,59 @@ class PublisherChecks(unittest.TestCase):
         return {'version_number': entry['version'], 'version_type': 'alpha', 'loaders': ['fabric'],
                 'game_versions': ['1.21.1'], 'files': [{'primary': True, 'hashes': {'sha512': 'abc'}}],
                 'dependencies': [{'dependency_type': 'required', 'project_id': slug + '-id'} for slug in entry['dependencies']]}
+
+    def test_stable_and_prerelease_classification(self):
+        for version, kind in [('0.4.0', 'release'), ('1.0.0', 'release'),
+                              ('0.4.0-alpha.103', 'alpha'), ('0.4.0-beta.1', 'beta'),
+                              ('0.4.0-rc.1', 'beta')]:
+            with self.subTest(version=version):
+                self.assertEqual(kind, publisher.release_type(version))
+        for version in ['0.4', '01.4.0', '0.4.0-alpha', '0.4.0-alpha.01',
+                        '0.4.0\nother', '0.4.0+1.21.1', '../0.4.0']:
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                publisher.release_type(version)
+
+    def test_workflow_blank_release_uses_pushed_build_version(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'gradle.properties').write_text('modVersion=0.4.0+1.21.1\n')
+            (root / 'CHANGELOG.md').write_text('## [0.4.0+1.21.1] - 2026-11-21\n\n### Changed\n\n- Stable release.\n')
+            for extra in [[], ['--release', '']]:
+                output = io.StringIO()
+                args = ['prepare_modrinth.py', 'matrix', '--repo', str(root), '--minecraft', '1.21.1'] + extra
+                with patch('sys.argv', args), contextlib.redirect_stdout(output):
+                    publisher.main()
+                self.assertEqual({'include': [{'minecraft': '1.21.1', 'java': 21}]}, json.loads(output.getvalue()))
+
+    def test_stable_upload_preserves_release_classification(self):
+        entry = self.entry(); entry['version'] = '0.4.0+1.21.1-fabric'
+        existing = self.existing(); existing['version_number'] = entry['version']
+        existing['version_type'] = 'release'
+        result = publisher.check_remote([entry], 'guardian', 'test-token', self.remote([existing]))
+        self.assertEqual('release', result['entries'][0]['release_type'])
+        self.assertTrue(result['entries'][0]['skip'])
+        existing['version_type'] = 'alpha'
+        with self.assertRaisesRegex(ValueError, 'metadata conflicts'):
+            publisher.check_remote([entry], 'guardian', 'test-token', self.remote([existing]))
+
+    def test_stable_bundle_keeps_exact_notes_and_release_type(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'gradle.properties').write_text('modVersion=0.4.0+1.21.1\n')
+            (root / 'CHANGELOG.md').write_text('## [0.4.0+1.21.1] - 2026-11-21\n\n### Changed\n\n- Stable release.\n', encoding='utf-8')
+            for loader in publisher.LOADERS:
+                folder = publisher.folder(root, '1.21.1', loader); folder.mkdir(parents=True)
+                (folder / 'runtime.jar').write_bytes(b'stable fixture')
+            digest = hashlib.sha512(b'stable fixture').hexdigest()
+            with patch.object(publisher, 'jar_metadata', return_value=digest):
+                publisher.prepare(root, root / 'bundle', '1.21.1', '0.4.0')
+                entries = publisher.load_bundle(root / 'bundle', '0.4.0', '1.21.1')
+                self.assertEqual({'release'}, {e['release_type'] for e in entries})
+                manifest = root / 'bundle/1.21.1/manifest.json'
+                value = json.loads(manifest.read_text()); value['entries'][0]['release_type'] = 'alpha'
+                manifest.write_text(json.dumps(value))
+                with self.assertRaisesRegex(ValueError, 'Wrong release type'):
+                    publisher.load_bundle(root / 'bundle', '0.4.0', '1.21.1')
 
     def test_pending_project_plans_new_version_without_remote_writes(self):
         result = publisher.check_remote([self.entry()], 'guardian', 'test-token', self.remote())

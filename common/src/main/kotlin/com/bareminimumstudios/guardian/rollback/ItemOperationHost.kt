@@ -164,7 +164,14 @@ class ItemOperationHost private constructor(
                     }
                 }
                 ItemOperationState.APPLYING -> {
-                    val result = apply.advance()
+                    var result = apply.advance()
+                    // Large checkpoints need bounded progress within the apply deadline.
+                    // Each advance still verifies the complete image around its one setter.
+                    if(plan.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE && plan.entries.sumOf { it.changes.size }>64) {
+                        repeat(3) {
+                            if(state==ItemOperationState.APPLYING && result==ItemApplyState.WRITING)result=apply.advance()
+                        }
+                    }
                     if (state != ItemOperationState.APPLYING) return state
                     when (result) {
                         ItemApplyState.UNRESOLVED -> drain(false, apply.reason ?: "Apply outcome is unresolved")

@@ -22,10 +22,10 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         if (stopped || operations.size >= 32 || operationId in operations) return null
         if (owners.isEmpty() || owners.size > 32) return null
         val copy = owners.toSet()
-        if (copy.size != owners.size || copy.any { !persistent(it) || it in reserved }) return null
+        if (copy.size != owners.size || copy.any { !persistent(it) || key(it) in reserved } || copy.map(::key).distinct().size != copy.size) return null
         return Lease(operationId, Collections.unmodifiableSet(copy), clock()).also { lease ->
             operations[operationId] = lease
-            copy.forEach { reserved[it] = lease }
+            copy.forEach { reserved[key(it)] = lease }
         }
     }
 
@@ -59,15 +59,15 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
         reapExpired()
         if (stopped) return false
         // A supplied stale/foreign permit must never become ordinary uncoordinated access.
-        if (permit != null && (operations[permit.operationId] !== permit || permit.currentState != ItemOwnerLeaseState.ACTIVE || owner !in permit.owners)) return false
-        val holder = reserved[owner] ?: return permit == null
+        if (permit != null && (operations[permit.operationId] !== permit || permit.currentState != ItemOwnerLeaseState.ACTIVE || !ownsAlias(permit,owner))) return false
+        val holder = reserved[key(owner)] ?: return permit == null
         return holder === permit
     }
 
     fun invalidate(owner: ItemSlotOwner) {
         checkThread()
         reapExpired()
-        reserved[owner]?.let { finish(it, ItemOwnerLeaseState.INVALIDATED) }
+        reserved[key(owner)]?.let { finish(it, ItemOwnerLeaseState.INVALIDATED) }
     }
 
     fun invalidateBlockChunk(dimension: ResourceId, chunkX: Int, chunkZ: Int) {
@@ -112,7 +112,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
             reapExpired()
             return !stopped && currentState == ItemOwnerLeaseState.ACTIVE &&
                 operations[operationId] === this && owners == expectedOwners &&
-                owners.all { reserved[it] === this }
+                owners.all { reserved[key(it)] === this }
         }
 
         /** Read-only authority for owners still held by this exact registry; never a write permit. */
@@ -120,7 +120,7 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
             checkThread()
             reapExpired()
             return !stopped && operations[operationId] === this && owners == expectedOwners &&
-                retainedUntil?.isDone == false && owners.all { reserved[it] === this }
+                retainedUntil?.isDone == false && owners.all { reserved[key(it)] === this }
         }
 
         /**
@@ -179,10 +179,15 @@ class ItemOwnerCoordination(private val clock: () -> Long = System::nanoTime) {
     private fun detach(lease: Lease) {
         if (operations[lease.operationId] !== lease) return
         operations.remove(lease.operationId)
-        lease.owners.forEach { if (reserved[it] === lease) reserved.remove(it) }
+        lease.owners.forEach { if (reserved[key(it)] === lease) reserved.remove(key(it)) }
         lease.retainedUntil = null
         lease.legacyDrainWorker = null
     }
+
+    // Expanded equipment storage and ordinary player inventory actions share one reservation.
+    private fun key(owner:ItemSlotOwner):ItemSlotOwner = if(owner is ItemSlotOwner.PlayerInventory && owner.layout!=null) ItemSlotOwner.PlayerInventory(owner.playerId) else owner
+    private fun ownsAlias(lease:Lease,owner:ItemSlotOwner):Boolean = owner in lease.owners ||
+        owner is ItemSlotOwner.PlayerInventory && owner.layout==null && lease.owners.any { it is ItemSlotOwner.PlayerInventory && it.playerId==owner.playerId }
 
     private fun persistent(owner: ItemSlotOwner) =
         owner is ItemSlotOwner.BlockContainer || owner is ItemSlotOwner.PlayerInventory

@@ -5,8 +5,8 @@ import java.util.UUID
 
 enum class InventoryCheckpointReason { MANUAL, PERIODIC, JOIN, LOGOUT, DEATH, BEFORE_RESTORE }
 
-/** Complete persistent player slots; no cursor, crafting, ender chest or mod-owned storage. */
-class InventoryCheckpoint(
+/** Normal persistent player slots plus optional named ender/equipment items; never temporary cursor/crafting state. */
+class InventoryCheckpoint @JvmOverloads constructor(
     val checkpointId: UUID,
     val playerId: UUID,
     val playerName: String,
@@ -15,9 +15,12 @@ class InventoryCheckpoint(
     val reason: InventoryCheckpointReason,
     val dimension: ResourceId,
     val position: BlockPosition,
-    inventory: InventorySnapshot
+    inventory: InventorySnapshot,
+    val equipment: PlayerEquipmentSnapshot? = null
 ) {
     val inventory = InventorySnapshot(inventory.slots)
+
+    val slotCount: Int get() = inventory.slots.size + (equipment?.slots?.size ?: 0)
 
     init {
         require(capturedAt >= 0)
@@ -28,13 +31,27 @@ class InventoryCheckpoint(
         require(this.inventory.slots.keys.all { it.owner == owner })
         require(this.inventory.slots.keys.map { it.index }.sorted() == (0 until this.inventory.slots.size).toList())
         require(this.inventory.slots.values.all { it.isEmpty || it.itemData != null && it.itemData.size > 0 })
-        require(this.inventory.slots.values.sumOf { (it.itemData?.size ?: 0).toLong() } <= MAX_COMPONENT_BYTES)
+        require(slotCount <= 256) { "Full player checkpoint exceeds slot budget" }
+        require(this.inventory.slots.values.sumOf { (it.itemData?.size ?: 0).toLong() } +
+            (equipment?.slots?.values?.sumOf { (it.itemData?.size ?: 0).toLong() } ?: 0L) <= MAX_COMPONENT_BYTES)
+    }
+
+    /** One owner binds all stored indices to the exact normal and named equipment topology. */
+    val fullInventory: InventorySnapshot by lazy {
+        val extra=equipment
+        val owner=ItemSlotOwner.PlayerInventory(playerId,extra?.let { PlayerStorageLayout(inventory.slots.size,it.providers.keys,it.slots.keys) })
+        val all=linkedMapOf<ItemSlotAddress,ItemStackSnapshot>()
+        inventory.slots.entries.forEach { (address,item) -> all[ItemSlotAddress(owner,address.index)]=item }
+        extra?.slots?.entries?.forEachIndexed { index,(address,item) ->
+            check(address==owner.layout!!.extraSlots[index]);all[ItemSlotAddress(owner,inventory.slots.size+index)]=item
+        }
+        InventorySnapshot(all)
     }
 
     /** The snapshot is explicit creation/replacement authority, never a conserving transfer source. */
     fun replacementChanges(current: InventorySnapshot): List<ItemSlotChange> {
-        require(current.slots.keys == inventory.slots.keys) { "Current inventory shape differs from checkpoint" }
-        return inventory.slots.entries.sortedBy { it.key.index }.mapNotNull { (address, target) ->
+        require(current.slots.keys == fullInventory.slots.keys) { "Current inventory shape differs from checkpoint" }
+        return fullInventory.slots.entries.sortedBy { it.key.index }.mapNotNull { (address, target) ->
             val observed = current.slots.getValue(address)
             if(observed == target) null else ItemSlotChange(address,target,observed)
         }

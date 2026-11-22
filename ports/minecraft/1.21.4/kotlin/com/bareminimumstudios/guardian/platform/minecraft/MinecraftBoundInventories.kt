@@ -41,11 +41,20 @@ class MinecraftBoundInventories internal constructor(
         BlastFurnaceBlockEntity::class.java to 3, SmokerBlockEntity::class.java to 3
     )
     private var playerStateRejected = false
+    private val equipment = mutableMapOf<ItemSlotOwner.PlayerInventory,MinecraftPlayerEquipmentStorage>()
     private val pins = lease.owners.associateWith(::resolve)
     private var closed = false
     private val pending = mutableSetOf<CompletableFuture<InventorySnapshot>>()
 
     init { check(isCurrent()) { "Inventory lease or identities changed during binding" }; read() }
+
+    internal fun validateEquipmentTarget(image: InventorySnapshot) {
+        check(isCurrent())
+        equipment.values.forEach { storage ->
+            val owner=ItemSlotOwner.PlayerInventory(storage.player.uuid,storage.layout)
+            storage.validateTarget(InventorySnapshot(image.slots.filterKeys { it.owner==owner }))
+        }
+    }
 
     fun isCurrent(): Boolean {
         checkThread()
@@ -83,14 +92,15 @@ class MinecraftBoundInventories internal constructor(
         return InventorySnapshot(slots)
     }
 
-    internal fun detach(): Map<ItemSlotOwner, MinecraftDetachedInventory> {
+    internal fun detach(): Map<ItemSlotOwner, MinecraftInventoryHandoff> {
         check(isCurrent() && !readOnly)
         check(server.playerList.players.all { it.containerMenu === it.inventoryMenu }) {
             "Online item rollback requires players to close their open menus"
         }
-        val result = linkedMapOf<ItemSlotOwner, MinecraftDetachedInventory>()
+        val result = linkedMapOf<ItemSlotOwner, MinecraftInventoryHandoff>()
         try {
-            pins.forEach { (owner, pin) -> result[owner] = MinecraftDetachedInventory.capture(pin.container, server.registryAccess()) }
+            pins.forEach { (owner, pin) -> result[owner] = if(pin.container is MinecraftPlayerEquipmentStorage)pin.container.detach()
+                else MinecraftDetachedInventory.capture(pin.container, server.registryAccess()) }
             check(isCurrent())
             return result
         } catch (error: Exception) {
@@ -117,6 +127,7 @@ class MinecraftBoundInventories internal constructor(
 
     private fun readBack(owner: ItemSlotOwner, save: Boolean): CompletionStage<InventorySnapshot> {
         checkThread()
+        if(owner is ItemSlotOwner.PlayerInventory && owner.layout!=null)return readEquipmentBack(owner,save)
         check(!save || !readOnly) { "A recovery binding cannot save inventory contents" }
         check(pending.isEmpty()) { "A bound inventory save is already pending" }
         val pin = checkNotNull(pins[owner]) { "Owner is not bound" }
@@ -186,6 +197,20 @@ class MinecraftBoundInventories internal constructor(
         return result
     }
 
+    private fun readEquipmentBack(owner: ItemSlotOwner.PlayerInventory,save: Boolean): CompletionStage<InventorySnapshot> {
+        check(!save || !readOnly) { "A recovery binding cannot save equipment contents" }
+        check(pending.isEmpty()) { "A bound inventory save is already pending" }
+        val pin=checkNotNull(pins[owner]);val storage=pin.container as MinecraftPlayerEquipmentStorage
+        val baseline=read()
+        if(save)MinecraftInventoryCoordination.prepareEquipmentHandback(lease,baseline)
+        val result=MinecraftEquipmentSavedReadback.read(server,storage,owner,baseline,save,players(),
+            { !closed && read().slots==baseline.slots },
+            { documents -> MinecraftInventoryCoordination.validateEquipmentRecoverySave(lease,owner,documents) })
+        pending.add(result)
+        result.whenComplete { _,_ -> server.execute { pending.remove(result) } }
+        return result
+    }
+
     override fun close() {
         checkThread()
         if (closed) return
@@ -204,7 +229,10 @@ class MinecraftBoundInventories internal constructor(
                 val inventory = player.inventory
                 check(player.server === server && !player.isRemoved && inventory.javaClass == Inventory::class.java && inventory.player === player && inventory.containerSize == 41)
                 check(MinecraftPlayerInventoryEligibility.isIdle(player)) { "Player menu or temporary items are not idle" }
-                Pin(owner,inventory,player.serverLevel(),null,null,41)
+                val routed=if(owner.layout==null)inventory else equipment.getOrPut(owner) {
+                    MinecraftPlayerEquipmentStorage.bind(player,checkNotNull(owner.layout))
+                }.also { check(it.isCurrent()) { "Protected equipment root or layout changed" } }
+                Pin(owner,routed,player.serverLevel(),null,null,routed.containerSize)
             }
             is ItemSlotOwner.BlockContainer -> {
                 val key = ResourceKey.create(Registries.DIMENSION,ResourceLocation.parse(owner.dimension.toString()))

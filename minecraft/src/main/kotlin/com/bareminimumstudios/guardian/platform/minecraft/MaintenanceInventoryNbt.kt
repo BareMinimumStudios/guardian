@@ -10,9 +10,20 @@ internal object MaintenanceInventoryNbt {
     private val sizes=mapOf("minecraft:barrel" to 27,"minecraft:chest" to 27,"minecraft:hopper" to 5,
         "minecraft:dispenser" to 9,"minecraft:dropper" to 9,"minecraft:furnace" to 3,"minecraft:blast_furnace" to 3,"minecraft:smoker" to 3)
     fun repair(document: CompoundTag, owner: ItemSlotOwner, images: ItemRollbackImages) {
+        require(owner !is ItemSlotOwner.PlayerInventory || owner.layout==null) { "Equipment owners require their combined saved-file repair" }
+        repairNormal(document,owner,images)
+    }
+
+    /** Used only after the equipment planner validates every extra slot in private file copies. */
+    fun repairEquipmentNormalPart(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
+        require(owner.layout!=null && images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+        repairNormal(document,owner,images)
+    }
+
+    private fun repairNormal(document: CompoundTag, owner: ItemSlotOwner, images: ItemRollbackImages) {
         require(document.getInt("DataVersion")==SharedConstants.getCurrentVersion().dataVersion.version && document.contains("DataVersion",Tag.TAG_INT.toInt())) { "Saved Minecraft data version differs" }
-        val original=images.original.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
-        val expected=images.expected.slots.filterKeys { it.owner==owner }.entries.sortedBy { it.key.index }
+        val original=images.original.slots.filterKeys { address -> address.owner==owner && ((owner as? ItemSlotOwner.PlayerInventory)?.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
+        val expected=images.expected.slots.filterKeys { address -> address.owner==owner && ((owner as? ItemSlotOwner.PlayerInventory)?.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
         require(original.isNotEmpty() && original.map { it.key.index }==original.indices.toList())
         val holder: CompoundTag
         val key: String

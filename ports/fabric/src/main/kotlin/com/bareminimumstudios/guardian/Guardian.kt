@@ -96,6 +96,8 @@ object Guardian : ModInitializer {
             }
         }
 
+        ServerLifecycleEvents.SERVER_STARTED.register { server -> runtime?.serverStarted(server) }
+
         ServerLifecycleEvents.SERVER_STOPPING.register { server ->
             server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
             BlockInspector.clear()

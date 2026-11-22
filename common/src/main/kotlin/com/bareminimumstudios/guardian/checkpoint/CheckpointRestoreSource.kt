@@ -11,7 +11,11 @@ class CheckpointRestoreSource(val checkpoint: InventoryCheckpoint) {
         require(before.playerId == checkpoint.playerId && before.reason == InventoryCheckpointReason.BEFORE_RESTORE)
         if(before.minecraftVersion != checkpoint.minecraftVersion)
             throw CheckpointRestoreRefusedException("Checkpoint belongs to Minecraft ${checkpoint.minecraftVersion}; current server is ${before.minecraftVersion}")
-        val changes=checkpoint.replacementChanges(before.inventory)
+        if((checkpoint.equipment==null)!=(before.equipment==null) ||
+            checkpoint.equipment?.providers!=before.equipment?.providers ||
+            checkpoint.fullInventory.slots.keys!=before.fullInventory.slots.keys)
+            throw CheckpointRestoreRefusedException("Checkpoint equipment providers, versions or slot layout differ; no items changed")
+        val changes=checkpoint.replacementChanges(before.fullInventory)
         if(changes.isEmpty())throw CheckpointRestoreRefusedException("Player inventory already matches this checkpoint")
         return ItemRollbackRecord(operationId,time,ItemRollbackPhase.PREPARED,
             listOf(ItemRollbackEntry(checkpoint.checkpointId,changes)),ItemRecoveryPurpose.CHECKPOINT_RESTORE,checkpointOf=checkpoint.checkpointId)

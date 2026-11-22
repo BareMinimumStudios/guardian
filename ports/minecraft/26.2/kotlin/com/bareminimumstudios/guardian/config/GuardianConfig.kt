@@ -15,7 +15,7 @@ import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedString
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.Identifier
 
-@Version(20)
+@Version(21)
 @AdminAccess(perms = ["guardian.config.admin"], fallback = 4)
 @WithCustomPerms(perms = ["guardian.config.edit"], fallback = 3)
 class GuardianConfig : Config(Identifier.fromNamespaceAndPath(GuardianConstants.MOD_ID, "main")) {
@@ -109,6 +109,17 @@ class GuardianConfig : Config(Identifier.fromNamespaceAndPath(GuardianConstants.
         var total = ValidatedInt(10000, 100000, 1000)
         @RequiresAction(Action.RESTART)
         var maxMiB = ValidatedInt(512, 16384, 2)
+    }
+
+    /** Optional OPAC structure claim protection. Existing claims are not removed. */
+    var structureClaims = StructureClaims()
+    class StructureClaims : ConfigSection() {
+        @RequiresAction(Action.RESTART)
+        var enabled = ValidatedBoolean(false)
+        @RequiresAction(Action.RESTART)
+        var structures = ValidatedString("")
+        @RequiresAction(Action.RESTART)
+        var bufferBlocks = ValidatedInt(50, 256, 0)
     }
 
     var storage = Storage()

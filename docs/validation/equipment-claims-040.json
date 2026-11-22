@@ -1,0 +1,335 @@
+{
+  "version": "0.4.0",
+  "databaseSchema": 31,
+  "configVersion": 21,
+  "releaseUploaded": false,
+  "sharedSuites": {
+    "baseline": {
+      "tests": 771,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ports": {
+      "tests": 773,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "targetTests": {
+    "1.21.1": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 0,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "note": "Baseline shared Minecraft unit suite runs against Fabric; NeoForge is checked by separate native acceptance fixtures."
+      }
+    },
+    "1.21.4": {
+      "fabric": {
+        "tests": 145,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 145,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.5": {
+      "fabric": {
+        "tests": 146,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 146,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.6": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.7": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.8": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.9": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.10": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "1.21.11": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "26.1.2": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "26.2": {
+      "fabric": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "neoforge": {
+        "tests": 144,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "sharedSuiteReuse": "Baseline and modern shared implementations run in full; unchanged shared results are reused during remaining local target builds. Minecraft-specific tests run for every target.",
+  "opac": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.10",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.11",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "1.21.8",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "fabric",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    },
+    {
+      "minecraft": "26.2",
+      "loader": "neoforge",
+      "opac": "0.33.0",
+      "assertions": 35,
+      "result": "pass",
+      "syntheticConnectedPlayer": true
+    }
+  ],
+  "equipmentInterruptionCohorts": [
+    {
+      "cohort": "fabric",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 1,
+      "freshNativeReload": "pass"
+    },
+    {
+      "cohort": "fabric-backpacks",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 1,
+      "freshNativeReload": "pass"
+    },
+    {
+      "cohort": "fabric-accessories",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 1,
+      "freshNativeReload": "pass"
+    },
+    {
+      "cohort": "neoforge-equipment",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 2,
+      "freshNativeReload": "pass"
+    },
+    {
+      "cohort": "neoforge-backpacks",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 1,
+      "freshNativeReload": "pass"
+    },
+    {
+      "cohort": "neoforge-accessories",
+      "physicalProcessInterruption": true,
+      "maintenancePreviewUnchanged": true,
+      "changedFiles": 1,
+      "freshNativeReload": "pass"
+    }
+  ],
+  "equipmentProviders": [
+    "Trinkets",
+    "Curios",
+    "Accessories",
+    "Cosmetic Armor Reworked",
+    "Tool Belt",
+    "Backpacked",
+    "Traveler's Backpack"
+  ],
+  "limits": [
+    "Native tests use synthetic connected players and isolated worlds/databases.",
+    "Real-client menu presentation and production-modpack acceptance remain pending.",
+    "Equipment compatibility requires matching provider versions and named layouts; unsupported APIs refuse safely.",
+    "Where OPAC has no matching 0.33.0 file, structure protection must stay disabled."
+  ]
+}

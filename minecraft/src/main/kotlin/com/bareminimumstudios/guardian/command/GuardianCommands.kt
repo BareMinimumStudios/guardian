@@ -621,6 +621,7 @@ object GuardianCommands {
             context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.status()))
             runtimeProvider()?.history()?.let { context.source.sendSystemMessage(Component.literal(it.queryStatus())) }
             runtimeProvider()?.checkpoints()?.let { context.source.sendSystemMessage(Component.literal(it.status())) }
+            com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.status()?.let { context.source.sendSystemMessage(Component.literal(it)) }
             com.bareminimumstudios.guardian.logging.OperationTimings.status().forEach { context.source.sendSystemMessage(Component.literal(it)) }
             if (b != null) {
                 context.source.sendSystemMessage(

@@ -38,4 +38,9 @@ Checkpoint replacement has separate level-four authority. Confirmation captures 
 fresh full preimage, stores an atomic before-state and source claim, then reuses native
 exclusive ownership and actual saved-file verification. Native admission checks that
 entire preimage again after detaching the backing inventories. Existing transfer
-conservation is unchanged. See [inventory backups](INVENTORY_BACKUPS.md).
+conservation is unchanged. Named equipment slots share a complete, versioned player
+owner with normal slots. Native provider roots and backing stores remain owned until
+every saved player/armor file and the durable receipt match the target. Data reloads
+cannot overlap that ownership. Equipment recovery repairs only journal-bound player
+files under the stopped-world lock. Schema 31 prevents older binaries opening these
+equipment formats. See [inventory backups](INVENTORY_BACKUPS.md).

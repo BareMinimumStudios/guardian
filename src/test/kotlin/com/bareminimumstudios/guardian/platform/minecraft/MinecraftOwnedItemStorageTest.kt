@@ -144,4 +144,26 @@ class MinecraftOwnedItemStorageTest {
         stack.set(transient, "value")
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(listOf(stack), registries) }
     }
+    @Test fun nativeSetterGateIsScopedToTheCurrentViewThreadAndUnconsumedWrite() {
+        val ordinary=net.minecraft.core.NonNullList.withSize(1,ItemStack.EMPTY)
+        assertFalse(MinecraftOwnedItemStorage.ownsView(ordinary))
+        assertTrue(MinecraftOwnedItemStorage.allowsNativeSetter(ordinary))
+        val storage=MinecraftOwnedItemStorage.capture(listOf(named()),registries)
+        val other=MinecraftOwnedItemStorage.capture(listOf(named()),registries)
+        assertTrue(MinecraftOwnedItemStorage.ownsView(storage.view))
+        assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+        storage.throughSetter(0,storage.snapshot().single(),ItemStackSnapshot.EMPTY) { stack ->
+            assertTrue(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+            assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(other.view))
+            CompletableFuture.runAsync {
+                assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+            }.join()
+            storage.view[0]=stack
+            assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+        }
+        assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+        storage.release()
+        assertFalse(MinecraftOwnedItemStorage.allowsNativeSetter(storage.view))
+    }
+
 }

@@ -29,7 +29,7 @@ Modded storage and interactions are supported when they use compatible paths. Cu
 
 SQLite is included. History is saved in `guardian/guardian.sqlite`; stop the server before copying it for a backup.
 
-**Alpha.100 is a testing release.** Targets: 1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2 on both loaders. Check the Versions tab for uploaded files. Use Java 21 for 1.21.x and Java 25 for 26.x. Back up before updating: schema 28 cannot be opened by older Guardian builds.
+**0.4.0.** Targets: 1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2 on both loaders. Check the Versions tab for uploaded files. Use Java 21 for 1.21.x and Java 25 for 26.x. Back up before updating: schema 31 cannot be opened by older Guardian builds. Newer Minecraft ports remain experimental; see the version support notes.
 
 ## Inspect something
 
@@ -103,8 +103,9 @@ The viewer is read-only. `inventory restore preview`, `apply` and `confirm` prov
 a separate administrator-only replacement, with a saved before-state for undo.
 
 For future backups, use `/guardian inventory snapshot u:Player` or enable automatic
-checkpoints in the server config. Automatic capture is off by default. Normal
-player slots are covered; ender chests and mod-added slots are not. Restoring a
+checkpoints in the server config. Automatic capture is off by default. Normal player slots, ender chests and supported equipped items are covered. Adapters
+include Trinkets, Curios, Accessories, Cosmetic Armor, Tool Belt, Backpacked and
+Traveler's Backpack, where available for your loader/version. Restoring a
 snapshot can recreate items moved elsewhere. Read the [inventory backup guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/INVENTORY_BACKUPS.md) before use.
 
 ## Optional logging
@@ -127,3 +128,11 @@ WorldEdit integration requires the **separate optional GPL adapter**, currently 
 Report problems with your Guardian version, exact command and diagnostic message. Real-client and modpack testing is still in progress.
 
 Guardian's core uses the Bare Minimum License. The optional WorldEdit adapter is licensed separately under GPL-3.0-or-later.
+
+## Keep structures available
+
+With Open Parties and Claims 0.33.0 installed, you can prevent players claiming configured
+structures and their surrounding area. The default buffer is 50 blocks around the whole
+structure; adjust it in the server config. Staff reservations require permission, OPAC admin
+mode and server claiming mode together. Existing claims are preserved. This is optional and
+off by default. See the [structure protection guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/STRUCTURE_CLAIMS.md).
