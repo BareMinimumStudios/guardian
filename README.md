@@ -8,24 +8,20 @@
 <a href="https://github.com/BareMinimumStudios/guardian/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/BareMinimumStudios/guardian/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=BUILD&labelColor=1A1A1A"></a>
 <a href="https://github.com/BareMinimumStudios/guardian/issues"><img alt="Issues" src="https://img.shields.io/github/issues/BareMinimumStudios/guardian?style=for-the-badge&labelColor=1A1A1A&color=FFFFFF"></a>
 
-Minecraft 1.21.1 · Java 21 · Server-side
+Fabric and NeoForge · Server-side
 
 </div>
 
 ---
 
-## Guardian
+## Guardian 0.4.0
 
-See who changed a block, moved items or edited a sign. Inspect the history in-game, search by
-player and time, and undo supported changes. Search broadly or add optional filters to narrow the results.
-
-**Minecraft 1.21.1 · Fabric and NeoForge · Java 21 · Server only**
-
-Players do not need to install anything. Source version: **0.4.0**.
+See who changed a block, moved an item, or edited a sign. Guardian runs on Fabric and NeoForge servers. Players can join without installing it.
 
 Separate builds target **1.21.1, 1.21.4 to 1.21.11, 26.1.2 and 26.2**.
-Choose the file for your exact Minecraft version and loader. Newer ports remain experimental;
-see the [version support matrix](docs/VERSION_SUPPORT.md) for validation limits.
+Choose the file for your exact Minecraft version and loader. Use **Java 21** for 1.21.x and
+**Java 25** for 26.x. See the [version support matrix](docs/VERSION_SUPPORT.md) for
+newer-port validation and loader requirements.
 
 ## Install
 
@@ -43,7 +39,8 @@ listed with that exact download.
 | NeoForge | NeoForge 21.1.256+, Kotlin for Forge 5.12+, Fzzy Config 0.7.6 for NeoForge 1.21.1 |
 
 SQLite is included. Your history is saved in `guardian/guardian.sqlite` inside the server folder.
-Keep this database with your world backups; stop the server before copying it.
+Stop the server before copying the database and keep it with your world backups.
+Older Guardian builds cannot open schema 31.
 
 Using WorldEdit on Fabric? Install the separate [WorldEdit adapter](worldedit-adapter/README.md)
 with WorldEdit 7.3.8. **The adapter is Fabric only; do not install it on NeoForge.**
@@ -281,14 +278,15 @@ database work, safety checks and saving. Include those lines, the exact command 
 that felt slow when reporting a problem. See the [timing guide](docs/COMMANDS.md#transaction-and-item-rollback-timings).
 Timings contain no player names, messages or item contents.
 
-## More help
+## Downloads and support
 
-- [Command guide](docs/COMMANDS.md): chat, entities, fluids, filters, permissions, exports and deleting old history.
+- [Modrinth](https://modrinth.com/mod/guardians) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/guardianex)
+- [GitHub source and README](https://github.com/BareMinimumStudios/guardian) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/BareMinimumStudios/guardian/issues)
+- [Commands and permissions](docs/COMMANDS.md) · [Version support](docs/VERSION_SUPPORT.md)
+- [Inventory backups and undo](docs/INVENTORY_BACKUPS.md) · [Item rollback](docs/ONLINE_ITEM_ROLLBACK.md) · [Interruption recovery](docs/ITEM_RECOVERY.md)
+- [Structure claim protection](docs/STRUCTURE_CLAIMS.md) · [WorldEdit adapter](worldedit-adapter/README.md) · [Bare Minimum License](LICENSE)
 - [Publishing builds](docs/PUBLISHING.md) for maintainers.
-- [Item rollback](docs/ONLINE_ITEM_ROLLBACK.md) and [interrupted-operation recovery](docs/ITEM_RECOVERY.md).
-- [WorldEdit setup](worldedit-adapter/README.md).
-- [Changelog](CHANGELOG.md) and [test/release status](docs/VALIDATION.md).
-- [Report a problem](https://github.com/BareMinimumStudios/guardian/issues).
+- [Test and release status](docs/VALIDATION.md).
 
 No results? Check `/guardian status`, the logging switch, player name, time window and dimension.
 For item history, actually move an item; opening a chest alone adds no transaction.
@@ -301,3 +299,5 @@ For item rollback, include the specific **Player…** or **Container…** diagno
 The core uses the [Bare Minimum License](LICENSE). The optional WorldEdit adapter uses
 [GPL-3.0-or-later](worldedit-adapter/LICENSE).
 [Development documentation](DEVELOPMENT.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+Project page copy: [Modrinth](docs/MODRINTH.md) · [CurseForge](docs/CURSEFORGE.md).

@@ -1,138 +1,30 @@
-![Guardian](https://raw.githubusercontent.com/BareMinimumStudios/guardian/main/docs/assets/guardian-banner.png)
+![Guardian shield and wordmark](https://raw.githubusercontent.com/BareMinimumStudios/guardian/main/docs/assets/guardian-banner.png)
 
-# Guardian
+## Guardian 0.4.0
 
-Find out who changed blocks, moved items or edited signs. Inspect history in-game, search an area and undo supported changes.
+See who changed a block, moved an item, or edited a sign. Guardian runs on Fabric and NeoForge servers. Players can join without installing it.
 
-**Server-side for Fabric and NeoForge. Players do not need to install Guardian.**
+### Install
 
-## What can it do?
+Choose the file for your exact loader and Minecraft version. Builds target 1.21.1, 1.21.4–1.21.11, 26.1.2, and 26.2. Use Java 21 for 1.21.x and Java 25 for 26.x. Fabric requires Fabric API, Fabric Language Kotlin, and Fzzy Config. NeoForge requires Kotlin for Forge and Fzzy Config. Run /guardian status as an operator after startup. SQLite is included. Stop the server before copying guardian/guardian.sqlite or upgrading.
 
-- Inspect block history and item movements, including a read-only transaction viewer.
-- Search by area, player, time or block/item ID.
-- Roll back supported block edits and item transfers; redo completed block and supported item rollbacks.
-- Recover recorded creative item deletions with names and other item data intact.
-- Optionally record chat, commands, whispers, signs, entity events and environmental changes.
+### Inspect and recover
 
-Modded storage and interactions are supported when they use compatible paths. Custom menus may need additional compatibility work.
+- Run /guardian inspect. Left-click a block for block history, right-click a container for item history, or open the read-only viewer with /guardian inspect ui.
+- Search every player in an area with /guardian lookup r:10 or /guardian transactions r:10. Player and time filters are optional.
+- Preview supported block and item rollbacks with /guardian rollback preview or /guardian rollback-items preview. Block redo uses /guardian restore. Item redo uses /guardian restore-items.
+- Recover recorded creative deletions with /guardian recover-items. Use /guardian inventory list to find a saved checkpoint, then /guardian inventory restore preview to check it before applying. A completed restore saves an undo checkpoint.
 
-## Install
+### Backups and integrations
 
-1. Stop the server and back up the world and Guardian database.
-2. Add the Guardian jar for your **exact Minecraft version and loader** to `mods`. Remove the old Guardian jar when updating.
-3. Install the matching dependencies below, start the server and run `/guardian status` as an operator.
+Manual and optional automatic checkpoints cover inventory, armor, offhand, ender chest, and supported equipment from Trinkets, Curios, Accessories, Cosmetic Armor Reworked, Tool Belt, Backpacked, and Traveler’s Backpack. Support depends on loader and mod version. Guardian preserves supported item components and can repair interrupted restores through targeted recovery.
 
-| Loader | Required dependencies |
-| --- | --- |
-| Fabric | Fabric API, Fabric Language Kotlin, Fzzy Config |
-| NeoForge | Kotlin for Forge, Fzzy Config |
+Staff can configure logging for chat, sessions, commands, and vanilla whispers. Guardian also records supported signs, entities, fluids, and other world changes. Optional Open Parties and Claims 0.33.0 integration protects configured structures with a 50-block buffer by default. The separate GPL WorldEdit adapter supports Fabric 1.21.1 with WorldEdit 7.3.8.
 
-SQLite is included. History is saved in `guardian/guardian.sqlite`; stop the server before copying it for a backup.
+### Downloads and support
 
-**0.4.0.** Targets: 1.21.1, 1.21.4–1.21.11, 26.1.2 and 26.2 on both loaders. Check the Versions tab for uploaded files. Use Java 21 for 1.21.x and Java 25 for 26.x. Back up before updating: schema 31 cannot be opened by older Guardian builds. Newer Minecraft ports remain experimental; see the version support notes.
-
-## Inspect something
-
-Run `/guardian inspect`, then:
-
-- **Left-click a block** for block history.
-- **Right-click a container** for item history.
-- Use `/guardian inspect ui` for the read-only item viewer.
-
-Run `/guardian inspect` again to return to normal interaction.
-
-## Search an area or player
-
-**History filters are optional.** You can search everyone in an area without supplying a player or time:
-
-```text
-/guardian lookup r:10
-/guardian transactions r:10
-```
-
-These search block and item history within ten blocks, across all players and retained ages. Each command searches its own category.
-
-Narrow the results when needed:
-
-```text
-/guardian lookup u:Alex t:1h r:10
-/guardian transactions i:minecraft:coal r:5
-```
-
-`u:` = player, `t:` = time, `r:` = radius, `i:` = block/item ID. Use **Next/Previous** or `p:2` for more results. Tab completion helps with names and filters.
-
-## Undo recorded changes
-
-Preview a small area first:
-
-```text
-/guardian rollback preview u:Alex t:10m r:5
-/guardian rollback u:Alex t:10m r:5
-```
-
-Use `/guardian restore preview` and `/guardian restore` with the same filters to redo completed block and supported item rollbacks.
-
-For supported item transfers:
-
-```text
-/guardian rollback-items preview u:Alex t:10m r:5
-/guardian rollback-items apply u:Alex t:10m r:5
-/guardian rollback-items confirm <token>
-```
-
-Keep affected players online, menus closed and cursors/crafting grids empty. Containers must stay loaded and inside the area. Use the token returned by `apply`.
-
-### Deleted items in creative
-
-For recorded creative item deletions, use the separate recovery command:
-
-```text
-/guardian recover-items preview u:Alex t:10m
-/guardian recover-items apply u:Alex t:10m
-/guardian recover-items confirm <token>
-```
-
-Keep Alex online, menus closed and the deleted slots empty. Recovery refuses occupied slots, conflicting history and repeat recovery. It accepts a player and time window, without a radius.
-
-**Creative-deletion recovery is separate from full inventory checkpoints.** Guardian cannot recover unlogged items or earlier events. Use `/guardian restore-items` to list saved transfer rollbacks, then `preview <UUID>`, `apply <UUID>` and `confirm <token>` to redo one. All complete inventories must still match the saved result. Minecarts, direct displays and lectern books remain unsupported rollback targets. Read the [item rollback](https://github.com/BareMinimumStudios/guardian/blob/main/docs/ONLINE_ITEM_ROLLBACK.md) and [creative recovery](https://github.com/BareMinimumStudios/guardian/blob/main/docs/CREATIVE_ITEM_RECOVERY.md) guides before using them on live history.
-
-## Full inventory recovery
-
-Use `/guardian inventory list` to choose a checkpoint saved **before the loss**.
-The viewer is read-only. `inventory restore preview`, `apply` and `confirm` provide
-a separate administrator-only replacement, with a saved before-state for undo.
-
-For future backups, use `/guardian inventory snapshot u:Player` or enable automatic
-checkpoints in the server config. Automatic capture is off by default. Normal player slots, ender chests and supported equipped items are covered. Adapters
-include Trinkets, Curios, Accessories, Cosmetic Armor, Tool Belt, Backpacked and
-Traveler's Backpack, where available for your loader/version. Restoring a
-snapshot can recreate items moved elsewhere. Read the [inventory backup guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/INVENTORY_BACKUPS.md) before use.
-
-## Optional logging
-
-Edit `config/guardian` and restart the server. Logging must be enabled before an event happens.
-
-For vanilla `/msg`, `/tell` and `/w`, enable `activity.whispers` and run `/guardian whispers`. No filters are required. For live monitoring, also enable `activity.liveSpy`, then use `/guardian spy whispers on` or `/guardian spy commands on`. Stop with `/guardian spy off`.
-
-Commands require staff permissions. Restrict private-history access and tell players what you record. Logging an event does not automatically make it recoverable.
-
-## WorldEdit and help
-
-WorldEdit integration requires the **separate optional GPL adapter**, currently for **Fabric 1.21.1 with WorldEdit 7.3.8 only**. Do not install that adapter on NeoForge or newer Minecraft versions.
-
-- [Full command guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/COMMANDS.md)
-- [WorldEdit setup](https://github.com/BareMinimumStudios/guardian/blob/main/worldedit-adapter/README.md)
-- [Changelog](https://github.com/BareMinimumStudios/guardian/blob/main/CHANGELOG.md)
-- [Report an issue](https://github.com/BareMinimumStudios/guardian/issues)
-
-Report problems with your Guardian version, exact command and diagnostic message. Real-client and modpack testing is still in progress.
-
-Guardian's core uses the Bare Minimum License. The optional WorldEdit adapter is licensed separately under GPL-3.0-or-later.
-
-## Keep structures available
-
-With Open Parties and Claims 0.33.0 installed, you can prevent players claiming configured
-structures and their surrounding area. The default buffer is 50 blocks around the whole
-structure; adjust it in the server config. Staff reservations require permission, OPAC admin
-mode and server claiming mode together. Existing claims are preserved. This is optional and
-off by default. See the [structure protection guide](https://github.com/BareMinimumStudios/guardian/blob/main/docs/STRUCTURE_CLAIMS.md).
+- [Modrinth](https://modrinth.com/mod/guardians) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/guardianex)
+- [GitHub source and README](https://github.com/BareMinimumStudios/guardian) · [Changelog](https://github.com/BareMinimumStudios/guardian/blob/main/CHANGELOG.md) · [Report an issue](https://github.com/BareMinimumStudios/guardian/issues)
+- [Commands and permissions](https://github.com/BareMinimumStudios/guardian/blob/main/docs/COMMANDS.md) · [Version support](https://github.com/BareMinimumStudios/guardian/blob/main/docs/VERSION_SUPPORT.md)
+- [Inventory backups and undo](https://github.com/BareMinimumStudios/guardian/blob/main/docs/INVENTORY_BACKUPS.md) · [Item rollback](https://github.com/BareMinimumStudios/guardian/blob/main/docs/ONLINE_ITEM_ROLLBACK.md) · [Interruption recovery](https://github.com/BareMinimumStudios/guardian/blob/main/docs/ITEM_RECOVERY.md)
+- [Structure claim protection](https://github.com/BareMinimumStudios/guardian/blob/main/docs/STRUCTURE_CLAIMS.md) · [WorldEdit adapter](https://github.com/BareMinimumStudios/guardian/blob/main/worldedit-adapter/README.md) · [Bare Minimum License](https://github.com/BareMinimumStudios/guardian/blob/main/LICENSE)

@@ -1,10 +1,11 @@
 # Guardian experimental ports
 
 These are testing builds for Fabric and NeoForge. The retained baseline targets Minecraft 1.21.1.
-The current testing checkpoint is alpha.101 for every target. Newer builds still need connected-client,
-real permission-provider, modpack and broader interruption-boundary acceptance.
+The current release source is **0.4.0**. See the [support matrix](../docs/VERSION_SUPPORT.md)
+for supported versions and the [0.4.0 validation report](../docs/VALIDATION.md) for test coverage.
+Newer builds still need connected-client, permission-provider, and modpack acceptance.
 
-## Targets and checks
+## Earlier alpha.101 target checks
 
 | Minecraft | Java | Shared + loader tests | Checkpoint capture / restore / undo |
 | --- | --- | --- | --- |
