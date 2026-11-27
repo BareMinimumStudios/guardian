@@ -1,6 +1,6 @@
 # Third-party notices
 
-Guardian is licensed separately under the Bare Minimum License (BML) v1.0. Third-party components retain their own licenses.
+Guardian is licensed separately under the Bare Minimum License (BML) v1.1. Third-party components retain their own licenses.
 
 ## CoreProtect
 

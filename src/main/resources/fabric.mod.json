@@ -7,7 +7,7 @@
   "authors": [
     "Bare Minimum Studios"
   ],
-  "license": "Bare Minimum License (BML) v1.0",
+  "license": "Bare Minimum License (BML) v1.1",
   "environment": "server",
   "entrypoints": {
     "main": [

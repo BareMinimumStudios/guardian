@@ -7,6 +7,10 @@ Guardian uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Runtim
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the Guardian core to Bare Minimum License 1.1.
+
 ## [0.4.1] - 2026-11-27
 
 ### Changed
