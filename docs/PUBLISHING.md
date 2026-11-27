@@ -15,9 +15,11 @@ The **Publish** workflow with destination **all** builds the Minecraft 1.21.1 ja
 - Keep the existing organization secret named `MODRINTH_TOKEN`. Allow the
   `BareMinimumStudios/guardian` repository to use it. Do not copy the token into source,
   a workflow input or a command argument.
-- Set the repository variable `MODRINTH_PROJECT_ID` to **Guardian's** project ID or
-  slug, or fill in the workflow's `project_id` input. The shared organization token
-  does not make another mod's project ID appropriate for Guardian.
+- Modrinth defaults to the Guardian slug `guardians`. Set `MODRINTH_PROJECT_ID` or
+  use the workflow's `project_id` input if Guardian's slug changes.
+- CurseForge defaults to GuardianEx project `1834486`. The workflow accepts a
+  repository variable override through `CURSEFORGE_PROJECT_ID` and requires
+  `CURSEFORGE_TOKEN`.
 - Guardian's Modrinth source URL must be `https://github.com/BareMinimumStudios/guardian`.
   The token needs permission to create versions on that project.
 

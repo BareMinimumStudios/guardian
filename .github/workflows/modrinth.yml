@@ -23,7 +23,7 @@ on:
         type: boolean
         default: true
       project_id:
-        description: Guardian project ID or slug (blank uses MODRINTH_PROJECT_ID)
+        description: Guardian project ID or slug (blank uses the repository setting or Guardian slug)
         type: string
         default: ''
   workflow_call:
@@ -69,7 +69,7 @@ jobs:
       - name: Check configuration and select targets
         id: plan
         env:
-          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID || 'guardians' }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           RELEASE: ${{ inputs.release }}
           MINECRAFT: ${{ inputs.minecraft }}
@@ -143,7 +143,7 @@ jobs:
       - name: Verify every file and existing Modrinth version before any uploads
         id: check
         env:
-          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID }}
+          MODRINTH_PROJECT_ID: ${{ inputs.project_id || vars.MODRINTH_PROJECT_ID || 'guardians' }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           RELEASE: ${{ inputs.release }}
           MINECRAFT: ${{ inputs.minecraft }}

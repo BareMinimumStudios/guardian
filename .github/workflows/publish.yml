@@ -128,12 +128,11 @@ jobs:
           path: build/release
       - name: Check CurseForge configuration
         env:
-          PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
           TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-        run: test -n "$PROJECT_ID" && test -n "$TOKEN"
+        run: test -n "$TOKEN" || { echo 'Allow Guardian access to the CURSEFORGE_TOKEN secret'; exit 1; }
       - uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
         with:
-          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID || '1834486' }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           name: ${{ needs.build.outputs.version }}-fabric
           version: ${{ needs.build.outputs.version }}-fabric
@@ -161,12 +160,11 @@ jobs:
           path: build/release
       - name: Check CurseForge configuration
         env:
-          PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
           TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-        run: test -n "$PROJECT_ID" && test -n "$TOKEN"
+        run: test -n "$TOKEN" || { echo 'Allow Guardian access to the CURSEFORGE_TOKEN secret'; exit 1; }
       - uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075
         with:
-          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID || '1834486' }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           name: ${{ needs.build.outputs.version }}-neoforge
           version: ${{ needs.build.outputs.version }}-neoforge
