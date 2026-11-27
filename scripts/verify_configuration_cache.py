@@ -1,30 +1,10 @@
-"""Verify reuse, allowing one Loom-generated cache creation to settle."""
+"""Verify reuse, allowing one newly stored entry to be checked."""
 from pathlib import Path
-import re
 import subprocess
 import sys
 
 REUSED = 'Configuration cache entry reused.'
-
-
-def loom_cache_created(output):
-    reasons = re.findall(
-        r'^Calculating task graph as configuration cache cannot be reused because (.+)$',
-        output.replace('\\', '/'), re.MULTILINE)
-    if len(reasons) != 1:
-        return False
-    match = re.fullmatch(r"the file system entry '([^'\r\n]+)' has been created\.", reasons[0])
-    if not match:
-        return False
-    path = match[1]
-    if re.fullmatch(r'.*/caches/fabric-loom/mojang_versions_manifest\.json', path):
-        return True
-    # Restored Gradle caches can still need a project-local mapped Minecraft jar.
-    # Accept creation only in Loom's generated Minecraft Maven namespace.
-    match = re.fullmatch(
-        r"(?:.*/)?\.gradle/loom-cache/minecraftMaven/net/minecraft/"
-        r"(minecraft-(?:merged|common|client|server)[^/'\r\n]*)/([^/'\r\n]+)/([^/'\r\n]+\.jar)", path)
-    return match is not None and all(part not in ('.', '..') for part in match.groups())
+STORED = 'Configuration cache entry stored.'
 
 
 def verify(repo, run=subprocess.run, emit=print):
@@ -42,10 +22,11 @@ def verify(repo, run=subprocess.run, emit=print):
         (folder / 'configuration-cache-verification.log').write_text(output, encoding='utf-8')
         if result.returncode:
             return result.returncode
-        if REUSED in {line.strip() for line in output.splitlines()}:
+        lines = {line.strip() for line in output.splitlines()}
+        if REUSED in lines:
             return 0
-        if attempt == 1 and loom_cache_created(output):
-            emit('::notice::Loom created a generated cache file during cache warm-up; checking cache reuse once more.')
+        if attempt == 1 and STORED in lines:
+            emit('::notice::Gradle stored a fresh configuration cache entry. Checking reuse once more.')
             continue
         emit('::error::The build succeeded but configuration-cache reuse was not verified. See the verification logs.')
         return 1
