@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.UUID
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -17,7 +18,7 @@ object EntityHistoryCapture {
     private var pipeline: () -> BufferedLogPipeline? = { null }
     private var config: () -> GuardianConfig? = { null }
     private val renameActor = ThreadLocal<ActorIdentity>()
-    private data class BreedingContext(val parent: java.util.UUID, val partner: java.util.UUID, val actor: ActorIdentity)
+    private data class BreedingContext(val parent: UUID, val partner: UUID, val actor: ActorIdentity)
     private val breedingContext = ThreadLocal<BreedingContext>()
     private var lastWarning = 0L
 
@@ -34,7 +35,7 @@ object EntityHistoryCapture {
             }
     }
     @JvmStatic fun plainName(entity: Entity): String? = entity.customName?.getString(256)?.filter { !it.isISOControl() }
-    @JvmStatic fun withRenameActor(player: net.minecraft.world.entity.player.Player, change: Runnable) {
+    @JvmStatic fun withRenameActor(player: Player, change: Runnable) {
         val previous = renameActor.get()
         renameActor.set(ActorIdentity.Player(player.uuid,player.gameProfile.name))
         try { change.run() } finally { if (previous == null) renameActor.remove() else renameActor.set(previous) }
@@ -78,7 +79,7 @@ object EntityHistoryCapture {
         val context=breedingContext.get() ?: return
         submit(child,EntityAuditKind.BREED,context.actor,plainName(child),null,null,context.parent,context.partner)
     }
-    private fun submit(entity: Entity, kind: EntityAuditKind, actor: ActorIdentity, before: String?, after: String?, damage: ResourceId?, parent: java.util.UUID? = null, partner: java.util.UUID? = null) {
+    private fun submit(entity: Entity, kind: EntityAuditKind, actor: ActorIdentity, before: String?, after: String?, damage: ResourceId?, parent: UUID? = null, partner: UUID? = null) {
         val writer = pipeline() ?: return
         runCatching {
             val pos = entity.blockPosition()

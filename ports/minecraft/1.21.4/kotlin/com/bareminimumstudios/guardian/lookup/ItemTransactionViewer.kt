@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.lookup
 
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
 import com.bareminimumstudios.guardian.permission.PermissionService
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination
 import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
@@ -10,7 +12,7 @@ import net.minecraft.world.SimpleMenuProvider
 /** DB work uses the existing history worker; authority and menu identity are checked on completion. */
 object ItemTransactionViewer {
     fun link(command: String): Component=Component.literal("[Open item UI]").withStyle {
-        it.withColor(net.minecraft.ChatFormatting.AQUA).withClickEvent(net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,command))
+        it.withColor(ChatFormatting.AQUA).withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND,command))
     }
     fun open(player: ServerPlayer,query: ContainerLookupQuery,history: BlockHistoryService,permissions: PermissionService,available: () -> Boolean) {
         fun allowed()=runCatching {

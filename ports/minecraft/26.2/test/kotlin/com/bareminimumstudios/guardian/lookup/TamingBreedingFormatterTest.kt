@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -8,7 +9,7 @@ import java.util.UUID
 import kotlin.test.*
 
 class TamingBreedingFormatterTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private val tame=EntityAuditEvent(timestampEpochMillis=1000,actor=ActorIdentity.Player(UUID.randomUUID(),"Alex"),dimension=ResourceId.parse("minecraft:overworld"),position=BlockPosition(1,64,2),targetUuid=UUID.randomUUID(),targetType=ResourceId.parse("minecraft:wolf"),kind=EntityAuditKind.TAME)
     @Test fun tameDescribesCompletedOwnershipWithoutCallingItARename() {
         val line=EntityHistoryFormatter.line(tame,2000).string
@@ -18,7 +19,7 @@ class TamingBreedingFormatterTest {
         val born=tame.copy(kind=EntityAuditKind.BREED,parentUuid=UUID.randomUUID(),partnerUuid=UUID.randomUUID())
         val line=EntityHistoryFormatter.line(born,2000)
         assertTrue("was born; breeding credited to Alex" in line.string)
-        val hover=(line.style.hoverEvent as net.minecraft.network.chat.HoverEvent.ShowText).value().string
+        val hover=(line.style.hoverEvent as HoverEvent.ShowText).value().string
         assertTrue(born.parentUuid.toString() in hover);assertTrue(born.partnerUuid.toString() in hover)
         assertFalse(born.parentUuid.toString() in line.string)
     }

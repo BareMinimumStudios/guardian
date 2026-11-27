@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.util.ProblemReporter
+import net.minecraft.world.level.storage.TagValueInput
 import com.bareminimumstudios.guardian.domain.BlockPosition
 import com.bareminimumstudios.guardian.domain.BlockStateSnapshot
 import net.minecraft.world.level.block.Block
@@ -34,13 +36,13 @@ object MinecraftBlockRestorer {
                 ?: return RestoreResult(false, "Recorded block entity is missing after restoration")
             val nbt = checkNotNull(decodedPayload)
             runCatching {
-                val problems = object : net.minecraft.util.ProblemReporter {
-                    override fun forChild(path: net.minecraft.util.ProblemReporter.PathElement): net.minecraft.util.ProblemReporter = this
-                    override fun report(problem: net.minecraft.util.ProblemReporter.Problem) {
+                val problems = object : ProblemReporter {
+                    override fun forChild(path: ProblemReporter.PathElement): ProblemReporter = this
+                    override fun report(problem: ProblemReporter.Problem) {
                         error("Recorded block-entity data could not be decoded: $problem")
                     }
                 }
-                blockEntity.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(problems, world.registryAccess(), nbt))
+                blockEntity.loadWithComponents(TagValueInput.create(problems, world.registryAccess(), nbt))
                 blockEntity.setChanged()
                 world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
             }.getOrElse {

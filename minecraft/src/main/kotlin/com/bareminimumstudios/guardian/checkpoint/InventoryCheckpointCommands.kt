@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.checkpoint
 
+import com.mojang.brigadier.suggestion.Suggestions
 import com.bareminimumstudios.guardian.GuardianRuntime
 import com.bareminimumstudios.guardian.command.CheckpointCommandFilters
 import com.bareminimumstudios.guardian.permission.PermissionService
@@ -34,15 +35,15 @@ internal object InventoryCheckpointCommands {
                 }
                 .executes { context -> result(runtime()?.checkpoints()?.capture(context.source,StringArgumentType.getString(context,"player"))) }))
         .then(Commands.literal("view").then(Commands.argument("checkpoint",StringArgumentType.word())
-            .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: com.mojang.brigadier.suggestion.Suggestions.empty() }
+            .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: Suggestions.empty() }
             .executes { context -> id(context.source,StringArgumentType.getString(context,"checkpoint")) { result(runtime()?.checkpoints()?.view(context.source,it)) } }))
         .then(Commands.literal("restore").requires { permissions.has(it,"guardian.inventory.restore",4) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Use /guardian inventory restore preview <checkpoint>, apply <checkpoint>, confirm <token>, reconcile, or cancel. Full snapshot replacement can recreate items moved elsewhere."));0 }
             .then(Commands.literal("preview").then(Commands.argument("checkpoint",StringArgumentType.word())
-                .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: com.mojang.brigadier.suggestion.Suggestions.empty() }
+                .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: Suggestions.empty() }
                 .executes { context -> id(context.source,StringArgumentType.getString(context,"checkpoint")) { result(runtime()?.checkpoints()?.preview(context.source,it)) } }))
             .then(Commands.literal("apply").then(Commands.argument("checkpoint",StringArgumentType.word())
-                .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: com.mojang.brigadier.suggestion.Suggestions.empty() }
+                .suggests { context,builder -> runtime()?.checkpoints()?.suggestIds(context.source,builder) ?: Suggestions.empty() }
                 .executes { context -> id(context.source,StringArgumentType.getString(context,"checkpoint")) { value ->
                     val current=runtime();val service=current?.checkpoints()
                     if(service?.permitted(context.source,true)!=true)0 else result(current.onlineItems()?.requestCheckpointRestore(context.source,value,service.limits))

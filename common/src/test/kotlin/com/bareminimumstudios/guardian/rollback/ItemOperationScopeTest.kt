@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.storage.StorageShutdown
+import org.junit.jupiter.api.RepeatedTest
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import java.util.concurrent.*
@@ -85,7 +87,7 @@ class ItemOperationScopeTest {
         } finally {release.countDown();scope.close();finish(scope)}
     }
     // Exercise independent completion-observer ordering across repeated worker schedules.
-    @org.junit.jupiter.api.RepeatedTest(25) fun sharedDrainWaitsForEveryStoppedHost() {
+    @RepeatedTest(25) fun sharedDrainWaitsForEveryStoppedHost() {
         block=true;val scope=scope()
         val a=record();val b=record()
         val first=assertNotNull(scope.start(a,coordination,{Port(a)}))
@@ -140,7 +142,7 @@ class ItemOperationScopeTest {
         try {
             assertTrue(entered.await(5,TimeUnit.SECONDS))
             val journalDrain=scope.stopAndDrain();val external=CompletableFuture<Void>()
-            val shutdown=com.bareminimumstudios.guardian.storage.StorageShutdown(listOf(journalDrain,external.minimalCompletionStage())) {calls.incrementAndGet();closed.countDown()}
+            val shutdown=StorageShutdown(listOf(journalDrain,external.minimalCompletionStage())) {calls.incrementAndGet();closed.countDown()}
             assertFalse(shutdown.closed.toCompletableFuture().isDone);release.countDown()
             journalDrain.toCompletableFuture().get(5,TimeUnit.SECONDS);assertEquals(0,calls.get())
             external.complete(null);shutdown.closed.toCompletableFuture().get(5,TimeUnit.SECONDS)
@@ -162,7 +164,7 @@ class ItemOperationScopeTest {
         scope.close();scope.close();finish(scope);scope.close();scope.advance()
         assertEquals(1,calls.get());assertNotSame(main,closeThread);assertEquals(ItemOperationScopeState.CLOSED,scope.state)
     }
-    @org.junit.jupiter.api.RepeatedTest(25) fun startedReadMustDrainBeforeBackendClosure() {
+    @RepeatedTest(25) fun startedReadMustDrainBeforeBackendClosure() {
         block=true;val scope=scope();val record=record();val port=Port(record)
         val host=assertNotNull(scope.start(record,coordination,{port}));host.advance()
         try {

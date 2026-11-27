@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.rollback
 
+import java.util.concurrent.CountDownLatch
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -120,8 +121,8 @@ class ItemMenuCoordinationTest {
         }.get(5, TimeUnit.SECONDS)
     }
     private class PendingJournal : ItemRollbackJournal {
-        val entered = java.util.concurrent.CountDownLatch(1)
-        val release = java.util.concurrent.CountDownLatch(1)
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
         override fun itemRollback(operationId: UUID): ItemRollbackRecord? {
             entered.countDown()
             check(release.await(5, TimeUnit.SECONDS))

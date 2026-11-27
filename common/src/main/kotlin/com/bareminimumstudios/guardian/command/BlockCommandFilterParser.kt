@@ -1,5 +1,10 @@
 package com.bareminimumstudios.guardian.command
 
+import com.bareminimumstudios.guardian.domain.ChangeCause
+import com.bareminimumstudios.guardian.domain.ResourceId
+import com.bareminimumstudios.guardian.storage.query.HistoryPlayer
+import com.bareminimumstudios.guardian.storage.query.HistorySearchFilter
+import java.util.UUID
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.BlockPosition
 
@@ -10,7 +15,7 @@ object BlockCommandFilterParser {
 
         var actorName: String? = null
         var usersSeen = false
-        var search = com.bareminimumstudios.guardian.storage.query.HistorySearchFilter()
+        var search = HistorySearchFilter()
         var includeSeen = false
         var excludeSeen = false
         var lookbackMillis: Long? = null
@@ -20,8 +25,8 @@ object BlockCommandFilterParser {
         var y: Int? = null
         var z: Int? = null
         var actions = emptySet<ActionType>()
-        var causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause>? = null
-        var movementId: java.util.UUID? = null
+        var causes: Set<ChangeCause>? = null
+        var movementId: UUID? = null
         var limit: Int? = null
         var page: Int? = null
         var order: String? = null
@@ -37,8 +42,8 @@ object BlockCommandFilterParser {
                     val names = value.split(',')
                     require(names.size in 1..32 && names.all { PLAYER_NAME.matches(it.removePrefix("!")) }) { "Use up to 32 player names separated by commas; prefix exclusions with !." }
                     require(names.map { it.lowercase() }.distinct().size == names.size) { "Duplicate player in user filter." }
-                    val included = names.filterNot { it.startsWith('!') }.map { com.bareminimumstudios.guardian.storage.query.HistoryPlayer(it) }
-                    val excluded = names.filter { it.startsWith('!') }.map { com.bareminimumstudios.guardian.storage.query.HistoryPlayer(it.drop(1)) }
+                    val included = names.filterNot { it.startsWith('!') }.map { HistoryPlayer(it) }
+                    val excluded = names.filter { it.startsWith('!') }.map { HistoryPlayer(it.drop(1)) }
                     search = search.copy(players = included, excludedPlayers = excluded)
                     actorName = included.singleOrNull()?.name
                 }
@@ -68,14 +73,14 @@ object BlockCommandFilterParser {
                 "z" -> z = parseCoordinate("z", value, z)
                 "m", "movement" -> {
                     require(movementId==null) { "Use one movement id" }
-                    movementId=java.util.UUID.fromString(value)
+                    movementId=UUID.fromString(value)
                     require(movementId.toString().equals(value,true)) { "Use a complete movement UUID" }
                 }
                 "c", "cause" -> {
                     require(causes == null) { "Cause filter was specified more than once." }
                     causes=value.split(',').map { name ->
                         val normalized=when { name.equals("worldedit",true)->"WORLD_EDIT"; name.equals("sign",true)->"SIGN_TEXT"; else->name.uppercase().replace('-','_') }
-                        com.bareminimumstudios.guardian.domain.ChangeCause.entries.firstOrNull { it.name==normalized }
+                        ChangeCause.entries.firstOrNull { it.name==normalized }
                             ?: error("Unknown cause '$name'; use fire, explosion, growth, decay, player or worldedit.")
                     }.toSet()
                 }
@@ -117,10 +122,10 @@ object BlockCommandFilterParser {
         )
     }
 
-    private fun parseResources(value: String): Set<com.bareminimumstudios.guardian.domain.ResourceId> {
+    private fun parseResources(value: String): Set<ResourceId> {
         val parts = value.split(',')
         require(parts.size in 1..64 && parts.none { it.isEmpty() }) { "Use 1 to 64 block/item IDs separated by commas." }
-        val resources = parts.map { com.bareminimumstudios.guardian.domain.ResourceId.parse(it) }
+        val resources = parts.map { ResourceId.parse(it) }
         require(resources.distinct().size == resources.size) { "Duplicate resource in filter." }
         return resources.toSet()
     }

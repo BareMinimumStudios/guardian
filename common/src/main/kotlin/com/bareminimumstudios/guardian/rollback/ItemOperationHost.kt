@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.rollback
 
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import com.bareminimumstudios.guardian.domain.*
 import java.util.concurrent.CompletionStage
 
@@ -31,9 +33,9 @@ class ItemOperationHost private constructor(
     private val plan = record
     private val fullImages = if (protected) ItemRollbackImages(record, original) else null
     private val saved = linkedMapOf<ItemSlotAddress, ItemStackSnapshot>()
-    private var protection: java.util.concurrent.CompletableFuture<Boolean>? = null
-    private var acknowledgment: java.util.concurrent.CompletableFuture<Boolean>? = null
-    private var receipt: java.util.concurrent.CompletableFuture<ItemRollbackImageRecord?>? = null
+    private var protection: CompletableFuture<Boolean>? = null
+    private var acknowledgment: CompletableFuture<Boolean>? = null
+    private var receipt: CompletableFuture<ItemRollbackImageRecord?>? = null
     private var recoveryWorker: ItemRollbackJournalWorker? = null
     private var recovery: ItemReconciliationDriver? = null
     private var recoveryPort: ItemReconciliationPort? = null
@@ -58,7 +60,7 @@ class ItemOperationHost private constructor(
     }
     private val baselineRemaining = ArrayDeque(owners)
     private var baselineOwner: ItemSlotOwner? = null
-    private var baselineResult: java.util.concurrent.CompletableFuture<InventorySnapshot?>? = null
+    private var baselineResult: CompletableFuture<InventorySnapshot?>? = null
     private val pendingSaved = linkedMapOf<ItemSlotOwner, CompletionStage<InventorySnapshot?>>()
     private val savePort = object : ItemSavePort {
         override fun isExclusiveAndCurrent(owners: Set<ItemSlotOwner>) =
@@ -85,10 +87,10 @@ class ItemOperationHost private constructor(
     internal val journalDrain: CompletionStage<Void> get() {
         checkThread()
         check(worker.isStopped && (recoveryWorker == null || recoveryWorker!!.isStopped))
-        return java.util.concurrent.CompletableFuture.allOf(
+        return CompletableFuture.allOf(
             worker.drained.toCompletableFuture(),
             retention.journalDrain.toCompletableFuture(),
-            recoveryWorker?.drained?.toCompletableFuture() ?: java.util.concurrent.CompletableFuture.completedFuture(null)
+            recoveryWorker?.drained?.toCompletableFuture() ?: CompletableFuture.completedFuture(null)
         ).minimalCompletionStage()
     }
     val completionAttempt: CompletionStage<Boolean>? get() { checkThread(); return save?.completionAttempt }
@@ -101,7 +103,7 @@ class ItemOperationHost private constructor(
         advancing = true
         try {
             if (state in setOf(ItemOperationState.PROTECTING, ItemOperationState.BASELINING, ItemOperationState.ACKNOWLEDGING, ItemOperationState.CONFIRMING) &&
-                clock() - started > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) {
+                clock() - started > TimeUnit.SECONDS.toNanos(10)) {
                 drain(false, "Durable admission or acknowledgment timed out")
                 return state
             }

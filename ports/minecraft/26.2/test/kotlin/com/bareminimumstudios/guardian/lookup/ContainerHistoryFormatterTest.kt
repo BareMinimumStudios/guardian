@@ -1,11 +1,12 @@
 package com.bareminimumstudios.guardian.lookup
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import kotlin.test.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
 class ContainerHistoryFormatterTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private val actor = ActorIdentity.Player(UUID.randomUUID(), "poke0")
     private val owner = ItemSlotOwner.BlockContainer(ResourceId.parse("minecraft:overworld"), BlockPosition(-281, 111, -26))
     private fun coal(count: Int) = ItemStackSnapshot(ResourceId.parse("minecraft:coal"), count, BinaryPayload.of(byteArrayOf(1)))

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.ArrayDeque
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -22,7 +23,7 @@ object FluidFlowCapture {
     data class Scope internal constructor(val level:ServerLevel,val origin:BlockPos,val actor:ActorIdentity,val formation:Boolean)
     @ConsistentCopyVisibility
     data class Mutation internal constructor(val level:ServerLevel,val position:BlockPos,val before:FluidSnapshot,val scope:Scope?)
-    private val scopes=ThreadLocal.withInitial { java.util.ArrayDeque<Scope>() }
+    private val scopes=ThreadLocal.withInitial { ArrayDeque<Scope>() }
     private var lastWarning=0L
     fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) { pipeline=writer;config=settings;worlds.clear();scopes.remove() }
     private fun enabled():Boolean {

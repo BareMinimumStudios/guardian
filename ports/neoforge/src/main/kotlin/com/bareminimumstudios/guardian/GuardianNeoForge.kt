@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian
 
+import com.bareminimumstudios.guardian.domain.PlayerActivityKind
+import com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture
+import net.neoforged.neoforge.event.server.ServerStartedEvent
 import com.bareminimumstudios.guardian.command.GuardianCommands
 import com.bareminimumstudios.guardian.config.GuardianConfigManager
 import com.bareminimumstudios.guardian.lookup.BlockInspector
@@ -35,7 +38,7 @@ class GuardianNeoForge {
         NeoForge.EVENT_BUS.addListener(::stopping)
         NeoForge.EVENT_BUS.addListener(::tick)
         NeoForge.EVENT_BUS.addListener(::commands)
-        com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.install({ runtime?.pipeline() }, { config })
+        PlayerActivityCapture.install({ runtime?.pipeline() }, { config })
         NeoForge.EVENT_BUS.addListener(::login)
         NeoForge.EVENT_BUS.addListener(::logout)
         logger.info("Guardian NeoForge initialized; permission provider={}", permissions.providerName)
@@ -50,9 +53,9 @@ class GuardianNeoForge {
             if (it.uncleanShutdownDetected) logger.warn("Guardian recovered an unclean storage shutdown; integrity passed={}", it.integrityCheckPassed)
         }
     }
-    private fun started(event: net.neoforged.neoforge.event.server.ServerStartedEvent) { runtime?.serverStarted(event.server) }
+    private fun started(event: ServerStartedEvent) { runtime?.serverStarted(event.server) }
     private fun stopping(event: ServerStoppingEvent) {
-        event.server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
+        event.server.playerList.players.forEach { PlayerActivityCapture.capture(it, PlayerActivityKind.LOGOUT) }
         BlockInspector.clear()
         if (runtime?.stop() == false) logger.error("Guardian shutdown retained protected item operations or incomplete storage work; check recovery journals and writer errors.")
         runtime = null
@@ -62,11 +65,11 @@ class GuardianNeoForge {
         GuardianCommands.register(event.dispatcher, permissions, { runtime }, { config })
     }
     private fun login(event: PlayerEvent.PlayerLoggedInEvent) {
-        (event.entity as? ServerPlayer)?.let { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN) }
+        (event.entity as? ServerPlayer)?.let { PlayerActivityCapture.capture(it, PlayerActivityKind.LOGIN) }
     }
     private fun logout(event: PlayerEvent.PlayerLoggedOutEvent) {
         (event.entity as? ServerPlayer)?.let {
-            com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
+            PlayerActivityCapture.capture(it, PlayerActivityKind.LOGOUT)
             BlockInspector.set(it, false)
         }
     }

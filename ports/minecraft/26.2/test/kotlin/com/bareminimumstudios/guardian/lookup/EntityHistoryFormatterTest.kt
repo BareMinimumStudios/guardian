@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -9,13 +10,13 @@ import java.util.UUID
 import kotlin.test.*
 
 class EntityHistoryFormatterTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private val row=EntityAuditEvent(timestampEpochMillis=1000,actor=ActorIdentity.System("environment"),dimension=ResourceId.parse("minecraft:overworld"),position=BlockPosition(1,64,2),targetUuid=UUID.randomUUID(),targetType=ResourceId.parse("example:deer"),kind=EntityAuditKind.DEATH,damageType=ResourceId.parse("minecraft:fall"))
     @Test fun deathKeepsIdentityAndDamageInHoverAndOffersTargetSearch() {
         val line=EntityHistoryFormatter.line(row,2000)
         assertTrue("example:deer died; source: environment @ 1, 64, 2" in line.string)
         assertFalse(row.targetUuid.toString() in line.string)
-        val hover=(line.style.hoverEvent as net.minecraft.network.chat.HoverEvent.ShowText).value().string
+        val hover=(line.style.hoverEvent as HoverEvent.ShowText).value().string
         assertTrue(row.targetUuid.toString() in hover);assertTrue("minecraft:fall" in hover)
         assertIs<ClickEvent.SuggestCommand>(line.style.clickEvent)
         assertEquals("/guardian entities id:${row.targetUuid}",(line.style.clickEvent as ClickEvent.SuggestCommand).command())

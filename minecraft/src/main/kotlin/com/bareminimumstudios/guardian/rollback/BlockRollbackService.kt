@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.domain.BlockPosition
+import com.bareminimumstudios.guardian.platform.minecraft.BlockStateSnapshotDecoder
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftNbtPayloadCodec
+import net.minecraft.core.BlockPos
 import com.bareminimumstudios.guardian.permission.PermissionService
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
@@ -138,14 +142,14 @@ class BlockRollbackService(
             val pos = directed.position
             var unavailable = BlockRollbackPreviewPlan.Outcome.UNLOADED
             val live = if (!world.chunkSource.hasChunk(pos.x shr 4, pos.z shr 4)) null else try {
-                MinecraftBlockSnapshotter.snapshot(world, net.minecraft.core.BlockPos(pos.x, pos.y, pos.z))
+                MinecraftBlockSnapshotter.snapshot(world, BlockPos(pos.x, pos.y, pos.z))
             } catch (error: Exception) {
                 unavailable = BlockRollbackPreviewPlan.Outcome.READ_FAILURE
                 logger.warn("Could not read block for rollback preview at {}", pos, error); null
             }
             val supported = live != null && runCatching {
-                com.bareminimumstudios.guardian.platform.minecraft.BlockStateSnapshotDecoder.decode(directed.before)
-                directed.before.blockEntityData?.let { com.bareminimumstudios.guardian.platform.minecraft.MinecraftNbtPayloadCodec.decode(it) }
+                BlockStateSnapshotDecoder.decode(directed.before)
+                directed.before.blockEntityData?.let { MinecraftNbtPayloadCodec.decode(it) }
             }.isSuccess
             val result = session.plan.observe(row, live, unavailable, supported)
             if (result == BlockRollbackPreviewPlan.Outcome.WOULD_RESTORE && session.examples.size < 5) {
@@ -229,7 +233,7 @@ class BlockRollbackService(
             }
 
             val live = try {
-                MinecraftBlockSnapshotter.snapshot(world, net.minecraft.core.BlockPos(pos.x, pos.y, pos.z))
+                MinecraftBlockSnapshotter.snapshot(world, BlockPos(pos.x, pos.y, pos.z))
             } catch (throwable: Throwable) {
                 logger.error("Failed to snapshot live block while rolling back row {}", row.rowId, throwable)
                 session.failed++
@@ -264,7 +268,7 @@ class BlockRollbackService(
             }
 
             val verified = runCatching {
-                MinecraftBlockSnapshotter.snapshot(world, net.minecraft.core.BlockPos(pos.x, pos.y, pos.z))
+                MinecraftBlockSnapshotter.snapshot(world, BlockPos(pos.x, pos.y, pos.z))
             }.getOrNull()
             if (verified != snapshot.before) {
                 // Best-effort compensation: if the target could not be reproduced exactly, restore the live state we replaced.
@@ -386,7 +390,7 @@ class BlockRollbackService(
         var skippedBlocked: Int = 0,
         var skippedUnloaded: Int = 0,
         var failed: Int = 0,
-        val blockedPositions: MutableSet<com.bareminimumstudios.guardian.domain.BlockPosition> = HashSet()
+        val blockedPositions: MutableSet<BlockPosition> = HashSet()
     )
 
     private enum class Phase {

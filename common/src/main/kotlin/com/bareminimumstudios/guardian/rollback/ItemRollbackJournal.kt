@@ -1,5 +1,10 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRequester
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits
 import com.bareminimumstudios.guardian.domain.*
 import java.util.Collections
 import java.util.UUID
@@ -24,9 +29,9 @@ interface ItemRollbackJournal {
     fun restorableItemRollbacks(limit: Int = 10): List<ItemRollbackSummary> = emptyList()
     fun itemRestoreSource(operationId: UUID): ItemRestoreSource = throw UnsupportedOperationException("Item redo is unavailable")
     fun prepareItemRestore(operationId: UUID, createdAt: Long, sourceOperation: UUID): ItemRollbackRecord = throw UnsupportedOperationException("Item redo is unavailable")
-    fun checkpointRestoreSource(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource = throw UnsupportedOperationException("Checkpoint restore is unavailable")
-    fun checkpointRestoreLink(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink? = null
-    fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, requester: com.bareminimumstudios.guardian.checkpoint.CheckpointRequester, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits): ItemRollbackRecord = throw UnsupportedOperationException("Checkpoint restore is unavailable")
+    fun checkpointRestoreSource(id: UUID): CheckpointRestoreSource = throw UnsupportedOperationException("Checkpoint restore is unavailable")
+    fun checkpointRestoreLink(id: UUID): CheckpointRestoreLink? = null
+    fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: InventoryCheckpoint, requester: CheckpointRequester, limits: InventoryCheckpointLimits): ItemRollbackRecord = throw UnsupportedOperationException("Checkpoint restore is unavailable")
     fun itemRollback(operationId: UUID): ItemRollbackRecord?
     /** Headers only, including protected COMPLETED records still awaiting reconciliation. No payload bulk load. */
     fun unfinishedItemRollbacks(limit: Int = 50): List<ItemRollbackSummary>

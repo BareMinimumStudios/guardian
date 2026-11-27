@@ -74,7 +74,7 @@ class StructureFootprintLookup(
         for(x in left..right)for(z in top..bottom)
             if(accept(StructureChunkKey(dimension,x,z)))return StructureClaimDecision.PROTECTED_STRUCTURE
         // References point to complete starts, whose boxes may span many chunks.
-        for(key in references.toList()) {
+        for(key in references) {
             observed.add(Coordinate(key.x,key.z))
             val value=metadata(key)
             if(value==null || !value.complete)complete=false

@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.command.SpyFilter
+import com.bareminimumstudios.guardian.lookup.ActivityFormatter
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.permission.PermissionService
@@ -11,7 +13,7 @@ import java.util.UUID
 /** Explicit session-only subscriptions. No content is buffered for an offline or revoked viewer. */
 object ActivitySpy {
     private data class Binding(val server:MinecraftServer,val config:GuardianConfig,val permissions:PermissionService)
-    private data class Subscription(val filters:MutableMap<PlayerActivityKind,com.bareminimumstudios.guardian.command.SpyFilter>,var tick:Int=Int.MIN_VALUE,var count:Int=0,var suppressed:Long=0)
+    private data class Subscription(val filters:MutableMap<PlayerActivityKind,SpyFilter>,var tick:Int=Int.MIN_VALUE,var count:Int=0,var suppressed:Long=0)
     private var binding:Binding?=null
     private val viewers=linkedMapOf<UUID,Subscription>()
     fun install(server:MinecraftServer,config:GuardianConfig,permissions:PermissionService) { clear();binding=Binding(server,config,permissions) }
@@ -20,7 +22,7 @@ object ActivitySpy {
     private fun permission(kind:PlayerActivityKind)=if(kind==PlayerActivityKind.WHISPER)"guardian.whispers" else "guardian.commands"
     private fun active(b:Binding,kind:PlayerActivityKind)=b.config.general.enabled.get() && b.config.logging.enabled.get() && b.config.activity.liveSpy.get() &&
         (if(kind==PlayerActivityKind.WHISPER)b.config.activity.whispers.get() else b.config.activity.commands.get())
-    fun set(player:ServerPlayer,kind:PlayerActivityKind,on:Boolean,filter:com.bareminimumstudios.guardian.command.SpyFilter=com.bareminimumstudios.guardian.command.SpyFilter()):Boolean {
+    fun set(player:ServerPlayer,kind:PlayerActivityKind,on:Boolean,filter:SpyFilter=SpyFilter()):Boolean {
         val b=binding ?: return false
         if(!b.server.isSameThread || player.level().server!==b.server || b.server.playerList.getPlayer(player.uuid)!==player || kind !in setOf(PlayerActivityKind.WHISPER,PlayerActivityKind.COMMAND))return false
         if(!on) { viewers[player.uuid]?.let { it.filters.remove(kind);if(it.filters.isEmpty())viewers.remove(player.uuid) };return true }
@@ -61,7 +63,7 @@ object ActivitySpy {
                 if(subscription.count==21)player.sendSystemMessage(Component.literal("Guardian spy: further updates this tick were suppressed. Use history for recorded entries."))
                 continue
             }
-            if(rendered==null)rendered=com.bareminimumstudios.guardian.lookup.ActivityFormatter.line(row,spy=true)
+            if(rendered==null)rendered=ActivityFormatter.line(row,spy=true)
             player.sendSystemMessage(rendered)
         }
     }

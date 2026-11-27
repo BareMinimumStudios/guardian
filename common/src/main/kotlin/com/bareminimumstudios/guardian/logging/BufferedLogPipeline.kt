@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.logging
 
+import java.util.concurrent.CompletionStage
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.StorageBackend
 import java.time.Duration
@@ -80,7 +81,7 @@ class BufferedLogPipeline(
     private val worker = AtomicReference<Thread?>()
     private val termination = CompletableFuture<Void>()
     /** Actual writer termination, including storage closure when owned; never an audit fence. */
-    val drained: java.util.concurrent.CompletionStage<Void> get() = termination.minimalCompletionStage()
+    val drained: CompletionStage<Void> get() = termination.minimalCompletionStage()
     private val lastFailure = AtomicReference<Throwable?>(null)
 
     private val accepted = AtomicLong()

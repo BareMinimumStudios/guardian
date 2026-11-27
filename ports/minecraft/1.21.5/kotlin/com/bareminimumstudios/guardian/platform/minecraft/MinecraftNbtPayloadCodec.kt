@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.nio.ByteBuffer
+import net.minecraft.SharedConstants
 import com.bareminimumstudios.guardian.domain.BinaryPayload
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtIo
@@ -26,7 +28,7 @@ object MinecraftNbtPayloadCodec {
         val output = ByteArrayOutputStream()
         output.write(MAGIC)
         output.write(FORMAT_VERSION.toInt())
-        output.write(java.nio.ByteBuffer.allocate(4).putInt(net.minecraft.SharedConstants.getCurrentVersion().dataVersion.version).array())
+        output.write(ByteBuffer.allocate(4).putInt(SharedConstants.getCurrentVersion().dataVersion.version).array())
         NbtIo.writeCompressed(nbt, output)
         return BinaryPayload.of(output.toByteArray())
     }
@@ -41,7 +43,7 @@ object MinecraftNbtPayloadCodec {
             "Unsupported Guardian NBT payload version: ${bytes[MAGIC.size]}"
         }
 
-        require(java.nio.ByteBuffer.wrap(bytes, 6, 4).int == net.minecraft.SharedConstants.getCurrentVersion().dataVersion.version) { "Recorded block-entity data belongs to a different Minecraft data version" }
+        require(ByteBuffer.wrap(bytes, 6, 4).int == SharedConstants.getCurrentVersion().dataVersion.version) { "Recorded block-entity data belongs to a different Minecraft data version" }
         return ByteArrayInputStream(bytes, HEADER_SIZE, bytes.size - HEADER_SIZE).use { input ->
             NbtIo.readCompressed(input, NbtAccounter.create(MAX_DECODED_NBT_BYTES))
         }

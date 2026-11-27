@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.network.chat.PlayerChatMessage
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -34,7 +35,7 @@ object PlayerActivityCapture {
             if (writer.submit(entry) == SubmissionResult.ACCEPTED) ActivitySpy.publish(player.server,entry) else LoggerFactory.getLogger("Guardian/Activity").warn("Player activity capture rejected by audit writer")
         }.onFailure { LoggerFactory.getLogger("Guardian/Activity").warn("Could not capture player activity", it) }
     }
-    @JvmStatic fun whisper(sender:ServerPlayer,recipient:ServerPlayer,message:net.minecraft.network.chat.PlayerChatMessage,filtered:Boolean) {
+    @JvmStatic fun whisper(sender:ServerPlayer,recipient:ServerPlayer,message:PlayerChatMessage,filtered:Boolean) {
         val settings=config() ?: return
         if(!settings.general.enabled.get() || !settings.logging.enabled.get() || !settings.activity.whispers.get() ||
             !sender.server.isSameThread || recipient.server!==sender.server || sender.server.playerList.getPlayer(sender.uuid)!==sender ||

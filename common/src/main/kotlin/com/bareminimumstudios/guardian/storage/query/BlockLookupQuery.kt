@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.storage.query
 
+import com.bareminimumstudios.guardian.domain.ChangeCause
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.BlockPosition
 import com.bareminimumstudios.guardian.domain.BlockBounds
@@ -24,7 +25,7 @@ data class BlockLookupQuery @JvmOverloads constructor(
     val search: HistorySearchFilter = HistorySearchFilter(),
     /** Explicit journal selection takes precedence over includeRolledBack. Empty selects the legacy history scope. */
     val rollbackStates: Set<BlockRollbackState> = emptySet(),
-    val causes: Set<com.bareminimumstudios.guardian.domain.ChangeCause> = emptySet(),
+    val causes: Set<ChangeCause> = emptySet(),
     val movementId: UUID? = null
 ) {
     init {

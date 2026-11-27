@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.ArrayDeque
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -23,10 +24,10 @@ object EnvironmentHistoryCapture {
     class Scope internal constructor(val level:ServerLevel,val cause:ChangeCause,val actor:ActorIdentity)
     internal class Entry(val before:BlockStateSnapshot,val cause:ChangeCause,val actor:ActorIdentity,val scoped:Boolean)
     class Pending internal constructor(val level:ServerLevel,internal val entries:LinkedHashMap<BlockPos,Entry>,internal val root:Boolean)
-    private val scopes=ThreadLocal.withInitial{java.util.ArrayDeque<Scope>()}
-    private val mutations=ThreadLocal.withInitial{java.util.ArrayDeque<Pending>()}
+    private val scopes=ThreadLocal.withInitial{ArrayDeque<Scope>()}
+    private val mutations=ThreadLocal.withInitial{ArrayDeque<Pending>()}
     class ObservationBatch internal constructor(val level:ServerLevel,internal val entries:LinkedHashMap<BlockPos,Entry> = LinkedHashMap())
-    private val observationBatches=ThreadLocal.withInitial{java.util.ArrayDeque<ObservationBatch>()}
+    private val observationBatches=ThreadLocal.withInitial{ArrayDeque<ObservationBatch>()}
     private var lastWarning=0L
     fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) { pipeline=writer;config=settings;scopes.remove();mutations.remove();observationBatches.remove() }
     private fun enabled(cause:ChangeCause):Boolean {

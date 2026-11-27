@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.worldedit;
 
+import com.sk89q.worldedit.function.operation.Operation;
 import com.bareminimumstudios.guardian.domain.ActionType;
 import com.bareminimumstudios.guardian.domain.ActorIdentity;
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot;
@@ -126,7 +127,7 @@ final class GuardianWorldEditExtent extends AbstractDelegateExtent {
     }
 
     @Override
-    protected com.sk89q.worldedit.function.operation.Operation commitBefore() {
+    protected Operation commitBefore() {
         if (!committed) {
             committed = true;
             capture.commit();

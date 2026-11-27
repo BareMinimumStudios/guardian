@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.rollback
 
+import java.util.concurrent.CompletionException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
@@ -146,7 +147,7 @@ class ItemOperationScope(
                 }
                 ItemOperationScopeState.CLOSING_BACKEND -> if (backendClosed.isDone) {
                     try { backendClosed.join(); state = ItemOperationScopeState.CLOSED }
-                    catch (error: java.util.concurrent.CompletionException) {
+                    catch (error: CompletionException) {
                         failure = error.cause ?: error
                         state = ItemOperationScopeState.FAILED
                     }

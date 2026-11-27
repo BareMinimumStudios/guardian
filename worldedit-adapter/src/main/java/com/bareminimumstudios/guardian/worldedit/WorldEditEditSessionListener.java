@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.worldedit;
 
+import net.minecraft.world.level.Level;
 import com.bareminimumstudios.guardian.domain.ActorIdentity;
 import com.bareminimumstudios.guardian.integration.api.GuardianIntegrationApi;
 import com.bareminimumstudios.guardian.logging.bulk.BulkCaptureSession;
@@ -35,7 +36,7 @@ public final class WorldEditEditSessionListener {
         }
 
         try {
-            net.minecraft.world.level.Level nativeWorld = FabricAdapter.adapt(event.getWorld());
+            Level nativeWorld = FabricAdapter.adapt(event.getWorld());
             if (!(nativeWorld instanceof ServerLevel serverWorld)) {
                 capture.releaseUnused();
                 event.setExtent(new RejectingAuditExtent(event.getExtent(), "Guardian could not resolve the WorldEdit server world."));

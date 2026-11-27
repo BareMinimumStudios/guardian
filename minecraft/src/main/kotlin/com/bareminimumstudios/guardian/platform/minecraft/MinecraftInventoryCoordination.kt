@@ -1,5 +1,24 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.rollback.ActualIoDrain
+import com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose
+import com.bareminimumstudios.guardian.rollback.ItemRollbackImages
+import com.bareminimumstudios.guardian.rollback.ItemRollbackRecord
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.nio.file.Files
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
+import java.util.function.Supplier
+import net.minecraft.core.registries.Registries
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtIo
+import net.minecraft.resources.ResourceKey
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.dimension.DimensionType
+import net.minecraft.world.level.storage.LevelResource
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
 import com.bareminimumstudios.guardian.rollback.ItemMenuCoordination
@@ -33,12 +52,12 @@ object MinecraftInventoryCoordination {
         val slotWriter = MinecraftReservedSlotWriter(server, owners)
         val lifecycleCopy = MinecraftLifecycleInventoryCopy(server)
         val lifecycleRemoval = MinecraftLifecycleItemRemoval(server)
-        val actualIo = com.bareminimumstudios.guardian.rollback.ActualIoDrain()
+        val actualIo = ActualIoDrain()
         var operations: MinecraftItemOperations? = null
         var stopping = false
-        val detachedImages = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, com.bareminimumstudios.guardian.rollback.ItemRollbackImages>()
-        val detached = java.util.IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftInventoryHandoff>>()
-        val sessions = java.util.IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
+        val detachedImages = IdentityHashMap<ItemOwnerCoordination.Lease, ItemRollbackImages>()
+        val detached = IdentityHashMap<ItemOwnerCoordination.Lease, Map<ItemSlotOwner, MinecraftInventoryHandoff>>()
+        val sessions = IdentityHashMap<ItemOwnerCoordination.Lease,MinecraftBoundInventories>()
         private var savedPlayers: MinecraftSavedPlayerReader? = null
         fun playerReader(): MinecraftSavedPlayerReader = savedPlayers ?: MinecraftSavedPlayerReader(actualIo, false).also { savedPlayers = it }
         fun closeSessions() { sessions.values.toList().forEach { it.close() };savedPlayers?.close();savedPlayers = null }
@@ -78,9 +97,9 @@ object MinecraftInventoryCoordination {
     }
 
     /** Stop bound I/O admission before disposing sessions. Result completion is not disk drain. */
-    fun beginShutdown(owners: ItemOwnerCoordination?): java.util.concurrent.CompletionStage<Void> {
+    fun beginShutdown(owners: ItemOwnerCoordination?): CompletionStage<Void> {
         val current = binding
-        if (current == null || current.owners !== owners) return java.util.concurrent.CompletableFuture.completedFuture<Void>(null).minimalCompletionStage()
+        if (current == null || current.owners !== owners) return CompletableFuture.completedFuture<Void>(null).minimalCompletionStage()
         check(current.server.isSameThread)
         current.stopping = true
         current.actualIo.close()
@@ -139,14 +158,14 @@ object MinecraftInventoryCoordination {
             { current.playerReader() },{ current.owners.invalidate(it) },{ if (current.sessions[lease] === it) current.sessions.remove(lease) }, current.actualIo).also { current.sessions[lease] = it }
     }
 
-    internal fun bindOwnedInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease, record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord): MinecraftBoundInventories {
+    internal fun bindOwnedInventories(server: MinecraftServer, lease: ItemOwnerCoordination.Lease, record: ItemRollbackRecord): MinecraftBoundInventories {
         val current = checkNotNull(binding)
         check(current.server === server && !current.detached.containsKey(lease))
         val session = bindInventories(server, lease)
         try {
             val original=session.read()
-            val images=com.bareminimumstudios.guardian.rollback.ItemRollbackImages(record,original)
-            require(lease.owners.size<=8 && original.slots.count { (address, stack) -> images.expected.slots[address]!=stack }<=(if(record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64)) {
+            val images=ItemRollbackImages(record,original)
+            require(lease.owners.size<=8 && original.slots.count { (address, stack) -> images.expected.slots[address]!=stack }<=(if(record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64)) {
                 "Online rollback exceeds its inventory or changed-slot budget; narrow the filters"
             }
             require((original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024) {
@@ -166,21 +185,21 @@ object MinecraftInventoryCoordination {
     }
 
     /** Prove that the original saved baseline can be read and repaired without instantiating owners. */
-    internal fun validateRecoverySave(lease: ItemOwnerCoordination.Lease, owner: ItemSlotOwner, tag: net.minecraft.nbt.CompoundTag) {
+    internal fun validateRecoverySave(lease: ItemOwnerCoordination.Lease, owner: ItemSlotOwner, tag: CompoundTag) {
         val current=checkNotNull(binding)
         val images=current.detachedImages[lease] ?: return
         check(current.server.isSameThread && ownsDetached(lease))
         val expected=tag.copy()
         if(owner is ItemSlotOwner.BlockContainer) {
-            val folder=net.minecraft.world.level.dimension.DimensionType.getStorageFolder(
-                net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.ResourceLocation.parse(owner.dimension.toString())),
-                current.server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("region")
-            require(!java.nio.file.Files.exists(folder.resolve("c.${owner.position.x shr 4}.${owner.position.z shr 4}.mcc"))) { "External chunk inventories cannot be admitted for recoverable item rollback" }
+            val folder=DimensionType.getStorageFolder(
+                ResourceKey.create(Registries.DIMENSION,ResourceLocation.parse(owner.dimension.toString())),
+                current.server.getWorldPath(LevelResource.ROOT)).resolve("region")
+            require(!Files.exists(folder.resolve("c.${owner.position.x shr 4}.${owner.position.z shr 4}.mcc"))) { "External chunk inventories cannot be admitted for recoverable item rollback" }
             lease.owners.filterIsInstance<ItemSlotOwner.BlockContainer>().filter {
                 it.dimension==owner.dimension && (it.position.x shr 4)==(owner.position.x shr 4) && (it.position.z shr 4)==(owner.position.z shr 4)
             }.forEach { MaintenanceInventoryNbt.repair(expected,it,images) }
-            val output=java.io.ByteArrayOutputStream()
-            java.io.DataOutputStream(output).use { net.minecraft.nbt.NbtIo.write(expected,it) }
+            val output=ByteArrayOutputStream()
+            DataOutputStream(output).use { NbtIo.write(expected,it) }
             require(output.size()<=512*1024) { "Expected saved inventory chunk exceeds the recoverable 512 KiB bound" }
         } else MaintenanceInventoryNbt.repair(expected,owner,images)
     }
@@ -208,7 +227,7 @@ object MinecraftInventoryCoordination {
     }
 
     /** Close the old mutating session first. A prefix fence leaves new read-only I/O admission open. */
-    internal fun retainedDiskFence(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): java.util.concurrent.CompletionStage<Void> {
+    internal fun retainedDiskFence(server: MinecraftServer, lease: ItemOwnerCoordination.Lease): CompletionStage<Void> {
         check(server.isSameThread)
         val current = checkNotNull(binding)
         check(current.server === server && !current.stopping && lease.isRetained(lease.owners) && !lease.isCurrent(lease.owners))
@@ -268,7 +287,7 @@ object MinecraftInventoryCoordination {
 
     /** Keep the exact audited setter chain usable; refuse ordinary block writes during retention. */
     @JvmStatic fun allowsReservedBlockSlotWrite(container: Container, slot: Int,
-                                               stack: net.minecraft.world.item.ItemStack, entry: ReservedSlotEntry): Boolean {
+                                               stack: ItemStack, entry: ReservedSlotEntry): Boolean {
         val current = binding
         if (current != null && current.server.isSameThread && current.slotWriter.consume(container, slot, stack, entry)) return true
         val block = container as BlockEntity
@@ -278,7 +297,7 @@ object MinecraftInventoryCoordination {
     }
 
     /** Direct player slot APIs only; composite operations need their own caller contracts. */
-    @JvmStatic fun allowsInventoryMutation(player: net.minecraft.world.entity.player.Player): Boolean {
+    @JvmStatic fun allowsInventoryMutation(player: Player): Boolean {
         val current = binding ?: return true
         if (player !is ServerPlayer || player.server !== current.server) return true
         if (!current.server.isSameThread) return false
@@ -287,7 +306,7 @@ object MinecraftInventoryCoordination {
 
     /** Consume the exact player setter ticket before checking ordinary mutation denial. */
     @JvmStatic fun allowsReservedPlayerSlotWrite(inventory: Inventory, slot: Int,
-                                                stack: net.minecraft.world.item.ItemStack): Boolean {
+                                                stack: ItemStack): Boolean {
         val current = binding
         if (current != null && current.server.isSameThread &&
             (current.lifecycleCopy.consume(inventory, slot, stack) ||
@@ -310,7 +329,7 @@ object MinecraftInventoryCoordination {
     }
 
     @JvmStatic fun setLifecycleCopiedSlot(target: Inventory, slot: Int,
-                                         stack: net.minecraft.world.item.ItemStack, operation: Runnable) {
+                                         stack: ItemStack, operation: Runnable) {
         val current = binding
         if (current == null || target.player !is ServerPlayer || target.player.server !== current.server) {
             operation.run(); return
@@ -319,7 +338,7 @@ object MinecraftInventoryCoordination {
     }
 
     @JvmStatic fun removeLifecycleVanishingItem(inventory: Inventory, slot: Int,
-                                              operation: java.util.function.Supplier<net.minecraft.world.item.ItemStack>): net.minecraft.world.item.ItemStack {
+                                              operation: Supplier<ItemStack>): ItemStack {
         val current = binding
         if (current == null || inventory.player !is ServerPlayer || inventory.player.server !== current.server) return operation.get()
         check(current.server.isSameThread)
@@ -337,7 +356,7 @@ object MinecraftInventoryCoordination {
     }
 
     @JvmStatic fun beforeReservedSlotWrite(container: Container, slot: Int,
-                                           stack: net.minecraft.world.item.ItemStack, entry: ReservedSlotEntry) {
+                                           stack: ItemStack, entry: ReservedSlotEntry) {
         val current = binding
         if (current != null && current.server.isSameThread && current.slotWriter.consume(container, slot, stack, entry)) return
         when (container) {
@@ -425,7 +444,7 @@ object MinecraftInventoryCoordination {
         }
     }
 
-    @JvmStatic fun beforeInventoryMutation(player: net.minecraft.world.entity.player.Player) {
+    @JvmStatic fun beforeInventoryMutation(player: Player) {
         val current = binding ?: return
         if (player !is ServerPlayer || player.server !== current.server) return
         check(current.server.isSameThread)
@@ -436,7 +455,7 @@ object MinecraftInventoryCoordination {
 
     @JvmStatic fun beforeItemUseCleanup(player: ServerPlayer) = beforeBulkInventoryMutation(player)
 
-    @JvmStatic fun beforeBulkInventoryMutation(player: net.minecraft.world.entity.player.Player) {
+    @JvmStatic fun beforeBulkInventoryMutation(player: Player) {
         val current = binding ?: return
         if (player !is ServerPlayer || player.server !== current.server) return
         check(current.server.isSameThread)

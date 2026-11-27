@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.domain.BinaryPayload
 import net.minecraft.nbt.CompoundTag
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +29,7 @@ class MinecraftNbtPayloadCodecTest {
 
     @Test
     fun rejectsUnversionedPayloads() {
-        val invalid = com.bareminimumstudios.guardian.domain.BinaryPayload.of(byteArrayOf(1, 2, 3, 4, 5, 6))
+        val invalid = BinaryPayload.of(byteArrayOf(1, 2, 3, 4, 5, 6))
         assertFailsWith<IllegalArgumentException> {
             MinecraftNbtPayloadCodec.decode(invalid)
         }

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.checkpoint
 
+import java.nio.ByteBuffer
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import kotlin.test.*
@@ -14,7 +15,7 @@ class EquipmentCheckpointCodecTest {
     }
     @Test fun originalCheckpointEncodingRemainsReadableAndByteStable() {
         val original=checkpoint();val bytes=InventoryCheckpointCodec.encode(original)
-        assertEquals(0x47435031,java.nio.ByteBuffer.wrap(bytes).int)
+        assertEquals(0x47435031,ByteBuffer.wrap(bytes).int)
         val decoded=InventoryCheckpointCodec.decode(bytes)
         assertNull(decoded.equipment)
         assertContentEquals(bytes,InventoryCheckpointCodec.encode(decoded))
@@ -24,7 +25,7 @@ class EquipmentCheckpointCodecTest {
             EquipmentSlotAddress("trinkets","hand/ring/0") to ItemStackSnapshot(ResourceId.parse("minecraft:diamond"),1,BinaryPayload.of(byteArrayOf(1,2,3))),
             EquipmentSlotAddress("curios","cosmetic/head/0") to ItemStackSnapshot.EMPTY))
         val original=checkpoint(equipment);val bytes=InventoryCheckpointCodec.encode(original)
-        assertEquals(0x47435032,java.nio.ByteBuffer.wrap(bytes).int)
+        assertEquals(0x47435032,ByteBuffer.wrap(bytes).int)
         val decoded=InventoryCheckpointCodec.decode(bytes)
         assertEquals(equipment,decoded.equipment);assertEquals(43,decoded.slotCount)
         assertContentEquals(bytes,InventoryCheckpointCodec.encode(decoded))

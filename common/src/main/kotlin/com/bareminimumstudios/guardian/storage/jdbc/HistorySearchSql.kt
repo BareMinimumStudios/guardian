@@ -1,11 +1,12 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.domain.PlayerActivityKind
 import com.bareminimumstudios.guardian.storage.query.*
 
 internal data class HistorySearchSql(val clause: String, val values: List<String>) {
     companion object {
         fun activityActors(query:PlayerActivityQuery):HistorySearchSql {
-            if(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER !in query.kinds)return actors(query.search,"player_uuid","player_name")
+            if(PlayerActivityKind.WHISPER !in query.kinds)return actors(query.search,"player_uuid","player_name")
             val conditions=mutableListOf<String>();val values=mutableListOf<String>()
             fun match(players:List<HistoryPlayer>):String {
                 val f=HistorySearchFilter(players=players)

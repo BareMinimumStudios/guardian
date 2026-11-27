@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.world.entity.EquipmentSlot;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -13,7 +14,7 @@ import net.minecraft.world.level.Level;
 @Mixin(ItemStack.class)
 public abstract class InventoryItemTickMixin {
     @WrapMethod(method = "inventoryTick")
-    private void guardian$guardInventoryTick(Level level, Entity entity, net.minecraft.world.entity.EquipmentSlot slot, Operation<Void> original) {
+    private void guardian$guardInventoryTick(Level level, Entity entity, EquipmentSlot slot, Operation<Void> original) {
         if (entity instanceof ServerPlayer player && !MinecraftInventoryCoordination.allowsAutomation(player.serverLevel())) return;
         original.call(level, entity, slot);
     }

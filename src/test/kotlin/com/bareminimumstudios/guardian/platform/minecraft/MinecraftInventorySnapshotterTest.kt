@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.inventory.ClickType
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.container.ContainerTransactionCorrelation
 import net.minecraft.SharedConstants
@@ -57,8 +58,8 @@ class MinecraftInventorySnapshotterTest {
     }
 
     @Test fun thrownCraftingResultIsSkippedUntilEntityOwnershipExists() {
-        assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,0,net.minecraft.world.inventory.ClickType.THROW))
-        assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,1,net.minecraft.world.inventory.ClickType.THROW))
+        assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,0,ClickType.THROW))
+        assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,1,ClickType.THROW))
     }
 
     @Test fun acceptsOccupiedCraftingInputsAndDerivedResults() {

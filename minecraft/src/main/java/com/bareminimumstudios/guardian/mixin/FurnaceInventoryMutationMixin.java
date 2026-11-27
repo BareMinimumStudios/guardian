@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.world.item.ItemStack;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.bareminimumstudios.guardian.platform.minecraft.ReservedSlotEntry;
 import net.minecraft.world.Container;
@@ -14,7 +15,7 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class FurnaceInventoryMutationMixin {
     @Inject(method = "setItem", at = @At("HEAD"), cancellable = true)
-    private void guardian$beforeSlotWrite(int slot, net.minecraft.world.item.ItemStack stack, CallbackInfo callback) {
+    private void guardian$beforeSlotWrite(int slot, ItemStack stack, CallbackInfo callback) {
         if (!MinecraftInventoryCoordination.allowsReservedBlockSlotWrite((Container) (Object) this, slot, stack, ReservedSlotEntry.FURNACE)) callback.cancel();
     }
 }

@@ -1,4 +1,9 @@
 package com.bareminimumstudios.guardian.lookup
+import net.minecraft.SharedConstants
+import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.server.Bootstrap
+import net.minecraft.world.item.DyeColor
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.query.*
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftNbtPayloadCodec
@@ -9,7 +14,7 @@ import net.minecraft.world.level.block.entity.SignText
 import kotlin.test.*
 import org.junit.jupiter.api.Test
 class SignHistoryFormatterTest {
-    companion object { init { net.minecraft.SharedConstants.tryDetectVersion();net.minecraft.server.Bootstrap.bootStrap() } }
+    companion object { init { SharedConstants.tryDetectVersion();Bootstrap.bootStrap() } }
     private fun state(front:String,back:String="",filtered:String=front):BlockStateSnapshot {
         fun text(raw:String,view:String)=SignText().setMessage(0,Component.literal(raw).withStyle { it.withClickEvent(ClickEvent.RunCommand("/op attacker")) },Component.literal(view))
         val tag=CompoundTag();tag.put("front_text",SignText.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE,text(front,filtered)).getOrThrow());tag.put("back_text",SignText.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE,text(back,back)).getOrThrow())
@@ -24,7 +29,7 @@ class SignHistoryFormatterTest {
         val s=row(state("old secret",filtered="old filtered"),state("new secret",filtered="new filtered"))
         val line=BlockHistoryFormatter.lines(listOf(StoredBlockChange(1,s,BlockRollbackState.ACTIVE)),1000)[1]
         assertTrue("edited front sign text" in line.string);assertFalse("placed" in line.string)
-        val hover=(line.style.hoverEvent as net.minecraft.network.chat.HoverEvent.ShowText).value()
+        val hover=(line.style.hoverEvent as HoverEvent.ShowText).value()
         assertTrue("old filtered" in hover.string && "new filtered" in hover.string);assertFalse("secret" in hover.string)
         assertNull(line.style.clickEvent);assertNull(hover.style.clickEvent);assertTrue(hover.siblings.isEmpty())
     }
@@ -32,7 +37,7 @@ class SignHistoryFormatterTest {
         val s=row(BlockStateSnapshot(ResourceId.parse("oak_sign")),BlockStateSnapshot(ResourceId.parse("oak_sign")))
         assertTrue("details unavailable" in SignHistoryDetails.summary(s));assertEquals("Sign text details unavailable",SignHistoryDetails.hover(s))
     }
-    private fun appearance(base:BlockStateSnapshot,waxed:Boolean=false,color:net.minecraft.world.item.DyeColor=net.minecraft.world.item.DyeColor.BLACK,glowing:Boolean=false):BlockStateSnapshot {
+    private fun appearance(base:BlockStateSnapshot,waxed:Boolean=false,color:DyeColor=DyeColor.BLACK,glowing:Boolean=false):BlockStateSnapshot {
         val tag=MinecraftNbtPayloadCodec.decode(requireNotNull(base.blockEntityData))
         val text=SignText.DIRECT_CODEC.parse(NbtOps.INSTANCE,tag.getCompound("front_text").orElseThrow()).getOrThrow().setColor(color).setHasGlowingText(glowing)
         tag.put("front_text",SignText.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE,text).getOrThrow());tag.putBoolean("is_waxed",waxed)
@@ -45,7 +50,7 @@ class SignHistoryFormatterTest {
         assertEquals(emptyList(),SignHistoryDetails.sides(row(a,b)))
     }
     @Test fun colorAndGlowIdentifyTheSideAndActualResult() {
-        val a=state("same");val b=appearance(a,color=net.minecraft.world.item.DyeColor.RED,glowing=true)
+        val a=state("same");val b=appearance(a,color=DyeColor.RED,glowing=true)
         assertEquals("dyed front sign text red; made front sign text glow",SignHistoryDetails.summary(row(a,b)))
         assertTrue("removed front sign text glow" in SignHistoryDetails.summary(row(b,a)))
         assertFalse("edited" in SignHistoryDetails.summary(row(a,b)))
@@ -54,8 +59,8 @@ class SignHistoryFormatterTest {
     private fun post(raw:String,filtered:String):BlockStateSnapshot {
         fun panel(value:String,view:String):CompoundTag {
             val holder=CompoundTag();holder.putString("color","black")
-            holder.put("message",net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow())
-            holder.put("filtered_message",net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(view))).getOrThrow())
+            holder.put("message",ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow())
+            holder.put("filtered_message",ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(view))).getOrThrow())
             return CompoundTag().also { it.put("TextHolder",holder) }
         }
         val tag=CompoundTag();tag.put("SignUp",panel(raw,filtered));tag.put("SignDown",panel("",""))
@@ -68,7 +73,7 @@ class SignHistoryFormatterTest {
     }
     private fun plaque(raw:String,filtered:String=raw,waxed:Boolean=false,color:String="black",glow:Boolean=false):BlockStateSnapshot {
         val holder=CompoundTag()
-        fun encoded(value:String)=net.minecraft.network.chat.ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow()
+        fun encoded(value:String)=ComponentSerialization.CODEC.listOf().encodeStart(NbtOps.INSTANCE,listOf(Component.literal(value))).getOrThrow()
         holder.put("message",encoded(raw));holder.put("filtered_message",encoded(filtered))
         holder.putString("color",color);holder.putBoolean("has_glowing_text",glow)
         val tag=CompoundTag();tag.put("TextHolder",holder);tag.putBoolean("Waxed",waxed)

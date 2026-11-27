@@ -1,5 +1,31 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot
+import com.bareminimumstudios.guardian.domain.EntityAuditEvent
+import com.bareminimumstudios.guardian.domain.FluidAuditEvent
+import com.bareminimumstudios.guardian.domain.PlayerActivity
+import com.bareminimumstudios.guardian.export.ExportFiles
+import com.bareminimumstudios.guardian.export.ExportKind
+import com.bareminimumstudios.guardian.export.ExportQuery
+import com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard
+import com.bareminimumstudios.guardian.rollback.ItemRecoveryRefusedException
+import com.bareminimumstudios.guardian.rollback.ItemRestoreSource
+import com.bareminimumstudios.guardian.rollback.ItemRollbackJournal
+import com.bareminimumstudios.guardian.rollback.ItemRollbackPhase
+import com.bareminimumstudios.guardian.rollback.ItemRollbackRecord
+import com.bareminimumstudios.guardian.rollback.ItemRollbackSummary
+import com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan
+import com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult
+import com.bareminimumstudios.guardian.storage.purge.PurgeScope
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
+import com.bareminimumstudios.guardian.storage.query.EntityLookupQuery
+import com.bareminimumstudios.guardian.storage.query.FluidLookupQuery
+import com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery
+import java.nio.file.Path
+import java.util.UUID
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.atomic.AtomicLong
 import com.bareminimumstudios.guardian.checkpoint.*
 import com.bareminimumstudios.guardian.logging.OperationTimings
 import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
@@ -23,14 +49,14 @@ class BlockHistoryService(
     private val server: MinecraftServer
 ) {
     private val logger = LoggerFactory.getLogger("Guardian/History")
-    private val activityQueries=java.util.concurrent.atomic.AtomicLong()
-    private val activityFailures=java.util.concurrent.atomic.AtomicLong()
-    private val lastActivityNanos=java.util.concurrent.atomic.AtomicLong()
-    private val maxActivityNanos=java.util.concurrent.atomic.AtomicLong()
+    private val activityQueries=AtomicLong()
+    private val activityFailures=AtomicLong()
+    private val lastActivityNanos=AtomicLong()
+    private val maxActivityNanos=AtomicLong()
     fun queryStatus():String="Activity queries: completed="+activityQueries.get()+" failed="+activityFailures.get()+" lastMs="+lastActivityNanos.get()/1_000_000+" maxMs="+maxActivityNanos.get()/1_000_000
     private val running = AtomicBoolean(true)
-    private val termination = java.util.concurrent.CompletableFuture<Void>()
-    val drained: java.util.concurrent.CompletionStage<Void> get() = termination.minimalCompletionStage()
+    private val termination = CompletableFuture<Void>()
+    val drained: CompletionStage<Void> get() = termination.minimalCompletionStage()
     private val executor: ExecutorService = Executors.newSingleThreadExecutor { task ->
         Thread(task, "Guardian-History").apply { isDaemon = true }
     }
@@ -55,8 +81,8 @@ class BlockHistoryService(
     }
 
     fun lookupContainers(
-        query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery,
-        onSuccess: (List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>) -> Unit,
+        query: ContainerLookupQuery,
+        onSuccess: (List<ContainerTransactionSnapshot>) -> Unit,
         onFailure: (Throwable) -> Unit
     ) {
         if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
@@ -72,7 +98,7 @@ class BlockHistoryService(
         }
     }
 
-    fun guardContainers(rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>, onSuccess: (com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard?) -> Unit, onFailure: (Throwable) -> Unit) {
+    fun guardContainers(rows: List<ContainerTransactionSnapshot>, onSuccess: (ContainerHistoryGuard?) -> Unit, onFailure: (Throwable) -> Unit) {
         if (!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) }; return }
         val immutableRows=rows.toList()
         val queuedAt=System.nanoTime()
@@ -87,15 +113,15 @@ class BlockHistoryService(
         }
     }
 
-    fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.FluidAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
+    fun lookupFluids(query: FluidLookupQuery, onSuccess: (List<FluidAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ storage.lookupFluids(query) }, onSuccess, onFailure)
     }
 
-    fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.EntityAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
+    fun lookupEntities(query: EntityLookupQuery, onSuccess: (List<EntityAuditEvent>) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({ storage.lookupEntities(query) }, onSuccess, onFailure)
     }
 
-    fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery, onSuccess: (List<com.bareminimumstudios.guardian.domain.PlayerActivity>) -> Unit, onFailure: (Throwable) -> Unit) {
+    fun lookupActivity(query: PlayerActivityQuery, onSuccess: (List<PlayerActivity>) -> Unit, onFailure: (Throwable) -> Unit) {
         recoveryWork({
             val start=System.nanoTime()
             try { storage.lookupActivity(query) } catch(error:Throwable) { activityFailures.incrementAndGet();throw error }
@@ -103,58 +129,58 @@ class BlockHistoryService(
         }, onSuccess, onFailure)
     }
 
-    fun exportRows(query: com.bareminimumstudios.guardian.export.ExportQuery, permitted: () -> Boolean, onSuccess: (List<Any>) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
+    fun exportRows(query: ExportQuery, permitted: () -> Boolean, onSuccess: (List<Any>) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
         check(permitted()) { "Export cancelled" };require(query.limit in 1..500);query.read(storage).toList().also { require(it.size<=query.limit) }
     },onSuccess,onFailure)
 
-    fun exportFile(root: java.nio.file.Path, kind: com.bareminimumstudios.guardian.export.ExportKind, limit: Int, filters: String, requester: String, requestedAt: Long, scope: Map<String,Any?>, rows: List<Any>, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.export.ExportFiles.Result) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
-        com.bareminimumstudios.guardian.export.ExportFiles.write(root,kind,limit,filters,requester,requestedAt,scope,rows,permitted)
+    fun exportFile(root: Path, kind: ExportKind, limit: Int, filters: String, requester: String, requestedAt: Long, scope: Map<String,Any?>, rows: List<Any>, permitted: () -> Boolean, onSuccess: (ExportFiles.Result) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({
+        ExportFiles.write(root,kind,limit,filters,requester,requestedAt,scope,rows,permitted)
     },onSuccess,onFailure)
 
-    fun previewPurge(cutoff: Long, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff) },onSuccess,onFailure)
-    fun previewPurge(cutoff: Long, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff,1000,scope) },onSuccess,onFailure)
-    fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean, onSuccess: (com.bareminimumstudios.guardian.storage.purge.AuditPurgeResult) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.applyPurge(plan,permitted) },onSuccess,onFailure)
+    fun previewPurge(cutoff: Long, onSuccess: (AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff) },onSuccess,onFailure)
+    fun previewPurge(cutoff: Long, scope: PurgeScope, onSuccess: (AuditPurgePlan) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.previewPurge(cutoff,1000,scope) },onSuccess,onFailure)
+    fun applyPurge(plan: AuditPurgePlan, permitted: () -> Boolean, onSuccess: (AuditPurgeResult) -> Unit, onFailure: (Throwable) -> Unit) = recoveryWork({ storage.applyPurge(plan,permitted) },onSuccess,onFailure)
 
     internal fun saveCheckpoint(value:InventoryCheckpoint,limits:InventoryCheckpointLimits,success:(InventoryCheckpointHeader)->Unit,failure:(Throwable)->Unit) =
         recoveryWork({ (storage as? InventoryCheckpointStore ?: error("Persistent checkpoints unavailable")).saveInventoryCheckpoint(value,limits) },success,failure)
-    internal fun checkpoint(id:java.util.UUID,success:(InventoryCheckpoint?)->Unit,failure:(Throwable)->Unit) =
+    internal fun checkpoint(id:UUID,success:(InventoryCheckpoint?)->Unit,failure:(Throwable)->Unit) =
         recoveryWork({ (storage as? InventoryCheckpointStore ?: error("Persistent checkpoints unavailable")).inventoryCheckpoint(id) },success,failure)
-    internal fun checkpointHeaders(player:java.util.UUID?,limit:Int,offset:Int,after:Long?,success:(List<InventoryCheckpointHeader>)->Unit,failure:(Throwable)->Unit) =
+    internal fun checkpointHeaders(player:UUID?,limit:Int,offset:Int,after:Long?,success:(List<InventoryCheckpointHeader>)->Unit,failure:(Throwable)->Unit) =
         recoveryWork({ (storage as? InventoryCheckpointStore ?: error("Persistent checkpoints unavailable")).inventoryCheckpoints(player,limit,offset,after) },success,failure)
-    internal fun checkpointPlayers(name:String,success:(List<java.util.UUID>)->Unit,failure:(Throwable)->Unit) =
+    internal fun checkpointPlayers(name:String,success:(List<UUID>)->Unit,failure:(Throwable)->Unit) =
         recoveryWork({ (storage as? InventoryCheckpointStore ?: error("Persistent checkpoints unavailable")).inventoryCheckpointPlayers(name) },success,failure)
-    internal fun checkpointRestoreSource(id:java.util.UUID,success:(CheckpointRestoreSource)->Unit,failure:(Throwable)->Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).checkpointRestoreSource(id) },success,failure)
-    internal fun prepareCheckpointRestore(id:java.util.UUID,before:InventoryCheckpoint,parent:java.util.UUID,requester:CheckpointRequester,limits:InventoryCheckpointLimits,success:(com.bareminimumstudios.guardian.rollback.ItemRollbackRecord)->Unit,failure:(Throwable)->Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareCheckpointRestore(id,before.capturedAt,parent,before,requester,limits) },success,failure)
+    internal fun checkpointRestoreSource(id:UUID,success:(CheckpointRestoreSource)->Unit,failure:(Throwable)->Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).checkpointRestoreSource(id) },success,failure)
+    internal fun prepareCheckpointRestore(id:UUID,before:InventoryCheckpoint,parent:UUID,requester:CheckpointRequester,limits:InventoryCheckpointLimits,success:(ItemRollbackRecord)->Unit,failure:(Throwable)->Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareCheckpointRestore(id,before.capturedAt,parent,before,requester,limits) },success,failure)
 
-    fun recoveryRecord(id: java.util.UUID, onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
+    fun recoveryRecord(id: UUID, onSuccess: (ItemRollbackRecord?) -> Unit, onFailure: (Throwable) -> Unit) {
+        recoveryWork({ (storage as? ItemRollbackJournal)?.itemRollback(id) ?: throw IllegalStateException("Journal entry not found or persistent journal unavailable") },onSuccess,onFailure)
     }
-    internal fun itemRestoreSource(id: java.util.UUID,onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRestoreSource)->Unit,onFailure:(Throwable)->Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).itemRestoreSource(id) },onSuccess,onFailure)
-    internal fun prepareItemRestore(id:java.util.UUID,time:Long,parent:java.util.UUID,onSuccess:(com.bareminimumstudios.guardian.rollback.ItemRollbackRecord)->Unit,onFailure:(Throwable)->Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareItemRestore(id,time,parent) },onSuccess,onFailure)
-    internal fun itemRestoreHeaders(onSuccess:(List<com.bareminimumstudios.guardian.rollback.ItemRollbackSummary>)->Unit,onFailure:(Throwable)->Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).restorableItemRollbacks(10) },onSuccess,onFailure)
-    internal fun prepareCreativeRecovery(id: java.util.UUID,time: Long,rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>,
-        onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) -> Unit,onFailure: (Throwable) -> Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareCreativeRecovery(id,time,rows) },onSuccess,onFailure)
-    internal fun prepareItemRollback(id: java.util.UUID, time: Long, rows: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>,
-        onSuccess: (com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) -> Unit, onFailure: (Throwable) -> Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareItemRollback(id,time,rows) },onSuccess,onFailure)
+    internal fun itemRestoreSource(id: UUID,onSuccess: (ItemRestoreSource)->Unit,onFailure:(Throwable)->Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).itemRestoreSource(id) },onSuccess,onFailure)
+    internal fun prepareItemRestore(id:UUID,time:Long,parent:UUID,onSuccess:(ItemRollbackRecord)->Unit,onFailure:(Throwable)->Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareItemRestore(id,time,parent) },onSuccess,onFailure)
+    internal fun itemRestoreHeaders(onSuccess:(List<ItemRollbackSummary>)->Unit,onFailure:(Throwable)->Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).restorableItemRollbacks(10) },onSuccess,onFailure)
+    internal fun prepareCreativeRecovery(id: UUID,time: Long,rows: List<ContainerTransactionSnapshot>,
+        onSuccess: (ItemRollbackRecord) -> Unit,onFailure: (Throwable) -> Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareCreativeRecovery(id,time,rows) },onSuccess,onFailure)
+    internal fun prepareItemRollback(id: UUID, time: Long, rows: List<ContainerTransactionSnapshot>,
+        onSuccess: (ItemRollbackRecord) -> Unit, onFailure: (Throwable) -> Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).prepareItemRollback(id,time,rows) },onSuccess,onFailure)
 
-    internal fun cancelPreparedItemRollback(id: java.util.UUID, onSuccess: (Boolean) -> Unit, onFailure: (Throwable) -> Unit) =
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal ?: error("Persistent item journal unavailable")).transitionItemRollback(id,
-            com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.PREPARED,com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.CANCELLED) },onSuccess,onFailure)
+    internal fun cancelPreparedItemRollback(id: UUID, onSuccess: (Boolean) -> Unit, onFailure: (Throwable) -> Unit) =
+        recoveryWork({ (storage as? ItemRollbackJournal ?: error("Persistent item journal unavailable")).transitionItemRollback(id,
+            ItemRollbackPhase.PREPARED,ItemRollbackPhase.CANCELLED) },onSuccess,onFailure)
 
-    fun recoveryHeaders(onSuccess: (List<com.bareminimumstudios.guardian.rollback.ItemRollbackSummary>) -> Unit,onFailure: (Throwable) -> Unit) {
-        recoveryWork({ (storage as? com.bareminimumstudios.guardian.rollback.ItemRollbackJournal)?.unfinishedItemRollbacks(10) ?: throw IllegalStateException("Persistent journal unavailable") },onSuccess,onFailure)
+    fun recoveryHeaders(onSuccess: (List<ItemRollbackSummary>) -> Unit,onFailure: (Throwable) -> Unit) {
+        recoveryWork({ (storage as? ItemRollbackJournal)?.unfinishedItemRollbacks(10) ?: throw IllegalStateException("Persistent journal unavailable") },onSuccess,onFailure)
     }
     private fun <T> recoveryWork(task: () -> T,onSuccess: (T) -> Unit,onFailure: (Throwable) -> Unit) {
         if(!running.get()) { server.execute { onFailure(IllegalStateException("Guardian history service is stopping")) };return }
         executor.execute {
-            runCatching(task).onSuccess { result -> server.execute { onSuccess(result) } }.onFailure { error -> if(error !is com.bareminimumstudios.guardian.rollback.ItemRecoveryRefusedException && error !is com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCapacityException) logger.warn("History task failed",error);server.execute { onFailure(error) } }
+            runCatching(task).onSuccess { result -> server.execute { onSuccess(result) } }.onFailure { error -> if(error !is ItemRecoveryRefusedException && error !is InventoryCheckpointCapacityException) logger.warn("History task failed",error);server.execute { onFailure(error) } }
         }
     }
 

@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.vehicle.AbstractMinecartContainer
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.level.Level
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
 import com.bareminimumstudios.guardian.logging.SubmissionResult
@@ -70,7 +74,7 @@ object PlayerContainerCapture {
         }
     }
 
-    @JvmStatic fun beginCreative(slot: net.minecraft.world.inventory.Slot, player: ServerPlayer): Pending? {
+    @JvmStatic fun beginCreative(slot: Slot, player: ServerPlayer): Pending? {
         if (!MinecraftInventorySnapshotter.isPlayerSlot(slot, player.inventory)) return null
         return beginPlayerAction(player, ContainerAction.CREATIVE_SET)
     }
@@ -113,7 +117,7 @@ object PlayerContainerCapture {
         private val lease:ActionCaptureScope.Lease
     ):AutoCloseable { override fun close()=lease.close() }
 
-    @JvmStatic fun beginBlockUse(world:net.minecraft.world.level.Level,player:ServerPlayer,pos:net.minecraft.core.BlockPos):DirectPending? {
+    @JvmStatic fun beginBlockUse(world:Level,player:ServerPlayer,pos:BlockPos):DirectPending? {
         if(!enabled() || world!==player.level() || !player.server.isSameThread || !world.hasChunk(pos.x shr 4,pos.z shr 4))return null
         val block=world.getBlockEntity(pos) ?: return null
         if(!DirectBlockItems.supported(block) || block is Container && MinecraftBlockContainerSnapshotter.hasPendingLoot(block))return null
@@ -188,7 +192,7 @@ object PlayerContainerCapture {
             if (index < first.containerSize) address(first, index, player)
             else address(parts.`guardian$second`(), index - first.containerSize, player)
         }
-        container is net.minecraft.world.entity.vehicle.AbstractMinecartContainer -> MinecartInventorySnapshotter.owner(container,player.serverLevel())?.let { ItemSlotAddress(it,index) }
+        container is AbstractMinecartContainer -> MinecartInventorySnapshotter.owner(container,player.serverLevel())?.let { ItemSlotAddress(it,index) }
         container is BlockEntity && container.level === player.serverLevel() -> {
             val pos = container.blockPos
             ItemSlotAddress(ItemSlotOwner.BlockContainer(ResourceId.parse(player.serverLevel().dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z)), index)

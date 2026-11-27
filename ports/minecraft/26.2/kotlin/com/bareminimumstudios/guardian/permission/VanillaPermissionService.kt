@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.permission
 
+import net.minecraft.server.permissions.Permission
+import net.minecraft.server.permissions.PermissionLevel
 import net.minecraft.commands.CommandSourceStack
 
 object VanillaPermissionService : PermissionService {
@@ -9,5 +11,5 @@ object VanillaPermissionService : PermissionService {
         source: CommandSourceStack,
         permission: String,
         fallbackOperatorLevel: Int
-    ): Boolean = source.permissions().hasPermission(net.minecraft.server.permissions.Permission.HasCommandLevel(net.minecraft.server.permissions.PermissionLevel.byId(fallbackOperatorLevel)))
+    ): Boolean = source.permissions().hasPermission(Permission.HasCommandLevel(PermissionLevel.byId(fallbackOperatorLevel)))
 }

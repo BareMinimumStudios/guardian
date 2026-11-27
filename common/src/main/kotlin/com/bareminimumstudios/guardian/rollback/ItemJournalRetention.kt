@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.rollback
 
+import java.util.concurrent.CompletionStage
 import java.util.concurrent.CompletableFuture
 
 /** Trusted host acknowledgment: drain alone cannot resolve a stopped or late-committing operation. */
@@ -7,7 +8,7 @@ class ItemJournalRetention internal constructor(private val drained: Completable
     private val thread = Thread.currentThread()
     internal val barrier = CompletableFuture<Void>()
     /** Same observer used by isDrained; shared shutdown must wait for this result too. */
-    internal val journalDrain: java.util.concurrent.CompletionStage<Void>
+    internal val journalDrain: CompletionStage<Void>
         get() { checkThread(); return drained.minimalCompletionStage() }
     val isDrained: Boolean get() {
         checkThread()

@@ -1,5 +1,12 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRequester
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreRefusedException
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCodec
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
@@ -116,17 +123,17 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
         checkNotNull(read(id))
     }
 
-    fun checkpointSource(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource {
-        val saved=checkpointStore().read(id) ?: throw com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreRefusedException("Checkpoint was not found or has expired")
-        if(checkpointClaim(id)!=null)throw com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreRefusedException("This checkpoint already has a restore operation")
-        return com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource(saved)
+    fun checkpointSource(id: UUID): CheckpointRestoreSource {
+        val saved=checkpointStore().read(id) ?: throw CheckpointRestoreRefusedException("Checkpoint was not found or has expired")
+        if(checkpointClaim(id)!=null)throw CheckpointRestoreRefusedException("This checkpoint already has a restore operation")
+        return CheckpointRestoreSource(saved)
     }
 
-    fun checkpointLink(id: UUID): com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink? =
+    fun checkpointLink(id: UUID): CheckpointRestoreLink? =
         connection.prepareStatement("SELECT source_uuid,before_uuid,requester_uuid,requester_name FROM ex_checkpoint_restore_link WHERE operation_uuid=?").use {
             it.setString(1,id.toString());it.executeQuery().use { row -> if(!row.next())null else
-                com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreLink(UUID.fromString(row.getString(1)),UUID.fromString(row.getString(2)),
-                    com.bareminimumstudios.guardian.checkpoint.CheckpointRequester(row.getString(3)?.let(UUID::fromString),row.getString(4)))
+                CheckpointRestoreLink(UUID.fromString(row.getString(1)),UUID.fromString(row.getString(2)),
+                    CheckpointRequester(row.getString(3)?.let(UUID::fromString),row.getString(4)))
             }
         }
     private fun checkpointStore() = JdbcInventoryCheckpoints(connection,SequenceAllocator())
@@ -140,19 +147,19 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
             claimSet("ex_item_restore_claim","source_operation_uuid",record.operationId.toString()).isNotEmpty())return false
         val saved=checkpointStore().read(link.checkpoint) ?: return false
         val before=checkpointStore().read(link.before) ?: return false
-        val canonical=com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreSource(saved).record(record.operationId,record.createdAt,before)
+        val canonical=CheckpointRestoreSource(saved).record(record.operationId,record.createdAt,before)
         return sameSaveRecord(canonical,record,record.phase) && (image==null ||
             image.original.slots==before.fullInventory.slots && image.expected.slots==saved.fullInventory.slots)
     }
 
-    fun prepareCheckpoint(id:UUID,time:Long,checkpointId:UUID,before:com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint,
-        requester:com.bareminimumstudios.guardian.checkpoint.CheckpointRequester,limits:com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits):ItemRollbackRecord = atomic {
+    fun prepareCheckpoint(id:UUID,time:Long,checkpointId:UUID,before:InventoryCheckpoint,
+        requester:CheckpointRequester,limits:InventoryCheckpointLimits):ItemRollbackRecord = atomic {
         val existing=read(id)
         if(existing!=null) {
             require(existing.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE && existing.checkpointOf==checkpointId && existing.createdAt==time)
             val link=checkNotNull(checkpointLink(id));require(link.before==before.checkpointId && link.requester==requester)
             val stored=checkNotNull(checkpointStore().read(link.before))
-            require(com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCodec.encode(stored).contentEquals(com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCodec.encode(before)))
+            require(InventoryCheckpointCodec.encode(stored).contentEquals(InventoryCheckpointCodec.encode(before)))
             require(hasSourceClaims(existing));return@atomic existing
         }
         val source=checkpointSource(checkpointId)
@@ -160,7 +167,7 @@ internal class JdbcItemRollbackJournal(private val connection: Connection) {
         val owners=ItemRecoveryCheck(record).owners
         for(owner in owners) connection.prepareStatement("SELECT 1 FROM ex_item_rollback_owner WHERE owner_key=?").use {
             it.setString(1,ownerKey(owner));it.executeQuery().use { row -> if(row.next())
-                throw com.bareminimumstudios.guardian.checkpoint.CheckpointRestoreRefusedException("Player inventory is reserved by another recovery operation") }
+                throw CheckpointRestoreRefusedException("Player inventory is reserved by another recovery operation") }
         }
         connection.prepareStatement("INSERT INTO ex_item_rollback(operation_uuid,created_at,phase,purpose) VALUES (?,?,'PREPARED',?)").use {
             it.setString(1,id.toString());it.setLong(2,time);it.setString(3,record.purpose.name);it.executeUpdate()

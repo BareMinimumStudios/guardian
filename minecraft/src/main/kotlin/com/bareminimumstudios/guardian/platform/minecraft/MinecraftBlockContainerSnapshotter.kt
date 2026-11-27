@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.entity.vehicle.ContainerEntity
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
 import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
@@ -20,7 +21,7 @@ object MinecraftBlockContainerSnapshotter {
             hasPendingLoot(parts.`guardian$first`()) || hasPendingLoot(parts.`guardian$second`())
         }
         is RandomizableContainer -> container.lootTable!=null
-        is net.minecraft.world.entity.vehicle.ContainerEntity -> container.lootTable!=null
+        is ContainerEntity -> container.lootTable!=null
         else -> false
     }
 

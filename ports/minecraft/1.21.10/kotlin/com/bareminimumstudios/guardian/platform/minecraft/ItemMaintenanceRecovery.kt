@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.codec.ItemRollbackImagesCodec
@@ -74,12 +76,12 @@ object ItemMaintenanceRecovery {
             check(lock.isValid)
             val receipt=checkNotNull(journal.itemRollbackImages(id)) { "Complete protected inventory images are unavailable" }
             val images=receipt.images
-            if(images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE) {
-                val store=journal as? com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore ?: error("Checkpoint authority is unavailable")
+            if(images.record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE) {
+                val store=journal as? InventoryCheckpointStore ?: error("Checkpoint authority is unavailable")
                 val source=checkNotNull(store.inventoryCheckpoint(checkNotNull(images.record.checkpointOf))) { "Checkpoint authority is missing" }
                 require(source.minecraftVersion==GuardianMinecraftVersion.current) { "Resolve this checkpoint operation using Minecraft "+source.minecraftVersion+" before changing game versions" }
                 source.equipment?.let { equipment ->
-                    val installed=com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()
+                    val installed=EquipmentModDiscovery.installed()
                     equipment.providers.forEach { (id,version) ->
                         val current=if(id=="minecraft")GuardianMinecraftVersion.current else installed[id]
                         require(current==version) { "Resolve equipment recovery using matching $id ($version) before changing equipment mods" }
@@ -87,9 +89,9 @@ object ItemMaintenanceRecovery {
                 }
             }
             require(images.record.phase in setOf(ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING,ItemRollbackPhase.RECOVERY_REQUIRED,ItemRollbackPhase.COMPLETED))
-            com.bareminimumstudios.guardian.rollback.ItemRecoveryPolicy.validate(images.record.purpose,images.record.entries)
+            ItemRecoveryPolicy.validate(images.record.purpose,images.record.entries)
             val owners=images.original.slots.keys.map { it.owner }.toSet()
-            require(owners.size in 1..8 && images.original.slots.count { (address,item) -> images.expected.slots[address]!=item }<=(if(images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64))
+            require(owners.size in 1..8 && images.original.slots.count { (address,item) -> images.expected.slots[address]!=item }<=(if(images.record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)256 else 64))
             require((images.original.slots.values+images.expected.slots.values).sumOf { (it.itemData?.size ?: 0).toLong() }<=2L*1024*1024)
             if(!receipt.acknowledged)require(journal.itemRollbackProtected(id)) { "Journal lacks persistent protection" }
             else require(images.record.phase==ItemRollbackPhase.COMPLETED)
@@ -141,11 +143,11 @@ object ItemMaintenanceRecovery {
             val owners=images.original.slots.keys.map { it.owner }.distinct()
             if(owners.any { it is ItemSlotOwner.PlayerInventory && it.layout!=null }) {
                 val owner=owners.single() as ItemSlotOwner.PlayerInventory
-                val platform=if("neoforge" in com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()) EquipmentSavePlatform.NEOFORGE else EquipmentSavePlatform.FABRIC
+                val platform=if("neoforge" in EquipmentModDiscovery.installed()) EquipmentSavePlatform.NEOFORGE else EquipmentSavePlatform.FABRIC
                 return EquipmentPlayerFileRecovery.edits(root,owner,images,platform)
             }
             val grouped=owners.groupBy { owner -> when(owner) {
-                is ItemSlotOwner.PlayerInventory -> root.resolve(net.minecraft.world.level.storage.LevelResource.PLAYER_DATA_DIR.id).resolve("${owner.playerId}.dat")
+                is ItemSlotOwner.PlayerInventory -> root.resolve(LevelResource.PLAYER_DATA_DIR.id).resolve("${owner.playerId}.dat")
                 is ItemSlotOwner.BlockContainer -> {
                     val dimension=ResourceKey.create(Registries.DIMENSION,ResourceLocation.parse(owner.dimension.toString()))
                     val folder=DimensionType.getStorageFolder(dimension,root).resolve("region").normalize()

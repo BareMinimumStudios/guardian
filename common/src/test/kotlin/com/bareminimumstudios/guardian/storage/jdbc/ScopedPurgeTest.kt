@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.sql.DriverManager
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.*
 import com.bareminimumstudios.guardian.storage.purge.*
@@ -102,7 +103,7 @@ class ScopedPurgeTest {
             db.open();db.append(listOf(block(1),block(2,nether),item()))
             val plan=db.previewPurge(100,1000,PurgeScope(world,include=setOf(stone,coal)))
             assertEquals(2,plan.candidates.size)
-            java.sql.DriverManager.getConnection("jdbc:sqlite:$path").use { conn->
+            DriverManager.getConnection("jdbc:sqlite:$path").use { conn->
                 conn.createStatement().use { it.executeUpdate("UPDATE ex_block SET wid=(SELECT id FROM ex_world_map WHERE world='minecraft:the_nether') WHERE time=1")
                     it.executeUpdate("DELETE FROM ex_container_item") }
             }
@@ -116,7 +117,7 @@ class ScopedPurgeTest {
             db.open();db.append(listOf(item(listOf(world,nether),listOf(coal,stone)),entity()))
             val scope=PurgeScope(world,include=setOf(coal));val plan=db.previewPurge(100,1000,scope)
             var checks=0;assertFails { db.applyPurge(plan){++checks<3} }
-            java.sql.DriverManager.getConnection("jdbc:sqlite:$path").use { conn->
+            DriverManager.getConnection("jdbc:sqlite:$path").use { conn->
                 fun count(table:String)=conn.createStatement().use { q->q.executeQuery("SELECT COUNT(*) FROM $table").use { it.next();it.getInt(1) } }
                 assertEquals(2,count("ex_container_location"));assertEquals(2,count("ex_container_item"))
                 assertEquals(1,db.applyPurge(plan){true}.deleted.containers)

@@ -1,9 +1,10 @@
 package com.bareminimumstudios.guardian.command
 
+import java.util.UUID
 import com.bareminimumstudios.guardian.export.ExportKind
 import com.bareminimumstudios.guardian.domain.*
 
-data class ExportFilters(val common:BlockCommandFilter,val entityKinds:Set<EntityAuditKind> = EntityAuditKind.entries.toSet(),val entityId:java.util.UUID?=null,val fluidKinds:Set<FluidAuditKind> = FluidAuditKind.entries.toSet()) {
+data class ExportFilters(val common:BlockCommandFilter,val entityKinds:Set<EntityAuditKind> = EntityAuditKind.entries.toSet(),val entityId:UUID?=null,val fluidKinds:Set<FluidAuditKind> = FluidAuditKind.entries.toSet()) {
     companion object {
         fun parse(kind:ExportKind,raw:String):Result<ExportFilters> = runCatching {
             val keys=raw.trim().split(Regex("\\s+")).map { it.substringBefore(':').lowercase() }

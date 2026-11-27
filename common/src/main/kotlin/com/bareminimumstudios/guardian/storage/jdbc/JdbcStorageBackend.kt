@@ -1,5 +1,22 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.checkpoint.CheckpointRequester
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore
+import com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose
+import com.bareminimumstudios.guardian.rollback.ItemRollbackImages
+import com.bareminimumstudios.guardian.rollback.ItemRollbackPhase
+import com.bareminimumstudios.guardian.rollback.ItemRollbackProtectionJournal
+import com.bareminimumstudios.guardian.rollback.ItemRollbackRecord
+import com.bareminimumstudios.guardian.storage.codec.ItemFrameSnapshotCodec
+import com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan
+import com.bareminimumstudios.guardian.storage.purge.PurgeScope
+import com.bareminimumstudios.guardian.storage.query.EntityLookupQuery
+import com.bareminimumstudios.guardian.storage.query.FluidLookupQuery
+import com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery
+import java.sql.Statement
+import java.sql.Types
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.BinaryPayload
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot
@@ -37,7 +54,7 @@ abstract class JdbcStorageBackend(
     private val path: Path,
     private val jdbcUrl: (Path) -> String,
     private val driverClassName: String
-) : QueryableStorageBackend, com.bareminimumstudios.guardian.rollback.ItemRollbackProtectionJournal, com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointStore {
+) : QueryableStorageBackend, ItemRollbackProtectionJournal, InventoryCheckpointStore {
     private val lock = ReentrantLock()
     private var connection: Connection? = null
     private var fileLockChannel: FileChannel? = null
@@ -107,7 +124,7 @@ abstract class JdbcStorageBackend(
     override fun append(entries: List<LogEntry>): Unit = lock.withLock {
         if (entries.isEmpty()) return@withLock
         val conn = requireConnection()
-        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry || it is com.bareminimumstudios.guardian.domain.PlayerActivity || it is EntityAuditEvent || it is FluidAuditEvent }) {
+        require(entries.all { it is BlockChangeSnapshot || it is ContainerAuditEntry || it is PlayerActivity || it is EntityAuditEvent || it is FluidAuditEvent }) {
             "Unsupported audit entry"
         }
 
@@ -121,7 +138,7 @@ abstract class JdbcStorageBackend(
                         is ContainerAuditEntry -> insertContainer(conn, it.transaction)
                         is EntityAuditEvent -> insertEntity(conn, it)
                         is FluidAuditEvent -> insertFluid(conn, it)
-                        is com.bareminimumstudios.guardian.domain.PlayerActivity -> insertActivity(conn, it)
+                        is PlayerActivity -> insertActivity(conn, it)
                     }
                 }
                 insertStatement.executeBatch()
@@ -140,13 +157,13 @@ abstract class JdbcStorageBackend(
         conn.prepareStatement("INSERT INTO ex_entity(event_uuid,time,actor,dimension,x,y,z,target_uuid,target_type,kind,before_name,after_name,damage_type,parent_uuid,partner_uuid,frame_before,frame_after) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
             val values = listOf(row.eventId.toString(), row.timestampEpochMillis, actorCodec.idFor(conn,row.actor), row.dimension.toString(), row.position.x, row.position.y, row.position.z, row.targetUuid.toString(), row.targetType.toString(), row.kind.name, row.beforeName, row.afterName, row.damageType?.toString(), row.parentUuid?.toString(), row.partnerUuid?.toString())
             values.forEachIndexed { index,value -> statement.setObject(index+1,value) }
-            statement.setBytes(16,row.frameBefore?.let(com.bareminimumstudios.guardian.storage.codec.ItemFrameSnapshotCodec::encode))
-            statement.setBytes(17,row.frameAfter?.let(com.bareminimumstudios.guardian.storage.codec.ItemFrameSnapshotCodec::encode))
+            statement.setBytes(16,row.frameBefore?.let(ItemFrameSnapshotCodec::encode))
+            statement.setBytes(17,row.frameAfter?.let(ItemFrameSnapshotCodec::encode))
             statement.executeUpdate()
         }
     }
 
-    override fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery): List<EntityAuditEvent> = lock.withLock {
+    override fun lookupEntities(query: EntityLookupQuery): List<EntityAuditEvent> = lock.withLock {
         val conn = requireConnection()
         val params = mutableListOf<Any>()
         val where = mutableListOf("e.kind IN (${query.kinds.joinToString(",") { "?" }})")
@@ -173,7 +190,7 @@ abstract class JdbcStorageBackend(
             statement.executeQuery().use { rows -> buildList {
                 while(rows.next()) {
                     val actorId = rows.getLong("actor").let { if(rows.wasNull()) null else it }
-                    add(EntityAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId),ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),UUID.fromString(rows.getString("target_uuid")),ResourceId.parse(rows.getString("target_type")),EntityAuditKind.valueOf(rows.getString("kind")),rows.getString("before_name"),rows.getString("after_name"),rows.getString("damage_type")?.let(ResourceId::parse),rows.getString("parent_uuid")?.let(UUID::fromString),rows.getString("partner_uuid")?.let(UUID::fromString),rows.getBytes(rows.findColumn("frame_before"))?.let(com.bareminimumstudios.guardian.storage.codec.ItemFrameSnapshotCodec::decode),rows.getBytes(rows.findColumn("frame_after"))?.let(com.bareminimumstudios.guardian.storage.codec.ItemFrameSnapshotCodec::decode)))
+                    add(EntityAuditEvent(UUID.fromString(rows.getString("event_uuid")),rows.getLong("time"),actorCodec.actorFor(conn,actorId),ResourceId.parse(rows.getString("dimension")),BlockPosition(rows.getInt("x"),rows.getInt("y"),rows.getInt("z")),UUID.fromString(rows.getString("target_uuid")),ResourceId.parse(rows.getString("target_type")),EntityAuditKind.valueOf(rows.getString("kind")),rows.getString("before_name"),rows.getString("after_name"),rows.getString("damage_type")?.let(ResourceId::parse),rows.getString("parent_uuid")?.let(UUID::fromString),rows.getString("partner_uuid")?.let(UUID::fromString),rows.getBytes(rows.findColumn("frame_before"))?.let(ItemFrameSnapshotCodec::decode),rows.getBytes(rows.findColumn("frame_after"))?.let(ItemFrameSnapshotCodec::decode)))
                 }
             } }
         }
@@ -186,7 +203,7 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    override fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery): List<FluidAuditEvent> = lock.withLock {
+    override fun lookupFluids(query: FluidLookupQuery): List<FluidAuditEvent> = lock.withLock {
         val conn = requireConnection()
         val params = mutableListOf<Any>()
         val where = mutableListOf("e.kind IN (${query.kinds.joinToString(",") { "?" }})")
@@ -218,7 +235,7 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    private fun insertActivity(conn: Connection, entry: com.bareminimumstudios.guardian.domain.PlayerActivity) {
+    private fun insertActivity(conn: Connection, entry: PlayerActivity) {
         conn.prepareStatement("INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text, recipient_uuid, recipient_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING").use {
             it.setString(1, entry.eventId.toString()); it.setLong(2, entry.timestampEpochMillis)
             it.setString(3, entry.actor.uuid.toString()); it.setString(4, entry.actor.lastKnownName)
@@ -226,7 +243,7 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.withLock {
+    override fun lookupActivity(query: PlayerActivityQuery): List<PlayerActivity> = lock.withLock {
         val params = mutableListOf<Any>()
         val where = mutableListOf("kind IN (${query.kinds.joinToString(",") { "?" }})")
         query.kinds.forEach { params.add(it.name) }
@@ -242,10 +259,10 @@ abstract class JdbcStorageBackend(
             params.add(query.limit); params.add(query.offset)
             params.forEachIndexed { index, value -> statement.setObject(index + 1, value) }
             statement.executeQuery().use { rows -> buildList {
-                while (rows.next()) add(com.bareminimumstudios.guardian.domain.PlayerActivity(
-                    java.util.UUID.fromString(rows.getString(1)), rows.getLong(2),
-                    ActorIdentity.Player(java.util.UUID.fromString(rows.getString(3)), rows.getString(4)),
-                    com.bareminimumstudios.guardian.domain.PlayerActivityKind.valueOf(rows.getString(5)), rows.getString(6),rows.getString(7)?.let(UUID::fromString),rows.getString(8)))
+                while (rows.next()) add(PlayerActivity(
+                    UUID.fromString(rows.getString(1)), rows.getLong(2),
+                    ActorIdentity.Player(UUID.fromString(rows.getString(3)), rows.getString(4)),
+                    PlayerActivityKind.valueOf(rows.getString(5)), rows.getString(6),rows.getString(7)?.let(UUID::fromString),rows.getString(8)))
             } }
         }
     }
@@ -471,7 +488,7 @@ abstract class JdbcStorageBackend(
                 changed = statement.executeBatch().sumOf { count ->
                     when {
                         count > 0 -> count
-                        count == java.sql.Statement.SUCCESS_NO_INFO -> 1
+                        count == Statement.SUCCESS_NO_INFO -> 1
                         else -> 0
                     }
                 }
@@ -490,9 +507,9 @@ abstract class JdbcStorageBackend(
         checkpoint(requireConnection())
     }
 
-    override fun previewPurge(cutoff: Long, limit: Int) = previewPurge(cutoff,limit,com.bareminimumstudios.guardian.storage.purge.PurgeScope())
-    override fun previewPurge(cutoff: Long, limit: Int, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope) = lock.withLock { JdbcAuditPurge(requireConnection()).preview(cutoff,limit,scope) }
-    override fun applyPurge(plan: com.bareminimumstudios.guardian.storage.purge.AuditPurgePlan, permitted: () -> Boolean) = lock.withLock { JdbcAuditPurge(requireConnection()).apply(plan,permitted) }
+    override fun previewPurge(cutoff: Long, limit: Int) = previewPurge(cutoff,limit,PurgeScope())
+    override fun previewPurge(cutoff: Long, limit: Int, scope: PurgeScope) = lock.withLock { JdbcAuditPurge(requireConnection()).preview(cutoff,limit,scope) }
+    override fun applyPurge(plan: AuditPurgePlan, permitted: () -> Boolean) = lock.withLock { JdbcAuditPurge(requireConnection()).apply(plan,permitted) }
 
     override fun guardContainerHistory(rows: List<ContainerTransactionSnapshot>) = lock.withLock { ContainerOwnerIndex.guard(requireConnection(),rows) }
 
@@ -500,32 +517,32 @@ abstract class JdbcStorageBackend(
         JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst)
     }
     override fun prepareCreativeRecovery(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>) = lock.withLock {
-        JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst,com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CREATIVE_DELETION)
+        JdbcItemRollbackJournal(requireConnection()).prepare(operationId,createdAt,newestFirst,ItemRecoveryPurpose.CREATIVE_DELETION)
     }
     override fun restorableItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).restorable(limit) }
     override fun itemRestoreSource(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).restoreSource(operationId) }
     override fun prepareItemRestore(operationId: UUID, createdAt: Long, sourceOperation: UUID) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepareRestore(operationId,createdAt,sourceOperation)
     }
-    override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
+    override fun protectItemRollback(record: ItemRollbackRecord) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).protect(record)
     }
-    override fun protectItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord, original: InventorySnapshot) = lock.withLock {
+    override fun protectItemRollback(record: ItemRollbackRecord, original: InventorySnapshot) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).protect(record,original)
     }
-    override fun cancelUnstartedItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord) = lock.withLock {
+    override fun cancelUnstartedItemRollback(record: ItemRollbackRecord) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).cancelUnstarted(record)
     }
     override fun itemRollbackImages(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).images(operationId) }
-    override fun acknowledgeItemRollback(record: com.bareminimumstudios.guardian.rollback.ItemRollbackRecord, images: com.bareminimumstudios.guardian.rollback.ItemRollbackImages, saved: InventorySnapshot) = lock.withLock {
+    override fun acknowledgeItemRollback(record: ItemRollbackRecord, images: ItemRollbackImages, saved: InventorySnapshot) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).acknowledge(record,images,saved)
     }
     override fun checkpointRestoreSource(id: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).checkpointSource(id) }
     override fun checkpointRestoreLink(id: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).checkpointLink(id) }
-    override fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, requester: com.bareminimumstudios.guardian.checkpoint.CheckpointRequester, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits) = lock.withLock {
+    override fun prepareCheckpointRestore(id: UUID, time: Long, checkpoint: UUID, before: InventoryCheckpoint, requester: CheckpointRequester, limits: InventoryCheckpointLimits) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).prepareCheckpoint(id,time,checkpoint,before,requester,limits)
     }
-    override fun saveInventoryCheckpoint(checkpoint: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpoint, limits: com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointLimits) = lock.withLock {
+    override fun saveInventoryCheckpoint(checkpoint: InventoryCheckpoint, limits: InventoryCheckpointLimits) = lock.withLock {
         JdbcInventoryCheckpoints(requireConnection(),allocator).save(checkpoint,limits)
     }
     override fun inventoryCheckpoint(id: UUID) = lock.withLock { JdbcInventoryCheckpoints(requireConnection(),allocator).read(id) }
@@ -535,7 +552,7 @@ abstract class JdbcStorageBackend(
     override fun itemRollbackProtected(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).protected(operationId) }
     override fun itemRollback(operationId: UUID) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).read(operationId) }
     override fun unfinishedItemRollbacks(limit: Int) = lock.withLock { JdbcItemRollbackJournal(requireConnection()).unfinished(limit) }
-    override fun transitionItemRollback(operationId: UUID, expected: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase, next: com.bareminimumstudios.guardian.rollback.ItemRollbackPhase) = lock.withLock {
+    override fun transitionItemRollback(operationId: UUID, expected: ItemRollbackPhase, next: ItemRollbackPhase) = lock.withLock {
         JdbcItemRollbackJournal(requireConnection()).transition(operationId,expected,next)
     }
 
@@ -581,7 +598,7 @@ abstract class JdbcStorageBackend(
         statement.setLong(1, rowId)
         statement.setString(2, snapshot.eventId.toString())
         statement.setLong(3, snapshot.timestampEpochMillis)
-        if (actorId == null) statement.setNull(4, java.sql.Types.BIGINT) else statement.setLong(4, actorId)
+        if (actorId == null) statement.setNull(4, Types.BIGINT) else statement.setLong(4, actorId)
         statement.setInt(5, worldId)
         statement.setInt(6, snapshot.position.x)
         statement.setInt(7, snapshot.position.y)
@@ -687,7 +704,7 @@ abstract class JdbcStorageBackend(
     private fun requireConnection(): Connection = checkNotNull(connection) { "Storage backend $id is not open" }
 
     private fun setPayload(statement: PreparedStatement, index: Int, payload: BinaryPayload?) {
-        if (payload == null) statement.setNull(index, java.sql.Types.BLOB)
+        if (payload == null) statement.setNull(index, Types.BLOB)
         else statement.setBytes(index, payload.copyBytes())
     }
 

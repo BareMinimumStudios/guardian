@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.IdentityHashMap
 import com.bareminimumstudios.guardian.checkpoint.*
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.server.level.ServerPlayer
@@ -42,7 +43,7 @@ internal class MinecraftPlayerEquipmentStorage private constructor(
 
     fun detach(): MinecraftInventoryHandoff {
         check(isCurrent())
-        val frames=java.util.IdentityHashMap<MinecraftEquipmentProviders.Group,MinecraftInventoryHandoff>()
+        val frames=IdentityHashMap<MinecraftEquipmentProviders.Group,MinecraftInventoryHandoff>()
         val captured=mutableListOf<MinecraftInventoryHandoff>()
         val protection=EquipmentMutationGate.acquire(observation.groups.flatMap { it.roots }+player)
         try {

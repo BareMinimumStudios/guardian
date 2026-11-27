@@ -1,5 +1,16 @@
 package com.bareminimumstudios.guardian.checkpoint
 
+import com.bareminimumstudios.guardian.domain.ItemStackSnapshot
+import com.bareminimumstudios.guardian.platform.minecraft.EquipmentMutationGate
+import com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingleSlotBinding
+import com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingletonStorage
+import com.bareminimumstudios.guardian.platform.minecraft.GuardianMinecraftVersion
+import com.bareminimumstudios.guardian.platform.minecraft.OwnedBackpackedPlayer
+import com.bareminimumstudios.guardian.platform.minecraft.OwnedEquipmentProvider
+import java.lang.reflect.InvocationTargetException
+import java.util.IdentityHashMap
+import java.util.function.Supplier
+import net.minecraft.core.NonNullList
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftItemSnapshotter
 import com.bareminimumstudios.guardian.domain.EquipmentSlotAddress
 import net.minecraft.server.level.ServerPlayer
@@ -21,7 +32,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
         var write: ((Int,ItemStack)->Unit)? = null
         var accepts: (Int,ItemStack)->Boolean = { _,_ -> true }
         var beforeDetach: ()->Unit = {}
-        var single: com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingleSlotBinding? = null
+        var single: EquipmentSingleSlotBinding? = null
         var attached: ()->Boolean = { true }
         var roots: List<Any> = listOf(identity)
         init { require(size in 0..256);EquipmentSlotAddress(provider,name) }
@@ -35,7 +46,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
 
     private fun resolve(player:ServerPlayer):Pair<Map<String,String>,List<Group>> {
         check(requireNotNull(player.level().server).isSameThread)
-        val providers=linkedMapOf("minecraft" to com.bareminimumstudios.guardian.platform.minecraft.GuardianMinecraftVersion.current)
+        val providers=linkedMapOf("minecraft" to GuardianMinecraftVersion.current)
         val groups=mutableListOf(container("minecraft","ender_chest",player.enderChestInventory))
         for((id,factory) in factories) {
             val version=installed[id] ?: continue
@@ -51,7 +62,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
                 groups.addAll(reader(player))
             } catch(error:Exception) {
                 val cause=generateSequence<Throwable>(error) {
-                    (it as? java.lang.reflect.InvocationTargetException)?.targetException
+                    (it as? InvocationTargetException)?.targetException
                 }.last()
                 val detail=(cause.message ?: cause.javaClass.simpleName)
                     .replace(Regex("\\p{Cntrl}")," ").take(180)
@@ -81,9 +92,9 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
         val (providers,groups)=resolve(player)
         // Compatibility layers can expose one native inventory under several names.
         // Duplicating that image would also duplicate its authority during recovery.
-        val identities=java.util.IdentityHashMap<Any,Boolean>()
-        val backings=java.util.IdentityHashMap<Any,Boolean>()
-        val currentBackings=java.util.IdentityHashMap<Group,Any>()
+        val identities=IdentityHashMap<Any,Boolean>()
+        val backings=IdentityHashMap<Any,Boolean>()
+        val currentBackings=IdentityHashMap<Group,Any>()
         for(group in groups)if(group.size>0) {
             check(identities.put(group.identity,true)==null) {
                 "Equipment provider ${group.provider} exposes the same physical inventory twice"
@@ -96,7 +107,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
             }
         }
         groups.firstOrNull { !it.attached() }?.let { error("Equipment provider ${it.provider}/${it.name} root changed during capture") }
-        val slots=linkedMapOf<EquipmentSlotAddress,com.bareminimumstudios.guardian.domain.ItemStackSnapshot>()
+        val slots=linkedMapOf<EquipmentSlotAddress,ItemStackSnapshot>()
         val capture=MinecraftItemSnapshotter.CaptureBatch(player.registryAccess())
         var bytes=0L
         for(group in groups)for(index in 0 until group.size) {
@@ -137,8 +148,8 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
             val component=optional(get.call(null,player)) ?: error("Trinkets component is missing")
             buildList {
                 for((group,types) in map(inventory.call(component)))for((slot,value) in map(types)) {
-                    val owner=checkNotNull(value);val items=stacks.get(owner) as net.minecraft.core.NonNullList<*>
-                    add(Group("trinkets","$group/$slot",owner,items.size,EquipmentListBinding.field(owner,"stacks")) { (stacks.get(owner) as net.minecraft.core.NonNullList<*>)[it] as ItemStack }.also { entry ->
+                    val owner=checkNotNull(value);val items=stacks.get(owner) as NonNullList<*>
+                    add(Group("trinkets","$group/$slot",owner,items.size,EquipmentListBinding.field(owner,"stacks")) { (stacks.get(owner) as NonNullList<*>)[it] as ItemStack }.also { entry ->
                         entry.write=(owner as Container)::setItem
                         entry.roots=listOf(component,owner)
                         entry.attached={ optional(get.call(null,player))===component &&
@@ -168,7 +179,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
                 // items. A checkpoint only reads the current already-initialized roots.
                 for((name,owner) in map(slots.get(holder))) {
                     val current=checkNotNull(owner)
-                    check(com.bareminimumstudios.guardian.platform.minecraft.EquipmentMutationGate.blocked(current) || !(updating.getBoolean(current) && resizing.getBoolean(current))) {
+                    check(EquipmentMutationGate.blocked(current) || !(updating.getBoolean(current) && resizing.getBoolean(current))) {
                         "Accessories slot layout has a pending native resize; retry after its next tick"
                     }
                     for((prefix,reader) in listOf("" to normal,"cosmetic/" to cosmetic)) {
@@ -187,7 +198,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
         val containers=method("top.theillusivec4.curios.api.type.capability.ICuriosItemHandler","getCurios")
         // NeoForge capability queries create a new facade. Pin the real serialized
         // attachment, not that facade, and do not recreate it while checking ownership.
-        val attachment=(type("top.theillusivec4.curios.common.CuriosRegistry").getField("INVENTORY").get(null) as java.util.function.Supplier<*>).get()
+        val attachment=(type("top.theillusivec4.curios.common.CuriosRegistry").getField("INVENTORY").get(null) as Supplier<*>).get()
         val data=Entity::class.java.getMethod("getData",type("net.neoforged.neoforge.attachment.AttachmentType"))
         val nativeRoot=type("top.theillusivec4.curios.common.capability.CurioInventoryCapability").getDeclaredField("curioInventory").also { it.isAccessible=true }
         val loading=type("top.theillusivec4.curios.common.capability.CurioInventory").getDeclaredField("markDeserialized").also { it.isAccessible=true }
@@ -253,7 +264,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
                 listOf(Group("toolbelt","belt",handler,1,backing) { backing.read()[it] }.also { entry ->
                     entry.write={ index,stack ->
                         require(index==0)
-                        com.bareminimumstudios.guardian.platform.minecraft.EquipmentMutationGate.replace(checkNotNull(attachment),stack) { write.call(attachment,stack) }
+                        EquipmentMutationGate.replace(checkNotNull(attachment),stack) { write.call(attachment,stack) }
                     }
                     entry.roots=listOf(checkNotNull(attachment),handler)
                     entry.attached={ get.call(null,player)===attachment && inventory.get(attachment)===handler }
@@ -278,7 +289,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
         val cachedType=type("com.mrcrayfish.backpacked.inventory.BackpackInventory")
         val pending=cachedType.getDeclaredField("save").also { it.isAccessible=true }
         val cachedStack=cachedType.getMethod("getBackpackStack")
-        fun verifyCaches(player:ServerPlayer,backpacks:net.minecraft.core.NonNullList<*>) {
+        fun verifyCaches(player:ServerPlayer,backpacks:NonNullList<*>) {
             // The public cache getters can create inventories and spill locked/overflow
             // items. Inspect existing caches only; do not flush or mutate a backup read.
             val current=caches.get(player) as Array<*>? ?: return
@@ -290,22 +301,22 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
             } }
         }
         return { player ->
-            check(player is com.bareminimumstudios.guardian.platform.minecraft.OwnedBackpackedPlayer) {
+            check(player is OwnedBackpackedPlayer) {
                 "Backpacked native ownership hooks are unavailable for this API"
             }
-            val backpacks=get.call(key,player) as net.minecraft.core.NonNullList<*>
+            val backpacks=get.call(key,player) as NonNullList<*>
             verifyCaches(player,backpacks)
             val root=checkNotNull(holder.invoke(manager,player)) { "Framework data holder is missing" }
             val entry=checkNotNull(map(dataMap.get(root))[key]) { "Framework backpack entry is missing" }
             @Suppress("UNCHECKED_CAST")
-            fun current()=entryValue.get(entry) as net.minecraft.core.NonNullList<ItemStack>
+            fun current()=entryValue.get(entry) as NonNullList<ItemStack>
             check(current()===backpacks) { "Framework public and native backpack storage differ" }
             val backing=EquipmentListBinding.native(entry,::current) { next ->
                 verifyCaches(player,current())
                 // Rebuild native inventory caches from the handed-back item. Old wrappers
                 // must never overwrite restored components or retain mutable item aliases.
                 caches.set(player,null)
-                com.bareminimumstudios.guardian.platform.minecraft.EquipmentMutationGate.replace(entry,next) {
+                EquipmentMutationGate.replace(entry,next) {
                     nativeSet.invoke(entry,next)
                 }
             }
@@ -332,7 +343,7 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
         val equip=method(api,"equipBackpack",ItemStack::class.java);val remove=method(api,"remove")
         val itemType=type(if(fabric!=null)"com.tiviacz.travelersbackpack.item.TravelersBackpackItem" else "com.tiviacz.travelersbackpack.items.TravelersBackpackItem")
         return { player ->
-            check(com.bareminimumstudios.guardian.platform.minecraft.OwnedEquipmentProvider::class.java.isAssignableFrom(get.declaringClass)) {
+            check(OwnedEquipmentProvider::class.java.isAssignableFrom(get.declaringClass)) {
                 "Traveler's Backpack wrapper ownership hooks are unavailable for this API"
             }
             if(mod.call(null)==true) {
@@ -342,14 +353,14 @@ internal class MinecraftEquipmentProviders(installed: Map<String,String>) {
                 val owner=optional(get.call(null,player)) ?: error("Traveler's Backpack storage is missing")
                 val stack=owner.javaClass.getField("backpack")
                 val wrapper=owner.javaClass.getField("backpackWrapper")
-                val binding=com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingleSlotBinding(owner,
-                    { com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingleSlotBinding.State(stack.get(owner) as ItemStack,wrapper.get(owner)) },
+                val binding=EquipmentSingleSlotBinding(owner,
+                    { EquipmentSingleSlotBinding.State(stack.get(owner) as ItemStack,wrapper.get(owner)) },
                     { state -> stack.set(owner,state.item);wrapper.set(owner,state.wrapper) },
                     { value -> if(value.isEmpty)remove.call(owner) else equip.call(owner,value) },
                     { value -> value.isEmpty || value.count==1 && itemType.isInstance(value.item) })
                 listOf(Group("travelersbackpack","back",owner,1) { read.call(owner) as ItemStack }.also { group ->
                     group.single=binding
-                    group.write={ index,value -> require(index==0);com.bareminimumstudios.guardian.platform.minecraft.EquipmentSingletonStorage.write(owner,value) }
+                    group.write={ index,value -> require(index==0);EquipmentSingletonStorage.write(owner,value) }
                     group.attached={ optional(get.call(null,player))===owner }
                 })
             }

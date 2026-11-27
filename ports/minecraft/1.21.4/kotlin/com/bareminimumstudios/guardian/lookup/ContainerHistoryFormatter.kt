@@ -1,11 +1,13 @@
 package com.bareminimumstudios.guardian.lookup
 
+import java.util.UUID
+import net.minecraft.network.chat.HoverEvent
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 
 object ContainerHistoryFormatter {
-    fun lines(transactions: List<ContainerTransactionSnapshot>, nowEpochMillis: Long = System.currentTimeMillis(), focus: ItemSlotOwner.BlockContainer? = null, entityFocus: java.util.UUID? = null): List<Component> = buildList {
+    fun lines(transactions: List<ContainerTransactionSnapshot>, nowEpochMillis: Long = System.currentTimeMillis(), focus: ItemSlotOwner.BlockContainer? = null, entityFocus: UUID? = null): List<Component> = buildList {
         if (transactions.isEmpty()) add(Component.literal("Guardian: no item transactions found."))
         else add(Component.literal("Guardian item history (${transactions.size} ${if (transactions.size == 1) "transaction" else "transactions"}):").withStyle(ChatFormatting.GOLD))
         for (transaction in transactions) {
@@ -36,7 +38,7 @@ object ContainerHistoryFormatter {
                     val id = requireNotNull(identity.first)
                     val name = id.path.replace('_', ' ') + if (id.namespace == "minecraft") "" else " (${id.namespace})"
                     val line = Component.literal("${age(nowEpochMillis, transaction.timestampEpochMillis)}: $actor moved ${to.values.sum()} $name ").withStyle(ChatFormatting.GREEN)
-                    line.append(Component.literal("[${positions(from)} → ${positions(to)}]").withStyle { it.withColor(ChatFormatting.AQUA).withHoverEvent(net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("${positions(from)} → ${positions(to)}"))) })
+                    line.append(Component.literal("[${positions(from)} → ${positions(to)}]").withStyle { it.withColor(ChatFormatting.AQUA).withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("${positions(from)} → ${positions(to)}"))) })
                     add(line)
                 }
                 continue

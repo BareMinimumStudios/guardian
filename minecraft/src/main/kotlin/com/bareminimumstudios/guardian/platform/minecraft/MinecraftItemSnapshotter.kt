@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.item.Item
 import com.bareminimumstudios.guardian.domain.BinaryPayload
 import com.bareminimumstudios.guardian.domain.ItemStackSnapshot
 import com.bareminimumstudios.guardian.domain.ResourceId
@@ -19,7 +20,7 @@ object MinecraftItemSnapshotter {
 
     /** A single inventory read can reuse canonical default-item payloads, never patched components. */
     internal class CaptureBatch(private val registries: HolderLookup.Provider) {
-        private val defaults = HashMap<net.minecraft.world.item.Item, ItemStackSnapshot>()
+        private val defaults = HashMap<Item, ItemStackSnapshot>()
         fun capture(stack: ItemStack): ItemStackSnapshot {
             if (stack.isEmpty) return ItemStackSnapshot.EMPTY
             if (!stack.componentsPatch.isEmpty) return MinecraftItemSnapshotter.capture(stack, registries)

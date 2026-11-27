@@ -1,5 +1,11 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer;
 import com.bareminimumstudios.guardian.lookup.BlockInspector;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,21 +32,21 @@ public abstract class InspectorPacketMixin {
     @Inject(method = "handleInteract", at = @At("HEAD"), cancellable = true)
     private void guardian$inspectFrame(ServerboundInteractPacket packet, CallbackInfo ci) {
         if(!player.level().getServer().isSameThread()) return;
-        net.minecraft.world.entity.Entity entity=packet.getTarget(player.level());
-        if(entity instanceof net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer cart && BlockInspector.interceptMinecart(player,cart)) {
+        Entity entity=packet.getTarget(player.level());
+        if(entity instanceof AbstractMinecartContainer cart && BlockInspector.interceptMinecart(player,cart)) {
             player.inventoryMenu.sendAllDataToRemote();ci.cancel();return;
         }
-        if(!(entity instanceof net.minecraft.world.entity.decoration.ItemFrame frame) || !BlockInspector.interceptFrame(player,frame)) return;
+        if(!(entity instanceof ItemFrame frame) || !BlockInspector.interceptFrame(player,frame)) return;
         if(BlockInspector.canInspectFrame(player,frame)) {
-            player.connection.send(new ClientboundSetEntityDataPacket(frame.getId(),java.util.List.of(
-                net.minecraft.network.syncher.SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$itemData(),frame.getItem().copy()),
-                net.minecraft.network.syncher.SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$rotationData(),frame.getRotation()))));
+            player.connection.send(new ClientboundSetEntityDataPacket(frame.getId(),List.of(
+                SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$itemData(),frame.getItem().copy()),
+                SynchedEntityData.DataValue.create(ItemFrameDataAccessor.guardian$rotationData(),frame.getRotation()))));
         }
         player.inventoryMenu.sendAllDataToRemote();
         ci.cancel();
     }
 
-    private void guardian$update(net.minecraft.core.BlockPos pos) {
+    private void guardian$update(BlockPos pos) {
         if (player.level().getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4) != null)
             player.connection.send(new ClientboundBlockUpdatePacket(player.level(), pos));
     }

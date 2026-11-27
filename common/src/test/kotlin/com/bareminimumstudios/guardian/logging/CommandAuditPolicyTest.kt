@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.logging
 
+import com.bareminimumstudios.guardian.command.HistoryPageCommands
 import kotlin.test.*
 import org.junit.jupiter.api.Test
 
@@ -36,7 +37,7 @@ class CommandAuditPolicyTest {
         assertNull(CommandAuditPolicy.snapshot("say "+"a".repeat(32769),false))
     }
     @Test fun commandHistoryNavigationKeepsReadOnlyFilters() {
-        assertEquals("/guardian commands u:Alex,!Bob t:1h p:2 o:oldest",com.bareminimumstudios.guardian.command.HistoryPageCommands.command("commands","u:Alex,!Bob t:1h p:1 o:newest",2,true))
+        assertEquals("/guardian commands u:Alex,!Bob t:1h p:2 o:oldest",HistoryPageCommands.command("commands","u:Alex,!Bob t:1h p:1 o:newest",2,true))
     }
     @Test fun controlCharactersAndInvalidRootsAreRejected() {
         for(text in listOf("", "/", "say secret\nforged", "say a\tsecret", "say \u0000", "say \u202e spoof", "say \u2028 forged", "bad/root args", "a".repeat(129)+" x"))assertNull(CommandAuditPolicy.snapshot(text,true))

@@ -1,17 +1,19 @@
 package com.bareminimumstudios.guardian.lookup
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap
+import net.minecraft.network.chat.HoverEvent
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import kotlin.test.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
 class ActivityFormatterTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private fun row(text:String)=PlayerActivity(timestampEpochMillis=1000,actor=ActorIdentity.Player(UUID.randomUUID(),"Alice"),kind=PlayerActivityKind.WHISPER,text=text,recipientUuid=UUID.randomUUID(),recipientName="Bob")
     @Test fun shortRowsShowAgeParticipantsAndHighlightedMatchesWithExactHover() {
         val r=row("hello TEST world");val line=ActivityFormatter.line(r,3000,needle="test")
         assertTrue("2s ago" in line.string && "Alice → Bob" in line.string)
         assertTrue(line.siblings.any { it.string=="TEST" && it.style.isBold })
-        val hover=(line.style.hoverEvent as net.minecraft.network.chat.HoverEvent.ShowText).value().string
+        val hover=(line.style.hoverEvent as HoverEvent.ShowText).value().string
         assertTrue(r.eventId.toString() in hover && "hello TEST world" in hover)
     }
     @Test fun consoleKeepsFullTextWithoutHover() {

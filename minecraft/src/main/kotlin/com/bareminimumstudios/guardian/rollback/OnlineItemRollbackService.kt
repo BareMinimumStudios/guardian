@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor
 import com.bareminimumstudios.guardian.checkpoint.*
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftCheckpointCapture
 import com.bareminimumstudios.guardian.platform.minecraft.GuardianMinecraftVersion
@@ -63,8 +64,8 @@ internal class OnlineItemRollbackService(
             permissions.has(fresh,operationPermission(purpose),if(purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)4 else 3) && permissions.has(fresh,basePermission(purpose),3)
     }.getOrDefault(false)
     private fun sameRequester(a: CommandSourceStack, b: CommandSourceStack) =
-        if (a.player != null || b.player != null) a.player?.uuid == b.player?.uuid else (a as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`() ===
-            (b as com.bareminimumstudios.guardian.mixin.ItemCommandSourceAccessor).`guardian$itemCommandSource`()
+        if (a.player != null || b.player != null) a.player?.uuid == b.player?.uuid else (a as ItemCommandSourceAccessor).`guardian$itemCommandSource`() ===
+            (b as ItemCommandSourceAccessor).`guardian$itemCommandSource`()
 
     fun requestItemRestore(source: CommandSourceStack, parent: UUID): Boolean {
         check(server.isSameThread)

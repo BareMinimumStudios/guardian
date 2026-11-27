@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot
+import com.bareminimumstudios.guardian.domain.InventorySnapshot
+import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
+import java.nio.file.Files
 import com.bareminimumstudios.guardian.rollback.*
 import java.util.UUID
 import kotlin.test.*
@@ -9,15 +13,15 @@ class ItemRollbackStartupGuardTest {
         val id=UUID.randomUUID()
         override fun unfinishedItemRollbacks(limit: Int) = phase?.let { listOf(ItemRollbackSummary(id,1,it)) } ?: emptyList()
         override fun itemRollback(operationId: UUID): ItemRollbackRecord? = error("Startup does not load item payloads")
-        override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>): ItemRollbackRecord = error("No new admission")
+        override fun prepareItemRollback(operationId: UUID, createdAt: Long, newestFirst: List<ContainerTransactionSnapshot>): ItemRollbackRecord = error("No new admission")
         override fun transitionItemRollback(operationId: UUID, expected: ItemRollbackPhase, next: ItemRollbackPhase): Boolean = error("Unknown capability cannot cancel")
     }
     private class Protection(private val delegate: Journal, private val held: Boolean) : ItemRollbackProtectionJournal, ItemRollbackJournal by delegate {
         override fun itemRollbackProtected(operationId: UUID)=held
         override fun protectItemRollback(record: ItemRollbackRecord): Boolean=error("No new protection")
-        override fun protectItemRollback(record: ItemRollbackRecord, original: com.bareminimumstudios.guardian.domain.InventorySnapshot): Boolean=error("No new protection")
+        override fun protectItemRollback(record: ItemRollbackRecord, original: InventorySnapshot): Boolean=error("No new protection")
         override fun itemRollbackImages(operationId: UUID): ItemRollbackImageRecord?=error("No payload reads")
-        override fun acknowledgeItemRollback(record: ItemRollbackRecord, images: ItemRollbackImages, saved: com.bareminimumstudios.guardian.domain.InventorySnapshot): Boolean=error("No acknowledgment")
+        override fun acknowledgeItemRollback(record: ItemRollbackRecord, images: ItemRollbackImages, saved: InventorySnapshot): Boolean=error("No acknowledgment")
         override fun transitionItemRollback(operationId: UUID, expected: ItemRollbackPhase, next: ItemRollbackPhase): Boolean {
             check(operationId==delegate.id && expected==ItemRollbackPhase.PREPARED && next==ItemRollbackPhase.CANCELLED && !held)
             delegate.phase=null;return true
@@ -34,9 +38,9 @@ class ItemRollbackStartupGuardTest {
         assertEquals(ItemRollbackPhase.PREPARED,journal.phase)
     }
     @Test fun openedStorageIsCheckedBeforeTheWriterStartsAndClosedOnRefusal() {
-        val path=java.nio.file.Files.createTempDirectory("guardian-startup-item-check").resolve("history.sqlite")
+        val path=Files.createTempDirectory("guardian-startup-item-check").resolve("history.sqlite")
         val db=SqliteStorageBackend(path)
-        val pipeline=com.bareminimumstudios.guardian.logging.BufferedLogPipeline(db,queueCapacity=8,batchSize=4,flushIntervalMillis=10)
+        val pipeline=BufferedLogPipeline(db,queueCapacity=8,batchSize=4,flushIntervalMillis=10)
         var checked=false
         assertFailsWith<IllegalStateException> {
             pipeline.start {

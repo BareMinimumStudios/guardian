@@ -1,12 +1,14 @@
 package com.bareminimumstudios.guardian.lookup
 
+import net.minecraft.SharedConstants
+import net.minecraft.server.Bootstrap
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.platform.minecraft.CopperSurfaceHistory
 import kotlin.test.*
 import org.junit.jupiter.api.Test
 
 class CopperSurfaceHistoryTest {
-    companion object { init { net.minecraft.SharedConstants.tryDetectVersion();net.minecraft.server.Bootstrap.bootStrap() } }
+    companion object { init { SharedConstants.tryDetectVersion();Bootstrap.bootStrap() } }
     private fun state(id:String)=BlockStateSnapshot(ResourceId.parse(id))
     @Test fun waxAndWaxRemovalCoverCopperShapesAndFunctionalBlocks() {
         for(id in listOf("copper_block","cut_copper","cut_copper_stairs","copper_grate","copper_bulb","copper_door","copper_trapdoor")) {

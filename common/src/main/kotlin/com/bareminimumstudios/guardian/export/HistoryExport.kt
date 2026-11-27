@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.export
 
+import java.util.Base64
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.QueryableStorageBackend
 import com.bareminimumstudios.guardian.storage.query.*
@@ -30,7 +31,7 @@ internal object ExportRows {
         ActorIdentity.Unknown->mapOf("type" to "unknown")
     }
     private fun pos(p:BlockPosition)=mapOf("x" to p.x,"y" to p.y,"z" to p.z)
-    private fun bytes(b:BinaryPayload?)=b?.let { java.util.Base64.getEncoder().encodeToString(it.copyBytes()) }
+    private fun bytes(b:BinaryPayload?)=b?.let { Base64.getEncoder().encodeToString(it.copyBytes()) }
     private fun block(s:BlockStateSnapshot)=mapOf("id" to s.blockId.toString(),"properties" to s.properties,"blockEntityBase64" to bytes(s.blockEntityData))
     private fun item(s:ItemStackSnapshot)=mapOf("id" to s.itemId?.toString(),"count" to s.count,"componentsBase64" to bytes(s.itemData))
     private fun owner(o:ItemSlotOwner):Map<String,Any?> = when(o) {

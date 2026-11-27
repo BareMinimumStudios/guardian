@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.permission
 
+import net.minecraft.server.permissions.Permission
+import net.minecraft.server.permissions.PermissionLevel
 import net.minecraft.commands.CommandSourceStack
 import net.neoforged.neoforge.server.permission.PermissionAPI
 import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent
@@ -11,7 +13,7 @@ import net.neoforged.neoforge.common.NeoForge
 class NeoForgePermissionService(private val useApi: Boolean) : PermissionService {
     override val providerName = if (useApi) "neoforge-permissions-api" else "vanilla-op-levels"
     private val nodes = mapOf("lookup" to 2, "inspect" to 2, "rollback" to 3, "restore" to 3, "purge" to 4, "export" to 4, "status" to 2, "chat" to 3, "commands" to 3, "whispers" to 3, "spy" to 3, "entities" to 2, "fluids" to 2, "sessions" to 3).map { (name, level) ->
-        PermissionNode("guardian", name, PermissionTypes.BOOLEAN, { player, _, _ -> player?.createCommandSourceStack()?.permissions()?.hasPermission(net.minecraft.server.permissions.Permission.HasCommandLevel(net.minecraft.server.permissions.PermissionLevel.byId(level))) == true })
+        PermissionNode("guardian", name, PermissionTypes.BOOLEAN, { player, _, _ -> player?.createCommandSourceStack()?.permissions()?.hasPermission(Permission.HasCommandLevel(PermissionLevel.byId(level))) == true })
     }.associateBy { it.nodeName }
 
     init {
@@ -21,6 +23,6 @@ class NeoForgePermissionService(private val useApi: Boolean) : PermissionService
         val player = source.player
         val node = nodes[permission]
         return if (useApi && player != null && node != null) PermissionAPI.getPermission(player, node)
-        else source.permissions().hasPermission(net.minecraft.server.permissions.Permission.HasCommandLevel(net.minecraft.server.permissions.PermissionLevel.byId(fallbackOperatorLevel)))
+        else source.permissions().hasPermission(Permission.HasCommandLevel(PermissionLevel.byId(fallbackOperatorLevel)))
     }
 }

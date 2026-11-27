@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import net.minecraft.nbt.*
 import java.nio.file.*
 import java.util.*
@@ -39,7 +41,7 @@ class MinecraftSavedPlayerReaderTest {
         try { reader.read(Path.of("unused"),UUID.randomUUID()).thenCompose { reader.read(Path.of("unused"),UUID.randomUUID()) }.get(2,TimeUnit.SECONDS) } finally { reader.close() }
     }
     @Test fun resultFailureOnCloseDoesNotPretendBlockedFileWorkDrained(){
-        val entered=CountDownLatch(1);val release=CountDownLatch(1);val returned=java.util.concurrent.atomic.AtomicBoolean()
+        val entered=CountDownLatch(1);val release=CountDownLatch(1);val returned=AtomicBoolean()
         val reader=MinecraftSavedPlayerReader{_,_->entered.countDown();check(release.await(3,TimeUnit.SECONDS));returned.set(true);Optional.empty()}
         val result=reader.read(Path.of("unused"),UUID.randomUUID());assertTrue(entered.await(2,TimeUnit.SECONDS))
         try{reader.close();assertTrue(result.isCompletedExceptionally);assertFalse(reader.drained.toCompletableFuture().isDone);reader.drained.toCompletableFuture().cancel(false);assertFalse(returned.get())}
@@ -54,7 +56,7 @@ class MinecraftSavedPlayerReaderTest {
         finally{release.countDown();reader.drained.toCompletableFuture().get(2,TimeUnit.SECONDS)}
     }
     @Test fun queuedReadsAreRemovedWithoutInvokingFileLoaderDuringClose(){
-        val entered=CountDownLatch(1);val release=CountDownLatch(1);val count=java.util.concurrent.atomic.AtomicInteger()
+        val entered=CountDownLatch(1);val release=CountDownLatch(1);val count=AtomicInteger()
         val reader=MinecraftSavedPlayerReader{_,_->count.incrementAndGet();entered.countDown();check(release.await(3,TimeUnit.SECONDS));Optional.empty()}
         reader.read(Path.of("unused"),UUID.randomUUID());assertTrue(entered.await(2,TimeUnit.SECONDS));val queued=(1..4).map{reader.read(Path.of("unused"),UUID.randomUUID())}
         try{reader.close();assertTrue(queued.all{it.isCompletedExceptionally});assertFalse(reader.drained.toCompletableFuture().isDone)}

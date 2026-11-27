@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.sql.DriverManager
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.codec.ItemRollbackImagesCodec
@@ -72,7 +73,7 @@ class ItemRestoreJournalTest {
             assertTrue(db.transitionItemRollback(redo.operationId,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING))
             parent.operationId to redo.operationId
         }
-        java.sql.DriverManager.getConnection((if(path.toString().endsWith("duckdb"))"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { connection ->
+        DriverManager.getConnection((if(path.toString().endsWith("duckdb"))"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { connection ->
             connection.createStatement().use {
                 it.executeUpdate("DROP TABLE ex_checkpoint_restore_claim")
                 it.executeUpdate("DROP TABLE ex_checkpoint_restore_link")

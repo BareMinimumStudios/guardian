@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.level.block.entity.LecternBlockEntity
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -11,10 +12,10 @@ object DirectBlockItems {
     private val hangingDisplay = object : ClassValue<Boolean>() {
         override fun computeValue(type:Class<*>):Boolean = type.methods.any { it.name=="amendments\$getExtension" && it.parameterCount==0 }
     }
-    fun supported(block:BlockEntity):Boolean = block is net.minecraft.world.level.block.entity.LecternBlockEntity || block is Container || block is DisplayInventoryAccess || (block is HangingSignBlockEntity && hangingDisplay.get(block.javaClass))
+    fun supported(block:BlockEntity):Boolean = block is LecternBlockEntity || block is Container || block is DisplayInventoryAccess || (block is HangingSignBlockEntity && hangingDisplay.get(block.javaClass))
     fun items(block:BlockEntity):List<ItemStack> {
         require(block !is Container || !MinecraftBlockContainerSnapshotter.hasPendingLoot(block)) { "Sealed loot inventories cannot be observed" }
-        if(block is net.minecraft.world.level.block.entity.LecternBlockEntity)return listOf(block.book)
+        if(block is LecternBlockEntity)return listOf(block.book)
         if(block is Container) {
             require(block.containerSize in 1..256) { "Direct block inventory exceeds the slot bound" }
             return (0 until block.containerSize).map(block::getItem)

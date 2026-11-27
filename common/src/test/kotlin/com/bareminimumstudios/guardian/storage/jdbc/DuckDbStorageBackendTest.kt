@@ -1,10 +1,11 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.nio.file.Path
 import java.nio.file.Files
 import kotlin.test.Test
 
 class DuckDbStorageBackendTest : JdbcBackendContract() {
-    override fun backend(path: java.nio.file.Path) = DuckDbStorageBackend(path)
+    override fun backend(path: Path) = DuckDbStorageBackend(path)
 
     @Test
     fun persistsAndQueriesAcrossRestart() {

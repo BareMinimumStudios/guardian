@@ -1,4 +1,5 @@
 package com.bareminimumstudios.guardian.mixin;
+import net.minecraft.server.level.ServerLevel;
 import com.bareminimumstudios.guardian.platform.minecraft.FluidFlowCapture;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -11,7 +12,7 @@ import net.minecraft.world.level.material.FluidState;
 @Mixin(FlowingFluid.class)
 public abstract class FlowingFluidHistoryMixin {
     @WrapMethod(method="tick")
-    private void guardian$flow(net.minecraft.server.level.ServerLevel level, BlockPos pos, BlockState block, FluidState state, Operation<Void> original) {
+    private void guardian$flow(ServerLevel level, BlockPos pos, BlockState block, FluidState state, Operation<Void> original) {
         FluidFlowCapture.Scope scope=FluidFlowCapture.enter(level,pos,false);
         try { original.call(level,pos,block,state); } finally { FluidFlowCapture.exit(scope); }
     }

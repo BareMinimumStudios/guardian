@@ -1,5 +1,12 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.logging.AuditOwnerObservation
+import com.bareminimumstudios.guardian.logging.AuditWriteBarrier
+import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
+import com.bareminimumstudios.guardian.permission.PermissionService
+import com.bareminimumstudios.guardian.platform.minecraft.InventorySnapshotReadException
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import com.bareminimumstudios.guardian.logging.OperationTimings
 import com.bareminimumstudios.guardian.logging.OperationTimings.Stage
 import com.bareminimumstudios.guardian.domain.*
@@ -17,7 +24,7 @@ import org.slf4j.LoggerFactory
 import java.util.ArrayDeque
 
 /** One inventory read per tick, bounded preview only. No slot setters or journal writes. */
-class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: com.bareminimumstudios.guardian.logging.BufferedLogPipeline,private val permissions: com.bareminimumstudios.guardian.permission.PermissionService,private val otherBusy: () -> Boolean = { false }) {
+class ContainerRollbackPreviewService(private val server: MinecraftServer, private val history: BlockHistoryService, private val pipeline: BufferedLogPipeline,private val permissions: PermissionService,private val otherBusy: () -> Boolean = { false }) {
     private val logger = LoggerFactory.getLogger("Guardian/ItemRollbackPreview")
     private var active: Session? = null
 
@@ -43,7 +50,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         return true
     }
 
-    fun requestItemRestore(source: CommandSourceStack, operationId: java.util.UUID): Boolean {
+    fun requestItemRestore(source: CommandSourceStack, operationId: UUID): Boolean {
         if(!permitted(source,ItemRecoveryPurpose.TRANSFER_REDO)) {
             source.sendFailure(Component.literal("Guardian: item redo requires guardian.restore and guardian.restore.items, or operator level 3."));return false
         }
@@ -94,7 +101,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         val session=active ?: return
         if(!authorize(session)) return
         if (!session.ready) {
-            if(System.nanoTime()-session.startedAt > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) refuse(session,"Timed out waiting for audit writes or history checks.")
+            if(System.nanoTime()-session.startedAt > TimeUnit.SECONDS.toNanos(10)) refuse(session,"Timed out waiting for audit writes or history checks.")
             return
         }
         val owner=session.owners.pollFirst()
@@ -115,7 +122,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
             } catch (error: Throwable) {
                 logger.warn("Could not observe inventory for item rollback preview",error)
                 session.unavailable.add(owner)
-                session.details.putIfAbsent(owner,(error as? com.bareminimumstudios.guardian.platform.minecraft.InventorySnapshotReadException)?.diagnostic ?: "inventory could not be snapshotted ("+error.javaClass.simpleName+"); see server log")
+                session.details.putIfAbsent(owner,(error as? InventorySnapshotReadException)?.diagnostic ?: "inventory could not be snapshotted ("+error.javaClass.simpleName+"); see server log")
             }
             return
         }
@@ -220,7 +227,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
     }
     private class Session(val source: CommandSourceStack,val query: ContainerLookupQuery,val purpose:ItemRecoveryPurpose) {
         val startedAt=System.nanoTime()
-        var barrier: com.bareminimumstudios.guardian.logging.AuditWriteBarrier? = null
+        var barrier: AuditWriteBarrier? = null
         var rows: List<ContainerTransactionSnapshot> = emptyList()
         var restore: ItemRestoreSource? = null
         val owners=ArrayDeque<ItemSlotOwner>()
@@ -232,7 +239,7 @@ class ContainerRollbackPreviewService(private val server: MinecraftServer, priva
         var guard: ContainerHistoryGuard? = null
         var retainedBytes=0L
         val bindings=linkedMapOf<ItemSlotOwner,MinecraftInventoryObservation>()
-        var watch: com.bareminimumstudios.guardian.logging.AuditOwnerObservation? = null
+        var watch: AuditOwnerObservation? = null
         var finalStarted=false
         var ready=false
     }

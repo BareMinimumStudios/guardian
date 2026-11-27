@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.server.level.ServerLevel;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class FurnaceTickMixin {
     @WrapMethod(method = "serverTick")
-    private static void guardian$guardTick(net.minecraft.server.level.ServerLevel level, BlockPos position, BlockState state, AbstractFurnaceBlockEntity furnace, Operation<Void> original) {
+    private static void guardian$guardTick(ServerLevel level, BlockPos position, BlockState state, AbstractFurnaceBlockEntity furnace, Operation<Void> original) {
         if (MinecraftInventoryCoordination.allowsFurnaceTick(level, position)) original.call(level, position, state, furnace);
     }
 }

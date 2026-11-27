@@ -1,4 +1,5 @@
 package com.bareminimumstudios.guardian.lookup
+import net.minecraft.network.chat.HoverEvent
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 import kotlin.test.*
@@ -11,7 +12,7 @@ class ActivityFormatterTest {
         val r=row("hello TEST world");val line=ActivityFormatter.line(r,3000,needle="test")
         assertTrue("2s ago" in line.string && "Alice → Bob" in line.string)
         assertTrue(line.siblings.any { it.string=="TEST" && it.style.isBold })
-        val hover=line.style.hoverEvent!!.getValue(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT)!!.string
+        val hover=line.style.hoverEvent!!.getValue(HoverEvent.Action.SHOW_TEXT)!!.string
         assertTrue(r.eventId.toString() in hover && "hello TEST world" in hover)
     }
     @Test fun consoleKeepsFullTextWithoutHover() {

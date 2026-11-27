@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.lookup
 
+import java.util.UUID
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
@@ -131,7 +132,7 @@ internal class ItemTransactionMenu(
         is ItemSlotOwner.Cursor -> "${playerLabel(owner.playerId)} cursor"
         is ItemSlotOwner.CraftingGrid -> "${playerLabel(owner.playerId)} crafting grid"
     }
-    private fun playerLabel(id: java.util.UUID): String {
+    private fun playerLabel(id: UUID): String {
         if(id==viewer.uuid)return "Your"
         val actor=view.current?.actor as? ActorIdentity.Player
         return if(actor?.uuid==id && !actor.lastKnownName.isNullOrBlank()) "${actor.lastKnownName}'s" else "Player $id"

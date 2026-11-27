@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.platform.minecraft.DirectBlockItems
+import net.minecraft.world.entity.decoration.ItemFrame
+import net.minecraft.world.entity.vehicle.AbstractMinecartContainer
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.query.*
@@ -47,12 +50,12 @@ object BlockInspector {
     }
     private fun entityAuthorized(player: ServerPlayer) = runCatching { permissions?.has(player.createCommandSourceStack(), "guardian.entities", 2) == true }.getOrDefault(false)
 
-    @JvmStatic fun canInspectFrame(player: ServerPlayer,frame: net.minecraft.world.entity.decoration.ItemFrame): Boolean =
+    @JvmStatic fun canInspectFrame(player: ServerPlayer,frame: ItemFrame): Boolean =
         player.server.isSameThread && isEnabled(player) && authorized(player) && entityAuthorized(player) &&
             frame.level()===player.serverLevel() && !frame.isRemoved && player.canInteractWithEntity(frame,1.0) &&
             player.serverLevel().chunkSource.getChunkNow(frame.pos.x shr 4,frame.pos.z shr 4)!=null
 
-    @JvmStatic fun interceptFrame(player: ServerPlayer,frame: net.minecraft.world.entity.decoration.ItemFrame): Boolean {
+    @JvmStatic fun interceptFrame(player: ServerPlayer,frame: ItemFrame): Boolean {
         if(!player.server.isSameThread || !isEnabled(player)) return false
         if(!authorized(player)) { set(player,false);player.sendSystemMessage(Component.literal("Guardian inspection disabled: permission was removed."));return true }
         if(!entityAuthorized(player)) { player.sendSystemMessage(Component.literal("Guardian: frame history also requires guardian.entities."));return true }
@@ -66,7 +69,7 @@ object BlockInspector {
         return true
     }
 
-    @JvmStatic fun interceptMinecart(player:ServerPlayer,cart:net.minecraft.world.entity.vehicle.AbstractMinecartContainer):Boolean {
+    @JvmStatic fun interceptMinecart(player:ServerPlayer,cart:AbstractMinecartContainer):Boolean {
         if(!player.server.isSameThread || !isEnabled(player))return false
         if(!authorized(player)) { set(player,false);player.sendSystemMessage(Component.literal("Guardian inspection disabled: permission was removed."));return true }
         if(cart.level()!==player.serverLevel() || cart.isRemoved || !player.canInteractWithEntity(cart,1.0) ||
@@ -86,7 +89,7 @@ object BlockInspector {
         if (world.isClientSide || player !is ServerPlayer || !isEnabled(player)) return InteractionResult.PASS
         if (!authorized(player)) return InteractionResult.SUCCESS
         val owner = ItemSlotOwner.BlockContainer(ResourceId.parse(world.dimension().location().toString()), BlockPosition(pos.x, pos.y, pos.z))
-        selections[player.uuid] = Selection(owner, rightClick && world.getBlockEntity(pos)?.let(com.bareminimumstudios.guardian.platform.minecraft.DirectBlockItems::supported)==true,
+        selections[player.uuid] = Selection(owner, rightClick && world.getBlockEntity(pos)?.let(DirectBlockItems::supported)==true,
             selections[player.uuid]?.oldestFirst ?: false)
         showPage(player, 1)
         return InteractionResult.SUCCESS

@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
 import com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
@@ -32,7 +34,7 @@ public abstract class HopperTransferMixin {
         }
     }
     @WrapMethod(method = "addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z")
-    private static boolean guardian$captureCollection(net.minecraft.world.Container container, net.minecraft.world.entity.item.ItemEntity item, Operation<Boolean> original) {
+    private static boolean guardian$captureCollection(Container container, ItemEntity item, Operation<Boolean> original) {
         try (var pending=HopperTransferCapture.beginCollection(container,item)) {
             boolean result=original.call(container,item);
             HopperTransferCapture.finishCollection(pending);

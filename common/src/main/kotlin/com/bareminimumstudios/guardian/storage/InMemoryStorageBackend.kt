@@ -1,5 +1,14 @@
 package com.bareminimumstudios.guardian.storage
 
+import com.bareminimumstudios.guardian.domain.ContainerAuditEntry
+import com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot
+import com.bareminimumstudios.guardian.domain.EntityAuditEvent
+import com.bareminimumstudios.guardian.domain.FluidAuditEvent
+import com.bareminimumstudios.guardian.domain.PlayerActivity
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
+import com.bareminimumstudios.guardian.storage.query.EntityLookupQuery
+import com.bareminimumstudios.guardian.storage.query.FluidLookupQuery
+import com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery
 import com.bareminimumstudios.guardian.storage.purge.*
 import com.bareminimumstudios.guardian.domain.ActorIdentity
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot
@@ -16,10 +25,10 @@ import kotlin.math.abs
 class InMemoryStorageBackend : QueryableStorageBackend {
     private val lock = ReentrantReadWriteLock()
     private val entries = mutableListOf<MemoryBlockRow>()
-    private val containers = mutableListOf<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot>()
-    private val activity = mutableListOf<com.bareminimumstudios.guardian.domain.PlayerActivity>()
-    private val entities = mutableListOf<com.bareminimumstudios.guardian.domain.EntityAuditEvent>()
-    private val fluids = mutableListOf<com.bareminimumstudios.guardian.domain.FluidAuditEvent>()
+    private val containers = mutableListOf<ContainerTransactionSnapshot>()
+    private val activity = mutableListOf<PlayerActivity>()
+    private val entities = mutableListOf<EntityAuditEvent>()
+    private val fluids = mutableListOf<FluidAuditEvent>()
     private var nextRowId = 1L
     @Volatile private var open = false
 
@@ -32,16 +41,16 @@ class InMemoryStorageBackend : QueryableStorageBackend {
     override fun append(entries: List<LogEntry>) {
         check(open) { "Storage backend is not open" }
         lock.write {
-            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.FluidAuditEvent>().forEach { row ->
+            entries.filterIsInstance<FluidAuditEvent>().forEach { row ->
                 if (fluids.none { it.eventId == row.eventId }) fluids.add(row)
             }
-            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.EntityAuditEvent>().forEach { row ->
+            entries.filterIsInstance<EntityAuditEvent>().forEach { row ->
                 if (entities.none { it.eventId == row.eventId }) entities.add(row)
             }
-            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.PlayerActivity>().forEach { row ->
+            entries.filterIsInstance<PlayerActivity>().forEach { row ->
                 if (activity.none { it.eventId == row.eventId }) activity.add(row)
             }
-            entries.filterIsInstance<com.bareminimumstudios.guardian.domain.ContainerAuditEntry>().forEach { entry ->
+            entries.filterIsInstance<ContainerAuditEntry>().forEach { entry ->
                 if (containers.none { it.transactionId == entry.transaction.transactionId }) containers += entry.transaction
             }
             entries.filterIsInstance<BlockChangeSnapshot>().forEach { snapshot ->
@@ -52,17 +61,17 @@ class InMemoryStorageBackend : QueryableStorageBackend {
         }
     }
 
-    override fun lookupFluids(query: com.bareminimumstudios.guardian.storage.query.FluidLookupQuery) = lock.read {
-        fluids.filter(query::matches).sortedWith(compareBy<com.bareminimumstudios.guardian.domain.FluidAuditEvent> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if(query.oldestFirst) it else it.reversed() }).drop(query.offset).take(query.limit)
+    override fun lookupFluids(query: FluidLookupQuery) = lock.read {
+        fluids.filter(query::matches).sortedWith(compareBy<FluidAuditEvent> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if(query.oldestFirst) it else it.reversed() }).drop(query.offset).take(query.limit)
     }
 
-    override fun lookupEntities(query: com.bareminimumstudios.guardian.storage.query.EntityLookupQuery) = lock.read {
-        entities.filter(query::matches).sortedWith(compareBy<com.bareminimumstudios.guardian.domain.EntityAuditEvent> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() }).drop(query.offset).take(query.limit)
+    override fun lookupEntities(query: EntityLookupQuery) = lock.read {
+        entities.filter(query::matches).sortedWith(compareBy<EntityAuditEvent> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() }).drop(query.offset).take(query.limit)
     }
 
-    override fun lookupActivity(query: com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery): List<com.bareminimumstudios.guardian.domain.PlayerActivity> = lock.read {
+    override fun lookupActivity(query: PlayerActivityQuery): List<PlayerActivity> = lock.read {
         activity.filter(query::matches)
-            .sortedWith(compareBy<com.bareminimumstudios.guardian.domain.PlayerActivity> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() })
+            .sortedWith(compareBy<PlayerActivity> { it.timestampEpochMillis }.thenBy { it.eventId.toString() }.let { if (query.oldestFirst) it else it.reversed() })
             .drop(query.offset).take(query.limit)
     }
 
@@ -117,18 +126,18 @@ class InMemoryStorageBackend : QueryableStorageBackend {
         changed
     }
 
-    override fun lookupContainers(query: com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery) = lock.read {
-        containers.filter(query::matches).sortedWith(if (query.oldestFirst) compareBy<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenBy { it.transactionId.toString() } else compareByDescending<com.bareminimumstudios.guardian.domain.ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).drop(query.offset).take(query.limit)
+    override fun lookupContainers(query: ContainerLookupQuery) = lock.read {
+        containers.filter(query::matches).sortedWith(if (query.oldestFirst) compareBy<ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenBy { it.transactionId.toString() } else compareByDescending<ContainerTransactionSnapshot> { it.timestampEpochMillis }.thenByDescending { it.transactionId.toString() }).drop(query.offset).take(query.limit)
     }
 
-    private fun purgeCandidates(cutoff: Long, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope): Pair<List<PurgeCandidate>,Long> {
+    private fun purgeCandidates(cutoff: Long, scope: PurgeScope): Pair<List<PurgeCandidate>,Long> {
         val pending=entries.filter { it.rollbackState in setOf(BlockRollbackState.PENDING,BlockRollbackState.RESTORE_PENDING) }.map { it.snapshot.dimension to it.snapshot.position }.toSet()
         val blocks=entries.filter { it.snapshot.timestampEpochMillis<cutoff && scope.matches(it.snapshot) && (it.snapshot.dimension to it.snapshot.position) !in pending }
         val candidates=blocks.map { PurgeCandidate(PurgeKind.BLOCK,it.rowId.toString(),it.snapshot.timestampEpochMillis) } + containers.filter { it.timestampEpochMillis<cutoff && scope.matches(it) }.map { PurgeCandidate(PurgeKind.CONTAINER,it.transactionId.toString(),it.timestampEpochMillis) } + activity.filter { it.timestampEpochMillis<cutoff && scope.global }.map { PurgeCandidate(PurgeKind.ACTIVITY,it.eventId.toString(),it.timestampEpochMillis) } + entities.filter { it.timestampEpochMillis<cutoff && !scope.typed && (scope.world==null || scope.world==it.dimension) }.map { PurgeCandidate(PurgeKind.ENTITY,it.eventId.toString(),it.timestampEpochMillis) } + fluids.filter { it.timestampEpochMillis<cutoff && !scope.typed && (scope.world==null || scope.world==it.dimension) }.map { PurgeCandidate(PurgeKind.FLUID,it.eventId.toString(),it.timestampEpochMillis) }
         return candidates to entries.count { it.snapshot.timestampEpochMillis<cutoff && scope.matches(it.snapshot) }.toLong()-blocks.size
     }
-    override fun previewPurge(cutoff: Long, limit: Int) = previewPurge(cutoff,limit,com.bareminimumstudios.guardian.storage.purge.PurgeScope())
-    override fun previewPurge(cutoff: Long, limit: Int, scope: com.bareminimumstudios.guardian.storage.purge.PurgeScope): AuditPurgePlan = lock.read {
+    override fun previewPurge(cutoff: Long, limit: Int) = previewPurge(cutoff,limit,PurgeScope())
+    override fun previewPurge(cutoff: Long, limit: Int, scope: PurgeScope): AuditPurgePlan = lock.read {
         require(open && cutoff>=0 && limit in 1..1000)
         val (candidates,protected)=purgeCandidates(cutoff,scope)
         AuditPurgePlan(cutoff,PurgeCounts(candidates.count{it.kind==PurgeKind.BLOCK}.toLong(),candidates.count{it.kind==PurgeKind.CONTAINER}.toLong(),candidates.count{it.kind==PurgeKind.ACTIVITY}.toLong(),candidates.count{it.kind==PurgeKind.ENTITY}.toLong(),candidates.count{it.kind==PurgeKind.FLUID}.toLong()),PurgeCounts(protected),candidates.sortedWith(compareBy<PurgeCandidate>{it.time}.thenBy{it.kind}.thenBy{it.key}).take(limit),scope)
@@ -150,7 +159,7 @@ class InMemoryStorageBackend : QueryableStorageBackend {
 
     override fun flush() = Unit
 
-    fun snapshot(): List<LogEntry> = lock.read { entries.map { it.snapshot } + containers.map { com.bareminimumstudios.guardian.domain.ContainerAuditEntry(it) } }
+    fun snapshot(): List<LogEntry> = lock.read { entries.map { it.snapshot } + containers.map { ContainerAuditEntry(it) } }
 
     override fun health(): StorageHealth = StorageHealth(id, schemaVersion = 0)
 

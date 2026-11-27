@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
+import net.minecraft.core.UUIDUtil
+import net.minecraft.world.level.dimension.DimensionType
+import net.minecraft.world.level.storage.LevelResource
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.jdbc.SqliteStorageBackend
@@ -20,7 +24,7 @@ import java.util.UUID
 import kotlin.test.*
 
 class ItemMaintenanceRecoveryTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() };private val registries=com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries }
+    companion object { init { MinecraftTestBootstrap.initialize() };private val registries=MinecraftTestBootstrap.registries }
     private class Fixture(withPartialPlayer: Boolean=true, preparedOnly: Boolean=false) : AutoCloseable {
         val base=Files.createTempDirectory("guardian-maintenance-engine")
         val world=Files.createDirectory(base.resolve("world"))
@@ -34,8 +38,8 @@ class ItemMaintenanceRecoveryTest {
         val original=InventorySnapshot(buildMap { for(i in 0..40)put(ItemSlotAddress(player,i),empty);for(i in 0..26)put(ItemSlotAddress(block,i),if(i==0)item else empty) })
         val record: ItemRollbackRecord
         val engine: ItemMaintenanceRecovery.Engine
-        val playerFile=Files.createDirectories(world.resolve(net.minecraft.world.level.storage.LevelResource.PLAYER_DATA_DIR.id)).resolve("${player.playerId}.dat")
-        val regionFolder=Files.createDirectories(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(Level.OVERWORLD,world).resolve("region"))
+        val playerFile=Files.createDirectories(world.resolve(LevelResource.PLAYER_DATA_DIR.id)).resolve("${player.playerId}.dat")
+        val regionFolder=Files.createDirectories(DimensionType.getStorageFolder(Level.OVERWORLD,world).resolve("region"))
         val regionFile=regionFolder.resolve("r.0.0.mca")
         private fun stack()=MinecraftItemSnapshotter.decodeTag(item.itemData!!.copyBytes()).apply { putInt("count",9);putByte("Slot",0) }
         init {
@@ -45,7 +49,7 @@ class ItemMaintenanceRecoveryTest {
             record=db.prepareItemRollback(UUID.randomUUID(),2,listOf(row));check(db.protectItemRollback(record,original))
             if(!preparedOnly)check(db.transitionItemRollback(record.operationId,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING))
             val p=CompoundTag().apply {
-                putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",net.minecraft.core.UUIDUtil.CODEC,player.playerId)
+                putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",UUIDUtil.CODEC,player.playerId)
                 putFloat("Health",17f);put("Inventory",ListTag().apply { if(withPartialPlayer)add(stack()) })
             }
             NbtIo.writeCompressed(p,playerFile)
@@ -87,7 +91,7 @@ class ItemMaintenanceRecoveryTest {
         assertEquals(ItemRollbackPhase.CANCELLED,f.db.itemRollback(f.record.operationId)!!.phase)
         assertFalse(Files.exists(f.playerFile));assertContentEquals(region,Files.readAllBytes(f.regionFile))
         assertTrue(f.db.unfinishedItemRollbacks(10).isEmpty());assertNull(f.engine.preview(f.record.operationId))
-        val rows=f.db.lookupContainers(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(limit=50))
+        val rows=f.db.lookupContainers(ContainerLookupQuery(limit=50))
         assertEquals(ItemRollbackPhase.PREPARED,f.db.prepareItemRollback(UUID.randomUUID(),3,rows).phase)
     }
     @Test fun applyingOperationCannotBeCancelledUsingItsStalePreparedHeader() = Fixture().use { f ->

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.lookup
 
+import java.time.Instant
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -34,7 +35,7 @@ object EntityHistoryFormatter {
             }
         }
         val pos=row.position
-        val hover="Entity: ${row.targetUuid}\nType: ${row.targetType}\nDimension: ${row.dimension}\nTime: ${java.time.Instant.ofEpochMilli(row.timestampEpochMillis)}" +
+        val hover="Entity: ${row.targetUuid}\nType: ${row.targetType}\nDimension: ${row.dimension}\nTime: ${Instant.ofEpochMilli(row.timestampEpochMillis)}" +
             (row.damageType?.let { "\nDamage: $it" } ?: "") +
             (row.parentUuid?.let { "\nParent: $it\nPartner: ${row.partnerUuid}" } ?: "") +
             (row.frameBefore?.let { "\nBefore: ${it.item.itemId ?: "empty"}, rotation ${it.rotation}" } ?: "") +

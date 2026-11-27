@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import kotlin.test.*
 
 class SealedInventoryCaptureTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private class TrappedBarrel:BarrelBlockEntity(BlockPos.ZERO,Blocks.BARREL.defaultBlockState()) {
         var reads=0
         override fun getItem(slot:Int):ItemStack { reads++;error("Audit must never unpack sealed loot") }

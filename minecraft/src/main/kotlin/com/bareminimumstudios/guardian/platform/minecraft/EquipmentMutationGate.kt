@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 import java.util.IdentityHashMap
 
 /** Native provider roots remain unavailable until every part of a journal-owned handback succeeds. */
@@ -12,10 +14,10 @@ internal object EquipmentMutationGate {
     }
     @JvmStatic fun endResourceReload()=synchronized(lock) { check(reloads>0);reloads--;Unit }
     /** Callers receive an observer; cancelling it cannot release a still-running native reload. */
-    @JvmStatic fun reloadResources(start: java.util.function.Supplier<java.util.concurrent.CompletableFuture<Void>>): java.util.concurrent.CompletableFuture<Void> {
-        if(!beginResourceReload())return java.util.concurrent.CompletableFuture.failedFuture(
+    @JvmStatic fun reloadResources(start: Supplier<CompletableFuture<Void>>): CompletableFuture<Void> {
+        if(!beginResourceReload())return CompletableFuture.failedFuture(
             IllegalStateException("Finish inventory restoration or recovery before reloading data packs"))
-        val observed=object:java.util.concurrent.CompletableFuture<Void>() {
+        val observed=object:CompletableFuture<Void>() {
             override fun cancel(mayInterruptIfRunning: Boolean)=false
         }
         try {

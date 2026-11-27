@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.nio.ByteBuffer
+import net.minecraft.SharedConstants
+import net.minecraft.world.item.Item
 import com.bareminimumstudios.guardian.domain.BinaryPayload
 import com.bareminimumstudios.guardian.domain.ItemStackSnapshot
 import com.bareminimumstudios.guardian.domain.ResourceId
@@ -13,13 +16,13 @@ import java.io.ByteArrayOutputStream
 
 /** Registry-aware item codec. Call capture/restore on the logical server thread only. */
 object MinecraftItemSnapshotter {
-    private val HEADER = byteArrayOf('G'.code.toByte(), 'I'.code.toByte(), 'T'.code.toByte(), 'M'.code.toByte(), 2) + java.nio.ByteBuffer.allocate(4).putInt(net.minecraft.SharedConstants.getCurrentVersion().dataVersion().version()).array()
+    private val HEADER = byteArrayOf('G'.code.toByte(), 'I'.code.toByte(), 'T'.code.toByte(), 'M'.code.toByte(), 2) + ByteBuffer.allocate(4).putInt(SharedConstants.getCurrentVersion().dataVersion().version()).array()
     private const val MAX_ENCODED_BYTES = 1024 * 1024
     private const val MAX_DECODED_BYTES = 8L * 1024 * 1024
 
     /** A single inventory read can reuse canonical default-item payloads, never patched components. */
     internal class CaptureBatch(private val registries: HolderLookup.Provider) {
-        private val defaults = HashMap<net.minecraft.world.item.Item, ItemStackSnapshot>()
+        private val defaults = HashMap<Item, ItemStackSnapshot>()
         fun capture(stack: ItemStack): ItemStackSnapshot {
             if (stack.isEmpty) return ItemStackSnapshot.EMPTY
             if (!stack.componentsPatch.isEmpty) return MinecraftItemSnapshotter.capture(stack, registries)

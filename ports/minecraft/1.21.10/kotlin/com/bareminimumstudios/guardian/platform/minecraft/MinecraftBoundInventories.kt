@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.rollback.ActualIoDrain
+import net.minecraft.core.BlockPos
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.mixin.ChunkMapSaveInvoker
 import com.bareminimumstudios.guardian.mixin.PlayerListSaveInvoker
@@ -30,7 +32,7 @@ class MinecraftBoundInventories internal constructor(
     private val players: () -> MinecraftSavedPlayerReader,
     private val onPlayerStateRejected: (ItemSlotOwner.PlayerInventory) -> Unit,
     private val onClose: (MinecraftBoundInventories) -> Unit,
-    private val actualIo: com.bareminimumstudios.guardian.rollback.ActualIoDrain,
+    private val actualIo: ActualIoDrain,
     private val readOnly: Boolean = false
 ) : AutoCloseable {
     private data class Pin(val owner: ItemSlotOwner, val container: Container, val level: ServerLevel,
@@ -136,7 +138,7 @@ class MinecraftBoundInventories internal constructor(
         val expected = baseline.slots.filterKeys { it.owner == owner }
         val result = CompletableFuture<InventorySnapshot>()
         pending.add(result)
-        var chunkTicket: com.bareminimumstudios.guardian.rollback.ActualIoDrain.Ticket? = null
+        var chunkTicket: ActualIoDrain.Ticket? = null
         var saveStarted = false
         var readStarted = false
         try {
@@ -237,7 +239,7 @@ class MinecraftBoundInventories internal constructor(
             is ItemSlotOwner.BlockContainer -> {
                 val key = ResourceKey.create(Registries.DIMENSION,ResourceLocation.parse(owner.dimension.toString()))
                 val level = checkNotNull(server.getLevel(key)) { "Dimension is unavailable" }
-                val pos = net.minecraft.core.BlockPos(owner.position.x,owner.position.y,owner.position.z)
+                val pos = BlockPos(owner.position.x,owner.position.y,owner.position.z)
                 val chunk = checkNotNull(level.chunkSource.getChunkNow(pos.x shr 4,pos.z shr 4)) { "Chunk is not loaded" }
                 val block = checkNotNull(level.getBlockEntity(pos)) { "Block inventory is unavailable" }
                 val size = checkNotNull(supportedBlocks[block.javaClass]) { "Unsupported block inventory" }

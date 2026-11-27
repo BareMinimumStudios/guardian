@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -7,7 +8,7 @@ import java.util.UUID
 import kotlin.test.*
 
 class ItemFrameHistoryFormatterTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() } }
+    companion object { init { MinecraftTestBootstrap.initialize() } }
     private val empty=ItemFrameSnapshot(ItemStackSnapshot.EMPTY,0)
     private val full=ItemFrameSnapshot(ItemStackSnapshot(ResourceId.parse("minecraft:diamond"),1,BinaryPayload.of(byteArrayOf(1))),0)
     private fun event(kind:EntityAuditKind,before:ItemFrameSnapshot?,after:ItemFrameSnapshot?)=EntityAuditEvent(timestampEpochMillis=1000,actor=ActorIdentity.Player(UUID.randomUUID(),"Alex"),dimension=ResourceId.parse("minecraft:overworld"),position=BlockPosition(1,64,2),targetUuid=UUID.randomUUID(),targetType=ResourceId.parse("minecraft:glow_item_frame"),kind=kind,frameBefore=before,frameAfter=after)

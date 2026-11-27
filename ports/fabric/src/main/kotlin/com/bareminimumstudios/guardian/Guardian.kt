@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian
 
+import com.bareminimumstudios.guardian.domain.PlayerActivityKind
+import com.bareminimumstudios.guardian.permission.VanillaPermissionService
+import com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import com.bareminimumstudios.guardian.command.GuardianCommands
 import com.bareminimumstudios.guardian.config.GuardianConfigManager
 import com.bareminimumstudios.guardian.integration.FabricIntegrationDetector
@@ -29,7 +33,7 @@ object Guardian : ModInitializer {
         val permissionService = if (config.integrations.usePermissionApi.get()) {
             PermissionServices.create()
         } else {
-            com.bareminimumstudios.guardian.permission.VanillaPermissionService
+            VanillaPermissionService
         }
 
         if (config.integrations.detectWorldEdit.get() || config.general.verboseStartup.get()) {
@@ -54,12 +58,12 @@ object Guardian : ModInitializer {
             }
         )
 
-        com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.install({ runtime?.pipeline() }, { config })
-        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
-            com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(handler.player, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN)
+        PlayerActivityCapture.install({ runtime?.pipeline() }, { config })
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            PlayerActivityCapture.capture(handler.player, PlayerActivityKind.LOGIN)
         }
-        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
-            com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(handler.player, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
+        ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
+            PlayerActivityCapture.capture(handler.player, PlayerActivityKind.LOGOUT)
         }
         PlayerBlockBreakHook.register()
         FabricBlockInspectorHooks.install()
@@ -99,7 +103,7 @@ object Guardian : ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register { server -> runtime?.serverStarted(server) }
 
         ServerLifecycleEvents.SERVER_STOPPING.register { server ->
-            server.playerList.players.forEach { com.bareminimumstudios.guardian.platform.minecraft.PlayerActivityCapture.capture(it, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT) }
+            server.playerList.players.forEach { PlayerActivityCapture.capture(it, PlayerActivityKind.LOGOUT) }
             BlockInspector.clear()
             val clean = runtime?.stop() ?: true
             runtime = null

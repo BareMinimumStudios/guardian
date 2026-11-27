@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery
+import net.minecraft.world.level.chunk.ChunkAccess
+import org.slf4j.LoggerFactory
 import com.bareminimumstudios.guardian.claims.*
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.ResourceId
@@ -38,7 +41,7 @@ internal object OpacStructureProtection {
     fun prepare(config: GuardianConfig.StructureClaims) {
         check(binding==null && !armed)
         if(!config.enabled.get())return
-        val version=com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()["openpartiesandclaims"]
+        val version=EquipmentModDiscovery.installed()["openpartiesandclaims"]
         require(version=="0.33.0") { "Structure claim protection requires Open Parties and Claims 0.33.0; found ${version ?: "not installed"}" }
         val resultType=type("xaero.pac.common.claims.result.api.ClaimResult")
         val resultEnum=type("xaero.pac.common.claims.result.api.ClaimResult${'$'}Type")
@@ -50,7 +53,7 @@ internal object OpacStructureProtection {
     fun start(server: MinecraftServer,config: GuardianConfig.StructureClaims,permissions: PermissionService) {
         check(binding==null)
         if(!config.enabled.get())return
-        val version=com.bareminimumstudios.guardian.checkpoint.EquipmentModDiscovery.installed()["openpartiesandclaims"]
+        val version=EquipmentModDiscovery.installed()["openpartiesandclaims"]
         require(version=="0.33.0") { "Structure claim protection requires Open Parties and Claims 0.33.0; found ${version ?: "not installed"}" }
         val ids=config.structures.get().split(Regex("[\\s,]+")).filter { it.isNotEmpty() }.map(ResourceId::parse).toSet()
         require(ids.isNotEmpty() && ids.size<=64) { "Configure between 1 and 64 structure IDs before enabling structure claim protection" }
@@ -59,7 +62,7 @@ internal object OpacStructureProtection {
         val api=type("xaero.pac.common.server.api.OpenPACServerAPI").getMethod("get",MinecraftServer::class.java).invoke(null,server)
         val manager=api.javaClass.getMethod("getServerClaimsManager").invoke(api)
         require(manager is OpacClaimHooks && server.commands is OpacCommandHooks &&
-            OpacChunkHooks::class.java.isAssignableFrom(net.minecraft.world.level.chunk.ChunkAccess::class.java)) {
+            OpacChunkHooks::class.java.isAssignableFrom(ChunkAccess::class.java)) {
             "Required OPAC structure protection hooks were not applied; no protected claiming can be enabled"
         }
         val area=type("xaero.pac.common.server.claims.player.task.PlayerAreaClaimActionSpreadoutTask")
@@ -89,7 +92,7 @@ internal object OpacStructureProtection {
             type("xaero.pac.common.claims.api.SpecialClaimOwners").getField("SERVER").get(null) as UUID,
             field(replacement,"with"),result,enum("ADDON_FORBIDS"),enum("ADDON_INTERRUPTS"),source,
             StructureFootprintLookup(StructureClaimPolicy(ids,radius),source),radius)
-        org.slf4j.LoggerFactory.getLogger("Guardian").info("Structure claim protection ready: {} structure IDs, {}-block buffer, OPAC {}",ids.size,radius,version)
+        LoggerFactory.getLogger("Guardian").info("Structure claim protection ready: {} structure IDs, {}-block buffer, OPAC {}",ids.size,radius,version)
     }
 
     fun tick() { binding?.lookup?.tick() }

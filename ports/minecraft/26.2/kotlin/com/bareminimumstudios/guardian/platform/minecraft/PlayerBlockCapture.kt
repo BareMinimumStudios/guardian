@@ -1,5 +1,14 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.lookup.BlockInspector
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.ButtonBlock
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.LeverBlock
+import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.state.BlockState
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.BlockChangeSnapshot
 import com.bareminimumstudios.guardian.domain.BlockPosition
@@ -140,8 +149,8 @@ object PlayerBlockCapture {
         world: Level,
         player: Player,
         pos: BlockPos,
-        state: net.minecraft.world.level.block.state.BlockState,
-        blockEntity: net.minecraft.world.level.block.entity.BlockEntity?
+        state: BlockState,
+        blockEntity: BlockEntity?
     ) {
         if (!shouldCapture(world, player)) return
 
@@ -198,10 +207,10 @@ object PlayerBlockCapture {
     /** Accepted use of a door, trapdoor, gate, lever, or button; not item placement/open-menu packets. */
     @JvmStatic
     fun beginInteraction(world: Level, player: Player, pos: BlockPos): BlockStateSnapshot? {
-        if (!shouldCapture(world, player) || com.bareminimumstudios.guardian.lookup.BlockInspector.isEnabled(player as? net.minecraft.server.level.ServerPlayer ?: return null)) return null
+        if (!shouldCapture(world, player) || BlockInspector.isEnabled(player as? ServerPlayer ?: return null)) return null
         val block = world.getBlockState(pos).block
-        if (block !is net.minecraft.world.level.block.DoorBlock && block !is net.minecraft.world.level.block.TrapDoorBlock &&
-            block !is net.minecraft.world.level.block.FenceGateBlock && block !is net.minecraft.world.level.block.LeverBlock && block !is net.minecraft.world.level.block.ButtonBlock && !CopperSurfaceHistory.supported(block)) return null
+        if (block !is DoorBlock && block !is TrapDoorBlock &&
+            block !is FenceGateBlock && block !is LeverBlock && block !is ButtonBlock && !CopperSurfaceHistory.supported(block)) return null
         return runCatching { MinecraftBlockSnapshotter.snapshot(world, pos) }.onFailure { snapshotFailures.incrementAndGet(); logger.error("Failed to snapshot interaction at {}", pos, it) }.getOrNull()
     }
 

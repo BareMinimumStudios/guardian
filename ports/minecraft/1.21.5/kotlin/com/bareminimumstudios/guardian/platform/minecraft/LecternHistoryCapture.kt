@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.BlockPos
+import net.minecraft.world.inventory.AbstractContainerMenu
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -13,10 +15,10 @@ object LecternHistoryCapture {
     private var pipeline:()->BufferedLogPipeline?={null}
     private var config:()->GuardianConfig?={null}
     private var lastWarning=0L
-    class Pending internal constructor(internal val lectern:LecternBlockEntity,internal val before:BlockStateSnapshot,internal val menu:net.minecraft.world.inventory.AbstractContainerMenu)
+    class Pending internal constructor(internal val lectern:LecternBlockEntity,internal val before:BlockStateSnapshot,internal val menu:AbstractContainerMenu)
     fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) { pipeline=writer;config=settings }
     private fun enabled():Boolean { val c=config() ?: return false;return c.general.enabled.get() && c.logging.enabled.get() && c.logging.lecternInteractions.get() }
-    @JvmStatic fun before(player:ServerPlayer,pos:net.minecraft.core.BlockPos):Pending? {
+    @JvmStatic fun before(player:ServerPlayer,pos:BlockPos):Pending? {
         val level=player.serverLevel()
         if(!enabled() || !player.serverLevel().server.isSameThread || !level.hasChunk(pos.x shr 4,pos.z shr 4))return null
         val lectern=level.getBlockEntity(pos) as? LecternBlockEntity ?: return null

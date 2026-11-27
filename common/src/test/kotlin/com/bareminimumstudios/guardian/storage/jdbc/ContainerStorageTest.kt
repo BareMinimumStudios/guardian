@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.storage.codec.BlockPropertiesCodec
+import java.io.EOFException
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.QueryableStorageBackend
 import com.bareminimumstudios.guardian.storage.query.*
@@ -106,7 +108,7 @@ class ContainerStorageTest {
             conn.createStatement().use { statement -> statement.executeUpdate("INSERT INTO ex_meta(meta_key, meta_value) VALUES ('test_preserved', 'yes')")
                 statement.executeUpdate("INSERT INTO ex_world_map VALUES (1, 'minecraft:overworld')")
                 statement.executeUpdate("INSERT INTO ex_resource_map VALUES (1, 'minecraft:air'), (2, 'minecraft:stone')")
-                conn.prepareStatement("INSERT INTO ex_blockdata_map VALUES (1, ?)").use { data -> data.setString(1, com.bareminimumstudios.guardian.storage.codec.BlockPropertiesCodec.encode(emptyMap())); data.executeUpdate() }
+                conn.prepareStatement("INSERT INTO ex_blockdata_map VALUES (1, ?)").use { data -> data.setString(1, BlockPropertiesCodec.encode(emptyMap())); data.executeUpdate() }
                 statement.executeUpdate("INSERT INTO ex_block VALUES (1, '${UUID.randomUUID()}', 100, NULL, 1, 1, 64, 2, 1, 1, NULL, 2, 1, NULL, 1, 1, 0)") }
         }
         factory(path).use { backend -> backend.open(); assertEquals(GuardianSchema.CURRENT_VERSION, backend.health().schemaVersion); assertEquals(ResourceId.parse("minecraft:stone"), backend.lookupBlocks(BlockLookupQuery()).single().snapshot.after.blockId); backend.append(listOf(ContainerAuditEntry(transaction()))) }
@@ -144,7 +146,7 @@ class ContainerStorageTest {
         assertFailsWith<IllegalArgumentException> { ContainerChangesCodec.decode(bytes + byteArrayOf(1)) }
         bytes[0] = 0
         assertFailsWith<IllegalArgumentException> { ContainerChangesCodec.decode(bytes) }
-        assertFailsWith<java.io.EOFException> { ContainerChangesCodec.decode(byteArrayOf(0x47, 0x43, 0x54, 0x31)) }
+        assertFailsWith<EOFException> { ContainerChangesCodec.decode(byteArrayOf(0x47, 0x43, 0x54, 0x31)) }
     }
     @Test fun upgradesVersionThreeAndRejectsOldCreativeReaders() = backends { factory, path, prefix ->
         Class.forName(if (prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver")

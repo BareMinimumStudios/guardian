@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.ItemRollbackImages
 import net.minecraft.SharedConstants
@@ -16,7 +17,7 @@ internal object MaintenanceInventoryNbt {
 
     /** Used only after the equipment planner validates every extra slot in private file copies. */
     fun repairEquipmentNormalPart(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
-        require(owner.layout!=null && images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+        require(owner.layout!=null && images.record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)
         repairNormal(document,owner,images)
     }
 

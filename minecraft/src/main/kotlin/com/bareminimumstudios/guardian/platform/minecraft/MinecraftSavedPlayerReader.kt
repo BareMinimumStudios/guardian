@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.rollback.ActualIoDrain
 import net.minecraft.nbt.*
 import java.io.DataInputStream
 import java.nio.file.*
@@ -9,7 +10,7 @@ import java.util.UUID
 import java.util.concurrent.*
 
 /** Bounded file reader. Does not save, log in, data-fix or fall back to a player's .dat_old file. */
-class MinecraftSavedPlayerReader internal constructor(private val actualIo: com.bareminimumstudios.guardian.rollback.ActualIoDrain = com.bareminimumstudios.guardian.rollback.ActualIoDrain(5),
+class MinecraftSavedPlayerReader internal constructor(private val actualIo: ActualIoDrain = ActualIoDrain(5),
     private val ownsActualIo: Boolean = true,
     private val equipmentLoader: (Path,UUID,Boolean) -> Optional<EquipmentSavedDocuments> = ::readEquipmentFiles,
     private val loader: (Path,UUID) -> Optional<CompoundTag> = ::readFile): AutoCloseable {
@@ -35,7 +36,7 @@ class MinecraftSavedPlayerReader internal constructor(private val actualIo: com.
         return future
     }
     private inner class Request<T>(val future: CompletableFuture<T>,
-                                val ticket: com.bareminimumstudios.guardian.rollback.ActualIoDrain.Ticket,
+                                val ticket: ActualIoDrain.Ticket,
                                 val load: () -> T): Runnable {
         var started=false
         override fun run() {

@@ -1,12 +1,13 @@
 package com.bareminimumstudios.guardian.rollback
 
+import java.util.Collections
 import com.bareminimumstudios.guardian.domain.*
 import java.util.UUID
 
 enum class ContainerPreviewReason { ELIGIBLE, UNSUPPORTED_ACTION, AMBIGUOUS_ORDER, UNSUPPORTED_OWNER, NONCONSERVING_ACTION, UNAVAILABLE_OWNER, OUTSIDE_SCOPE, STATE_MISMATCH, BLOCKED_CHAIN, NEWER_HISTORY, CHANGED_BLOCK, RESERVED_OWNER, CLAIMED_SOURCE, INCOMPLETE_HISTORY }
 data class ContainerPreviewEntry(val transactionId: UUID, val reason: ContainerPreviewReason, val changedSlots: Int)
 class ContainerRollbackPreview(entries: List<ContainerPreviewEntry>) {
-    val entries: List<ContainerPreviewEntry> = java.util.Collections.unmodifiableList(ArrayList(entries))
+    val entries: List<ContainerPreviewEntry> = Collections.unmodifiableList(ArrayList(entries))
     val eligible: Int get() = entries.count { it.reason == ContainerPreviewReason.ELIGIBLE }
 }
 

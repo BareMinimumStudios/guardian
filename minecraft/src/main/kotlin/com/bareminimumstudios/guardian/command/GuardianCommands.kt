@@ -1,5 +1,34 @@
 package com.bareminimumstudios.guardian.command
 
+import com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCommands
+import com.bareminimumstudios.guardian.domain.ChangeCause
+import com.bareminimumstudios.guardian.domain.PlayerActivityKind
+import com.bareminimumstudios.guardian.export.ExportKind
+import com.bareminimumstudios.guardian.export.ExportQuery
+import com.bareminimumstudios.guardian.logging.OperationTimings
+import com.bareminimumstudios.guardian.lookup.ActivityFormatter
+import com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter
+import com.bareminimumstudios.guardian.lookup.EntityHistoryFormatter
+import com.bareminimumstudios.guardian.lookup.FluidHistoryFormatter
+import com.bareminimumstudios.guardian.lookup.HistoryNavigation
+import com.bareminimumstudios.guardian.lookup.ItemTransactionViewer
+import com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy
+import com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture
+import com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection
+import com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
+import com.bareminimumstudios.guardian.storage.query.EntityLookupQuery
+import com.bareminimumstudios.guardian.storage.query.FluidLookupQuery
+import com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery
+import com.mojang.brigadier.arguments.IntegerArgumentType
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import java.util.UUID
+import java.util.concurrent.CompletableFuture
+import net.minecraft.commands.SharedSuggestionProvider
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument
+import net.minecraft.core.registries.BuiltInRegistries
 import com.bareminimumstudios.guardian.rollback.BlockHistoryOperation
 import com.bareminimumstudios.guardian.GuardianRuntime
 import com.bareminimumstudios.guardian.config.GuardianConfig
@@ -70,21 +99,21 @@ object GuardianCommands {
 
         // Vanilla sends the login command tree before adding this player to playersByUUID.
         // Advertise by current permission; execution and deferred results still require a live identity.
-        root.then(com.bareminimumstudios.guardian.checkpoint.InventoryCheckpointCommands.node(permissions,runtimeProvider))
+        root.then(InventoryCheckpointCommands.node(permissions,runtimeProvider))
         root.then(Commands.literal("entities").requires { authorized(it,permissions,"guardian.entities",2) }
             .executes { context -> executeEntities(context.source,"",runtimeProvider(),configProvider()) }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
                 .suggests { context,builder ->
-                    if (!entityAuthorized(context.source,permissions)) com.mojang.brigadier.suggestion.Suggestions.empty()
+                    if (!entityAuthorized(context.source,permissions)) Suggestions.empty()
                     else {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
                         val token=builder.input.substring(start)
                         val choices=when(token.substringBefore(':').lowercase()) {
                             "a","action" -> listOf("${token.substringBefore(':')}:death","${token.substringBefore(':')}:rename","${token.substringBefore(':')}:tame","${token.substringBefore(':')}:breed","${token.substringBefore(':')}:frame","${token.substringBefore(':')}:frame-place","${token.substringBefore(':')}:frame-remove","${token.substringBefore(':')}:frame-change","${token.substringBefore(':')}:death,rename").filter { it.startsWith(token,true) }
-                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet().map { it.toString() }) +
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,BuiltInRegistries.ENTITY_TYPE.keySet().map { it.toString() }) +
                                 if (':' !in token) listOf("a:","id:").filter { it.startsWith(token,true) } else emptyList()
                         }
-                        net.minecraft.commands.SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
+                        SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
                     }
                 }
                 .executes { context -> executeEntities(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
@@ -92,16 +121,16 @@ object GuardianCommands {
             .executes { context -> executeFluids(context.source,"",runtimeProvider(),configProvider()) }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
                 .suggests { context,builder ->
-                    if (!fluidAuthorized(context.source,permissions)) com.mojang.brigadier.suggestion.Suggestions.empty()
+                    if (!fluidAuthorized(context.source,permissions)) Suggestions.empty()
                     else {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
                         val token=builder.input.substring(start)
                         val choices=when(token.substringBefore(':').lowercase()) {
                             "a","action" -> listOf("${token.substringBefore(':')}:place","${token.substringBefore(':')}:remove","${token.substringBefore(':')}:flow","${token.substringBefore(':')}:form").filter { it.startsWith(token,true) }
-                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,net.minecraft.core.registries.BuiltInRegistries.FLUID.keySet().map { it.toString() }) +
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },true,BuiltInRegistries.FLUID.keySet().map { it.toString() }) +
                                 if (':' !in token) listOf("a:").filter { it.startsWith(token,true) } else emptyList()
                         }
-                        net.minecraft.commands.SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
+                        SharedSuggestionProvider.suggest(choices,builder.createOffset(start))
                     }
                 }
                 .executes { context -> executeFluids(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider()) }))
@@ -116,54 +145,54 @@ object GuardianCommands {
         val spy=Commands.literal("spy").requires { authorized(activitySource(it,"commands"),permissions,"guardian.spy",3) }
             .executes { context->context.source.sendSystemMessage(Component.literal("Use /guardian spy status, off, whispers on [u:Alex,!Bob], or commands on [u:Alex] [c:say,!help]."));1 }
         spy.then(Commands.literal("off").executes { context->
-            context.source.player?.let { com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.forget(it.uuid) }
+            context.source.player?.let { ActivitySpy.forget(it.uuid) }
             context.source.sendSystemMessage(Component.literal("Guardian spy: all channels off."));1
         })
         spy.then(Commands.literal("status").executes { context->
             val player=context.source.player
-            context.source.sendSystemMessage(Component.literal(if(player==null)"Guardian spy requires an online player." else com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.status(player)));1
+            context.source.sendSystemMessage(Component.literal(if(player==null)"Guardian spy requires an online player." else ActivitySpy.status(player)));1
         })
         for(channel in listOf("whispers","commands")) {
-            val kind=if(channel=="whispers")com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER else com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND
+            val kind=if(channel=="whispers")PlayerActivityKind.WHISPER else PlayerActivityKind.COMMAND
             val node=Commands.literal(channel).requires { authorized(activitySource(it,channel),permissions,"guardian.$channel",3) }
-            fun change(context:com.mojang.brigadier.context.CommandContext<CommandSourceStack>,on:Boolean,raw:String):Int {
+            fun change(context:CommandContext<CommandSourceStack>,on:Boolean,raw:String):Int {
                 val player=context.source.player ?: run { context.source.sendFailure(Component.literal("Guardian live spy requires an online player; use history from console."));return 0 }
-                val filter=runCatching { com.bareminimumstudios.guardian.command.SpyFilter.parse(raw,channel=="commands") }.getOrElse { context.source.sendFailure(Component.literal("Guardian spy: "+it.message));return 0 }
-                if(!com.bareminimumstudios.guardian.platform.minecraft.ActivitySpy.set(player,kind,on,filter)) {
+                val filter=runCatching { SpyFilter.parse(raw,channel=="commands") }.getOrElse { context.source.sendFailure(Component.literal("Guardian spy: "+it.message));return 0 }
+                if(!ActivitySpy.set(player,kind,on,filter)) {
                     context.source.sendFailure(Component.literal("Guardian spy unavailable: enable activity.liveSpy and this capture category, and check guardian.spy plus guardian.$channel."));return 0
                 }
                 player.sendSystemMessage(Component.literal("Guardian $channel spy "+if(on)"enabled for this session. Use spy status to see filters." else "disabled."));return 1
             }
             node.then(Commands.literal("on").executes { change(it,true,"") }
                 .then(Commands.argument("filters",StringArgumentType.greedyString())
-                    .suggests { _,builder->net.minecraft.commands.SharedSuggestionProvider.suggest(if(channel=="commands")listOf("u:","c:","c:!help") else listOf("u:"),builder) }
+                    .suggests { _,builder->SharedSuggestionProvider.suggest(if(channel=="commands")listOf("u:","c:","c:!help") else listOf("u:"),builder) }
                     .executes { change(it,true,StringArgumentType.getString(it,"filters")) }))
             node.then(Commands.literal("off").executes { change(it,false,"") })
             spy.then(node)
         }
         root.then(spy)
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
-            .then(Commands.argument("position", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos()).executes { context ->
+            .then(Commands.argument("position", BlockPosArgument.blockPos()).executes { context ->
                 val history = runtimeProvider()?.history()
                 if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
-                val pos = net.minecraft.commands.arguments.coordinates.BlockPosArgument.getBlockPos(context, "position")
-                val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension(context.source), BlockPosition(pos.x, pos.y, pos.z))
+                val pos = BlockPosArgument.getBlockPos(context, "position")
+                val query = ContainerLookupQuery(dimension(context.source), BlockPosition(pos.x, pos.y, pos.z))
                 history.lookupContainers(query, { transactions ->
                     if (!authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
-                    com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
+                    ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
                 }, { if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) context.source.sendFailure(Component.literal("Guardian container lookup failed; see server log.")) })
                 1
             }))
         root.then(Commands.literal("transactions").requires { permissions.has(it, LOOKUP_PERMISSION, 2) }
-            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).suggests { context, builder -> if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) net.minecraft.commands.SharedSuggestionProvider.suggest(context.source.server.playerList.players.map { it.gameProfile.name }, builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }.executes { context ->
+            .then(Commands.literal("player").then(Commands.argument("name", StringArgumentType.word()).suggests { context, builder -> if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) SharedSuggestionProvider.suggest(context.source.server.playerList.players.map { it.gameProfile.name }, builder) else Suggestions.empty() }.executes { context ->
                 val history = runtimeProvider()?.history()
                 if (history == null) { context.source.sendFailure(Component.literal("Guardian history is unavailable.")); return@executes 0 }
                 val name = StringArgumentType.getString(context, "name")
-                val uuid = runCatching { java.util.UUID.fromString(name) }.getOrNull()
-                val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(actorUuid = uuid, actorName = if (uuid == null) name else null)
+                val uuid = runCatching { UUID.fromString(name) }.getOrNull()
+                val query = ContainerLookupQuery(actorUuid = uuid, actorName = if (uuid == null) name else null)
                 history.lookupContainers(query, { transactions ->
                     if (!authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
-                    com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
+                    ContainerHistoryFormatter.lines(transactions).forEach(context.source::sendSystemMessage)
                 }, { if (authorized(context.source, permissions, LOOKUP_PERMISSION, 2)) context.source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
                 1
             })))
@@ -187,7 +216,7 @@ object GuardianCommands {
                 .suggests { context,builder -> suggestItemRestores(context.source,builder,runtimeProvider(),permissions) }
                 .executes { context -> executeItemRestore(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
             .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
-                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .suggests { context,builder -> SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
                 .executes { context -> if(runtimeProvider()?.onlineItems()?.confirmItemRestore(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
             .then(Commands.literal("cancel").executes { context ->
@@ -204,7 +233,7 @@ object GuardianCommands {
                 .suggests { context,builder -> suggestCreativeRecovery(context.source,builder,permissions) }
                 .executes { context -> executeCreativeRecovery(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),true) }))
             .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
-                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .suggests { context,builder -> SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
                 .executes { context -> if(runtimeProvider()?.onlineItems()?.confirmCreativeRecovery(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
             .then(Commands.literal("cancel").executes { context ->
@@ -219,7 +248,7 @@ object GuardianCommands {
                     .suggests { context,builder -> suggestFilters(context.source,builder,permissions,true,true,ROLLBACK_PERMISSION,3) }
                     .executes { context -> executeItemPreview(context.source,StringArgumentType.getString(context,"filters"),runtimeProvider(),configProvider(),apply=true) }))
             .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
-                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
+                .suggests { context,builder -> SharedSuggestionProvider.suggest(runtimeProvider()?.onlineItems()?.confirmationSuggestions(context.source) ?: emptyList(),builder) }
                 .executes { context -> if(runtimeProvider()?.onlineItems()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("reconcile").executes { context -> if(runtimeProvider()?.onlineItems()?.reconcile(context.source)==true)1 else 0 })
             .then(Commands.literal("cancel").executes { context ->
@@ -244,30 +273,30 @@ object GuardianCommands {
                 .then(Commands.literal("saved")
                     .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian rollback-items recovery saved <operation UUID>. Read-only saved block/player slots."));0 }
                     .then(Commands.argument("operation",StringArgumentType.word())
-                        .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
+                        .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else Suggestions.empty() }
                         .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider(),true) }))
                 .then(Commands.argument("operation",StringArgumentType.word())
-                    .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else com.mojang.brigadier.suggestion.Suggestions.empty() }
+                    .suggests { context,builder -> if (authorized(context.source, permissions, ROLLBACK_PERMISSION, 3)) SharedSuggestionProvider.suggest(runtimeProvider()?.itemRecovery()?.suggestions(context.source) ?: emptyList(),builder) else Suggestions.empty() }
                     .executes { context -> executeRecovery(context.source,StringArgumentType.getString(context,"operation"),runtimeProvider()) })))
         root.then(Commands.literal("purge").requires { authorized(it.player?.createCommandSourceStack() ?: it,permissions,"guardian.purge",4) }
             .executes { context -> context.source.sendSystemMessage(Component.literal("Usage: /guardian purge preview t:30d [w:minecraft:overworld] [i:minecraft:stone] [e:minecraft:coal] | confirm <token> | cancel. Permanent history deletion, at most 1000 records per confirmation."));0 }
             .then(Commands.literal("preview").then(Commands.argument("age",StringArgumentType.greedyString())
                 .suggests { context,builder ->
                     val source=context.source.player?.createCommandSourceStack() ?: context.source
-                    if(!authorized(source,permissions,"guardian.purge",4))com.mojang.brigadier.suggestion.Suggestions.empty() else {
+                    if(!authorized(source,permissions,"guardian.purge",4))Suggestions.empty() else {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
                         val token=builder.input.substring(start)
                         val key=token.substringBefore(':').lowercase()
-                        val resources=if(key in setOf("i","include","e","exclude")) (net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()+net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet()).map { it.toString() } else emptyList()
+                        val resources=if(key in setOf("i","include","e","exclude")) (BuiltInRegistries.BLOCK.keySet()+BuiltInRegistries.ITEM.keySet()).map { it.toString() } else emptyList()
                         val worlds=if(key in setOf("w","world"))source.server.allLevels.map { it.dimension().location().toString() } else emptyList()
                         val current=builder.createOffset(start)
-                        com.bareminimumstudios.guardian.command.PurgeCommandFilters.suggestions(token,worlds,resources).forEach(current::suggest)
+                        PurgeCommandFilters.suggestions(token,worlds,resources).forEach(current::suggest)
                         current.buildFuture()
                     }
                 }
                 .executes { context ->
                     val source=context.source
-                    val parsed=com.bareminimumstudios.guardian.command.PurgeCommandFilters.parse(StringArgumentType.getString(context,"age"))
+                    val parsed=PurgeCommandFilters.parse(StringArgumentType.getString(context,"age"))
                     val filters=parsed.getOrNull()
                     val purge=runtimeProvider()?.purge()
                     if(filters==null){source.sendFailure(Component.literal("Guardian purge: ${parsed.exceptionOrNull()?.message}"));0}
@@ -275,28 +304,28 @@ object GuardianCommands {
                     else if(purge.preview(source,filters.ageMillis,filters.scope))1 else 0
                 }))
             .then(Commands.literal("confirm").then(Commands.argument("token",StringArgumentType.word())
-                .suggests { context,builder -> net.minecraft.commands.SharedSuggestionProvider.suggest(runtimeProvider()?.purge()?.suggestions(context.source) ?: emptyList(),builder) }
+                .suggests { context,builder -> SharedSuggestionProvider.suggest(runtimeProvider()?.purge()?.suggestions(context.source) ?: emptyList(),builder) }
                 .executes { context -> if(runtimeProvider()?.purge()?.confirm(context.source,StringArgumentType.getString(context,"token"))==true)1 else 0 }))
             .then(Commands.literal("cancel").executes { context -> if(runtimeProvider()?.purge()?.cancel(context.source)==true)1 else 0 }))
         val exportNode=Commands.literal("export").requires { authorized(it,permissions,"guardian.export",4) }
             .executes { context->context.source.sendSystemMessage(Component.literal("Usage: /guardian export <blocks|items|chat|sessions|commands|whispers|entities|fluids> t:1h [filters] [l:100] | cancel. Server-side JSONL, at most 500 records."));0 }
             .then(Commands.literal("cancel").executes { context->if(runtimeProvider()?.export()?.cancel(context.source)==true)1 else 0 })
-        for(kind in com.bareminimumstudios.guardian.export.ExportKind.entries)exportNode.then(Commands.literal(kind.name.lowercase())
+        for(kind in ExportKind.entries)exportNode.then(Commands.literal(kind.name.lowercase())
             .requires { exportAllowed(it,permissions,kind) }
             .executes { context->context.source.sendFailure(Component.literal("Guardian export requires t:<time>, for example /guardian export ${kind.name.lowercase()} t:1h"));0 }
             .then(Commands.argument("filters",StringArgumentType.greedyString())
                 .suggests { context,builder->
-                    if(!exportAllowed(context.source,permissions,kind))com.mojang.brigadier.suggestion.Suggestions.empty() else {
+                    if(!exportAllowed(context.source,permissions,kind))Suggestions.empty() else {
                         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start);val token=builder.input.substring(start)
                         val key=token.substringBefore(':').lowercase()
-                        val resources=if(key in setOf("i","include","e","exclude")) (if(kind==com.bareminimumstudios.guardian.export.ExportKind.ITEMS)net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else if(kind==com.bareminimumstudios.guardian.export.ExportKind.ENTITIES)net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet() else if(kind==com.bareminimumstudios.guardian.export.ExportKind.FLUIDS)net.minecraft.core.registries.BuiltInRegistries.FLUID.keySet()+net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() } else emptyList()
+                        val resources=if(key in setOf("i","include","e","exclude")) (if(kind==ExportKind.ITEMS)BuiltInRegistries.ITEM.keySet() else if(kind==ExportKind.ENTITIES)BuiltInRegistries.ENTITY_TYPE.keySet() else if(kind==ExportKind.FLUIDS)BuiltInRegistries.FLUID.keySet()+BuiltInRegistries.BLOCK.keySet() else BuiltInRegistries.BLOCK.keySet()).map { it.toString() } else emptyList()
                         val choices=when {
-                            key in setOf("a","action") && kind==com.bareminimumstudios.guardian.export.ExportKind.ENTITIES -> listOf("death","rename","tame","breed","frame","frame-place","frame-remove","frame-change").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
-                            key in setOf("a","action") && kind==com.bareminimumstudios.guardian.export.ExportKind.FLUIDS -> listOf("place","remove","flow","form").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
-                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },kind!=com.bareminimumstudios.guardian.export.ExportKind.BLOCKS,resources)
+                            key in setOf("a","action") && kind==ExportKind.ENTITIES -> listOf("death","rename","tame","breed","frame","frame-place","frame-remove","frame-change").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
+                            key in setOf("a","action") && kind==ExportKind.FLUIDS -> listOf("place","remove","flow","form").filter { it.startsWith(token.substringAfter(':'),true) }.map { token.substringBefore(':')+":"+it }
+                            else -> FilterSuggestions.values(token,context.source.server.playerList.players.map { it.gameProfile.name },kind!=ExportKind.BLOCKS,resources)
                         }
                         val target=builder.createOffset(start)
-                        choices.filter { it.substringBefore(':').lowercase() !in setOf("p","page") && (kind !in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS,com.bareminimumstudios.guardian.export.ExportKind.WHISPERS) || it.substringBefore(':').lowercase() in setOf("u","user","t","time","l","limit","o","order")) }.take(100).forEach(target::suggest)
+                        choices.filter { it.substringBefore(':').lowercase() !in setOf("p","page") && (kind !in setOf(ExportKind.CHAT,ExportKind.SESSIONS,ExportKind.COMMANDS,ExportKind.WHISPERS) || it.substringBefore(':').lowercase() in setOf("u","user","t","time","l","limit","o","order")) }.take(100).forEach(target::suggest)
                         target.buildFuture()
                     }
                 }
@@ -305,28 +334,28 @@ object GuardianCommands {
         dispatcher.register(root)
     }
 
-    private fun exportAllowed(source:CommandSourceStack,permissions:PermissionService,kind:com.bareminimumstudios.guardian.export.ExportKind)=authorized(source,permissions,"guardian.export",4) && authorized(source,permissions,kind.permission,kind.fallback)
+    private fun exportAllowed(source:CommandSourceStack,permissions:PermissionService,kind:ExportKind)=authorized(source,permissions,"guardian.export",4) && authorized(source,permissions,kind.permission,kind.fallback)
 
-    private fun executeExport(source:CommandSourceStack,kind:com.bareminimumstudios.guardian.export.ExportKind,raw:String,runtime:GuardianRuntime?,config:GuardianConfig):Int {
+    private fun executeExport(source:CommandSourceStack,kind:ExportKind,raw:String,runtime:GuardianRuntime?,config:GuardianConfig):Int {
         val service=runtime?.export() ?: run { source.sendFailure(Component.literal("Guardian export service is unavailable."));return 0 }
         if(!exportAllowed(source,runtime.permissions,kind))return 0
-        val parsed=com.bareminimumstudios.guardian.command.ExportFilters.parse(kind,raw).getOrElse { source.sendFailure(Component.literal("Guardian export: ${it.message}"));return 0 }
+        val parsed=ExportFilters.parse(kind,raw).getOrElse { source.sendFailure(Component.literal("Guardian export: ${it.message}"));return 0 }
         val f=parsed.common;val limit=f.limit ?: 100
         if(limit>config.lookup.maxResults.get()){source.sendFailure(Component.literal("Guardian export exceeds the configured history result limit."));return 0}
-        val activity=kind in setOf(com.bareminimumstudios.guardian.export.ExportKind.CHAT,com.bareminimumstudios.guardian.export.ExportKind.SESSIONS,com.bareminimumstudios.guardian.export.ExportKind.COMMANDS,com.bareminimumstudios.guardian.export.ExportKind.WHISPERS)
+        val activity=kind in setOf(ExportKind.CHAT,ExportKind.SESSIONS,ExportKind.COMMANDS,ExportKind.WHISPERS)
         val scope=if(activity)null else (resolveScope(source,f) ?: return 0)
         val radius=f.radius
         if(radius!=null && radius>config.lookup.maxRadius.get()){source.sendFailure(Component.literal("Guardian export radius exceeds the configured maximum."));return 0}
         val position=if(scope?.bounds!=null)null else f.explicitPosition ?: if(radius!=null)sourcePosition(source)else null
         val after=(System.currentTimeMillis()-checkNotNull(f.lookbackMillis)).coerceAtLeast(0)
         val search=resolvedSearch(source,f)
-        val dimension=if(kind==com.bareminimumstudios.guardian.export.ExportKind.ITEMS && position==null && scope?.bounds==null && radius==null)null else scope?.dimension
-        val query:com.bareminimumstudios.guardian.export.ExportQuery=when(kind) {
-            com.bareminimumstudios.guardian.export.ExportKind.BLOCKS -> com.bareminimumstudios.guardian.export.ExportQuery.Blocks(BlockLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,actions=f.actions,causes=f.causes,movementId=f.movementId,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
-            com.bareminimumstudios.guardian.export.ExportKind.ITEMS -> com.bareminimumstudios.guardian.export.ExportQuery.Items(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=dimension,position=position,bounds=scope!!.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
-            com.bareminimumstudios.guardian.export.ExportKind.ENTITIES -> com.bareminimumstudios.guardian.export.ExportQuery.Entities(com.bareminimumstudios.guardian.storage.query.EntityLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.entityKinds,targetUuid=parsed.entityId))
-            com.bareminimumstudios.guardian.export.ExportKind.FLUIDS -> com.bareminimumstudios.guardian.export.ExportQuery.Fluids(com.bareminimumstudios.guardian.storage.query.FluidLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.fluidKinds))
-            else -> com.bareminimumstudios.guardian.export.ExportQuery.Activity(kind,com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(when(kind){com.bareminimumstudios.guardian.export.ExportKind.CHAT->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT);com.bareminimumstudios.guardian.export.ExportKind.COMMANDS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND);com.bareminimumstudios.guardian.export.ExportKind.WHISPERS->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER);else->setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN,com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)},search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+        val dimension=if(kind==ExportKind.ITEMS && position==null && scope?.bounds==null && radius==null)null else scope?.dimension
+        val query:ExportQuery=when(kind) {
+            ExportKind.BLOCKS -> ExportQuery.Blocks(BlockLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,actions=f.actions,causes=f.causes,movementId=f.movementId,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+            ExportKind.ITEMS -> ExportQuery.Items(ContainerLookupQuery(dimension=dimension,position=position,bounds=scope!!.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
+            ExportKind.ENTITIES -> ExportQuery.Entities(EntityLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.entityKinds,targetUuid=parsed.entityId))
+            ExportKind.FLUIDS -> ExportQuery.Fluids(FluidLookupQuery(dimension=scope!!.dimension,position=position,bounds=scope.bounds,radius=radius,search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst,kinds=parsed.fluidKinds))
+            else -> ExportQuery.Activity(kind,PlayerActivityQuery(when(kind){ExportKind.CHAT->setOf(PlayerActivityKind.CHAT);ExportKind.COMMANDS->setOf(PlayerActivityKind.COMMAND);ExportKind.WHISPERS->setOf(PlayerActivityKind.WHISPER);else->setOf(PlayerActivityKind.LOGIN,PlayerActivityKind.LOGOUT)},search=search,afterEpochMillis=after,limit=limit,oldestFirst=f.oldestFirst))
         }
         val metadata=mapOf<String,Any?>("dimension" to dimension?.toString(),"position" to position?.let { listOf(it.x,it.y,it.z) },"radius" to radius,"bounds" to scope?.bounds?.let { listOf(it.min.x,it.min.y,it.min.z,it.max.x,it.max.y,it.max.z) },"afterEpochMillis" to after,"oldestFirst" to f.oldestFirst,"includedPlayers" to search.players.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) },"excludedPlayers" to search.excludedPlayers.map { mapOf("name" to it.name,"uuid" to it.uuid?.toString()) })
         return if(service.request(source,query,raw,metadata))1 else 0
@@ -358,21 +387,21 @@ object GuardianCommands {
                 }
         )
 
-    private fun suggestFilters(source: CommandSourceStack, builder: com.mojang.brigadier.suggestion.SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false, extended: Boolean = true, recovery: Boolean = false): java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
-        if (!authorized(source, permissions, permission, fallback)) return com.mojang.brigadier.suggestion.Suggestions.empty()
+    private fun suggestFilters(source: CommandSourceStack, builder: SuggestionsBuilder, permissions: PermissionService, items: Boolean = false, preview: Boolean = false, permission: String = LOOKUP_PERMISSION, fallback: Int = 2, activity: Boolean = false, extended: Boolean = true, recovery: Boolean = false): CompletableFuture<Suggestions> {
+        if (!authorized(source, permissions, permission, fallback)) return Suggestions.empty()
         val start = builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val current = builder.input.substring(start)
         val players=source.server.playerList.players.map { it.gameProfile.name }
         val resourceKey = current.substringBefore(':').lowercase()
         val resources = if (!extended || activity || resourceKey !in setOf("i", "include", "e", "exclude")) emptyList() else
-            (if (items) net.minecraft.core.registries.BuiltInRegistries.ITEM.keySet() else net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet()).map { it.toString() }
+            (if (items) BuiltInRegistries.ITEM.keySet() else BuiltInRegistries.BLOCK.keySet()).map { it.toString() }
         val choices = if(activity && (current.isEmpty() || "q:".startsWith(current)))listOf("q:","u:","t:","l:","p:","o:").filter { it.startsWith(current) } else if (preview) ItemRollbackPreviewFilters.suggestions(current,players) else if(recovery) FilterSuggestions.recoveryValues(current,players,resources) else FilterSuggestions.values(current, players, items, resources, extended)
         if(recovery) {
             val target=builder.createOffset(start)
             choices.forEach(target::suggest)
             return target.buildFuture()
         }
-        return net.minecraft.commands.SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order", "q", "text") }, builder.createOffset(start))
+        return SharedSuggestionProvider.suggest(choices.filter { !activity || it.substringBefore(':') in setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order", "q", "text") }, builder.createOffset(start))
     }
 
     private fun authorized(source: CommandSourceStack, permissions: PermissionService, permission: String, fallback: Int): Boolean =
@@ -405,7 +434,7 @@ object GuardianCommands {
             source.sendFailure(Component.literal("Guardian fluid limit/radius exceeds the configured maximum."));return 0
         }
         val position=filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) }
-        val query=com.bareminimumstudios.guardian.storage.query.FluidLookupQuery(kinds=parsed.kinds,
+        val query=FluidLookupQuery(kinds=parsed.kinds,
             dimension=if(position!=null || scope.bounds!=null) scope.dimension else null,position=position,radius=filter.radius,bounds=scope.bounds,
             afterEpochMillis=filter.lookbackMillis?.let { (System.currentTimeMillis()-it).coerceAtLeast(0) },search=resolvedSearch(source,filter),
             limit=limit,offset=((filter.page ?: 1)-1)*limit,oldestFirst=filter.oldestFirst)
@@ -413,8 +442,8 @@ object GuardianCommands {
         history.lookupFluids(query,{ rows ->
             if (!fluidAuthorized(source,runtime.permissions)) return@lookupFluids
             source.sendSystemMessage(Component.literal("Guardian fluid history: ${rows.size} records (page ${filter.page ?: 1})."))
-            rows.forEach { source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.FluidHistoryFormatter.line(it)) }
-            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
+            rows.forEach { source.sendSystemMessage(FluidHistoryFormatter.line(it)) }
+            source.sendSystemMessage(HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
                 { page -> HistoryPageCommands.command("fluids",navigationRaw,page,filter.oldestFirst) },HistoryPageCommands.command("fluids",navigationRaw,1,!filter.oldestFirst)))
         },{ if(fluidAuthorized(source,runtime.permissions)) source.sendFailure(Component.literal("Guardian fluid lookup failed; see server log.")) })
         return 1
@@ -436,7 +465,7 @@ object GuardianCommands {
             source.sendFailure(Component.literal("Guardian entity limit/radius exceeds the configured maximum."));return 0
         }
         val position=filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) }
-        val query=com.bareminimumstudios.guardian.storage.query.EntityLookupQuery(kinds=parsed.kinds,targetUuid=parsed.targetUuid,
+        val query=EntityLookupQuery(kinds=parsed.kinds,targetUuid=parsed.targetUuid,
             dimension=if(position!=null || scope.bounds!=null) scope.dimension else null,position=position,radius=filter.radius,bounds=scope.bounds,
             afterEpochMillis=filter.lookbackMillis?.let { (System.currentTimeMillis()-it).coerceAtLeast(0) },search=resolvedSearch(source,filter),
             limit=limit,offset=((filter.page ?: 1)-1)*limit,oldestFirst=filter.oldestFirst)
@@ -444,8 +473,8 @@ object GuardianCommands {
         history.lookupEntities(query,{ rows ->
             if (!entityAuthorized(source,runtime.permissions)) return@lookupEntities
             source.sendSystemMessage(Component.literal("Guardian entity history: ${rows.size} records (page ${filter.page ?: 1})."))
-            rows.forEach { source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.EntityHistoryFormatter.line(it)) }
-            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
+            rows.forEach { source.sendSystemMessage(EntityHistoryFormatter.line(it)) }
+            source.sendSystemMessage(HistoryNavigation.footer(filter.page ?: 1,rows.size==limit,filter.oldestFirst,
                 { page -> HistoryPageCommands.command("entities",navigationRaw,page,filter.oldestFirst) },HistoryPageCommands.command("entities",navigationRaw,1,!filter.oldestFirst)))
         },{ if(entityAuthorized(source,runtime.permissions)) source.sendFailure(Component.literal("Guardian entity lookup failed; see server log.")) })
         return 1
@@ -454,7 +483,7 @@ object GuardianCommands {
     private fun executeActivity(source: CommandSourceStack, raw: String, name: String, runtime: GuardianRuntime?, config: GuardianConfig): Int {
         val history = runtime?.history() ?: run { source.sendFailure(Component.literal("Guardian history is unavailable.")); return 0 }
         if(!activityAuthorized(source,runtime.permissions,name))return 0
-        val textFilter=runCatching { com.bareminimumstudios.guardian.command.ActivityTextFilter.parse(raw) }.getOrElse { source.sendFailure(Component.literal("Guardian $name: "+it.message));return 0 }
+        val textFilter=runCatching { ActivityTextFilter.parse(raw) }.getOrElse { source.sendFailure(Component.literal("Guardian $name: "+it.message));return 0 }
         val filterRaw=textFilter.remaining
         val allowed = setOf("u", "user", "t", "time", "l", "limit", "p", "page", "o", "order")
         if (filterRaw.split(Regex("\\s+")).any { it.isNotBlank() && it.substringBefore(':').lowercase() !in allowed }) {
@@ -467,19 +496,19 @@ object GuardianCommands {
         val limit = filter.limit ?: config.lookup.defaultResults.get()
         if (limit > minOf(500, config.lookup.maxResults.get())) { source.sendFailure(Component.literal("Guardian activity page limit exceeded.")); return 0 }
         val kinds = when(name) {
-            "chat" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.CHAT)
-            "commands" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.COMMAND)
-            "whispers" -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.WHISPER)
-            else -> setOf(com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGIN, com.bareminimumstudios.guardian.domain.PlayerActivityKind.LOGOUT)
+            "chat" -> setOf(PlayerActivityKind.CHAT)
+            "commands" -> setOf(PlayerActivityKind.COMMAND)
+            "whispers" -> setOf(PlayerActivityKind.WHISPER)
+            else -> setOf(PlayerActivityKind.LOGIN, PlayerActivityKind.LOGOUT)
         }
-        val query = com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery(kinds, textContains=textFilter.text, search = resolvedSearch(source, filter),
+        val query = PlayerActivityQuery(kinds, textContains=textFilter.text, search = resolvedSearch(source, filter),
             afterEpochMillis = filter.lookbackMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0) }, limit = limit, offset = ((filter.page ?: 1) - 1) * limit, oldestFirst = filter.oldestFirst)
         history.lookupActivity(query, { rows ->
             if (!activityAuthorized(source, runtime.permissions, name)) return@lookupActivity
             source.sendSystemMessage(Component.literal("Guardian $name history: ${rows.size} records (page ${filter.page ?: 1})."))
             val renderedAt=System.currentTimeMillis()
-            rows.forEach { row->source.sendSystemMessage(if(source.player==null)com.bareminimumstudios.guardian.lookup.ActivityFormatter.console(row) else com.bareminimumstudios.guardian.lookup.ActivityFormatter.line(row,renderedAt,needle=textFilter.text)) }
-            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst, { page -> HistoryPageCommands.command(name, raw, page, filter.oldestFirst) }, HistoryPageCommands.command(name, raw, 1, !filter.oldestFirst)))
+            rows.forEach { row->source.sendSystemMessage(if(source.player==null)ActivityFormatter.console(row) else ActivityFormatter.line(row,renderedAt,needle=textFilter.text)) }
+            source.sendSystemMessage(HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst, { page -> HistoryPageCommands.command(name, raw, page, filter.oldestFirst) }, HistoryPageCommands.command(name, raw, 1, !filter.oldestFirst)))
         }, { if (activityAuthorized(source, runtime.permissions, name)) source.sendFailure(Component.literal("Guardian $name lookup failed; see server log.")) })
         return 1
     }
@@ -493,7 +522,7 @@ object GuardianCommands {
         if (limit > minOf(500, config.lookup.maxResults.get()) || (filter.radius ?: 0) > config.lookup.maxRadius.get()) {
             source.sendFailure(Component.literal("Guardian transaction limit/radius exceeds the configured maximum (limit at most 500).")); return 0
         }
-        val query = com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(
+        val query = ContainerLookupQuery(
             dimension = if (filter.explicitPosition != null || filter.radius != null || scope.bounds != null) scope.dimension else null,
             position = filter.explicitPosition ?: filter.radius?.let { sourcePosition(source) },
             search = resolvedSearch(source, filter), limit = limit,
@@ -504,14 +533,14 @@ object GuardianCommands {
         if(ui) {
             val player=source.player ?: run { source.sendFailure(Component.literal("Guardian item UI can only be used by a player."));return 0 }
             if(limit>50) { source.sendFailure(Component.literal("Guardian item UI supports l:1 through l:50."));return 0 }
-            com.bareminimumstudios.guardian.lookup.ItemTransactionViewer.open(player,query,history,runtime.permissions) { runtime.history()===history }
+            ItemTransactionViewer.open(player,query,history,runtime.permissions) { runtime.history()===history }
             return 1
         }
         history.lookupContainers(query, { rows ->
             if (!authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) return@lookupContainers
-            com.bareminimumstudios.guardian.lookup.ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
-            if(source.player!=null) source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.ItemTransactionViewer.link("/guardian transactions ui $navigationRaw"))
-            source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst,
+            ContainerHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
+            if(source.player!=null) source.sendSystemMessage(ItemTransactionViewer.link("/guardian transactions ui $navigationRaw"))
+            source.sendSystemMessage(HistoryNavigation.footer(filter.page ?: 1, rows.size == limit, filter.oldestFirst,
                 { page -> HistoryPageCommands.command("transactions", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("transactions", navigationRaw, 1, !filter.oldestFirst)))
         }, { if (authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) source.sendFailure(Component.literal("Guardian item lookup failed; see server log.")) })
         return 1
@@ -530,9 +559,9 @@ object GuardianCommands {
             1
         }
         .then(Commands.literal("ui").executes { context -> context.source.player?.let(BlockInspector::openItemUi);1 })
-        .then(Commands.literal("page").then(Commands.argument("page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10000)).executes { context ->
+        .then(Commands.literal("page").then(Commands.argument("page", IntegerArgumentType.integer(1, 10000)).executes { context ->
             val player = context.source.player ?: return@executes 0
-            BlockInspector.showPage(player, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "page")); 1
+            BlockInspector.showPage(player, IntegerArgumentType.getInteger(context, "page")); 1
         }))
         .then(Commands.literal("order").then(Commands.literal("oldest").executes { context -> context.source.player?.let { BlockInspector.setOrder(it, true) }; 1 })
             .then(Commands.literal("newest").executes { context -> context.source.player?.let { BlockInspector.setOrder(it, false) }; 1 }))
@@ -617,12 +646,12 @@ object GuardianCommands {
                         "accepted=${p.accepted} persisted=${p.persisted} backpressure=${p.backpressure} failures=${p.writeFailures}"
                 )
             )
-            context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.PlayerContainerCapture.status()))
-            context.source.sendSystemMessage(Component.literal(com.bareminimumstudios.guardian.platform.minecraft.HopperTransferCapture.status()))
+            context.source.sendSystemMessage(Component.literal(PlayerContainerCapture.status()))
+            context.source.sendSystemMessage(Component.literal(HopperTransferCapture.status()))
             runtimeProvider()?.history()?.let { context.source.sendSystemMessage(Component.literal(it.queryStatus())) }
             runtimeProvider()?.checkpoints()?.let { context.source.sendSystemMessage(Component.literal(it.status())) }
-            com.bareminimumstudios.guardian.platform.minecraft.OpacStructureProtection.status()?.let { context.source.sendSystemMessage(Component.literal(it)) }
-            com.bareminimumstudios.guardian.logging.OperationTimings.status().forEach { context.source.sendSystemMessage(Component.literal(it)) }
+            OpacStructureProtection.status()?.let { context.source.sendSystemMessage(Component.literal(it)) }
+            OperationTimings.status().forEach { context.source.sendSystemMessage(Component.literal(it)) }
             if (b != null) {
                 context.source.sendSystemMessage(
                     Component.literal(
@@ -687,7 +716,7 @@ object GuardianCommands {
             onSuccess = { rows ->
                 if (!authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) return@lookup
                 BlockHistoryFormatter.lines(rows).forEach(source::sendSystemMessage)
-                source.sendSystemMessage(com.bareminimumstudios.guardian.lookup.HistoryNavigation.footer(filter.page ?: 1, rows.size == requestedLimit, filter.oldestFirst,
+                source.sendSystemMessage(HistoryNavigation.footer(filter.page ?: 1, rows.size == requestedLimit, filter.oldestFirst,
                     { page -> HistoryPageCommands.command("lookup", navigationRaw, page, filter.oldestFirst) }, HistoryPageCommands.command("lookup", navigationRaw, 1, !filter.oldestFirst)))
             },
             onFailure = { if (authorized(source, runtime.permissions, LOOKUP_PERMISSION, 2)) source.sendFailure(Component.literal("Guardian lookup failed; see the server log.")) }
@@ -730,16 +759,16 @@ object GuardianCommands {
         }
         val center = if (scope.bounds == null) (filter.explicitPosition ?: sourcePosition(source)) else null
         val now = System.currentTimeMillis()
-        if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.FIRE || it==com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION }) {
+        if(filter.causes.any { it==ChangeCause.FIRE || it==ChangeCause.EXPLOSION }) {
             source.sendFailure(Component.literal("Guardian fire/explosion history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
-        if(filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH || it==com.bareminimumstudios.guardian.domain.ChangeCause.DECAY }) {
+        if(filter.causes.any { it==ChangeCause.GROWTH || it==ChangeCause.DECAY }) {
             source.sendFailure(Component.literal("Guardian growth/decay history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
-        if(filter.movementId!=null || filter.causes.any { it==com.bareminimumstudios.guardian.domain.ChangeCause.PISTON || it==com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY }) {
+        if(filter.movementId!=null || filter.causes.any { it==ChangeCause.PISTON || it==ChangeCause.GRAVITY }) {
             source.sendFailure(Component.literal("Guardian movement history is read-only in this checkpoint; rollback/restore is unavailable for those causes."));return 0
         }
-        if(filter.causes.any { it in setOf(com.bareminimumstudios.guardian.domain.ChangeCause.SIGN_TEXT,com.bareminimumstudios.guardian.domain.ChangeCause.LECTERN) }) {
+        if(filter.causes.any { it in setOf(ChangeCause.SIGN_TEXT,ChangeCause.LECTERN) }) {
             source.sendFailure(Component.literal("Guardian sign/lectern history is read-only; rollback/restore is unavailable for those records."));return 0
         }
         val query = BlockLookupQuery(
@@ -749,7 +778,7 @@ object GuardianCommands {
             radius = radius,
             search = resolvedSearch(source, filter),
             actions = filter.actions,
-            causes = (filter.causes.ifEmpty { com.bareminimumstudios.guardian.domain.ChangeCause.entries.toSet() }) - setOf(com.bareminimumstudios.guardian.domain.ChangeCause.FIRE,com.bareminimumstudios.guardian.domain.ChangeCause.EXPLOSION,com.bareminimumstudios.guardian.domain.ChangeCause.GROWTH,com.bareminimumstudios.guardian.domain.ChangeCause.DECAY,com.bareminimumstudios.guardian.domain.ChangeCause.PISTON,com.bareminimumstudios.guardian.domain.ChangeCause.GRAVITY,com.bareminimumstudios.guardian.domain.ChangeCause.SIGN_TEXT,com.bareminimumstudios.guardian.domain.ChangeCause.LECTERN),
+            causes = (filter.causes.ifEmpty { ChangeCause.entries.toSet() }) - setOf(ChangeCause.FIRE,ChangeCause.EXPLOSION,ChangeCause.GROWTH,ChangeCause.DECAY,ChangeCause.PISTON,ChangeCause.GRAVITY,ChangeCause.SIGN_TEXT,ChangeCause.LECTERN),
             afterEpochMillis = (now - lookbackMillis).coerceAtLeast(0L),
             includeRolledBack = false,
             limit = (config.rollback.maxRecords.get() + 1).coerceAtMost(10_000)
@@ -772,21 +801,21 @@ object GuardianCommands {
     private fun executeRecovery(source: CommandSourceStack,raw: String?,runtime: GuardianRuntime?,saved: Boolean=false): Int {
         val recovery=runtime?.itemRecovery()
         if(recovery==null) { source.sendFailure(Component.literal("Guardian item recovery view is unavailable."));return 0 }
-        val id=if(raw==null) null else runCatching { java.util.UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse { source.sendFailure(Component.literal("Guardian: use a complete operation UUID from /guardian rollback-items recovery."));return 0 }
+        val id=if(raw==null) null else runCatching { UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse { source.sendFailure(Component.literal("Guardian: use a complete operation UUID from /guardian rollback-items recovery."));return 0 }
         return if(recovery.request(source,id,saved)) 1 else 0
     }
 
-    private fun suggestCreativeRecovery(source:CommandSourceStack,builder:com.mojang.brigadier.suggestion.SuggestionsBuilder,permissions:PermissionService):java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
-        if(!permissions.has(source,ROLLBACK_PERMISSION,3) || !permissions.has(source,"guardian.recover.items",3))return com.mojang.brigadier.suggestion.Suggestions.empty()
+    private fun suggestCreativeRecovery(source:CommandSourceStack,builder:SuggestionsBuilder,permissions:PermissionService):CompletableFuture<Suggestions> {
+        if(!permissions.has(source,ROLLBACK_PERMISSION,3) || !permissions.has(source,"guardian.recover.items",3))return Suggestions.empty()
         val start=builder.input.lastIndexOf(' ').plus(1).coerceAtLeast(builder.start)
         val token=builder.input.substring(start)
-        return net.minecraft.commands.SharedSuggestionProvider.suggest(com.bareminimumstudios.guardian.command.CreativeRecoveryFilters.suggestions(token,source.server.playerList.players.map { it.gameProfile.name }),builder.createOffset(start))
+        return SharedSuggestionProvider.suggest(CreativeRecoveryFilters.suggestions(token,source.server.playerList.players.map { it.gameProfile.name }),builder.createOffset(start))
     }
     private fun executeCreativeRecovery(source:CommandSourceStack,raw:String,runtime:GuardianRuntime?,config:GuardianConfig,apply:Boolean):Int {
-        val filter=com.bareminimumstudios.guardian.command.CreativeRecoveryFilters.parse(raw).getOrElse { source.sendFailure(Component.literal(it.message ?: "Use u:<player> t:<time>."));return 0 }
+        val filter=CreativeRecoveryFilters.parse(raw).getOrElse { source.sendFailure(Component.literal(it.message ?: "Use u:<player> t:<time>."));return 0 }
         val player=source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(filter.actorName,ignoreCase=true) }
             ?: run { source.sendFailure(Component.literal("Guardian: the player must be online with their personal inventory idle."));return 0 }
-        val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(actorUuid=player.uuid,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0L),limit=51)
+        val query=ContainerLookupQuery(actorUuid=player.uuid,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0L),limit=51)
         val max=config.rollback.maxRecords.get().coerceAtMost(50)
         return if(if(apply)runtime?.onlineItems()?.requestCreativeRecovery(source,query,max)==true else runtime?.itemRollbackPreview()?.requestCreativeRecovery(source,query,max)==true)1 else 0
     }
@@ -800,7 +829,7 @@ object GuardianCommands {
         if (radius != null && radius > config.rollback.maxRadius.get()) { source.sendFailure(Component.literal("Item preview radius exceeds the configured rollback maximum."));return 0 }
         val center=if (scope.bounds == null) filter.explicitPosition ?: sourcePosition(source) else null
         val player=filter.actorName?.let { name -> source.server.playerList.players.firstOrNull { it.gameProfile.name.equals(name,ignoreCase=true) } }
-        val query=com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(dimension=scope.dimension,position=center,bounds=scope.bounds,radius=radius,actorUuid=player?.uuid,actorName=if(player==null)filter.actorName else null,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0),limit=51)
+        val query=ContainerLookupQuery(dimension=scope.dimension,position=center,bounds=scope.bounds,radius=radius,actorUuid=player?.uuid,actorName=if(player==null)filter.actorName else null,afterEpochMillis=(System.currentTimeMillis()-checkNotNull(filter.lookbackMillis)).coerceAtLeast(0),limit=51)
         return if(if(apply) runtime.onlineItems()?.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))==true
             else preview.request(source,query,config.rollback.maxRecords.get().coerceAtMost(50))) 1 else 0
     }
@@ -837,7 +866,7 @@ object GuardianCommands {
         Mth.floor(source.position.z)
     )
     private fun executeItemRestore(source:CommandSourceStack,raw:String,runtime:GuardianRuntime?,apply:Boolean):Int {
-        val id=runCatching { java.util.UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse {
+        val id=runCatching { UUID.fromString(raw).also { require(it.toString().equals(raw,ignoreCase=true)) } }.getOrElse {
             source.sendFailure(Component.literal("Guardian: use a complete operation UUID from a completed item rollback."));return 0
         }
         if(runtime==null) { source.sendFailure(Component.literal("Guardian is not ready."));return 0 }
@@ -862,10 +891,10 @@ object GuardianCommands {
         return 1
     }
 
-    private fun suggestItemRestores(source:CommandSourceStack,builder:com.mojang.brigadier.suggestion.SuggestionsBuilder,runtime:GuardianRuntime?,permissions:PermissionService):java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
+    private fun suggestItemRestores(source:CommandSourceStack,builder:SuggestionsBuilder,runtime:GuardianRuntime?,permissions:PermissionService):CompletableFuture<Suggestions> {
         val history=runtime?.history()
         if(history==null || !mayRestoreItems(source,permissions)) return builder.buildFuture()
-        val result=java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions>()
+        val result=CompletableFuture<Suggestions>()
         history.itemRestoreHeaders({ headers ->
             if(mayRestoreItems(source,permissions)) headers.filter { it.operationId.toString().startsWith(builder.remainingLowerCase) }.forEach { builder.suggest(it.operationId.toString()) }
             result.complete(builder.build())

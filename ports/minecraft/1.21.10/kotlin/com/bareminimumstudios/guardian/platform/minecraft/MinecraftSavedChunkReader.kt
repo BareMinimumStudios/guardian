@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.concurrent.CompletionException
 import com.bareminimumstudios.guardian.mixin.*
 import com.mojang.datafixers.util.Either
 import net.minecraft.nbt.*
@@ -24,7 +25,7 @@ object MinecraftSavedChunkReader {
                         val tag=region.`guardian$region`(pos).getChunkDataInputStream(pos)?.use { NbtIo.read(it,NbtAccounter.create(16L*1024*1024)) }
                         Optional.ofNullable(tag)
                     }
-                } catch(error: Exception) { throw java.util.concurrent.CompletionException(error) }
+                } catch(error: Exception) { throw CompletionException(error) }
             }
         }
     }

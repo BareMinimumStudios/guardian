@@ -1,10 +1,11 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.nio.file.Path
 import java.nio.file.Files
 import kotlin.test.Test
 
 class SqliteStorageBackendTest : JdbcBackendContract() {
-    override fun backend(path: java.nio.file.Path) = SqliteStorageBackend(path)
+    override fun backend(path: Path) = SqliteStorageBackend(path)
 
     @Test
     fun persistsAndQueriesAcrossRestart() {

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.sql.PreparedStatement
 import com.bareminimumstudios.guardian.storage.purge.*
 import java.sql.Connection
 
@@ -10,7 +11,7 @@ internal class JdbcAuditPurge(private val connection: Connection) {
     private data class Source(val kind: PurgeKind, val table: String, val key: String, val predicate: String)
     private val sources get() = listOf(Source(PurgeKind.BLOCK,"ex_block b","b.rowid",safeBlock),Source(PurgeKind.CONTAINER,"ex_container","transaction_uuid",noJournal),Source(PurgeKind.ACTIVITY,"ex_player_activity","event_uuid","1=1"),Source(PurgeKind.ENTITY,"ex_entity","event_uuid","1=1"),Source(PurgeKind.FLUID,"ex_fluid","event_uuid","1=1"))
     private data class Selection(val sql: String, val values: List<String>) {
-        fun bind(q: java.sql.PreparedStatement, start: Int) { values.forEachIndexed { i,value -> q.setString(start+i,value) } }
+        fun bind(q: PreparedStatement, start: Int) { values.forEachIndexed { i,value -> q.setString(start+i,value) } }
     }
     private fun selection(kind: PurgeKind, scope: PurgeScope): Selection {
         if(scope.global)return Selection("1=1",emptyList())

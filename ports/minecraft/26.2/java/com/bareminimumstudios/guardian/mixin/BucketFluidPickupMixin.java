@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.world.entity.LivingEntity;
 import com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(BucketItem.class)
 public abstract class BucketFluidPickupMixin {
     @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"), require = 1)
-    private ItemStack guardian$pickupFluid(BucketPickup pickup, net.minecraft.world.entity.LivingEntity player, LevelAccessor access, BlockPos pos, BlockState state, Operation<ItemStack> original) {
+    private ItemStack guardian$pickupFluid(BucketPickup pickup, LivingEntity player, LevelAccessor access, BlockPos pos, BlockState state, Operation<ItemStack> original) {
         FluidHistoryCapture.Pending pending=access instanceof Level level && player instanceof Player actor ? FluidHistoryCapture.begin(actor,level,pos) : null;
         ItemStack result=original.call(pickup,player,access,pos,state);
         FluidHistoryCapture.finish(pending,!result.isEmpty(),true);

@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import com.bareminimumstudios.guardian.rollback.ItemRollbackPhase
+import java.sql.DriverManager
+import java.sql.SQLException
 import com.bareminimumstudios.guardian.checkpoint.*
 import com.bareminimumstudios.guardian.domain.*
 import java.nio.file.Files
@@ -79,9 +82,9 @@ class InventoryCheckpointStoreTest {
             db.open();db.saveInventoryCheckpoint(value,InventoryCheckpointLimits())
             val record=db.prepareCheckpointRestore(operation,200,value.checkpointId,before,CheckpointRequester(null,"Console"),InventoryCheckpointLimits())
             assertTrue(db.protectItemRollback(record,before.inventory))
-            assertTrue(db.transitionItemRollback(operation,com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.PREPARED,com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.APPLYING))
+            assertTrue(db.transitionItemRollback(operation,ItemRollbackPhase.PREPARED,ItemRollbackPhase.APPLYING))
         }
-        java.sql.DriverManager.getConnection((if(path.toString().endsWith("duckdb"))"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c ->
+        DriverManager.getConnection((if(path.toString().endsWith("duckdb"))"jdbc:duckdb:" else "jdbc:sqlite:")+path).use { c ->
             c.createStatement().use {
                 it.executeUpdate("DROP INDEX ex_checkpoint_budget_idx")
                 it.executeUpdate("DROP INDEX ex_checkpoint_name_idx")
@@ -96,14 +99,14 @@ class InventoryCheckpointStoreTest {
             assertEquals(listOf(before.checkpointId,value.checkpointId),db.inventoryCheckpoints().map { it.checkpointId })
             val receipt=assertNotNull(db.itemRollbackImages(operation))
             assertFalse(receipt.acknowledged)
-            assertEquals(com.bareminimumstudios.guardian.rollback.ItemRollbackPhase.RECOVERY_REQUIRED,receipt.images.record.phase)
+            assertEquals(ItemRollbackPhase.RECOVERY_REQUIRED,receipt.images.record.phase)
             assertEquals(value.checkpointId,receipt.images.record.checkpointOf)
             assertEquals(before.inventory.slots,receipt.images.original.slots)
             assertEquals(value.inventory.slots,receipt.images.expected.slots)
             assertTrue(db.itemRollbackProtected(operation))
             assertFails { db.checkpointRestoreSource(value.checkpointId) }
             for(sql in GuardianSchema.migrations.single { it.version==30 }.statements) {
-                assertFailsWith<java.sql.SQLException> { connection(db).createStatement().use { it.executeUpdate(sql) } }
+                assertFailsWith<SQLException> { connection(db).createStatement().use { it.executeUpdate(sql) } }
             }
             if(path.toString().endsWith("sqlite")) {
                 connection(db).createStatement().use { s ->

@@ -1,11 +1,14 @@
 package com.bareminimumstudios.guardian.lookup
+import net.minecraft.SharedConstants
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.server.Bootstrap
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.query.*
 import java.util.UUID
 import kotlin.test.*
 import org.junit.jupiter.api.Test
 class BlockMovementFormatterTest {
-    companion object { init { net.minecraft.SharedConstants.tryDetectVersion();net.minecraft.server.Bootstrap.bootStrap() } }
+    companion object { init { SharedConstants.tryDetectVersion();Bootstrap.bootStrap() } }
     private val id=UUID.randomUUID();private val air=BlockStateSnapshot(ResourceId.parse("minecraft:air"));private val sand=BlockStateSnapshot(ResourceId.parse("minecraft:sand"))
     private fun row(phase:BlockMovementPhase)=StoredBlockChange(1,BlockChangeSnapshot(1,ActorIdentity.Unknown,ResourceId.parse("minecraft:overworld"),BlockPosition(1,64,2),if(phase==BlockMovementPhase.FALL_START)sand else air,if(phase==BlockMovementPhase.FALL_START)air else sand,if(phase==BlockMovementPhase.PISTON)ChangeCause.PISTON else ChangeCause.GRAVITY,ActionType.BLOCK_CHANGE,movementId=id,movementPhase=phase),BlockRollbackState.ACTIVE)
     @Test fun startDoesNotClaimDeliveryAndLandingIsExplicit() {
@@ -17,6 +20,6 @@ class BlockMovementFormatterTest {
     @Test fun settledPistonRowExposesTheFullCorrelationOnHover() {
         val line=BlockHistoryFormatter.lines(listOf(row(BlockMovementPhase.PISTON)),1000)[1]
         assertTrue("piston changed" in line.string)
-        assertTrue(id.toString() in line.style.hoverEvent!!.getValue(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT)!!.string)
+        assertTrue(id.toString() in line.style.hoverEvent!!.getValue(HoverEvent.Action.SHOW_TEXT)!!.string)
     }
 }

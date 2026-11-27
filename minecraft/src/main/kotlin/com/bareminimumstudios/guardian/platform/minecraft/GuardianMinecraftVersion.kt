@@ -1,9 +1,11 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.Properties
+
 /** The exact target is packaged by Gradle, including for maintenance before a server exists. */
 object GuardianMinecraftVersion {
     val current: String by lazy {
-        val properties=java.util.Properties()
+        val properties=Properties()
         checkNotNull(GuardianMinecraftVersion::class.java.getResourceAsStream("/guardian-build.properties")) {
             "Guardian build metadata is missing"
         }.use { properties.load(it) }

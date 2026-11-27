@@ -1,5 +1,16 @@
 package com.bareminimumstudios.guardian.rollback
 
+import com.bareminimumstudios.guardian.permission.PermissionService
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedChunkReader
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedContainerDecoder
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerDecoder
+import com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerReader
+import net.minecraft.core.registries.Registries
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.storage.LevelResource
 import com.bareminimumstudios.guardian.domain.ItemSlotOwner
 import com.bareminimumstudios.guardian.logging.*
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
@@ -11,8 +22,8 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /** Operator view only. It never replays items, changes phases or releases persistent claims. */
-class ItemRecoveryService(private val server: MinecraftServer,private val history: BlockHistoryService,private val pipeline: BufferedLogPipeline,private val permissions: com.bareminimumstudios.guardian.permission.PermissionService,private val otherBusy: () -> Boolean) {
-    private val players=com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerReader()
+class ItemRecoveryService(private val server: MinecraftServer,private val history: BlockHistoryService,private val pipeline: BufferedLogPipeline,private val permissions: PermissionService,private val otherBusy: () -> Boolean) {
+    private val players=MinecraftSavedPlayerReader()
     private var active: Session?=null
     private var recent: List<String> = emptyList()
     fun isBusy()=active!=null
@@ -28,7 +39,7 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
                 if(!authorize(session)) return@recoveryHeaders
                 recent=headers.map { it.operationId.toString() }
                 source.sendSystemMessage(Component.literal("Guardian unfinished item journals: ${headers.size} shown (maximum 10)."))
-                headers.forEach { source.sendSystemMessage(Component.literal("${it.operationId} | ${it.phase}").withStyle { style -> style.withClickEvent(net.minecraft.network.chat.ClickEvent.SuggestCommand("/guardian rollback-items recovery ${it.operationId}")) }) }
+                headers.forEach { source.sendSystemMessage(Component.literal("${it.operationId} | ${it.phase}").withStyle { style -> style.withClickEvent(ClickEvent.SuggestCommand("/guardian rollback-items recovery ${it.operationId}")) }) }
                 source.sendSystemMessage(Component.literal("Use /guardian rollback-items recovery <operation UUID>. Read-only; no claims cleared."));active=null
             }, { refuse(session,"Journal listing failed or persistent storage is unavailable.") })
             else history.recoveryRecord(id,{ record ->
@@ -69,15 +80,15 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
     }
     private fun readSaved(session: Session,owner: ItemSlotOwner.BlockContainer) {
         session.ready=false
-        val key=net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,net.minecraft.resources.Identifier.parse(owner.dimension.toString()))
+        val key=ResourceKey.create(Registries.DIMENSION,Identifier.parse(owner.dimension.toString()))
         val world=server.getLevel(key)
         if(world==null) { session.check!!.accept(owner,null);session.ready=true;return }
-        val pos=net.minecraft.world.level.ChunkPos(owner.position.x shr 4,owner.position.z shr 4)
+        val pos=ChunkPos(owner.position.x shr 4,owner.position.z shr 4)
         try {
-            com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedChunkReader.read(world.chunkSource.chunkMap,pos).whenComplete { tag,error -> server.execute {
+            MinecraftSavedChunkReader.read(world.chunkSource.chunkMap,pos).whenComplete { tag,error -> server.execute {
                 if(!authorize(session)) return@execute
                 val snapshot=if(error!=null || tag==null || tag.isEmpty) null else runCatching {
-                    com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedContainerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),world.registryAccess())
+                    MinecraftSavedContainerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),world.registryAccess())
                 }.getOrNull()
                 session.check!!.accept(owner,snapshot);session.ready=true
             } }
@@ -85,11 +96,11 @@ class ItemRecoveryService(private val server: MinecraftServer,private val histor
     }
     private fun readSavedPlayer(session: Session,owner: ItemSlotOwner.PlayerInventory) {
         session.ready=false
-        val folder=server.getWorldPath(net.minecraft.world.level.storage.LevelResource.PLAYER_DATA_DIR)
+        val folder=server.getWorldPath(LevelResource.PLAYER_DATA_DIR)
         players.read(folder,owner.playerId).whenComplete { tag,error -> server.execute {
             if(!authorize(session)) return@execute
             val snapshot=if(error!=null || tag==null || tag.isEmpty) null else runCatching {
-                com.bareminimumstudios.guardian.platform.minecraft.MinecraftSavedPlayerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),server.registryAccess())
+                MinecraftSavedPlayerDecoder.decode(tag.get(),owner,session.check!!.addresses(owner),server.registryAccess())
             }.getOrNull()
             session.check!!.accept(owner,snapshot);session.ready=true
         } }

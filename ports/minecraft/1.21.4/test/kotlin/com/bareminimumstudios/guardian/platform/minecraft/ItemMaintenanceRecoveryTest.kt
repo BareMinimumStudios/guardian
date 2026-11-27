@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.jdbc.SqliteStorageBackend
@@ -87,7 +88,7 @@ class ItemMaintenanceRecoveryTest {
         assertEquals(ItemRollbackPhase.CANCELLED,f.db.itemRollback(f.record.operationId)!!.phase)
         assertFalse(Files.exists(f.playerFile));assertContentEquals(region,Files.readAllBytes(f.regionFile))
         assertTrue(f.db.unfinishedItemRollbacks(10).isEmpty());assertNull(f.engine.preview(f.record.operationId))
-        val rows=f.db.lookupContainers(com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery(limit=50))
+        val rows=f.db.lookupContainers(ContainerLookupQuery(limit=50))
         assertEquals(ItemRollbackPhase.PREPARED,f.db.prepareItemRollback(UUID.randomUUID(),3,rows).phase)
     }
     @Test fun applyingOperationCannotBeCancelledUsingItsStalePreparedHeader() = Fixture().use { f ->

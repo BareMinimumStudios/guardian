@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.lookup
 
+import com.bareminimumstudios.guardian.domain.BlockMovementPhase
+import com.bareminimumstudios.guardian.platform.minecraft.CopperSurfaceHistory
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
 import com.bareminimumstudios.guardian.domain.ActionType
 import com.bareminimumstudios.guardian.domain.ActorIdentity
 import com.bareminimumstudios.guardian.domain.ChangeCause
@@ -16,8 +20,8 @@ object BlockHistoryFormatter {
             add(Component.literal("Guardian block history (${rows.size} result${if (rows.size == 1) "" else "s"}):"))
             rows.forEach { row ->
                 val line=Component.literal(formatRow(row,nowEpochMillis))
-                row.snapshot.movementId?.let { id -> line.withStyle { it.withHoverEvent(net.minecraft.network.chat.HoverEvent.ShowText(Component.literal("Movement: $id\nPhase: ${row.snapshot.movementPhase}\nSearch this movement with m:$id"))).withClickEvent(net.minecraft.network.chat.ClickEvent.SuggestCommand("/guardian lookup m:$id")) } }
-                if(row.snapshot.cause==ChangeCause.SIGN_TEXT)line.withStyle { it.withHoverEvent(net.minecraft.network.chat.HoverEvent.ShowText(Component.literal(SignHistoryDetails.hover(row.snapshot)))) }
+                row.snapshot.movementId?.let { id -> line.withStyle { it.withHoverEvent(HoverEvent.ShowText(Component.literal("Movement: $id\nPhase: ${row.snapshot.movementPhase}\nSearch this movement with m:$id"))).withClickEvent(ClickEvent.SuggestCommand("/guardian lookup m:$id")) } }
+                if(row.snapshot.cause==ChangeCause.SIGN_TEXT)line.withStyle { it.withHoverEvent(HoverEvent.ShowText(Component.literal(SignHistoryDetails.hover(row.snapshot)))) }
                 add(line)
             }
         }
@@ -31,11 +35,11 @@ object BlockHistoryFormatter {
             is ActorIdentity.System -> identity.source
             ActorIdentity.Unknown -> "unknown"
         }
-        val copper=if(s.cause==ChangeCause.PLAYER && s.action==ActionType.BLOCK_CHANGE)com.bareminimumstudios.guardian.platform.minecraft.CopperSurfaceHistory.describe(s.before,s.after) else null
+        val copper=if(s.cause==ChangeCause.PLAYER && s.action==ActionType.BLOCK_CHANGE)CopperSurfaceHistory.describe(s.before,s.after) else null
         val fireIds=setOf("minecraft:fire","minecraft:soul_fire")
-        val change = if(s.cause==ChangeCause.LECTERN) LecternHistoryDetails.summary(s) else if(s.cause==ChangeCause.SIGN_TEXT) SignHistoryDetails.summary(s) else if(copper!=null)copper else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
-        else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.FALL_LAND) "falling block landed: ${s.after.blockId}"
-        else if(s.movementPhase==com.bareminimumstudios.guardian.domain.BlockMovementPhase.PISTON) "piston changed ${s.before.blockId} -> ${s.after.blockId}"
+        val change = if(s.cause==ChangeCause.LECTERN) LecternHistoryDetails.summary(s) else if(s.cause==ChangeCause.SIGN_TEXT) SignHistoryDetails.summary(s) else if(copper!=null)copper else if(s.movementPhase==BlockMovementPhase.FALL_START) "began falling: ${s.before.blockId}"
+        else if(s.movementPhase==BlockMovementPhase.FALL_LAND) "falling block landed: ${s.after.blockId}"
+        else if(s.movementPhase==BlockMovementPhase.PISTON) "piston changed ${s.before.blockId} -> ${s.after.blockId}"
         else if(s.cause==ChangeCause.FIRE) when {
             s.before.blockId.toString() in fireIds && s.after.blockId.toString() !in fireIds -> "extinguished ${s.before.blockId}"
             s.after.blockId.toString() in fireIds && s.action==ActionType.BLOCK_PLACE -> "ignited ${s.after.blockId}"

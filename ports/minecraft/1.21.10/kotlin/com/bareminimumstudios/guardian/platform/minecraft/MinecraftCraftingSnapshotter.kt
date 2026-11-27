@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.UUID
+import net.minecraft.core.HolderLookup
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.mixin.CraftingMenuAccessor
 import net.minecraft.server.level.ServerPlayer
@@ -30,7 +32,7 @@ object MinecraftCraftingSnapshotter {
     fun capture(menu: AbstractContainerMenu, player: ServerPlayer): InventorySnapshot? =
         capture(menu, player.inventory, player.uuid, player.registryAccess())
 
-    fun capture(menu: AbstractContainerMenu, inventory: Inventory, playerId: java.util.UUID, registries: net.minecraft.core.HolderLookup.Provider): InventorySnapshot? {
+    fun capture(menu: AbstractContainerMenu, inventory: Inventory, playerId: UUID, registries: HolderLookup.Provider): InventorySnapshot? {
         val grid = grid(menu, inventory) ?: return null
         val slots = LinkedHashMap(MinecraftInventorySnapshotter.capturePlayer(menu, inventory, playerId, registries).slots)
         val owner = ItemSlotOwner.CraftingGrid(playerId, menu.containerId)

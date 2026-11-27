@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.resources.RegistryOps
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -14,8 +15,8 @@ import kotlin.test.*
 
 class MinecraftSavedContainerDecoderTest {
     companion object {
-        init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() }
-        private val registries=com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries
+        init { MinecraftTestBootstrap.initialize() }
+        private val registries=MinecraftTestBootstrap.registries
     }
     private val owner=ItemSlotOwner.BlockContainer(ResourceId.parse("minecraft:overworld"),BlockPosition(-1,64,17))
     private val address=ItemSlotAddress(owner,0)
@@ -23,7 +24,7 @@ class MinecraftSavedContainerDecoderTest {
     private fun chunk(entity: CompoundTag=entity())=CompoundTag().apply {
         putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion().version());putInt("xPos",-1);putInt("zPos",1);putString("Status","minecraft:full");put("block_entities",ListTag().apply { add(entity) })
     }
-    private fun item(slot: Int=0,stack: ItemStack=ItemStack(Items.COAL,5))=(ItemStack.CODEC.encodeStart(net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE,registries),stack).orThrow as CompoundTag).apply { putByte("Slot",slot.toByte()) }
+    private fun item(slot: Int=0,stack: ItemStack=ItemStack(Items.COAL,5))=(ItemStack.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE,registries),stack).orThrow as CompoundTag).apply { putByte("Slot",slot.toByte()) }
     private fun decode(chunk: CompoundTag,wanted: Set<ItemSlotAddress> = setOf(address))=MinecraftSavedContainerDecoder.decode(chunk,owner,wanted,registries)
     @Test fun readsExactSavedCountsComponentsAndEmptySlotsWithoutMutatingNbt() {
         val stack=ItemStack(Items.COAL,5).apply { set(DataComponents.CUSTOM_NAME,Component.literal("Stored coal")) }

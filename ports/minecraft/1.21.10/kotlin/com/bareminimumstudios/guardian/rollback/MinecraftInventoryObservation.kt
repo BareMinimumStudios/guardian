@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.rollback
 
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.level.block.ChestBlock
+import net.minecraft.world.level.block.state.properties.ChestType
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.platform.minecraft.*
 import com.bareminimumstudios.guardian.mixin.CompoundContainerAccessor
@@ -35,7 +38,7 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                     val entity=level.getBlockEntity(pos) ?: return reject("no block entity exists at this position")
                     if(entity !is Container) return reject("block entity is not an inventory ("+entity.javaClass.name+")")
                     val state=level.getBlockState(pos)
-                    if(state.block is net.minecraft.world.level.block.ChestBlock && state.getValue(net.minecraft.world.level.block.ChestBlock.TYPE)!=net.minecraft.world.level.block.state.properties.ChestType.SINGLE && !loaded(level,pos.relative(net.minecraft.world.level.block.ChestBlock.getConnectedDirection(state)))) return reject("other half of the double chest is not loaded")
+                    if(state.block is ChestBlock && state.getValue(ChestBlock.TYPE)!=ChestType.SINGLE && !loaded(level,pos.relative(ChestBlock.getConnectedDirection(state)))) return reject("other half of the double chest is not loaded")
                     val container=MinecraftBlockContainerSnapshotter.resolve(level,pos) ?: return reject("container could not be resolved")
                     for(part in parts(container)) {
                         if(part.level !== level) return reject("container belongs to a different level")
@@ -73,7 +76,7 @@ class MinecraftInventoryObservation private constructor(val snapshot: InventoryS
                         player.level().server!==server->"player belongs to a different server"
                         player.isRemoved->"player entity is removed"
                         player.inventory!==inventory->"player inventory object was replaced"
-                        inventory.javaClass!=net.minecraft.world.entity.player.Inventory::class.java->"unsupported player inventory implementation ("+inventory.javaClass.name+")"
+                        inventory.javaClass!=Inventory::class.java->"unsupported player inventory implementation ("+inventory.javaClass.name+")"
                         inventory.player!==player->"inventory is attached to a different player"
                         inventory.containerSize!=43->"unsupported player inventory size ("+inventory.containerSize+"; expected 43)"
                         player.inventoryMenu!==menu->"personal inventory menu was replaced"

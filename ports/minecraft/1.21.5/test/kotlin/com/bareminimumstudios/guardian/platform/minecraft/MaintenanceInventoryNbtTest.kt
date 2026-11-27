@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.UUIDUtil
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import net.minecraft.SharedConstants
@@ -14,7 +15,7 @@ import java.util.UUID
 import kotlin.test.*
 
 class MaintenanceInventoryNbtTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() };private val registries=com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries }
+    companion object { init { MinecraftTestBootstrap.initialize() };private val registries=MinecraftTestBootstrap.registries }
     private val player=ItemSlotOwner.PlayerInventory(UUID.randomUUID())
     private val block=ItemSlotOwner.BlockContainer(ResourceId.parse("minecraft:overworld"),BlockPosition(0,64,0))
     private val a=ItemSlotAddress(player,0);private val b=ItemSlotAddress(block,0)
@@ -27,7 +28,7 @@ class MaintenanceInventoryNbtTest {
     }))
     private fun saved(count: Int=9)=MinecraftItemSnapshotter.decodeTag(item.itemData!!.copyBytes()).apply { putInt("count",count);putByte("Slot",0) }
     private fun playerTag(withItem: Boolean=false)=CompoundTag().apply {
-        putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",net.minecraft.core.UUIDUtil.CODEC,player.playerId)
+        putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",UUIDUtil.CODEC,player.playerId)
         putString("Unrelated","keep player fields")
         put("Inventory",ListTag().apply { if(withItem)add(saved()) })
     }
@@ -65,7 +66,7 @@ class MaintenanceInventoryNbtTest {
         assertFailsWith<IllegalArgumentException> { MaintenanceInventoryNbt.repair(p,player,images) }
         val unknown=playerTag(true);unknown.getList("Inventory").orElseThrow().getCompound(0).orElseThrow().putString("mod_extra","must not discard")
         assertFailsWith<IllegalArgumentException> { MaintenanceInventoryNbt.repair(unknown,player,images) }
-        val other=playerTag();other.store("UUID",net.minecraft.core.UUIDUtil.CODEC,UUID.randomUUID())
+        val other=playerTag();other.store("UUID",UUIDUtil.CODEC,UUID.randomUUID())
         assertFailsWith<IllegalArgumentException> { MaintenanceInventoryNbt.repair(other,player,images) }
     }
     @Test fun paddedMultiEntrySectionPaletteSelectsThePhysicalContainer() {

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.world.entity.LivingEntity;
 import com.bareminimumstudios.guardian.platform.minecraft.FluidHistoryCapture;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(BucketItem.class)
 public abstract class BucketFluidPlacementMixin {
     @WrapMethod(method = "emptyContents(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z")
-    private boolean guardian$placeFluid(net.minecraft.world.entity.LivingEntity player, Level level, BlockPos pos, BlockHitResult hit, Operation<Boolean> original) {
+    private boolean guardian$placeFluid(LivingEntity player, Level level, BlockPos pos, BlockHitResult hit, Operation<Boolean> original) {
         FluidHistoryCapture.Pending pending=player instanceof Player actor ? FluidHistoryCapture.begin(actor,level,pos) : null;
         boolean result=original.call(player,level,pos,hit);
         FluidHistoryCapture.finish(pending,result,false);

@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import java.util.concurrent.TimeUnit
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.domain.InventorySnapshot
 import net.minecraft.server.MinecraftServer
@@ -141,7 +142,7 @@ internal class MinecraftItemOperations(
     private fun advanceRestart(admission: RestartRecoveryAdmission) {
         val query=admission.query
         if(query!=null) {
-            if(System.nanoTime()-admission.started > java.util.concurrent.TimeUnit.SECONDS.toNanos(10)) {
+            if(System.nanoTime()-admission.started > TimeUnit.SECONDS.toNanos(10)) {
                 admission.state=if(admission.host==null)RestartAdmissionState.REFUSED else RestartAdmissionState.RECOVERY_REQUIRED
                 admission.reason="Restart receipt query timed out";query.close()
             }
@@ -198,7 +199,7 @@ internal class MinecraftItemOperations(
 
     private fun advanceRecovery(entry: Entry, recovery: Recovery) {
         if(recovery.closed)return
-        check(System.nanoTime()-recovery.started < java.util.concurrent.TimeUnit.SECONDS.toNanos(10))
+        check(System.nanoTime()-recovery.started < TimeUnit.SECONDS.toNanos(10))
         check(recovery.quiescent() && entry.lease.isRetained(entry.lease.owners))
         val fence=recovery.fence.toCompletableFuture()
         if(!fence.isDone)return

@@ -1,4 +1,5 @@
 package com.bareminimumstudios.guardian.platform.minecraft
+import java.util.ArrayDeque
 import com.bareminimumstudios.guardian.config.GuardianConfig
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.BufferedLogPipeline
@@ -25,8 +26,8 @@ object BlockMovementCapture {
     internal class Plan(val level:ServerLevel,val id:UUID,val before:Map<BlockPos,BlockStateSnapshot>,val expected:Map<BlockPos,BlockStateSnapshot>,val deadline:Long)
     class FallStart internal constructor(val level:ServerLevel,val pos:BlockPos,val before:BlockStateSnapshot,val expected:BlockStateSnapshot)
     class FallTick internal constructor(val entity:FallingBlockEntity,val level:ServerLevel) { internal var landing:Pair<BlockPos,BlockStateSnapshot>?=null }
-    private val pistonFrames=ThreadLocal.withInitial{java.util.ArrayDeque<PistonFrame>()}
-    private val fallFrames=ThreadLocal.withInitial{java.util.ArrayDeque<FallTick>()}
+    private val pistonFrames=ThreadLocal.withInitial{ArrayDeque<PistonFrame>()}
+    private val fallFrames=ThreadLocal.withInitial{ArrayDeque<FallTick>()}
     private val pending=mutableListOf<Plan>()
     private var lastWarning=0L
     fun install(writer:()->BufferedLogPipeline?,settings:()->GuardianConfig?) {

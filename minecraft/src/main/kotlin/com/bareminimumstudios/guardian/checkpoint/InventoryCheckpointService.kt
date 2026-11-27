@@ -1,5 +1,11 @@
 package com.bareminimumstudios.guardian.checkpoint
 
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import java.util.ArrayDeque
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 import com.bareminimumstudios.guardian.command.CheckpointCommandFilters
 import com.bareminimumstudios.guardian.lookup.BlockHistoryService
 import com.bareminimumstudios.guardian.permission.PermissionService
@@ -15,7 +21,7 @@ class InventoryCheckpointService(
     val automatic:Boolean,val intervalSeconds:Int,val limits:InventoryCheckpointLimits,
     private val captureAllowed:()->Boolean,private val otherBusy:()->Boolean
 ) {
-    private val scan=java.util.ArrayDeque<UUID>()
+    private val scan=ArrayDeque<UUID>()
     private val pending=mutableSetOf<UUID>()
     private var nextScan:Long?=null
     private var nanoTime:()->Long=System::nanoTime
@@ -26,7 +32,7 @@ class InventoryCheckpointService(
     private var suggesting=false
     private var lastSaveNanos=0L;private var maxSaveNanos=0L
     private var lastNanos=0L;private var maxNanos=0L;private var lastWarning=0L
-    private val logger=org.slf4j.LoggerFactory.getLogger("Guardian/Checkpoints")
+    private val logger=LoggerFactory.getLogger("Guardian/Checkpoints")
     fun status()="Inventory checkpoints: automatic=$automatic pending=${pending.size} captured=$captured unchanged=$unchanged failures=$failures skipped=$skipped captureLastMs=${lastNanos/1_000_000} captureMaxMs=${maxNanos/1_000_000} saveLastMs=${lastSaveNanos/1_000_000} saveMaxMs=${maxSaveNanos/1_000_000} lastSkip=$lastSkipReason"
 
     fun permitted(source:CommandSourceStack,restore:Boolean=false):Boolean=runCatching {
@@ -42,7 +48,7 @@ class InventoryCheckpointService(
         if(scan.isEmpty()) {
             // nanoTime may have a negative origin and can wrap.
             if(nextScan?.let { now-it<0 }==true)return
-            scan.addAll(server.playerList.players.map { it.uuid });nextScan=now+java.util.concurrent.TimeUnit.SECONDS.toNanos(intervalSeconds.toLong())
+            scan.addAll(server.playerList.players.map { it.uuid });nextScan=now+TimeUnit.SECONDS.toNanos(intervalSeconds.toLong())
         }
         val id=scan.pollFirst() ?: return
         if(id in pending)return
@@ -83,7 +89,7 @@ class InventoryCheckpointService(
             failures++
             if(source!=null && permitted(source))fail(source,error.message?.take(180) ?: "Checkpoint could not be saved.")
             val now=System.nanoTime()
-            if(now-lastWarning>java.util.concurrent.TimeUnit.SECONDS.toNanos(30)) {
+            if(now-lastWarning>TimeUnit.SECONDS.toNanos(30)) {
                 lastWarning=now;logger.warn("Inventory checkpoint persistence refused or failed; failures={}; {}",failures,error.javaClass.simpleName)
             }
         })
@@ -158,10 +164,10 @@ class InventoryCheckpointService(
         return true
     }
 
-    fun suggestIds(source:CommandSourceStack,builder:com.mojang.brigadier.suggestion.SuggestionsBuilder):java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> {
-        if(!permitted(source) || suggesting)return com.mojang.brigadier.suggestion.Suggestions.empty()
+    fun suggestIds(source:CommandSourceStack,builder:SuggestionsBuilder):CompletableFuture<Suggestions> {
+        if(!permitted(source) || suggesting)return Suggestions.empty()
         suggesting=true
-        val future=java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions>()
+        val future=CompletableFuture<Suggestions>()
         history.checkpointHeaders(null,10,0,null,{ rows ->
             suggesting=false
             if(permitted(source))rows.map { it.checkpointId.toString() }.filter { it.startsWith(builder.remaining,true) }.forEach { builder.suggest(it) }

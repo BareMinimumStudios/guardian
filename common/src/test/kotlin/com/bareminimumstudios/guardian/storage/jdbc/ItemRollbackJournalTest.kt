@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.io.File
+import java.util.concurrent.TimeUnit
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.*
 import com.bareminimumstudios.guardian.storage.query.ContainerLookupQuery
@@ -115,10 +117,10 @@ class ItemRollbackJournalTest {
         factory(path).use { db -> db.open();db.append(listOf(ContainerAuditEntry(value)));db.prepareItemRollback(id,200,listOf(value)) }
         val driver=if(prefix.contains("sqlite")) "org.sqlite.JDBC" else "org.duckdb.DuckDBDriver"
         val classes=listOf(ItemJournalCrashWriter::class.java,Class.forName(driver),Class.forName("org.slf4j.LoggerFactory"))
-        val classpath=classes.map { Path.of(it.protectionDomain.codeSource.location.toURI()).toString() }.distinct().joinToString(java.io.File.pathSeparator)
+        val classpath=classes.map { Path.of(it.protectionDomain.codeSource.location.toURI()).toString() }.distinct().joinToString(File.pathSeparator)
         val process=ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-cp",classpath,ItemJournalCrashWriter::class.java.name,driver,prefix+path.toAbsolutePath(),id.toString()).redirectErrorStream(true).start()
         try {
-            assertTrue(process.waitFor(30,java.util.concurrent.TimeUnit.SECONDS))
+            assertTrue(process.waitFor(30,TimeUnit.SECONDS))
             val output=process.inputStream.bufferedReader().readText()
             assertEquals(23,process.exitValue(),output);assertContains(output,"APPLY_INTENT_COMMITTED")
         } finally { if(process.isAlive) process.destroyForcibly() }

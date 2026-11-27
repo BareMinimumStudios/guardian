@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.storage.jdbc
 
+import java.util.UUID
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.ContainerHistoryGuard
 import com.bareminimumstudios.guardian.storage.codec.ContainerChangesCodec
@@ -38,7 +39,7 @@ internal object ContainerOwnerIndex {
         }
     }
 
-    data class Source(val transactionId: java.util.UUID, val timestampEpochMillis: Long, val changes: List<ItemSlotChange>)
+    data class Source(val transactionId: UUID, val timestampEpochMillis: Long, val changes: List<ItemSlotChange>)
 
     fun guard(connection: Connection, rows: List<ContainerTransactionSnapshot>): ContainerHistoryGuard =
         guardSources(connection, rows.map { Source(it.transactionId, it.timestampEpochMillis, it.changes) })
@@ -71,9 +72,9 @@ internal object ContainerOwnerIndex {
                 query.executeQuery().use { if(it.next()) blocks.add(owner) }
             }
         }
-        val claimed=mutableSetOf<java.util.UUID>()
+        val claimed=mutableSetOf<UUID>()
         connection.prepareStatement("SELECT transaction_uuid FROM ex_item_rollback_claim WHERE transaction_uuid IN ($placeholders)").use { query ->
-            selected.forEachIndexed { index,id -> query.setString(index+1,id) };query.executeQuery().use { result -> while(result.next()) claimed.add(java.util.UUID.fromString(result.getString(1))) }
+            selected.forEachIndexed { index,id -> query.setString(index+1,id) };query.executeQuery().use { result -> while(result.next()) claimed.add(UUID.fromString(result.getString(1))) }
         }
         return ContainerHistoryGuard(newer,blocks,reserved,claimed)
     }

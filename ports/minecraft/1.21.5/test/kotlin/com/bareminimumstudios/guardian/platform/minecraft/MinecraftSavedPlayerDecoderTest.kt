@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.UUIDUtil
+import net.minecraft.resources.RegistryOps
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -14,11 +16,11 @@ import java.util.UUID
 import kotlin.test.*
 
 class MinecraftSavedPlayerDecoderTest {
-    companion object { init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() };private val registries=com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries }
+    companion object { init { MinecraftTestBootstrap.initialize() };private val registries=MinecraftTestBootstrap.registries }
     private val owner=ItemSlotOwner.PlayerInventory(UUID.randomUUID())
     private fun address(index: Int)=ItemSlotAddress(owner,index)
-    private fun item(slot: Int,stack: ItemStack=ItemStack(Items.COAL,5))=(ItemStack.CODEC.encodeStart(net.minecraft.resources.RegistryOps.create(NbtOps.INSTANCE,registries),stack).orThrow as CompoundTag).apply { putByte("Slot",slot.toByte()) }
-    private fun tag(vararg items: CompoundTag)=CompoundTag().apply { putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",net.minecraft.core.UUIDUtil.CODEC,owner.playerId);put("Inventory",ListTag().apply { items.forEach { add(it) } }) }
+    private fun item(slot: Int,stack: ItemStack=ItemStack(Items.COAL,5))=(ItemStack.CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE,registries),stack).orThrow as CompoundTag).apply { putByte("Slot",slot.toByte()) }
+    private fun tag(vararg items: CompoundTag)=CompoundTag().apply { putInt("DataVersion",SharedConstants.getCurrentVersion().dataVersion.version);store("UUID",UUIDUtil.CODEC,owner.playerId);put("Inventory",ListTag().apply { items.forEach { add(it) } }) }
     private fun decode(tag: CompoundTag,wanted: Set<ItemSlotAddress> = setOf(address(0)))=MinecraftSavedPlayerDecoder.decode(tag,owner,wanted,registries)
     @Test fun mapsSeparateMainAndEquipmentStorageIncludingBodyAndSaddle() {
         val saved=tag(item(0),item(35)).apply {
@@ -35,7 +37,7 @@ class MinecraftSavedPlayerDecoderTest {
         assertEquals(MinecraftItemSnapshotter.capture(stack,registries),decode(tag).slots[address(0)]);assertEquals(before,tag)
     }
     @Test fun refusesWrongMissingUuidAndIncompatibleDataVersion() {
-        for(change in listOf<(CompoundTag)->Unit>({ it.remove("UUID") },{ it.store("UUID",net.minecraft.core.UUIDUtil.CODEC,UUID.randomUUID()) },{ it.putInt("DataVersion",1) },{ it.remove("DataVersion") })) assertFails { decode(tag().apply(change)) }
+        for(change in listOf<(CompoundTag)->Unit>({ it.remove("UUID") },{ it.store("UUID",UUIDUtil.CODEC,UUID.randomUUID()) },{ it.putInt("DataVersion",1) },{ it.remove("DataVersion") })) assertFails { decode(tag().apply(change)) }
     }
     @Test fun requiresInventoryListAndRejectsDuplicateOrMalformedSlots() {
         assertFails { decode(tag().apply { remove("Inventory") }) };assertFails { decode(tag().apply { putString("Inventory","invalid") }) }

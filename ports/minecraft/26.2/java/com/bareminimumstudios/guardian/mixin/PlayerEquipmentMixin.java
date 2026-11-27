@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.mixin;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 import com.bareminimumstudios.guardian.platform.minecraft.MinecraftInventoryCoordination;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -10,7 +13,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
-@Mixin(net.minecraft.world.entity.LivingEntity.class)
+@Mixin(LivingEntity.class)
 public abstract class PlayerEquipmentMixin {
     @WrapMethod(method = "setItemSlot")
     private void guardian$beforeEquip(EquipmentSlot slot, ItemStack stack, Operation<Void> original) {
@@ -19,7 +22,7 @@ public abstract class PlayerEquipmentMixin {
     }
 
     @WrapMethod(method = "applyItemBlocking")
-    private float guardian$beforeShieldDamage(net.minecraft.server.level.ServerLevel level, net.minecraft.world.damagesource.DamageSource source, float amount, Operation<Float> original) {
+    private float guardian$beforeShieldDamage(ServerLevel level, DamageSource source, float amount, Operation<Float> original) {
         if ((Object) this instanceof ServerPlayer player) MinecraftInventoryCoordination.beforeEquipmentMutation(player);
         return original.call(level,source,amount);
     }

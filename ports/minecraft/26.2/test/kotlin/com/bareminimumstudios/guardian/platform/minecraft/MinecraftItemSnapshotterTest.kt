@@ -1,5 +1,7 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.component.DataComponentType
+import net.minecraft.network.codec.StreamCodec
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -15,8 +17,8 @@ import kotlin.test.*
 
 class MinecraftItemSnapshotterTest {
     companion object {
-        init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() }
-        private val registries = com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries
+        init { MinecraftTestBootstrap.initialize() }
+        private val registries = MinecraftTestBootstrap.registries
     }
     @Test fun batchReusesDefaultPayloadWithoutReusingCounts() {
         val batch = MinecraftItemSnapshotter.CaptureBatch(registries)
@@ -47,8 +49,8 @@ class MinecraftItemSnapshotterTest {
         val batch = MinecraftItemSnapshotter.CaptureBatch(registries)
         val stack = ItemStack(Items.STONE)
         batch.capture(stack)
-        val component = net.minecraft.core.component.DataComponentType.builder<String>()
-            .networkSynchronized(net.minecraft.network.codec.StreamCodec.unit("test")).build()
+        val component = DataComponentType.builder<String>()
+            .networkSynchronized(StreamCodec.unit("test")).build()
         stack.set(component, "value")
         assertFailsWith<IllegalArgumentException> { batch.capture(stack) }
     }
@@ -85,8 +87,8 @@ class MinecraftItemSnapshotterTest {
         assertTrue(MinecraftItemSnapshotter.restore(ItemStackSnapshot.EMPTY, registries).isEmpty)
     }
     @Test fun transientComponentsAreRejectedInsteadOfSilentlyLost() {
-        val component = net.minecraft.core.component.DataComponentType.builder<String>()
-            .networkSynchronized(net.minecraft.network.codec.StreamCodec.unit("test")).build()
+        val component = DataComponentType.builder<String>()
+            .networkSynchronized(StreamCodec.unit("test")).build()
         val stack = ItemStack(Items.STONE); stack.set(component, "value")
         assertFailsWith<IllegalArgumentException> { MinecraftItemSnapshotter.capture(stack, registries) }
     }

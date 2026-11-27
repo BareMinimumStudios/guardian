@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.inventory.ContainerInput
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.logging.container.ContainerTransactionCorrelation
 import net.minecraft.SharedConstants
@@ -21,8 +22,8 @@ import kotlin.test.*
 
 class MinecraftInventorySnapshotterTest {
     companion object {
-        init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() }
-        private val registries = com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries
+        init { MinecraftTestBootstrap.initialize() }
+        private val registries = MinecraftTestBootstrap.registries
     }
     // Snapshot and eligibility paths do not call player behavior; no running server is needed.
     private val inventory = InventoryMenuFixtures.inventory()
@@ -57,8 +58,8 @@ class MinecraftInventorySnapshotterTest {
     }
 
     @Test fun thrownCraftingResultIsSkippedUntilEntityOwnershipExists() {
-        assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,0,net.minecraft.world.inventory.ContainerInput.THROW))
-        assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,1,net.minecraft.world.inventory.ContainerInput.THROW))
+        assertFalse(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,0,ContainerInput.THROW))
+        assertTrue(MinecraftCraftingSnapshotter.acceptsClick(menu,inventory,1,ContainerInput.THROW))
     }
 
     @Test fun acceptsOccupiedCraftingInputsAndDerivedResults() {

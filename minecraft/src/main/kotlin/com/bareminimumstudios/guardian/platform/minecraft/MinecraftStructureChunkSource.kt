@@ -1,5 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.world.level.dimension.DimensionType
 import com.bareminimumstudios.guardian.claims.*
 import com.bareminimumstudios.guardian.domain.ResourceId
 import net.minecraft.nbt.*
@@ -30,7 +31,7 @@ internal class MinecraftStructureChunkSource(private val server: MinecraftServer
     private val version=MinecraftSavedPlayerDecoder.currentDataVersion()
     private val levels=server.allLevels.associate { level ->
         val id=MinecraftDimensionId.of(level)
-        val folder=net.minecraft.world.level.dimension.DimensionType.getStorageFolder(level.dimension(),root).normalize()
+        val folder=DimensionType.getStorageFolder(level.dimension(),root).normalize()
         require(folder.startsWith(root)) { "Unsafe structure metadata dimension path" }
         id to Level(level,id,folder,MinecraftStructureRegistry.selected(level,structures),level.chunkSource.chunkMap.chunkScanner())
     }

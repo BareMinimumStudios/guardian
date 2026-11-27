@@ -1,5 +1,8 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose
+import net.minecraft.core.UUIDUtil
+import net.minecraft.world.entity.player.Inventory
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.rollback.ItemRollbackImages
 import net.minecraft.SharedConstants
@@ -16,7 +19,7 @@ internal object MaintenanceInventoryNbt {
 
     /** Used only after the equipment planner validates every extra slot in private file copies. */
     fun repairEquipmentNormalPart(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
-        require(owner.layout!=null && images.record.purpose==com.bareminimumstudios.guardian.rollback.ItemRecoveryPurpose.CHECKPOINT_RESTORE)
+        require(owner.layout!=null && images.record.purpose==ItemRecoveryPurpose.CHECKPOINT_RESTORE)
         repairNormal(document,owner,images)
     }
 
@@ -30,7 +33,7 @@ internal object MaintenanceInventoryNbt {
         val key: String
         when(owner) {
             is ItemSlotOwner.PlayerInventory -> {
-                require(original.size==41 && document.read("UUID",net.minecraft.core.UUIDUtil.CODEC).isPresent && document.read("UUID",net.minecraft.core.UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player identity differs" }
+                require(original.size==41 && document.read("UUID",UUIDUtil.CODEC).isPresent && document.read("UUID",UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player identity differs" }
                 holder=document;key="Inventory"
             }
             is ItemSlotOwner.BlockContainer -> {
@@ -79,7 +82,7 @@ internal object MaintenanceInventoryNbt {
 
     /** 26.2 saves main inventory and equipment independently; neither side may be omitted from a repair. */
     private fun repairPlayer(document: CompoundTag, owner: ItemSlotOwner.PlayerInventory, images: ItemRollbackImages) {
-        require(document.read("UUID",net.minecraft.core.UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player identity differs" }
+        require(document.read("UUID",UUIDUtil.CODEC).orElseThrow()==owner.playerId) { "Saved player identity differs" }
         val original=images.original.slots.filterKeys { address -> address.owner==owner && (owner.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
         val expected=images.expected.slots.filterKeys { address -> address.owner==owner && (owner.layout?.normalSlots?.let { address.index<it } ?: true) }.entries.sortedBy { it.key.index }
         require(original.size==43 && expected.size==43 && original.map { it.key.index }==(0..42).toList() && expected.map { it.key.index }==(0..42).toList())
@@ -102,7 +105,7 @@ internal object MaintenanceInventoryNbt {
             require(slot in 0..35 && actual[slot]==null) { "Duplicate or unsupported saved slot" }
             actual[slot]=normalized(entry,true)
         }
-        val names=(36..42).associateBy { requireNotNull(net.minecraft.world.entity.player.Inventory.EQUIPMENT_SLOT_MAPPING.get(it)).serializedName }
+        val names=(36..42).associateBy { requireNotNull(Inventory.EQUIPMENT_SLOT_MAPPING.get(it)).serializedName }
         val equipment=document.get("equipment")
         require(equipment==null || equipment is CompoundTag)
         equipment?.let { items ->
@@ -113,7 +116,7 @@ internal object MaintenanceInventoryNbt {
         val result=ListTag();val resultEquipment=CompoundTag()
         expected.forEachIndexed { index,entry -> item(entry.value)?.let { stack ->
             if(index<36) { stack.putByte("Slot",index.toByte());result.add(stack) }
-            else resultEquipment.put(requireNotNull(net.minecraft.world.entity.player.Inventory.EQUIPMENT_SLOT_MAPPING.get(index)).serializedName,stack)
+            else resultEquipment.put(requireNotNull(Inventory.EQUIPMENT_SLOT_MAPPING.get(index)).serializedName,stack)
         } }
         document.put("Inventory",result)
         if(resultEquipment.isEmpty)document.remove("equipment") else document.put("equipment",resultEquipment)

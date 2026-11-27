@@ -1,4 +1,6 @@
 package com.bareminimumstudios.guardian.platform.minecraft
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.Component
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -39,10 +41,10 @@ class MinecraftCraftingSnapshotterTest {
     @Test fun ingredientComponentsAreImmutableAcrossLiveStackMutation() {
         val menu=CraftingTestInventory.menu(inventory)
         val stack=ItemStack(Items.OAK_LOG,2)
-        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Before"))
+        stack.set(DataComponents.CUSTOM_NAME,Component.literal("Before"))
         CraftingTestInventory.seed(menu.slots[1].container as CraftingContainer,0,stack)
         val first=MinecraftCraftingSnapshotter.capture(menu,inventory,id,registries)!!
-        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("After"));stack.count=1
+        stack.set(DataComponents.CUSTOM_NAME,Component.literal("After"));stack.count=1
         val second=MinecraftCraftingSnapshotter.capture(menu,inventory,id,registries)!!
         val address=ItemSlotAddress(ItemSlotOwner.CraftingGrid(id,0),0)
         assertEquals(2,first.slots.getValue(address).count)

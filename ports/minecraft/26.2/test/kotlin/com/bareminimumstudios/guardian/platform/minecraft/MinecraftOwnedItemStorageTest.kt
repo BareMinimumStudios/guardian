@@ -1,5 +1,9 @@
 package com.bareminimumstudios.guardian.platform.minecraft
 
+import net.minecraft.core.NonNullList
+import net.minecraft.core.component.DataComponentType
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.world.item.component.ItemAttributeModifiers
 import com.bareminimumstudios.guardian.domain.*
 import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
@@ -14,8 +18,8 @@ import kotlin.test.*
 
 class MinecraftOwnedItemStorageTest {
     companion object {
-        init { com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.initialize() }
-        private val registries = com.bareminimumstudios.guardian.platform.minecraft.MinecraftTestBootstrap.registries
+        init { MinecraftTestBootstrap.initialize() }
+        private val registries = MinecraftTestBootstrap.registries
     }
     private fun named() = ItemStack(Items.DIAMOND_SWORD).apply {
         set(DataComponents.CUSTOM_NAME, Component.literal("Original"))
@@ -41,7 +45,7 @@ class MinecraftOwnedItemStorageTest {
         input.set(DataComponents.CUSTOM_NAME, Component.literal("Input changed"))
         val read = storage.view[0]
         read.set(DataComponents.DAMAGE, 99)
-        read.set(DataComponents.ATTRIBUTE_MODIFIERS, net.minecraft.world.item.component.ItemAttributeModifiers.EMPTY)
+        read.set(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
         read.remove(DataComponents.CUSTOM_NAME)
         assertEquals(expected, snapshot(storage.view[0]))
     }
@@ -139,13 +143,13 @@ class MinecraftOwnedItemStorageTest {
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(emptyList(), registries) }
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(List(257) { ItemStack.EMPTY }, registries) }
         val stack = ItemStack(Items.STONE)
-        val transient = net.minecraft.core.component.DataComponentType.builder<String>()
-            .networkSynchronized(net.minecraft.network.codec.StreamCodec.unit("test")).build()
+        val transient = DataComponentType.builder<String>()
+            .networkSynchronized(StreamCodec.unit("test")).build()
         stack.set(transient, "value")
         assertFailsWith<IllegalArgumentException> { MinecraftOwnedItemStorage.capture(listOf(stack), registries) }
     }
     @Test fun nativeSetterGateIsScopedToTheCurrentViewThreadAndUnconsumedWrite() {
-        val ordinary=net.minecraft.core.NonNullList.withSize(1,ItemStack.EMPTY)
+        val ordinary=NonNullList.withSize(1,ItemStack.EMPTY)
         assertFalse(MinecraftOwnedItemStorage.ownsView(ordinary))
         assertTrue(MinecraftOwnedItemStorage.allowsNativeSetter(ordinary))
         val storage=MinecraftOwnedItemStorage.capture(listOf(named()),registries)

@@ -1,4 +1,6 @@
 package com.bareminimumstudios.guardian.export
+import java.nio.file.Path
+import java.util.Base64
 import com.bareminimumstudios.guardian.domain.*
 import com.bareminimumstudios.guardian.storage.*
 import com.bareminimumstudios.guardian.storage.jdbc.*
@@ -12,8 +14,8 @@ class HistoryExportTest {
     private val actor=ActorIdentity.Player(UUID.randomUUID(),"Alice")
     private fun event(text:String="quote \"\n\t\\ snow \u2603",kind:PlayerActivityKind=PlayerActivityKind.CHAT)=PlayerActivity(timestampEpochMillis=1,actor=actor,kind=kind,text=if(kind in setOf(PlayerActivityKind.CHAT,PlayerActivityKind.COMMAND))text else null)
     private fun block(bytes:Int=3)=StoredBlockChange(1,BlockChangeSnapshot(1,actor,ResourceId.parse("overworld"),BlockPosition(1,64,2),BlockStateSnapshot(ResourceId.parse("air")),BlockStateSnapshot(ResourceId.parse("oak_sign"),emptyMap(),BinaryPayload.of(ByteArray(bytes){1})),ChangeCause.SIGN_TEXT,ActionType.BLOCK_CHANGE),BlockRollbackState.ACTIVE)
-    private fun write(root:java.nio.file.Path,rows:List<Any>,permit:()->Boolean={true})=ExportFiles.write(root,ExportKind.CHAT,500,"t:1h","console",100,emptyMap(),rows,permit)
-    private fun files(root:java.nio.file.Path)=if(Files.exists(root.resolve("exports")))Files.list(root.resolve("exports")).use{it.toList()}else emptyList()
+    private fun write(root:Path,rows:List<Any>,permit:()->Boolean={true})=ExportFiles.write(root,ExportKind.CHAT,500,"t:1h","console",100,emptyMap(),rows,permit)
+    private fun files(root:Path)=if(Files.exists(root.resolve("exports")))Files.list(root.resolve("exports")).use{it.toList()}else emptyList()
     @Test fun utf8JsonLinesEscapeControlsAndContainMetadataWithoutCsvFormulas() {
         val root=Files.createTempDirectory("export-json");val result=write(root,listOf(event(),event("=1+1")))
         val lines=Files.readAllLines(root.resolve("exports").resolve(result.filename));assertEquals(3,lines.size)
@@ -22,7 +24,7 @@ class HistoryExportTest {
     }
     @Test fun blockSnapshotsAndItemComponentsRemainVersionedOpaqueBytes() {
         val row=block();val projected=ExportRows.value(row);val state=projected["after"] as Map<*,*>
-        assertContentEquals(row.snapshot.after.blockEntityData!!.copyBytes(),java.util.Base64.getDecoder().decode(state["blockEntityBase64"] as String))
+        assertContentEquals(row.snapshot.after.blockEntityData!!.copyBytes(),Base64.getDecoder().decode(state["blockEntityBase64"] as String))
         val item=ItemStackSnapshot(ResourceId.parse("coal"),2,BinaryPayload.of(byteArrayOf(7,8)))
         val txn=ContainerTransactionSnapshot(UUID.randomUUID(),1,actor,1,ContainerAction.PICKUP,listOf(ItemSlotChange(ItemSlotAddress(ItemSlotOwner.PlayerInventory(actor.uuid),0),item,ItemStackSnapshot.EMPTY)))
         assertEquals(2,ExportRows.payloadBytes(txn));assertEquals("item_transaction",ExportRows.value(txn)["recordType"])
