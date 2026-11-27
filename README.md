@@ -4,6 +4,12 @@
 
 <br>
 
+[![Guide](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/documentation/gitbook_vector.svg)](https://github.com/BareMinimumStudios/guardian#guardian-040)
+[![Modrinth](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/guardians)
+[![CurseForge](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/guardianex)
+[![Discord](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/social/discord-singular_vector.svg)](https://discord.gg/pcRw79hwey)
+
+
 <a href="LICENSE"><img alt="BML 1.0" src="https://img.shields.io/badge/LICENSE-BML--1.0-FFFFFF?style=for-the-badge&labelColor=1A1A1A"></a>
 <a href="https://github.com/BareMinimumStudios/guardian/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/BareMinimumStudios/guardian/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=BUILD&labelColor=1A1A1A"></a>
 <a href="https://github.com/BareMinimumStudios/guardian/issues"><img alt="Issues" src="https://img.shields.io/github/issues/BareMinimumStudios/guardian?style=for-the-badge&labelColor=1A1A1A&color=FFFFFF"></a>
@@ -16,7 +22,7 @@ Fabric and NeoForge · Server-side
 
 ## Guardian 0.4.0
 
-See who changed a block, moved an item, or edited a sign. Guardian runs on Fabric and NeoForge servers. Players can join without installing it.
+Guardian gives server staff a searchable history of what happened in their world. Find out who broke a block, took items from a chest, or edited a sign. It runs on Fabric and NeoForge servers, and players can join without installing it.
 
 Separate builds target **1.21.1, 1.21.4 to 1.21.11, 26.1.2 and 26.2**.
 Choose the file for your exact Minecraft version and loader. Use **Java 21** for 1.21.x and
