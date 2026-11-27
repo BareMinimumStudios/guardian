@@ -1,6 +1,6 @@
 ![Guardian shield and wordmark](https://raw.githubusercontent.com/BareMinimumStudios/guardian/main/docs/assets/guardian-banner.png)
 
-[![Guide](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/documentation/gitbook_vector.svg)](https://github.com/BareMinimumStudios/guardian#guardian-040)
+[![Guide](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/documentation/gitbook_vector.svg)](https://github.com/BareMinimumStudios/guardian#guardian-041)
 [![Modrinth](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/guardians)
 [![CurseForge](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/guardianex)
 [![Discord](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/social/discord-singular_vector.svg)](https://discord.gg/pcRw79hwey)

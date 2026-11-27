@@ -3,10 +3,12 @@
 Use **Actions → Modrinth upload → Run workflow** after pushing the release source.
 Leave the release field blank to use the version in `gradle.properties`. Select `all`
 for Minecraft and loader to prepare all 22 builds. Leave **dry_run** checked for the first run.
-A stable version such as `0.4.0` publishes as **release**. Numbered `alpha`, `beta`
+A stable version such as `0.4.1` publishes as **release**. Numbered `alpha`, `beta`
 and `rc` versions remain prereleases; `rc` uses the platform's beta category.
 The exact version must match every selected target profile and its dated changelog section.
-Stable GitHub tags use the shared version, such as `v0.4.0`; each jar retains its Minecraft suffix.
+Stable GitHub tags use the shared version, such as `v0.4.1`; each jar retains its Minecraft suffix.
+
+The **Publish** workflow with destination **all** builds the Minecraft 1.21.1 jars once and shares those files with Modrinth, CurseForge, and GitHub. Modrinth builds the remaining targets separately. The optional WorldEdit adapter is attached to the GitHub release.
 
 ## Organization setup
 
@@ -90,3 +92,5 @@ The full build includes the optional WorldEdit adapter, so it does not need anot
 Publishing still verifies every runtime jar, loader, Minecraft version, dependency and file hash.
 These resource limits do not skip tests or weaken recovery checks. Use a stable version only
 after the release's functional and recovery validation is complete.
+
+Use one dated [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) entry per Guardian release, for example `## [0.4.1] - 2026-11-27`. All publishing jobs use that entry.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Prepare and verify Guardian uploads. Only mc-publish performs remote writes."""
 import argparse
+from datetime import date
 import hashlib
 import json
 import os
@@ -46,11 +47,12 @@ def release_type(release):
 
 def release_notes(repo, release):
     release_type(release)
-    version = release + '+1.21.1'
     text = (repo / 'CHANGELOG.md').read_text(encoding='utf-8')
-    match = re.search(r'^## \[' + re.escape(version) + r'\] - \d{4}-\d{2}-\d{2}\s*$', text, re.M)
-    require(match, 'Missing dated changelog section for ' + version)
-    notes = re.split(r'^## ', text[match.end():], maxsplit=1, flags=re.M)[0].strip()
+    heading = r'^## \[' + re.escape(release) + r'(?:\+1\.21\.1)?\] - (\d{4}-\d{2}-\d{2})[ \t]*$'
+    matches = list(re.finditer(heading, text, re.M))
+    require(len(matches) == 1, 'Expected one dated changelog section for ' + release)
+    date.fromisoformat(matches[0].group(1))
+    notes = re.split(r'^## |^\[[^\]\n]+\]:', text[matches[0].end():], maxsplit=1, flags=re.M)[0].strip()
     require(notes, 'Release notes are empty')
     return notes + '\n'
 
@@ -64,7 +66,12 @@ def jar_metadata(path, minecraft, loader, version, java):
         nested = [n for n in names if n.endswith('.jar')]
         require(len(nested) == 1 and 'sqlite-jdbc-' in nested[0], 'Core must bundle SQLite only')
         classes = [n for n in names if n.endswith('.class')]
-        require(classes and all(int.from_bytes(archive.read(n)[6:8], 'big') <= java + 44 for n in classes), 'Wrong Java bytecode version')
+        require(classes, 'Missing Java bytecode')
+        for name in classes:
+            with archive.open(name) as stream:
+                header = stream.read(8)
+            require(len(header) == 8 and header[:4] == b'\xca\xfe\xba\xbe'
+                    and int.from_bytes(header[6:8], 'big') <= java + 44, 'Wrong Java bytecode version')
         if loader == 'fabric':
             meta = json.loads(archive.read('fabric.mod.json'))
             require(meta['id'] == 'guardian' and meta['version'] == version and meta['environment'] == 'server', 'Wrong Fabric metadata')
@@ -95,20 +102,19 @@ def prepare(repo, out, minecraft, release):
     java = int(pins.get('javaVersion', '21'))
     notes = release_notes(repo, release)
     entries = []
+    sources = []
     for loader in LOADERS:
-        candidates = [p for p in folder(repo, minecraft, loader).glob('*.jar')
-                      if not p.name.endswith(('-sources.jar', '-dev.jar', '-javadoc.jar'))]
-        require(len(candidates) == 1, f'Expected exactly one {minecraft} {loader} runtime jar')
-        digest = jar_metadata(candidates[0], minecraft, loader, version, java)
+        artifact = 'guardian' if loader == 'fabric' else 'guardian-neoforge'
+        source = folder(repo, minecraft, loader) / f'{artifact}-{version}.jar'
+        sources.append(source)
+        digest = jar_metadata(source, minecraft, loader, version, java)
         name = f'guardian-{version}-{loader}.jar'
         entries.append({'minecraft': minecraft, 'loader': loader, 'java': java,
                         'mod_version': version, 'version': version + '-' + loader, 'release_type': release_type(release),
                         'file': name, 'sha512': digest, 'dependencies': list(DEPENDENCIES[loader])})
     dest = out / minecraft
     dest.mkdir(parents=True, exist_ok=True)
-    for loader, entry in zip(LOADERS, entries):
-        source = next(p for p in folder(repo, minecraft, loader).glob('*.jar')
-                      if not p.name.endswith(('-sources.jar', '-dev.jar', '-javadoc.jar')))
+    for source, entry in zip(sources, entries):
         shutil.copy2(source, dest / entry['file'])
     (dest / 'RELEASE-NOTES.md').write_text(notes, encoding='utf-8', newline='\n')
     notes_hash = hashlib.sha512(notes.encode('utf-8')).hexdigest()
@@ -194,6 +200,8 @@ def main():
     parser.add_argument('--release', help='Defaults to the release in gradle.properties')
     parser.add_argument('--minecraft', default='all')
     parser.add_argument('--loader', default='all')
+    parser.add_argument('--shared-base-artifact', action='store_true',
+                        help='Skip the 1.21.1 build job when the current run already produced both jars')
     parser.add_argument('--project', default=os.environ.get('MODRINTH_PROJECT_ID', ''))
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
@@ -207,6 +215,9 @@ def main():
         targets = VERSIONS if args.minecraft == 'all' else (args.minecraft,)
         for v in targets:
             require(profile(args.repo, v)['modVersion'] == args.release + '+' + v, 'Release/profile version mismatch')
+        if args.shared_base_artifact:
+            require(args.minecraft == 'all', 'Shared base artifacts require the full release matrix')
+            targets = tuple(v for v in targets if v != '1.21.1')
         result = {'include': [{'minecraft': v, 'java': 25 if v.startswith('26.') else 21} for v in targets]}
     elif args.command == 'prepare':
         result = prepare(args.repo, args.bundle, args.minecraft, args.release)

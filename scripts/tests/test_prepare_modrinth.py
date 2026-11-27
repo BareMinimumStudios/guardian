@@ -58,6 +58,17 @@ class PublisherChecks(unittest.TestCase):
                     publisher.main()
                 self.assertEqual({'include': [{'minecraft': '1.21.1', 'java': 21}]}, json.loads(output.getvalue()))
 
+    def test_shared_changelog_heading_excludes_link_definitions(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            notes = '### Fixed\n\n- Release note.\n'
+            (root / 'CHANGELOG.md').write_text(
+                '## [Unreleased]\n\n## [0.4.1] - 2026-11-27\n\n' + notes
+                + '\n[0.4.1]: https://example.com/releases/0.4.1\n',
+                encoding='utf-8',
+            )
+            self.assertEqual(notes, publisher.release_notes(root, '0.4.1'))
+
     def test_stable_upload_preserves_release_classification(self):
         entry = self.entry(); entry['version'] = '0.4.0+1.21.1-fabric'
         existing = self.existing(); existing['version_number'] = entry['version']
@@ -76,7 +87,9 @@ class PublisherChecks(unittest.TestCase):
             (root / 'CHANGELOG.md').write_text('## [0.4.0+1.21.1] - 2026-11-21\n\n### Changed\n\n- Stable release.\n', encoding='utf-8')
             for loader in publisher.LOADERS:
                 folder = publisher.folder(root, '1.21.1', loader); folder.mkdir(parents=True)
-                (folder / 'runtime.jar').write_bytes(b'stable fixture')
+                artifact = 'guardian' if loader == 'fabric' else 'guardian-neoforge'
+                (folder / f'{artifact}-0.4.0+1.21.1.jar').write_bytes(b'stable fixture')
+                (folder / f'{artifact}-0.3.0+1.21.1.jar').write_bytes(b'previous release')
             digest = hashlib.sha512(b'stable fixture').hexdigest()
             with patch.object(publisher, 'jar_metadata', return_value=digest):
                 publisher.prepare(root, root / 'bundle', '1.21.1', '0.4.0')
@@ -112,7 +125,8 @@ class PublisherChecks(unittest.TestCase):
             for loader in publisher.LOADERS:
                 folder = publisher.folder(root, '1.21.1', loader)
                 folder.mkdir(parents=True)
-                (folder / 'runtime.jar').write_bytes(b'fixture runtime')
+                artifact = 'guardian' if loader == 'fabric' else 'guardian-neoforge'
+                (folder / f'{artifact}-0.4.0-alpha.99+1.21.1.jar').write_bytes(b'fixture runtime')
             digest = hashlib.sha512(b'fixture runtime').hexdigest()
             with patch.object(publisher, 'jar_metadata', return_value=digest):
                 publisher.prepare(root, root / 'bundle', '1.21.1', '0.4.0-alpha.99')

@@ -21,11 +21,11 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'push' || inputs.target != 'modrinth'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
-      release: ${{ steps.release.outputs.release }}
       release_type: ${{ steps.release.outputs.release_type }}
       prerelease: ${{ steps.release.outputs.prerelease }}
     steps:
@@ -45,62 +45,42 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import json, os, re, shutil, zipfile, sys
+          import json, os, shutil, zipfile, sys
           sys.path.insert(0, 'scripts')
-          from prepare_modrinth import release_type
+          from prepare_modrinth import prepare, release_type
           props = dict(line.split('=', 1) for line in Path('gradle.properties').read_text().splitlines() if '=' in line and not line.startswith('#'))
           version = props['modVersion']
           kind = release_type(version.split('+', 1)[0])
           tag = 'v' + (version.split('+', 1)[0] if kind == 'release' else version)
           if os.environ['GITHUB_REF_TYPE'] == 'tag' and os.environ['GITHUB_REF_NAME'] != tag:
               raise SystemExit('Tag must match modVersion: ' + tag)
-          text = Path('CHANGELOG.md').read_text()
-          heading = re.search(r'^## \[' + re.escape(version) + r'\] - \d{4}-\d{2}-\d{2}\s*$', text, re.M)
-          if not heading:
-              raise SystemExit('Missing dated changelog section for ' + version)
-          notes = re.split(r'^## |^\[Unreleased\]:', text[heading.end():], maxsplit=1, flags=re.M)[0].strip()
-          if not notes:
-              raise SystemExit('Release notes must not be empty')
           dest = Path('build/release')
           dest.mkdir(parents=True, exist_ok=True)
-          (dest / 'RELEASE-NOTES.md').write_text(notes + '\n')
-          for folder, mod_id, name in [('build/libs', 'guardian', 'guardian'), ('worldedit-adapter/build/libs', 'guardian-worldedit', 'guardian-worldedit')]:
-              matches = []
-              for jar in Path(folder).glob('*.jar'):
-                  if jar.name.endswith('-sources.jar') or jar.name.endswith('-dev.jar'):
-                      continue
-                  with zipfile.ZipFile(jar) as archive:
-                      if 'fabric.mod.json' not in archive.namelist():
-                          continue
-                      meta = json.loads(archive.read('fabric.mod.json'))
-                      if meta.get('id') == mod_id and meta.get('version') == version and meta.get('environment') == 'server':
-                          matches.append(jar)
-              if len(matches) != 1:
-                  raise SystemExit('Expected one runtime artifact for ' + mod_id + ': ' + str(matches))
-              if mod_id == 'guardian':
-                  with zipfile.ZipFile(matches[0]) as archive:
-                      bundled = [entry for entry in archive.namelist() if entry.startswith('META-INF/jars/') and entry.endswith('.jar')]
-                      if len(bundled) != 1 or 'sqlite-jdbc-' not in bundled[0] or matches[0].stat().st_size > 16 * 1024 * 1024:
-                          raise SystemExit('Default Fabric release must bundle only SQLite and stay below 16 MiB')
-              shutil.copy2(matches[0], dest / (name + '-' + version + '-fabric.jar'))
-          neo = Path('neoforge/build/libs') / ('guardian-neoforge-' + version + '.jar')
-          with zipfile.ZipFile(neo) as archive:
-              metadata = archive.read('META-INF/neoforge.mods.toml').decode()
-              if 'modId="guardian"' not in metadata or ('version="' + version + '"') not in metadata:
-                  raise SystemExit('Invalid NeoForge runtime metadata')
-              if 'META-INF/jarjar/metadata.json' not in archive.namelist():
-                  raise SystemExit('Missing NeoForge JDBC jar-in-jar metadata')
-              bundled = json.loads(archive.read('META-INF/jarjar/metadata.json'))['jars']
-              if len(bundled) != 1 or 'sqlite-jdbc-' not in bundled[0]['path'] or neo.stat().st_size > 16 * 1024 * 1024:
-                  raise SystemExit('Default NeoForge release must bundle only SQLite and stay below 16 MiB')
-          shutil.copy2(neo, dest / ('guardian-' + version + '-neoforge.jar'))
+          bundle = Path('build/modrinth')
+          entries = prepare(Path('.'), bundle, '1.21.1', version.split('+', 1)[0])
+          shutil.copy2(bundle / '1.21.1' / 'RELEASE-NOTES.md', dest / 'RELEASE-NOTES.md')
+          for entry in entries:
+              shutil.copy2(bundle / '1.21.1' / entry['file'], dest / entry['file'])
+          adapter = Path('worldedit-adapter/build/libs') / ('guardian-worldedit-' + version + '.jar')
+          with zipfile.ZipFile(adapter) as archive:
+              meta = json.loads(archive.read('fabric.mod.json'))
+              if (meta.get('id'), meta.get('version'), meta.get('environment')) != ('guardian-worldedit', version, 'server'):
+                  raise SystemExit('Invalid WorldEdit runtime metadata')
+          shutil.copy2(adapter, dest / ('guardian-worldedit-' + version + '-fabric.jar'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              output.write('version=' + version + '\ntag=' + tag + '\nrelease=' + version.split('+', 1)[0] + '\n')
+              output.write('version=' + version + '\ntag=' + tag + '\n')
               output.write('release_type=' + kind + '\nprerelease=' + str(kind != 'release').lower() + '\n')
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: guardian-release
           path: build/release/*
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'all'
+        with:
+          name: guardian-modrinth-build-1.21.1
+          path: build/modrinth/
           if-no-files-found: error
 
   github:
@@ -130,11 +110,11 @@ jobs:
 
   modrinth:
     needs: build
-    if: github.event_name == 'workflow_dispatch' && (inputs.target == 'modrinth' || inputs.target == 'all')
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && (inputs.target == 'modrinth' || (inputs.target == 'all' && needs.build.result == 'success')) }}
     uses: ./.github/workflows/modrinth.yml
     with:
-      release: ${{ needs.build.outputs.release }}
       dry_run: false
+      shared_base_artifact: ${{ inputs.target == 'all' }}
     secrets: inherit
 
   curseforge:

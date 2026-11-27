@@ -4,7 +4,7 @@
 
 <br>
 
-[![Guide](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/documentation/gitbook_vector.svg)](https://github.com/BareMinimumStudios/guardian#guardian-040)
+[![Guide](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/documentation/gitbook_vector.svg)](https://github.com/BareMinimumStudios/guardian#guardian-041)
 [![Modrinth](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/guardians)
 [![CurseForge](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/guardianex)
 [![Discord](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/social/discord-singular_vector.svg)](https://discord.gg/pcRw79hwey)
@@ -20,7 +20,7 @@ Fabric and NeoForge · Server-side
 
 ---
 
-## Guardian 0.4.0
+## Guardian 0.4.1
 
 Guardian gives server staff a searchable history of what happened in their world. Find out who broke a block, took items from a chest, or edited a sign. It runs on Fabric and NeoForge servers, and players can join without installing it.
 

@@ -77,15 +77,28 @@ class ScopedPurgeTest {
         assertEquals(1,db.applyPurge(plan){true}.deleted.total)
         assertEquals(2,db.previewPurge(100).eligible.blocks)
     }
-    @Test fun scopedBatchCapIsSharedAndCancellationIsAtomic()=stores { db->
-        db.append((1L..1001).map { block(it) }+item())
-        val scope=PurgeScope(world,include=setOf(stone,coal));val plan=db.previewPurge(2000,1000,scope)
-        assertEquals(1002,plan.eligible.total);assertEquals(1000,plan.candidates.size)
-        var checks=0;assertFails { db.applyPurge(plan){++checks<4} }
-        assertEquals(plan.eligible,db.previewPurge(2000,1000,scope).eligible)
-        assertEquals(1000,db.applyPurge(plan){true}.deleted.total)
-        assertEquals(2,db.previewPurge(2000,1000,scope).eligible.total)
+    @Test fun scopedBatchCapIsSharedAndCancellationIsAtomic() = stores { db ->
+        profilePurge(db, "seed") { db.append((1L..1001).map { block(it) } + item()) }
+        val scope = PurgeScope(world, include = setOf(stone, coal))
+        val plan = profilePurge(db, "preview") { db.previewPurge(2000, 1000, scope) }
+        assertEquals(1002, plan.eligible.total)
+        assertEquals(1000, plan.candidates.size)
+        var checks = 0
+        profilePurge(db, "cancel") { assertFails { db.applyPurge(plan) { ++checks < 4 } } }
+        assertEquals(plan.eligible, db.previewPurge(2000, 1000, scope).eligible)
+        val deleted = profilePurge(db, "delete") { db.applyPurge(plan) { true } }
+        assertEquals(1000, deleted.deleted.total)
+        assertEquals(2, db.previewPurge(2000, 1000, scope).eligible.total)
     }
+
+    private inline fun <T> profilePurge(db: QueryableStorageBackend, phase: String, action: () -> T): T {
+        if (System.getenv("GUARDIAN_AUDIT_BENCHMARK") != "purge") return action()
+        val start = System.nanoTime()
+        return action().also {
+            println("GUARDIAN_PURGE ${db.javaClass.simpleName} phase=$phase nanos=${System.nanoTime() - start}")
+        }
+    }
+
     @Test fun parserRejectsUnsupportedDuplicateAndMalformedScopes() {
         for(raw in listOf("", "w:overworld", "t:30d u:Alex", "t:30d time:7d", "t:30d w:overworld world:the_nether", "t:30d i:coal,", "t:30d i:*", "t:30d w:a,b", "t:30d e:", "t:30d i:coal include:stone", "t:30d i:"+(1..65).joinToString(","){"mod:item$it"}))assertTrue(PurgeCommandFilters.parse(raw).isFailure,raw)
         val result=PurgeCommandFilters.parse("time:30d world:overworld include:stone,mod:ore exclude:coal").getOrThrow()

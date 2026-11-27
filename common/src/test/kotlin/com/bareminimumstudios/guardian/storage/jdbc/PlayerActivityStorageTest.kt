@@ -5,6 +5,7 @@ import com.bareminimumstudios.guardian.storage.*
 import com.bareminimumstudios.guardian.storage.query.PlayerActivityQuery
 import java.nio.file.Files
 import java.sql.DriverManager
+import java.sql.SQLException
 import java.util.UUID
 import kotlin.test.*
 
@@ -30,6 +31,28 @@ class PlayerActivityStorageTest {
         assertEquals(listOf(logout,chat),db.lookupActivity(all.copy(afterEpochMillis = 20)))
         assertTrue(db.lookupActivity(all.copy(playerName = "' OR 1=1 --")).isEmpty())
         assertTrue(db.lookupActivity(all.copy(playerUuid = UUID.randomUUID())).isEmpty())
+    }
+    @Test fun failedSqliteBatchRollsBackEarlierWritesAndCanBeRetried() {
+        val file = Files.createTempDirectory("guardian-activity-batch").resolve("audit.sqlite")
+        val login = row(PlayerActivityKind.LOGIN, 10)
+        val chat = row(PlayerActivityKind.CHAT, 20, text = "retry after rollback")
+        val all = query(PlayerActivityKind.LOGIN, PlayerActivityKind.CHAT)
+        SqliteStorageBackend(file).use { db ->
+            db.open()
+            DriverManager.getConnection("jdbc:sqlite:$file").use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeUpdate(
+                        "CREATE TRIGGER reject_activity BEFORE INSERT ON ex_player_activity " +
+                            "WHEN NEW.kind = 'CHAT' BEGIN SELECT RAISE(ABORT, 'fixture'); END"
+                    )
+                    assertFailsWith<SQLException> { db.append(listOf(login, chat)) }
+                    assertTrue(db.lookupActivity(all).isEmpty())
+                    statement.executeUpdate("DROP TRIGGER reject_activity")
+                }
+            }
+            db.append(listOf(login, chat, login, chat))
+            assertEquals(listOf(chat, login), db.lookupActivity(all))
+        }
     }
     @Test fun snapshotsRejectMissingChatTextAndSessionPayloads() {
         assertFailsWith<IllegalArgumentException> { row(PlayerActivityKind.CHAT,1) }

@@ -2,10 +2,20 @@
 
 All notable changes to Guardian will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Guardian uses semantic versions with a Minecraft version suffix.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Guardian uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Runtime jars include their Minecraft version and loader.
 
 ## [Unreleased]
+
+## [0.4.1] - 2026-11-27
+
+### Changed
+
+- Modrinth uses the same version names as CurseForge, such as `0.4.1+1.21.1-fabric`.
+- Combined releases build and verify the Minecraft 1.21.1 jars once for GitHub, CurseForge, and Modrinth. Modrinth-only releases skip the separate GitHub and CurseForge build.
+- All release destinations use the same dated changelog entry for every supported Minecraft version.
+- Upload preparation selects the exact release jars, so older local jars can stay in the build folder. Jar validation reads the class headers when checking Java compatibility.
+- Entity, fluid, and player activity writes reuse prepared statements within each audit batch.
 
 ### Fixed
 
@@ -1209,3 +1219,7 @@ This first Step 4 slice captures accepted clicks in supported block-container me
 - Deprecated WorldEdit exception constructors.
 
 The imported Step 3 Fix 1 prototype was version `0.3.0-alpha.2+1.21.1`. Its original release date is not recorded here. Earlier staged work is described in `docs/PORTING_PLAN.md`.
+
+[Unreleased]: https://github.com/BareMinimumStudios/guardian/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/BareMinimumStudios/guardian/compare/v0.4.0...v0.4.1
+[0.4.0+1.21.1]: https://github.com/BareMinimumStudios/guardian/releases/tag/v0.4.0

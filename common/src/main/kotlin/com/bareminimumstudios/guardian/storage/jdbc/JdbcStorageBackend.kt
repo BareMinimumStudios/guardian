@@ -131,18 +131,7 @@ abstract class JdbcStorageBackend(
         val reservedRowIds = entries.filterIsInstance<BlockChangeSnapshot>().let { blocks -> if (blocks.isEmpty()) null else allocator.reserve(conn, "block", blocks.size).iterator() }
         conn.autoCommit = false
         try {
-            conn.prepareStatement(BLOCK_INSERT_SQL).use { insertStatement ->
-                entries.forEach {
-                    when (it) {
-                        is BlockChangeSnapshot -> { bindBlockChange(conn, insertStatement, it, checkNotNull(reservedRowIds).nextLong()); insertStatement.addBatch() }
-                        is ContainerAuditEntry -> insertContainer(conn, it.transaction)
-                        is EntityAuditEvent -> insertEntity(conn, it)
-                        is FluidAuditEvent -> insertFluid(conn, it)
-                        is PlayerActivity -> insertActivity(conn, it)
-                    }
-                }
-                insertStatement.executeBatch()
-            }
+            writeEntries(conn, entries, reservedRowIds)
             conn.commit()
         } catch (t: Throwable) {
             conn.rollback()
@@ -153,14 +142,41 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    private fun insertEntity(conn: Connection, row: EntityAuditEvent) {
-        conn.prepareStatement("INSERT INTO ex_entity(event_uuid,time,actor,dimension,x,y,z,target_uuid,target_type,kind,before_name,after_name,damage_type,parent_uuid,partner_uuid,frame_before,frame_after) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
-            val values = listOf(row.eventId.toString(), row.timestampEpochMillis, actorCodec.idFor(conn,row.actor), row.dimension.toString(), row.position.x, row.position.y, row.position.z, row.targetUuid.toString(), row.targetType.toString(), row.kind.name, row.beforeName, row.afterName, row.damageType?.toString(), row.parentUuid?.toString(), row.partnerUuid?.toString())
-            values.forEachIndexed { index,value -> statement.setObject(index+1,value) }
-            statement.setBytes(16,row.frameBefore?.let(ItemFrameSnapshotCodec::encode))
-            statement.setBytes(17,row.frameAfter?.let(ItemFrameSnapshotCodec::encode))
-            statement.executeUpdate()
+    private fun writeEntries(conn: Connection, entries: List<LogEntry>, blockIds: LongIterator?) {
+        val blockSql = BLOCK_INSERT_SQL.takeIf { blockIds != null }
+        val entitySql = ENTITY_INSERT_SQL.takeIf { entries.any { it is EntityAuditEvent } }
+        val fluidSql = FLUID_INSERT_SQL.takeIf { entries.any { it is FluidAuditEvent } }
+        val activitySql = ACTIVITY_INSERT_SQL.takeIf { entries.any { it is PlayerActivity } }
+        blockSql?.let(conn::prepareStatement).use { block ->
+            entitySql?.let(conn::prepareStatement).use { entity ->
+                fluidSql?.let(conn::prepareStatement).use { fluid ->
+                    activitySql?.let(conn::prepareStatement).use { activity ->
+                        for (entry in entries) {
+                            when (entry) {
+                                is BlockChangeSnapshot -> {
+                                    val statement = checkNotNull(block)
+                                    bindBlockChange(conn, statement, entry, checkNotNull(blockIds).nextLong())
+                                    statement.addBatch()
+                                }
+                                is ContainerAuditEntry -> insertContainer(conn, entry.transaction)
+                                is EntityAuditEvent -> insertEntity(conn, checkNotNull(entity), entry)
+                                is FluidAuditEvent -> insertFluid(conn, checkNotNull(fluid), entry)
+                                is PlayerActivity -> insertActivity(checkNotNull(activity), entry)
+                            }
+                        }
+                        block?.executeBatch()
+                    }
+                }
+            }
         }
+    }
+
+    private fun insertEntity(conn: Connection, statement: PreparedStatement, row: EntityAuditEvent) {
+        val values = listOf(row.eventId.toString(), row.timestampEpochMillis, actorCodec.idFor(conn,row.actor), row.dimension.toString(), row.position.x, row.position.y, row.position.z, row.targetUuid.toString(), row.targetType.toString(), row.kind.name, row.beforeName, row.afterName, row.damageType?.toString(), row.parentUuid?.toString(), row.partnerUuid?.toString())
+        values.forEachIndexed { index,value -> statement.setObject(index+1,value) }
+        statement.setBytes(16,row.frameBefore?.let(ItemFrameSnapshotCodec::encode))
+        statement.setBytes(17,row.frameAfter?.let(ItemFrameSnapshotCodec::encode))
+        statement.executeUpdate()
     }
 
     override fun lookupEntities(query: EntityLookupQuery): List<EntityAuditEvent> = lock.withLock {
@@ -196,11 +212,9 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    private fun insertFluid(conn: Connection, row: FluidAuditEvent) {
-        conn.prepareStatement("INSERT INTO ex_fluid(event_uuid,time,actor,dimension,x,y,z,kind,before_fluid,before_source,before_block,after_fluid,after_source,after_block,before_amount,after_amount) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING").use { statement ->
-            val values=listOf(row.eventId.toString(),row.timestampEpochMillis,actorCodec.idFor(conn,row.actor),row.dimension.toString(),row.position.x,row.position.y,row.position.z,row.kind.name,row.before.fluidId.toString(),if(row.before.source) 1 else 0,row.before.blockId.toString(),row.after.fluidId.toString(),if(row.after.source) 1 else 0,row.after.blockId.toString(),row.before.amount,row.after.amount)
-            values.forEachIndexed { index,value -> statement.setObject(index+1,value) };statement.executeUpdate()
-        }
+    private fun insertFluid(conn: Connection, statement: PreparedStatement, row: FluidAuditEvent) {
+        val values=listOf(row.eventId.toString(),row.timestampEpochMillis,actorCodec.idFor(conn,row.actor),row.dimension.toString(),row.position.x,row.position.y,row.position.z,row.kind.name,row.before.fluidId.toString(),if(row.before.source) 1 else 0,row.before.blockId.toString(),row.after.fluidId.toString(),if(row.after.source) 1 else 0,row.after.blockId.toString(),row.before.amount,row.after.amount)
+        values.forEachIndexed { index,value -> statement.setObject(index+1,value) };statement.executeUpdate()
     }
 
     override fun lookupFluids(query: FluidLookupQuery): List<FluidAuditEvent> = lock.withLock {
@@ -235,12 +249,10 @@ abstract class JdbcStorageBackend(
         }
     }
 
-    private fun insertActivity(conn: Connection, entry: PlayerActivity) {
-        conn.prepareStatement("INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text, recipient_uuid, recipient_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING").use {
-            it.setString(1, entry.eventId.toString()); it.setLong(2, entry.timestampEpochMillis)
-            it.setString(3, entry.actor.uuid.toString()); it.setString(4, entry.actor.lastKnownName)
-            it.setString(5, entry.kind.name); it.setString(6, entry.text); it.setString(7,entry.recipientUuid?.toString());it.setString(8,entry.recipientName);it.executeUpdate()
-        }
+    private fun insertActivity(statement: PreparedStatement, entry: PlayerActivity) {
+        statement.setString(1, entry.eventId.toString()); statement.setLong(2, entry.timestampEpochMillis)
+        statement.setString(3, entry.actor.uuid.toString()); statement.setString(4, entry.actor.lastKnownName)
+        statement.setString(5, entry.kind.name); statement.setString(6, entry.text); statement.setString(7,entry.recipientUuid?.toString());statement.setString(8,entry.recipientName);statement.executeUpdate()
     }
 
     override fun lookupActivity(query: PlayerActivityQuery): List<PlayerActivity> = lock.withLock {
@@ -711,6 +723,10 @@ abstract class JdbcStorageBackend(
     protected data class IntegrityResult(val performed: Boolean, val passed: Boolean)
 
     private companion object {
+        const val ENTITY_INSERT_SQL = "INSERT INTO ex_entity(event_uuid,time,actor,dimension,x,y,z,target_uuid,target_type,kind,before_name,after_name,damage_type,parent_uuid,partner_uuid,frame_before,frame_after) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING"
+        const val FLUID_INSERT_SQL = "INSERT INTO ex_fluid(event_uuid,time,actor,dimension,x,y,z,kind,before_fluid,before_source,before_block,after_fluid,after_source,after_block,before_amount,after_amount) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_uuid) DO NOTHING"
+        const val ACTIVITY_INSERT_SQL = "INSERT INTO ex_player_activity(event_uuid, time, player_uuid, player_name, kind, text, recipient_uuid, recipient_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event_uuid) DO NOTHING"
+
         val BLOCK_INSERT_SQL = """
             INSERT INTO ex_block(
                 rowid, event_uuid, time, actor, wid, x, y, z,

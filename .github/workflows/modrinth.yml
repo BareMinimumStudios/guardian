@@ -43,6 +43,9 @@ on:
       project_id:
         type: string
         default: ''
+      shared_base_artifact:
+        type: boolean
+        default: false
     secrets:
       MODRINTH_TOKEN:
         required: true
@@ -71,13 +74,18 @@ jobs:
           RELEASE: ${{ inputs.release }}
           MINECRAFT: ${{ inputs.minecraft }}
           LOADER: ${{ inputs.loader }}
+          SHARED_BASE_ARTIFACT: ${{ inputs.shared_base_artifact || false }}
         shell: bash
         run: |
           test -n "$MODRINTH_PROJECT_ID" || { echo 'Set Guardian MODRINTH_PROJECT_ID or the project_id input'; exit 1; }
           test -n "$MODRINTH_TOKEN" || { echo 'Allow this repository access to the organization MODRINTH_TOKEN secret'; exit 1; }
           case "$LOADER" in all|fabric|neoforge) ;; *) echo 'Unsupported loader'; exit 1 ;; esac
           python scripts/prepare_modrinth.py access
-          matrix=$(python scripts/prepare_modrinth.py matrix --release "$RELEASE" --minecraft "$MINECRAFT")
+          matrix_args=(--release "$RELEASE" --minecraft "$MINECRAFT")
+          if [ "$SHARED_BASE_ARTIFACT" = true ]; then
+            matrix_args+=(--shared-base-artifact)
+          fi
+          matrix=$(python scripts/prepare_modrinth.py matrix "${matrix_args[@]}")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
@@ -190,7 +198,7 @@ jobs:
           modrinth-id: ${{ needs.preflight.outputs.project }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           modrinth-featured: false
-          name: Guardian ${{ matrix.mod_version }} (${{ matrix.loader }})
+          name: ${{ matrix.version }}
           version: ${{ matrix.version }}
           version-type: ${{ matrix.release_type }}
           files: ${{ matrix.file }}
