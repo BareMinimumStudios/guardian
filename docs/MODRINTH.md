@@ -3,12 +3,12 @@
 </p>
 
 <p align="center" style="text-align: center;">
-<a href="https://modrinth.com/mod/guardians"><img src="https://img.shields.io/badge/Modrinth-133329?logo=modrinth&amp;logoColor=8CFFCF&amp;style=for-the-badge" alt="Modrinth" height="28"></a>
-<a href="https://www.curseforge.com/minecraft/mc-mods/guardianex"><img src="https://img.shields.io/badge/CurseForge-39232B?logo=curseforge&amp;logoColor=FFA880&amp;style=for-the-badge" alt="CurseForge" height="28"></a>
-<a href="https://github.com/BareMinimumStudios/guardian"><img src="https://img.shields.io/badge/Source-242B49?logo=github&amp;logoColor=EAF0FF&amp;style=for-the-badge" alt="GitHub source" height="28"></a>
-<a href="https://github.com/BareMinimumStudios/guardian/issues"><img src="https://img.shields.io/github/issues/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=242B49&amp;color=364775" alt="Report an issue" height="28"></a>
-<a href="https://github.com/BareMinimumStudios/guardian/forks"><img src="https://img.shields.io/github/forks/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=242B49&amp;color=364775" alt="Forks" height="28"></a>
-<a href="https://github.com/BareMinimumStudios/guardian/stargazers"><img src="https://img.shields.io/github/stars/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=242B49&amp;color=364775" alt="Stars" height="28"></a>
+<a href="https://modrinth.com/mod/guardians"><img src="https://img.shields.io/badge/Modrinth-242424?logo=modrinth&amp;logoColor=F5F5F5&amp;style=for-the-badge" alt="Modrinth" height="28"></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/guardianex"><img src="https://img.shields.io/badge/CurseForge-323232?logo=curseforge&amp;logoColor=F5F5F5&amp;style=for-the-badge" alt="CurseForge" height="28"></a>
+<a href="https://github.com/BareMinimumStudios/guardian"><img src="https://img.shields.io/badge/Source-1A1A1A?logo=github&amp;logoColor=F5F5F5&amp;style=for-the-badge" alt="GitHub source" height="28"></a>
+<a href="https://github.com/BareMinimumStudios/guardian/issues"><img src="https://img.shields.io/github/issues/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=1A1A1A&amp;color=404040" alt="Report an issue" height="28"></a>
+<a href="https://github.com/BareMinimumStudios/guardian/forks"><img src="https://img.shields.io/github/forks/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=1A1A1A&amp;color=404040" alt="Forks" height="28"></a>
+<a href="https://github.com/BareMinimumStudios/guardian/stargazers"><img src="https://img.shields.io/github/stars/BareMinimumStudios/guardian?style=for-the-badge&amp;labelColor=1A1A1A&amp;color=404040" alt="Stars" height="28"></a>
 </p>
 
 <p align="center" style="text-align: center;"><strong>Fabric + NeoForge · Server-side</strong></p>
